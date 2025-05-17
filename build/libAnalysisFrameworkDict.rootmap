@@ -1,0 +1,11 @@
+{ decls }
+namespace AnalysisFramework {  }
+
+[ libAnalysisFrameworkDict.so ]
+# List of selected classes
+class AnalysisFramework::ConfigurationManager
+class AnalysisFramework::DatasetLoader
+class AnalysisFramework::VariableManager
+header ConfigurationManager.h
+header DatasetLoader.h
+header VariableManager.h
