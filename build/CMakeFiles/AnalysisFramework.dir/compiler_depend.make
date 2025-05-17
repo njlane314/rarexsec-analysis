@@ -291,7 +291,7 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
   /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/forward_list.h \
   /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/forward_list.tcc \
   /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TDataMember.h \
-  ../DatasetLoader.h \
+  ../SampleLoader.h \
   /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/fstream \
   /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/codecvt.h \
   /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/x86_64-pc-linux-gnu/bits/basic_file.h \
@@ -547,9 +547,9 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
   /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TH2.h \
   /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TProfile.h \
   ../SampleTypes.h \
+  ../SampleProcessing.h \
   ../VariableManager.h \
   ../ConfigurationManager.h \
-  ../DatasetProcessing.h \
   ../ConfigurationManager.h \
   ../VariableManager.h \
   ../HistogramGenerator.h \
@@ -600,8 +600,6 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSymfwd.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTSym.h:
-
-../DatasetProcessing.h:
 
 ../SampleTypes.h:
 
@@ -932,6 +930,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/ROOT/TBufferMerger.hxx:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TObject.h:
+
+/usr/include/ctype.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/ROOT/RConfig.hxx:
 
@@ -1341,6 +1341,8 @@ AnalysisFrameworkDict.cxx:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/cstdarg:
 
+../SampleProcessing.h:
+
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TObjArray.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TSeqCollection.h:
@@ -1358,6 +1360,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/ios:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/ios_base.h:
+
+../SampleLoader.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/locale_classes.tcc:
 
@@ -1442,16 +1446,6 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/pstl/glue_memory_defs.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/forward_list:
-
-/usr/include/ctype.h:
-
-../DatasetLoader.h:
-
-/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorD.h:
-
-/cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/fs_ops.h:
-
-/cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/iterators/primitive_iterator.hpp:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/stl_set.h:
 
@@ -1552,6 +1546,12 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/sstream:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/std_mutex.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorD.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/fs_ops.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/iterators/primitive_iterator.hpp:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/iterators/iteration_proxy.hpp:
 

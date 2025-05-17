@@ -4,8 +4,8 @@ namespace AnalysisFramework {  }
 [ libAnalysisFrameworkDict.so ]
 # List of selected classes
 class AnalysisFramework::ConfigurationManager
-class AnalysisFramework::DatasetLoader
+class AnalysisFramework::SampleLoader
 class AnalysisFramework::VariableManager
 header ConfigurationManager.h
-header DatasetLoader.h
+header SampleLoader.h
 header VariableManager.h

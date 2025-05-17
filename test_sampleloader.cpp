@@ -1,4 +1,4 @@
-#include "DatasetLoader.h"
+#include "SampleLoader.h"
 #include "ConfigurationManager.h"
 #include "VariableManager.h"
 
@@ -11,16 +11,16 @@ int main() {
         file_paths.sample_directory_base = "/exp/uboone/data/users/nlane/analysis/";
         AnalysisFramework::ConfigurationManager config_manager(file_paths);
         AnalysisFramework::VariableManager variable_manager;
-        AnalysisFramework::DatasetLoader loader(config_manager, variable_manager);
+        AnalysisFramework::SampleLoader loader(config_manager, variable_manager);
         
         std::string beam_key = "numi_fhc";              
         std::vector<std::string> runs_to_load = {"run1"}; 
         bool blinded = true;                            
         AnalysisFramework::VariableOptions var_opts;      
 
-        auto campaign = loader.LoadRuns(beam_key, runs_to_load, blinded, var_opts);
+        auto sample_dataset = loader.LoadRuns(beam_key, runs_to_load, blinded, var_opts);
         long long total_events = 0;
-        for (auto& [sample_key, dfs] : campaign.dataframes) {
+        for (auto& [sample_key, dfs] : sample_dataset.dataframes) {
             for (auto& df : dfs) {
                 auto count = df.Count().GetValue();
                 total_events += count;
@@ -31,7 +31,7 @@ int main() {
             }
         }         
                 
-        std::cout << "Total number of events in the campaign: " << total_events << std::endl;
+        std::cout << "Total number of events in the sample_dataset: " << total_events << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

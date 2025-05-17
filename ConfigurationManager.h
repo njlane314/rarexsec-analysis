@@ -46,7 +46,7 @@ const std::vector<RunConfiguration> StandardRunConfigurations = {
                 "",                                                           // truth_filter: Truth-level selection string (empty for data).
                 {},                                                           // exclusion_truth_filters: List of sample_keys to exclude from this sample.
                 SampleType::kDataNuMIFHC,                                     // type: Enum specifying the sample type (e.g., data, MC). Ensure this is defined.
-                1.0e21,                                                       // pot: Protons-On-Target for this dataset. Adjust as needed.
+                1.0e20,                                                       // pot: Protons-On-Target for this dataset. Adjust as needed.
                 1000000                                                       // triggers: Number of triggers. Adjust as needed.
             }},
             {"numi_fhc_overlay_intrinsic_strangeness_run1", { // Definition for 'numi_overlay_intrinsic_strangeness' MC sample.

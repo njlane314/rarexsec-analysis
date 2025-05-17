@@ -63,9 +63,9 @@ CMAKE_BINARY_DIR = /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/test_histogramgen.dir/all
+all: CMakeFiles/test_histogram.dir/all
+all: CMakeFiles/test_sampleloader.dir/all
 all: CMakeFiles/AnalysisFramework.dir/all
-all: CMakeFiles/test_dataloader.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -73,37 +73,63 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/test_histogramgen.dir/clean
+clean: CMakeFiles/test_histogram.dir/clean
+clean: CMakeFiles/test_sampleloader.dir/clean
 clean: CMakeFiles/AnalysisFramework.dir/clean
-clean: CMakeFiles/test_dataloader.dir/clean
 clean: CMakeFiles/AnalysisFrameworkDict.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/test_histogramgen.dir
+# Target rules for target CMakeFiles/test_histogram.dir
 
 # All Build rule for target.
-CMakeFiles/test_histogramgen.dir/all: CMakeFiles/AnalysisFramework.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles --progress-num=7,8 "Built target test_histogramgen"
-.PHONY : CMakeFiles/test_histogramgen.dir/all
+CMakeFiles/test_histogram.dir/all: CMakeFiles/AnalysisFramework.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles --progress-num=5,6 "Built target test_histogram"
+.PHONY : CMakeFiles/test_histogram.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/test_histogramgen.dir/rule: cmake_check_build_system
+CMakeFiles/test_histogram.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 5
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_histogramgen.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_histogram.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 0
-.PHONY : CMakeFiles/test_histogramgen.dir/rule
+.PHONY : CMakeFiles/test_histogram.dir/rule
 
 # Convenience name for target.
-test_histogramgen: CMakeFiles/test_histogramgen.dir/rule
-.PHONY : test_histogramgen
+test_histogram: CMakeFiles/test_histogram.dir/rule
+.PHONY : test_histogram
 
 # clean rule for target.
-CMakeFiles/test_histogramgen.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/clean
-.PHONY : CMakeFiles/test_histogramgen.dir/clean
+CMakeFiles/test_histogram.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/clean
+.PHONY : CMakeFiles/test_histogram.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_sampleloader.dir
+
+# All Build rule for target.
+CMakeFiles/test_sampleloader.dir/all: CMakeFiles/AnalysisFramework.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles --progress-num=7,8 "Built target test_sampleloader"
+.PHONY : CMakeFiles/test_sampleloader.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_sampleloader.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_sampleloader.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_sampleloader.dir/rule
+
+# Convenience name for target.
+test_sampleloader: CMakeFiles/test_sampleloader.dir/rule
+.PHONY : test_sampleloader
+
+# clean rule for target.
+CMakeFiles/test_sampleloader.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/clean
+.PHONY : CMakeFiles/test_sampleloader.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/AnalysisFramework.dir
@@ -130,32 +156,6 @@ AnalysisFramework: CMakeFiles/AnalysisFramework.dir/rule
 CMakeFiles/AnalysisFramework.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/AnalysisFramework.dir/build.make CMakeFiles/AnalysisFramework.dir/clean
 .PHONY : CMakeFiles/AnalysisFramework.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/test_dataloader.dir
-
-# All Build rule for target.
-CMakeFiles/test_dataloader.dir/all: CMakeFiles/AnalysisFramework.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles --progress-num=5,6 "Built target test_dataloader"
-.PHONY : CMakeFiles/test_dataloader.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/test_dataloader.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 5
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_dataloader.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 0
-.PHONY : CMakeFiles/test_dataloader.dir/rule
-
-# Convenience name for target.
-test_dataloader: CMakeFiles/test_dataloader.dir/rule
-.PHONY : test_dataloader
-
-# clean rule for target.
-CMakeFiles/test_dataloader.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/clean
-.PHONY : CMakeFiles/test_dataloader.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/AnalysisFrameworkDict.dir

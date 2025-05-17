@@ -224,11 +224,11 @@ AnalysisFrameworkDict.cxx: \
  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/strtok.h \
  ../Binning.h \
  ../ConfigurationManager.h \
- ../DatasetLoader.h \
- ../DatasetProcessing.h \
  ../Histogram.h \
  ../HistogramGenerator.h \
  ../LinkDef.h \
+ ../SampleLoader.h \
+ ../SampleProcessing.h \
  ../SampleTypes.h \
  ../Selection.h \
  ../VariableManager.h

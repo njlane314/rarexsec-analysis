@@ -56,8 +56,8 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/test_histogramgen.dir/DependInfo.cmake"
+  "CMakeFiles/test_histogram.dir/DependInfo.cmake"
+  "CMakeFiles/test_sampleloader.dir/DependInfo.cmake"
   "CMakeFiles/AnalysisFramework.dir/DependInfo.cmake"
-  "CMakeFiles/test_dataloader.dir/DependInfo.cmake"
   "CMakeFiles/AnalysisFrameworkDict.dir/DependInfo.cmake"
   )

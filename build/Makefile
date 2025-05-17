@@ -65,30 +65,6 @@ CMAKE_BINARY_DIR = /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
-
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
-
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
-
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
@@ -130,6 +106,30 @@ edit_cache:
 edit_cache/fast: edit_cache
 .PHONY : edit_cache/fast
 
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/cvmfs/larsoft.opensciencegrid.org/products/cmake/v3_20_0/Linux64bit+3.10-2.17/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build//CMakeFiles/progress.marks
@@ -162,17 +162,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named test_histogramgen
+# Target rules for targets named test_histogram
 
 # Build rule for target.
-test_histogramgen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_histogramgen
-.PHONY : test_histogramgen
+test_histogram: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_histogram
+.PHONY : test_histogram
 
 # fast build rule for target.
-test_histogramgen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/build
-.PHONY : test_histogramgen/fast
+test_histogram/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/build
+.PHONY : test_histogram/fast
+
+#=============================================================================
+# Target rules for targets named test_sampleloader
+
+# Build rule for target.
+test_sampleloader: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_sampleloader
+.PHONY : test_sampleloader
+
+# fast build rule for target.
+test_sampleloader/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/build
+.PHONY : test_sampleloader/fast
 
 #=============================================================================
 # Target rules for targets named AnalysisFramework
@@ -186,19 +199,6 @@ AnalysisFramework: cmake_check_build_system
 AnalysisFramework/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/AnalysisFramework.dir/build.make CMakeFiles/AnalysisFramework.dir/build
 .PHONY : AnalysisFramework/fast
-
-#=============================================================================
-# Target rules for targets named test_dataloader
-
-# Build rule for target.
-test_dataloader: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_dataloader
-.PHONY : test_dataloader
-
-# fast build rule for target.
-test_dataloader/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/build
-.PHONY : test_dataloader/fast
 
 #=============================================================================
 # Target rules for targets named AnalysisFrameworkDict
@@ -237,53 +237,53 @@ AnalysisFrameworkDict.cxx.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/AnalysisFramework.dir/build.make CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.s
 .PHONY : AnalysisFrameworkDict.cxx.s
 
-test_dataloader.o: test_dataloader.cpp.o
-.PHONY : test_dataloader.o
+test_histogram.o: test_histogram.cpp.o
+.PHONY : test_histogram.o
 
 # target to build an object file
-test_dataloader.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/test_dataloader.cpp.o
-.PHONY : test_dataloader.cpp.o
+test_histogram.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/test_histogram.cpp.o
+.PHONY : test_histogram.cpp.o
 
-test_dataloader.i: test_dataloader.cpp.i
-.PHONY : test_dataloader.i
+test_histogram.i: test_histogram.cpp.i
+.PHONY : test_histogram.i
 
 # target to preprocess a source file
-test_dataloader.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/test_dataloader.cpp.i
-.PHONY : test_dataloader.cpp.i
+test_histogram.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/test_histogram.cpp.i
+.PHONY : test_histogram.cpp.i
 
-test_dataloader.s: test_dataloader.cpp.s
-.PHONY : test_dataloader.s
+test_histogram.s: test_histogram.cpp.s
+.PHONY : test_histogram.s
 
 # target to generate assembly for a file
-test_dataloader.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/test_dataloader.cpp.s
-.PHONY : test_dataloader.cpp.s
+test_histogram.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogram.dir/build.make CMakeFiles/test_histogram.dir/test_histogram.cpp.s
+.PHONY : test_histogram.cpp.s
 
-test_histogramgen.o: test_histogramgen.cpp.o
-.PHONY : test_histogramgen.o
+test_sampleloader.o: test_sampleloader.cpp.o
+.PHONY : test_sampleloader.o
 
 # target to build an object file
-test_histogramgen.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.o
-.PHONY : test_histogramgen.cpp.o
+test_sampleloader.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/test_sampleloader.cpp.o
+.PHONY : test_sampleloader.cpp.o
 
-test_histogramgen.i: test_histogramgen.cpp.i
-.PHONY : test_histogramgen.i
+test_sampleloader.i: test_sampleloader.cpp.i
+.PHONY : test_sampleloader.i
 
 # target to preprocess a source file
-test_histogramgen.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.i
-.PHONY : test_histogramgen.cpp.i
+test_sampleloader.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/test_sampleloader.cpp.i
+.PHONY : test_sampleloader.cpp.i
 
-test_histogramgen.s: test_histogramgen.cpp.s
-.PHONY : test_histogramgen.s
+test_sampleloader.s: test_sampleloader.cpp.s
+.PHONY : test_sampleloader.s
 
 # target to generate assembly for a file
-test_histogramgen.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.s
-.PHONY : test_histogramgen.cpp.s
+test_sampleloader.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_sampleloader.dir/build.make CMakeFiles/test_sampleloader.dir/test_sampleloader.cpp.s
+.PHONY : test_sampleloader.cpp.s
 
 # Help Target
 help:
@@ -299,17 +299,17 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... AnalysisFrameworkDict"
 	@echo "... AnalysisFramework"
-	@echo "... test_dataloader"
-	@echo "... test_histogramgen"
+	@echo "... test_histogram"
+	@echo "... test_sampleloader"
 	@echo "... AnalysisFrameworkDict.o"
 	@echo "... AnalysisFrameworkDict.i"
 	@echo "... AnalysisFrameworkDict.s"
-	@echo "... test_dataloader.o"
-	@echo "... test_dataloader.i"
-	@echo "... test_dataloader.s"
-	@echo "... test_histogramgen.o"
-	@echo "... test_histogramgen.i"
-	@echo "... test_histogramgen.s"
+	@echo "... test_histogram.o"
+	@echo "... test_histogram.i"
+	@echo "... test_histogram.s"
+	@echo "... test_sampleloader.o"
+	@echo "... test_sampleloader.i"
+	@echo "... test_sampleloader.s"
 .PHONY : help
 
 

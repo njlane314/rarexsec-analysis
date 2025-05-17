@@ -20,14 +20,14 @@ endif()
 
 # Define public headers
 set(ANALYSIS_FRAMEWORK_PUBLIC_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/DatasetLoader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SampleLoader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/VariableManager.h
 )
 
 # Define headers for dictionary generation
 set(DICTIONARY_INPUT_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/DatasetLoader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SampleLoader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/VariableManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HistogramGenerator.h
@@ -68,10 +68,10 @@ install(
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AnalysisFrameworkDict_rdict.pcm DESTINATION lib)
 
 # Add executable
-add_executable(test_dataloader test_dataloader.cpp)
+add_executable(test_sampleloader test_sampleloader.cpp)
 
 # Set include directories for the executable
-target_include_directories(test_dataloader
+target_include_directories(test_sampleloader
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${ROOT_INCLUDE_DIRS}
@@ -79,28 +79,28 @@ target_include_directories(test_dataloader
 )
 
 # Link the executable to the library
-target_link_libraries(test_dataloader
+target_link_libraries(test_sampleloader
     PRIVATE
         AnalysisFramework
         ${ROOT_LIBRARIES}
 )
 
 # Install the executable
-install(TARGETS test_dataloader DESTINATION bin)
+install(TARGETS test_sampleloader DESTINATION bin)
 
-add_executable(test_histogramgen test_histogramgen.cpp) 
+add_executable(test_histogram test_histogram.cpp) 
 
-target_include_directories(test_histogramgen
+target_include_directories(test_histogram
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${ROOT_INCLUDE_DIRS}
         ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
 )
 
-target_link_libraries(test_histogramgen
+target_link_libraries(test_histogram
     PRIVATE
         AnalysisFramework
         ${ROOT_LIBRARIES}
 )
 
-install(TARGETS test_histogramgen DESTINATION bin)
+install(TARGETS test_histogram DESTINATION bin)

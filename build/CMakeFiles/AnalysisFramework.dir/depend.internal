@@ -224,11 +224,11 @@ AnalysisFrameworkDict.cxx
  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/strtok.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/Binning.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h
- /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h
- /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetProcessing.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/Histogram.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/LinkDef.h
+ /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h
+ /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleProcessing.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleTypes.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/Selection.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h

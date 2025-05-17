@@ -35,7 +35,7 @@
 #include "TDataMember.h"
 
 // Header files passed as explicit arguments
-#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h"
+#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h"
@@ -132,42 +132,42 @@ namespace ROOT {
 } // end of namespace ROOT
 
 namespace ROOT {
-   static TClass *AnalysisFrameworkcLcLDatasetLoader_Dictionary();
-   static void AnalysisFrameworkcLcLDatasetLoader_TClassManip(TClass*);
-   static void delete_AnalysisFrameworkcLcLDatasetLoader(void *p);
-   static void deleteArray_AnalysisFrameworkcLcLDatasetLoader(void *p);
-   static void destruct_AnalysisFrameworkcLcLDatasetLoader(void *p);
+   static TClass *AnalysisFrameworkcLcLSampleLoader_Dictionary();
+   static void AnalysisFrameworkcLcLSampleLoader_TClassManip(TClass*);
+   static void delete_AnalysisFrameworkcLcLSampleLoader(void *p);
+   static void deleteArray_AnalysisFrameworkcLcLSampleLoader(void *p);
+   static void destruct_AnalysisFrameworkcLcLSampleLoader(void *p);
 
    // Function generating the singleton type initializer
-   static TGenericClassInfo *GenerateInitInstanceLocal(const ::AnalysisFramework::DatasetLoader*)
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::AnalysisFramework::SampleLoader*)
    {
-      ::AnalysisFramework::DatasetLoader *ptr = nullptr;
-      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::AnalysisFramework::DatasetLoader));
+      ::AnalysisFramework::SampleLoader *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::AnalysisFramework::SampleLoader));
       static ::ROOT::TGenericClassInfo 
-         instance("AnalysisFramework::DatasetLoader", "DatasetLoader.h", 42,
-                  typeid(::AnalysisFramework::DatasetLoader), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &AnalysisFrameworkcLcLDatasetLoader_Dictionary, isa_proxy, 4,
-                  sizeof(::AnalysisFramework::DatasetLoader) );
-      instance.SetDelete(&delete_AnalysisFrameworkcLcLDatasetLoader);
-      instance.SetDeleteArray(&deleteArray_AnalysisFrameworkcLcLDatasetLoader);
-      instance.SetDestructor(&destruct_AnalysisFrameworkcLcLDatasetLoader);
+         instance("AnalysisFramework::SampleLoader", "SampleLoader.h", 42,
+                  typeid(::AnalysisFramework::SampleLoader), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &AnalysisFrameworkcLcLSampleLoader_Dictionary, isa_proxy, 4,
+                  sizeof(::AnalysisFramework::SampleLoader) );
+      instance.SetDelete(&delete_AnalysisFrameworkcLcLSampleLoader);
+      instance.SetDeleteArray(&deleteArray_AnalysisFrameworkcLcLSampleLoader);
+      instance.SetDestructor(&destruct_AnalysisFrameworkcLcLSampleLoader);
       return &instance;
    }
-   TGenericClassInfo *GenerateInitInstance(const ::AnalysisFramework::DatasetLoader*)
+   TGenericClassInfo *GenerateInitInstance(const ::AnalysisFramework::SampleLoader*)
    {
-      return GenerateInitInstanceLocal(static_cast<::AnalysisFramework::DatasetLoader*>(nullptr));
+      return GenerateInitInstanceLocal(static_cast<::AnalysisFramework::SampleLoader*>(nullptr));
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::AnalysisFramework::DatasetLoader*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::AnalysisFramework::SampleLoader*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
 
    // Dictionary for non-ClassDef classes
-   static TClass *AnalysisFrameworkcLcLDatasetLoader_Dictionary() {
-      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const ::AnalysisFramework::DatasetLoader*>(nullptr))->GetClass();
-      AnalysisFrameworkcLcLDatasetLoader_TClassManip(theClass);
+   static TClass *AnalysisFrameworkcLcLSampleLoader_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const ::AnalysisFramework::SampleLoader*>(nullptr))->GetClass();
+      AnalysisFrameworkcLcLSampleLoader_TClassManip(theClass);
    return theClass;
    }
 
-   static void AnalysisFrameworkcLcLDatasetLoader_TClassManip(TClass* ){
+   static void AnalysisFrameworkcLcLSampleLoader_TClassManip(TClass* ){
    }
 
 } // end of namespace ROOT
@@ -209,17 +209,17 @@ namespace ROOT {
 
 namespace ROOT {
    // Wrapper around operator delete
-   static void delete_AnalysisFrameworkcLcLDatasetLoader(void *p) {
-      delete (static_cast<::AnalysisFramework::DatasetLoader*>(p));
+   static void delete_AnalysisFrameworkcLcLSampleLoader(void *p) {
+      delete (static_cast<::AnalysisFramework::SampleLoader*>(p));
    }
-   static void deleteArray_AnalysisFrameworkcLcLDatasetLoader(void *p) {
-      delete [] (static_cast<::AnalysisFramework::DatasetLoader*>(p));
+   static void deleteArray_AnalysisFrameworkcLcLSampleLoader(void *p) {
+      delete [] (static_cast<::AnalysisFramework::SampleLoader*>(p));
    }
-   static void destruct_AnalysisFrameworkcLcLDatasetLoader(void *p) {
-      typedef ::AnalysisFramework::DatasetLoader current_t;
+   static void destruct_AnalysisFrameworkcLcLSampleLoader(void *p) {
+      typedef ::AnalysisFramework::SampleLoader current_t;
       (static_cast<current_t*>(p))->~current_t();
    }
-} // end of namespace ROOT for class ::AnalysisFramework::DatasetLoader
+} // end of namespace ROOT for class ::AnalysisFramework::SampleLoader
 
 namespace ROOT {
    static TClass *vectorlEstringgR_Dictionary();
@@ -419,7 +419,7 @@ namespace ROOT {
 namespace {
   void TriggerDictionaryInitialization_libAnalysisFrameworkDict_Impl() {
     static const char* headers[] = {
-"/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h",
+"/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h",
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h",
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h",
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h",
@@ -439,9 +439,9 @@ nullptr
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_AutoLoading_Map;
-namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$VariableManager.h")))  __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h")))  VariableManager;}
-namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$ConfigurationManager.h")))  __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h")))  ConfigurationManager;}
-namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h")))  DatasetLoader;}
+namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$VariableManager.h")))  __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h")))  VariableManager;}
+namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$ConfigurationManager.h")))  __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h")))  ConfigurationManager;}
+namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h")))  SampleLoader;}
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "libAnalysisFrameworkDict dictionary payload"
@@ -449,7 +449,7 @@ namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$/exp/u
 
 #define _BACKWARD_BACKWARD_WARNING_H
 // Inline headers
-#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h"
+#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h"
@@ -458,7 +458,7 @@ namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$/exp/u
 )DICTPAYLOAD";
     static const char* classesHeaders[] = {
 "AnalysisFramework::ConfigurationManager", payloadCode, "@",
-"AnalysisFramework::DatasetLoader", payloadCode, "@",
+"AnalysisFramework::SampleLoader", payloadCode, "@",
 "AnalysisFramework::VariableManager", payloadCode, "@",
 nullptr
 };

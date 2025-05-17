@@ -292,7 +292,7 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o
  /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/forward_list.h
  /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/forward_list.tcc
  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TDataMember.h
- /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h
+ /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleLoader.h
  /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/fstream
  /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/codecvt.h
  /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/x86_64-pc-linux-gnu/bits/basic_file.h
@@ -548,9 +548,9 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o
  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TH2.h
  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TProfile.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleTypes.h
+ /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/SampleProcessing.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h
- /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetProcessing.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h
  /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h

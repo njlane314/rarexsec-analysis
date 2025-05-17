@@ -15,13 +15,13 @@
 #include "TChain.h"
 
 #include "SampleTypes.h"
+#include "SampleProcessing.h"
 #include "VariableManager.h"
 #include "ConfigurationManager.h"
-#include "DatasetProcessing.h"
 
 namespace AnalysisFramework {
 
-struct CampaignDataset {
+struct SampleDataset {
     std::map<std::string, std::vector<ROOT::RDF::RNode>> dataframes;
     std::map<std::string, double> sample_scalars;
     double total_pot = 0.0;
@@ -39,7 +39,7 @@ struct SamplePath {
     std::string file_path;                                       
 };
 
-class DatasetLoader {
+class SampleLoader {
 private:
     const ConfigurationManager& config_manager_;
     const VariableManager& variable_manager_;
@@ -57,18 +57,18 @@ private:
             path_info.sample_props = &(run_config.sample_props.at(sample_key));
 
             if (path_info.sample_props->relative_path.empty()) {
-                throw std::runtime_error("DatasetLoader::ResolveSamplePath: Dataset '" + sample_key + "' in ProcessingConfig '" + run_key + 
+                throw std::runtime_error("SampleLoader::ResolveSamplePath: Dataset '" + sample_key + "' in ProcessingConfig '" + run_key + 
                                          "' (beam: " + beam_key + ") has an empty relative_path.");
             }
             path_info.file_path = file_paths_config.sample_directory_base + "/" + path_info.sample_props->relative_path;
         } catch (const std::out_of_range& oor) {
-            throw std::runtime_error("DatasetLoader::ResolveSamplePath: Configuration error for beam '" + beam_key +
+            throw std::runtime_error("SampleLoader::ResolveSamplePath: Configuration error for beam '" + beam_key +
                                      "', run_key '" + run_key + "', sample_key '" + sample_key +
                                      ": " + oor.what());
         }
 
         if (!std::ifstream(path_info.file_path.c_str()).good()) {
-            throw std::runtime_error("DatasetLoader::ResolveSamplePath: File not found: " + path_info.file_path);
+            throw std::runtime_error("SampleLoader::ResolveSamplePath: File not found: " + path_info.file_path);
         }
         return path_info;
     }
@@ -106,7 +106,7 @@ private:
     }
 
     void LoadSamples(
-        CampaignDataset& campaign_dataset,
+        SampleDataset& sample_dataset,
         const ProcessingConfig& processing_config) const
     {
         auto data_props_iter = std::find_if(
@@ -123,8 +123,8 @@ private:
         double data_pot = run_props.pot;
         int run_triggers = run_props.triggers;
 
-        campaign_dataset.total_pot += data_pot;
-        campaign_dataset.total_triggers += run_triggers;
+        sample_dataset.total_pot += data_pot;
+        sample_dataset.total_triggers += run_triggers;
 
         // --- Load Data Samples -- 
 
@@ -137,7 +137,7 @@ private:
                         ROOT::RDF::RNode rdf_data = this->CreateDataFrameNode(path_opt.value(), processing_config.variable_options);
                         rdf_data = this->ApplyEventProcessing(rdf_data, path_opt.value(), processing_config.variable_options, false);
                         rdf_data = rdf_data.Define("exposure_event_weight", [](){ return 1.0; });
-                        campaign_dataset.dataframes[data_key].push_back(rdf_data);
+                        sample_dataset.dataframes[data_key].push_back(rdf_data);
                     }
                 }
             }
@@ -158,7 +158,7 @@ private:
                         ext_weight = static_cast<double>(run_triggers) / ext_props.triggers;
                     }
                     rdf_ext = rdf_ext.Define("exposure_event_weight", [ext_weight](){ return ext_weight; });
-                    campaign_dataset.dataframes[ext_key].push_back(rdf_ext);
+                    sample_dataset.dataframes[ext_key].push_back(rdf_ext);
                 }
             }
         }
@@ -187,22 +187,22 @@ private:
                     }
                     double pot_weight = (mc_props.pot > 0 && data_pot > 0) ? (data_pot / mc_props.pot) : 1.0;
                     rdf_mc = rdf_mc.Define("exposure_event_weight", [pot_weight](){ return pot_weight; });
-                    campaign_dataset.dataframes[mc_key].push_back(rdf_mc);
+                    sample_dataset.dataframes[mc_key].push_back(rdf_mc);
                 }
             }
         }
     }
 
 public:
-    DatasetLoader(const ConfigurationManager& config_manager, const VariableManager& varibale_manager) :
+    SampleLoader(const ConfigurationManager& config_manager, const VariableManager& varibale_manager) :
         config_manager_(config_manager), variable_manager_(varibale_manager) {}
 
-    CampaignDataset LoadRuns(
+    SampleDataset LoadRuns(
         const std::string& beam_key,
         const std::vector<std::string>& runs_to_load,
         bool blinded = true,
         const VariableOptions& variable_options = VariableOptions{}) const {
-        CampaignDataset campaign_dataset;
+        SampleDataset sample_dataset;
 
         for (const auto& run_key : runs_to_load) {
             const auto& run_config = config_manager_.GetRunConfig(beam_key, run_key);
@@ -212,9 +212,9 @@ public:
                 variable_options,
                 blinded
             };
-            this->LoadSamples(campaign_dataset, processing_config);
+            this->LoadSamples(sample_dataset, processing_config);
         }
-        return campaign_dataset;
+        return sample_dataset;
     }
 };
 
