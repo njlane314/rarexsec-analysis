@@ -109,9 +109,14 @@ private:
         CampaignDataset& campaign_dataset,
         const ProcessingConfig& processing_config) const
     {
-        const auto& data_props_iter = processing_config.run_config.sample_props.find("data");
+        auto data_props_iter = std::find_if(
+            processing_config.run_config.sample_props.begin(),
+            processing_config.run_config.sample_props.end(),
+            [](const auto& pair) { return isSampleData(pair.second.type); }
+        );
+
         if (data_props_iter == processing_config.run_config.sample_props.end()) {
-            throw std::runtime_error("Dataset::LoadSamples: Missing for run " + processing_config.run_config.run_key);
+            throw std::runtime_error("Dataset::LoadSamples: No data sample found for run " + processing_config.run_config.run_key);
         }
 
         const auto& run_props = data_props_iter->second;

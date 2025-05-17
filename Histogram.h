@@ -6,15 +6,16 @@
 #include <stdexcept>
 #include <numeric>
 #include <cmath>
-#include <iostream> 
+#include <iostream>
+#include <algorithm>
 
 #include "TH1D.h"
 #include "TMatrixDSym.h"
 #include "TVectorD.h"
 #include "TNamed.h"
 #include "TMath.h"
-#include "TColor.h" 
-#include "Rtypes.h" 
+#include "TColor.h"
+#include "Rtypes.h"
 
 #include "Binning.h"
 
@@ -38,16 +39,32 @@ private:
             if (binning_def.nBins() == 0) {
                 return;
             }
-            TString uniqueName = TString::Format("%s_root_%ld", GetName(), (long)this);
+            TString uniqueName = TString::Format("%s_root_%p", GetName(), (void*)this);
             fRootHist = new TH1D(uniqueName,
                                  TString::Format("%s;%s;Events", GetTitle(), binning_def.variable_tex.Data()),
                                  binning_def.nBins(), binning_def.bin_edges.data());
             fRootHist->SetDirectory(nullptr);
         } else {
-            if (fRootHist->GetNbinsX() != binning_def.nBins() ||
-                !std::equal(binning_def.bin_edges.begin(), binning_def.bin_edges.end(), fRootHist->GetXaxis()->GetXbins()->GetArray())) {
+            bool binningChanged = false;
+            if (fRootHist->GetNbinsX() != binning_def.nBins()) {
+                binningChanged = true;
+            } else {
+                const TArrayD* bins = fRootHist->GetXaxis()->GetXbins();
+                if (bins->GetSize() != static_cast<int>(binning_def.bin_edges.size())) {
+                    binningChanged = true;
+                } else {
+                    for (int i = 0; i < bins->GetSize(); ++i) {
+                        if (std::abs((*bins)[i] - binning_def.bin_edges[i]) > 1e-9) {
+                            binningChanged = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (binningChanged) {
                 delete fRootHist;
-                TString uniqueName = TString::Format("%s_root_%ld", GetName(), (long)this);
+                TString uniqueName = TString::Format("%s_root_%p", GetName(), (void*)this);
                 fRootHist = new TH1D(uniqueName,
                                  TString::Format("%s;%s;Events", GetTitle(), binning_def.variable_tex.Data()),
                                  binning_def.nBins(), binning_def.bin_edges.data());
@@ -64,12 +81,37 @@ private:
             fRootHist->SetBinError(i + 1, error);
         }
 
-        Color_t color = TColor::GetColor(plot_color_name.Data());
-        fRootHist->SetLineColor(color);
-        fRootHist->SetMarkerColor(color);
+        Color_t color_to_set = kBlack;
+        if (plot_color_name.IsNull() || plot_color_name.IsWhitespace()) {
+            color_to_set = kBlack;
+        } else if (plot_color_name.CompareTo("kBlack", TString::kIgnoreCase) == 0) {
+            color_to_set = kBlack;
+        } else if (plot_color_name.CompareTo("kRed", TString::kIgnoreCase) == 0) {
+            color_to_set = kRed;
+        } else if (plot_color_name.CompareTo("kBlue", TString::kIgnoreCase) == 0) {
+            color_to_set = kBlue;
+        } else if (plot_color_name.CompareTo("kGreen", TString::kIgnoreCase) == 0) {
+            color_to_set = kGreen;
+        } else if (plot_color_name.CompareTo("kMagenta", TString::kIgnoreCase) == 0) {
+            color_to_set = kMagenta;
+        } else if (plot_color_name.CompareTo("kCyan", TString::kIgnoreCase) == 0) {
+            color_to_set = kCyan;
+        } else if (plot_color_name.CompareTo("kYellow", TString::kIgnoreCase) == 0) {
+            color_to_set = kYellow;
+        } else if (plot_color_name.CompareTo("kOrange", TString::kIgnoreCase) == 0) {
+            color_to_set = kOrange;
+        } else if (plot_color_name.CompareTo("kGray", TString::kIgnoreCase) == 0 || plot_color_name.CompareTo("kGrey", TString::kIgnoreCase) == 0) {
+            color_to_set = kGray;
+        }
+        else {
+            color_to_set = TColor::GetColor(plot_color_name.Data());
+        }
+        
+        fRootHist->SetLineColor(color_to_set);
+        fRootHist->SetMarkerColor(color_to_set);
         fRootHist->SetFillStyle(plot_hatch_idx);
         if (plot_hatch_idx != 0) {
-            fRootHist->SetFillColor(color);
+            fRootHist->SetFillColor(color_to_set);
         }
     }
 
@@ -100,7 +142,7 @@ public:
             if (uncertainties[i] < 0) throw std::runtime_error("Uncertainties cannot be negative for histogram '" + std::string(name.Data()) + "'.");
             covariance_matrix(i, i) = uncertainties[i] * uncertainties[i];
         }
-        if (tex_string.IsNull() || tex_string.IsWhitespace()) tex_string = name;
+        if (this->tex_string.IsNull() || this->tex_string.IsWhitespace()) this->tex_string = name;
         updateRootHistNonConst();
     }
 
@@ -118,7 +160,7 @@ public:
                                              name.Data(), binDef.nBins(), counts.size(), covMatrix.GetNrows());
             throw std::runtime_error(errMsg.Data());
         }
-        if (tex_string.IsNull() || tex_string.IsWhitespace()) tex_string = name;
+        if (this->tex_string.IsNull() || this->tex_string.IsWhitespace()) this->tex_string = name;
         updateRootHistNonConst();
     }
 
@@ -133,7 +175,8 @@ public:
         fRootHist(nullptr)
     {
         if (other.fRootHist) {
-            fRootHist = static_cast<TH1D*>(other.fRootHist->Clone(TString::Format("%s_copy_%ld", other.fRootHist->GetName(),(long)this)));
+            TString cloneName = TString::Format("%s_clone_%p", other.fRootHist->GetName(), (void*)this);
+            fRootHist = static_cast<TH1D*>(other.fRootHist->Clone(cloneName));
             fRootHist->SetDirectory(nullptr);
         }
     }
@@ -143,7 +186,7 @@ public:
         TNamed::operator=(other);
         binning_def = other.binning_def;
         bin_counts = other.bin_counts;
-        if (covariance_matrix.GetNrows() != other.covariance_matrix.GetNrows()) {
+        if (covariance_matrix.GetNrows() != other.covariance_matrix.GetNrows() || covariance_matrix.GetNcols() != other.covariance_matrix.GetNcols()) {
              covariance_matrix.ResizeTo(other.covariance_matrix.GetNrows(), other.covariance_matrix.GetNcols());
         }
         covariance_matrix = other.covariance_matrix;
@@ -154,10 +197,9 @@ public:
         delete fRootHist;
         fRootHist = nullptr;
         if (other.fRootHist) {
-            fRootHist = static_cast<TH1D*>(other.fRootHist->Clone(TString::Format("%s_assign_%ld", other.fRootHist->GetName(), (long)this)));
+            TString assignName = TString::Format("%s_assign_%p", other.fRootHist->GetName(), (void*)this);
+            fRootHist = static_cast<TH1D*>(other.fRootHist->Clone(assignName));
             fRootHist->SetDirectory(nullptr);
-        } else {
-            updateRootHistNonConst();
         }
         return *this;
     }
@@ -180,12 +222,16 @@ public:
         if (nBins() == 0) return {};
         std::vector<double> stdDevs(nBins());
         for (int i = 0; i < nBins(); ++i) {
-            stdDevs[i] = (covariance_matrix(i,i) < 0) ? 0.0 : std::sqrt(covariance_matrix(i,i));
+            stdDevs[i] = (covariance_matrix.GetNrows() > i && covariance_matrix.GetNcols() > i && covariance_matrix(i,i) >= 0) ? std::sqrt(covariance_matrix(i,i)) : 0.0;
         }
         return stdDevs;
     }
+
     double getBinError(int i) const {
         if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::getBinError: Bin index out of range.");
+        if (covariance_matrix.GetNrows() <=i || covariance_matrix.GetNcols() <=i) {
+             throw std::out_of_range("Histogram::getBinError: Covariance matrix index out of range.");
+        }
         return (covariance_matrix(i,i) < 0) ? 0.0 : std::sqrt(covariance_matrix(i,i));
     }
 
@@ -197,9 +243,9 @@ public:
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 if (stdDevs[i] > 1e-9 && stdDevs[j] > 1e-9) {
-                    corrMatrix(i,j) = covariance_matrix(i,j) / (stdDevs[i] * stdDevs[j]);
+                    corrMatrix(i,j) = (covariance_matrix.GetNrows() > i && covariance_matrix.GetNcols() > i && covariance_matrix.GetNrows() > j && covariance_matrix.GetNcols() > j) ? covariance_matrix(i,j) / (stdDevs[i] * stdDevs[j]) : 0.0;
                 } else {
-                    corrMatrix(i,j) = (i == j && (stdDevs[i] < 1e-9 || stdDevs[j] < 1e-9) ) ? 0.0 : ((i == j) ? 1.0 : 0.0);
+                    corrMatrix(i,j) = (i == j && (std::abs(stdDevs[i]) < 1e-9 || std::abs(stdDevs[j]) < 1e-9) ) ? 0.0 : ((i == j) ? 1.0 : 0.0);
                 }
             }
         }
@@ -218,7 +264,7 @@ public:
             updateRootHist();
         }
         if (fRootHist) {
-            TString cloneName = newName.IsNull() ? TString::Format("%s_clone", fRootHist->GetName()) : newName;
+            TString cloneName = newName.IsNull() || newName.IsWhitespace() ? TString::Format("%s_clone_%p", fRootHist->GetName(), (void*)this) : newName;
             TH1D* clone = static_cast<TH1D*>(fRootHist->Clone(cloneName));
             clone->SetDirectory(nullptr);
             return clone;
@@ -231,21 +277,27 @@ public:
         bin_counts[i] = content;
         if (fRootHist) fRootHist->SetBinContent(i + 1, content);
     }
+
     void setBinError(int i, double error) {
         if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::setBinError: Bin index out of range.");
         if (error < 0) throw std::runtime_error("Error cannot be negative for histogram '" + std::string(GetName()) + "'.");
+        if (covariance_matrix.GetNrows() <=i || covariance_matrix.GetNcols() <=i) {
+             covariance_matrix.ResizeTo(nBins(), nBins());
+        }
         covariance_matrix(i,i) = error * error;
         if (fRootHist) fRootHist->SetBinError(i + 1, error);
     }
+
     void setCovarianceMatrix(const TMatrixDSym& cov) {
         if (cov.GetNrows() != nBins()) throw std::runtime_error("Histogram::setCovarianceMatrix: Covariance matrix dimensions mismatch for histogram '" + std::string(GetName()) + "'.");
         covariance_matrix = cov;
         if (fRootHist) {
             for (int i = 0; i < nBins(); ++i) {
-                 fRootHist->SetBinError(i + 1, std::sqrt(covariance_matrix(i,i) >=0 ? covariance_matrix(i,i) : 0.0));
+                 fRootHist->SetBinError(i + 1, (covariance_matrix.GetNrows() > i && covariance_matrix.GetNcols() > i && covariance_matrix(i,i) >=0) ? std::sqrt(covariance_matrix(i,i)) : 0.0);
             }
         }
     }
+
     void setBinning(const Binning& newBinningDef) {
         if (newBinningDef.nBins() <= 0) {
             throw std::runtime_error("New binning definition has zero or negative bins for histogram '" + std::string(GetName()) + "'.");
@@ -254,9 +306,9 @@ public:
         bin_counts.assign(newBinningDef.nBins(), 0.0);
         covariance_matrix.ResizeTo(newBinningDef.nBins(), newBinningDef.nBins());
         covariance_matrix.Zero();
+        
         delete fRootHist;
         fRootHist = nullptr;
-        updateRootHistNonConst();
     }
 
     double sum() const {
@@ -268,8 +320,15 @@ public:
         if (n == 0) return 0.0;
         TVectorD a(n);
         for(int i=0; i<n; ++i) a[i] = 1.0;
+        
         TMatrixDSym temp_cov = covariance_matrix;
-        TVectorD cov_a = temp_cov * a;
+        TVectorD cov_a(n); // Ensure cov_a is sized correctly
+        if (temp_cov.GetNrows() == n && temp_cov.GetNcols() == n) { // Basic check
+            cov_a = temp_cov * a;
+        } else {
+            // Handle error or return 0 if matrix dimensions are wrong
+            return 0.0;
+        }
         double variance_sum = a * cov_a;
         return variance_sum >= 0 ? std::sqrt(variance_sum) : 0.0;
     }
@@ -291,7 +350,7 @@ public:
         }
         if (fRootHist) {
             for (int i = 0; i < nBins(); ++i) {
-                 fRootHist->SetBinError(i + 1, std::sqrt(covariance_matrix(i,i) >= 0 ? covariance_matrix(i,i) : 0.0));
+                 fRootHist->SetBinError(i + 1, (covariance_matrix.GetNrows() > i && covariance_matrix.GetNcols() > i && covariance_matrix(i,i) >= 0) ? std::sqrt(covariance_matrix(i,i)) : 0.0);
             }
         }
     }
@@ -322,19 +381,24 @@ public:
         for (size_t i = 0; i < result.bin_counts.size(); ++i) {
             result.bin_counts[i] *= scalar;
         }
-        result.covariance_matrix *= (scalar * scalar);
+        if (scalar != 0.0) { // Avoid multiplying by zero if covariance matrix is valid
+             result.covariance_matrix *= (scalar * scalar);
+        } else { // If scalar is zero, resulting histogram has zero counts and zero errors
+            result.covariance_matrix.Zero();
+        }
         result.updateRootHistNonConst();
         return result;
     }
 
     Histogram operator/(double scalar) const {
-        if (std::abs(scalar) < 1e-9) throw std::runtime_error("Division by zero scalar for histogram '" + std::string(GetName()) + "'.");
+        if (std::abs(scalar) < 1e-9) throw std::runtime_error("Division by zero or very small scalar for histogram '" + std::string(GetName()) + "'.");
         Histogram result = *this;
         result.SetName(TString::Format("%s_div_scalar", GetName()));
+        double inv_scalar_sq = 1.0 / (scalar * scalar);
         for (size_t i = 0; i < result.bin_counts.size(); ++i) {
             result.bin_counts[i] /= scalar;
         }
-        result.covariance_matrix *= (1.0 / (scalar * scalar));
+        result.covariance_matrix *= inv_scalar_sq;
         result.updateRootHistNonConst();
         return result;
     }
@@ -372,6 +436,6 @@ inline Histogram operator*(double scalar, const Histogram& hist) {
     return hist * scalar;
 }
 
-} // namespace Analysis
+}
 
-#endif // HISTOGRAM_H
+#endif

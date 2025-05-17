@@ -162,6 +162,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named test_histogramgen
+
+# Build rule for target.
+test_histogramgen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_histogramgen
+.PHONY : test_histogramgen
+
+# fast build rule for target.
+test_histogramgen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/build
+.PHONY : test_histogramgen/fast
+
+#=============================================================================
 # Target rules for targets named AnalysisFramework
 
 # Build rule for target.
@@ -248,6 +261,30 @@ test_dataloader.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_dataloader.dir/build.make CMakeFiles/test_dataloader.dir/test_dataloader.cpp.s
 .PHONY : test_dataloader.cpp.s
 
+test_histogramgen.o: test_histogramgen.cpp.o
+.PHONY : test_histogramgen.o
+
+# target to build an object file
+test_histogramgen.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.o
+.PHONY : test_histogramgen.cpp.o
+
+test_histogramgen.i: test_histogramgen.cpp.i
+.PHONY : test_histogramgen.i
+
+# target to preprocess a source file
+test_histogramgen.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.i
+.PHONY : test_histogramgen.cpp.i
+
+test_histogramgen.s: test_histogramgen.cpp.s
+.PHONY : test_histogramgen.s
+
+# target to generate assembly for a file
+test_histogramgen.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/test_histogramgen.cpp.s
+.PHONY : test_histogramgen.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -263,12 +300,16 @@ help:
 	@echo "... AnalysisFrameworkDict"
 	@echo "... AnalysisFramework"
 	@echo "... test_dataloader"
+	@echo "... test_histogramgen"
 	@echo "... AnalysisFrameworkDict.o"
 	@echo "... AnalysisFrameworkDict.i"
 	@echo "... AnalysisFrameworkDict.s"
 	@echo "... test_dataloader.o"
 	@echo "... test_dataloader.i"
 	@echo "... test_dataloader.s"
+	@echo "... test_histogramgen.o"
+	@echo "... test_histogramgen.i"
+	@echo "... test_histogramgen.s"
 .PHONY : help
 
 

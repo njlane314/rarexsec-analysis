@@ -20,13 +20,13 @@ class Binning {
 public:
     TString variable = "";
     std::vector<double> bin_edges;
-    TString label = ""; // Unique key for this binning
+    TString label = ""; 
     TString variable_tex = "";
     TString variable_tex_short = "";
     bool is_log = false;
-    TString selection_query = ""; // Query string from Selection class
-    TString selection_key = "";   // Key for the selection_categories map
-    TString preselection_key = "";// Key for the preselection_categories map
+    TString selection_query = ""; 
+    TString selection_key = "";   
+    TString preselection_key = "";
     TString selection_tex = "";
     TString selection_tex_short = "";
 
@@ -42,7 +42,7 @@ public:
         selection_tex(selTex), selection_tex_short(selTexShort)
     {
         if (this->variable_tex.IsNull()) this->variable_tex = this->variable;
-        if (this->label.IsNull()) this->label = this->variable; // Default label
+        if (this->label.IsNull()) this->label = this->variable; 
         if (bin_edges.size() < 2) {
             throw std::runtime_error("Binning must have at least two bin edges (for one bin).");
         }

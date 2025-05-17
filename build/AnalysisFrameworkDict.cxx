@@ -38,6 +38,7 @@
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h"
+#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h"
 
 // Header files passed via #pragma extra_include
 
@@ -421,6 +422,7 @@ namespace {
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h",
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h",
 "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h",
+"/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h",
 nullptr
     };
     static const char* includePaths[] = {
@@ -450,6 +452,7 @@ namespace AnalysisFramework{class __attribute__((annotate("$clingAutoload$/exp/u
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h"
 #include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h"
+#include "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";

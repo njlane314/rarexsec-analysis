@@ -551,8 +551,55 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
   ../ConfigurationManager.h \
   ../DatasetProcessing.h \
   ../ConfigurationManager.h \
-  ../VariableManager.h
+  ../VariableManager.h \
+  ../HistogramGenerator.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSym.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTSym.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTBase.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTUtils.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSymfwd.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDUtils.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDUtilsfwd.h \
+  ../Binning.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TAxis.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMath.h \
+  ../Selection.h \
+  ../Histogram.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TH1D.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorD.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorT.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixT.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTSparse.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixD.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDfwd.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSym.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSparse.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSparsefwd.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TNamed.h \
+  /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TColor.h
 
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TColor.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixD.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTSparse.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixT.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TH1D.h:
+
+../Selection.h:
+
+../Binning.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDUtilsfwd.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDUtils.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSymfwd.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTSym.h:
 
 ../DatasetProcessing.h:
 
@@ -653,6 +700,8 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TArrayD.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TAttAxis.h:
+
+../Histogram.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TAxis.h:
 
@@ -764,6 +813,8 @@ CMakeFiles/AnalysisFramework.dir/AnalysisFrameworkDict.cxx.o: AnalysisFrameworkD
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/ROOT/RDF/RSampleInfo.hxx:
 
+../HistogramGenerator.h:
+
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/string_view:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TProfile2D.h:
@@ -851,6 +902,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/x86_64-pc-linux-gnu/bits/c++allocator.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/meta/void_t.hpp:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTUtils.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/cwchar:
 
@@ -973,6 +1026,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/tr1/riemann_zeta.tcc:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/iterators/json_reverse_iterator.hpp:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSym.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/stl_deque.h:
 
@@ -1224,6 +1279,8 @@ AnalysisFrameworkDict.cxx:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/strtok.h:
 
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDfwd.h:
+
 /usr/include/bits/waitstatus.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/locale_facets.tcc:
@@ -1324,7 +1381,11 @@ AnalysisFrameworkDict.cxx:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/locale_facets.h:
 
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorT.h:
+
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/streambuf_iterator.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixTBase.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/adl_serializer.hpp:
 
@@ -1353,6 +1414,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/THashTable.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TInterpreter.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSparse.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TROOT.h:
 
@@ -1383,6 +1446,8 @@ AnalysisFrameworkDict.cxx:
 /usr/include/ctype.h:
 
 ../DatasetLoader.h:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TVectorD.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/fs_ops.h:
 
@@ -1489,6 +1554,8 @@ AnalysisFrameworkDict.cxx:
 /cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/include/c++/9.3.0/bits/std_mutex.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/detail/iterators/iteration_proxy.hpp:
+
+/cvmfs/larsoft.opensciencegrid.org/products/root/v6_28_12/Linux64bit+3.10-2.17-e20-p3915-prof/include/TMatrixDSparsefwd.h:
 
 /cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include/nlohmann/byte_container_with_subtype.hpp:
 

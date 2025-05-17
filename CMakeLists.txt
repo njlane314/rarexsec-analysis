@@ -30,6 +30,7 @@ set(DICTIONARY_INPUT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/DatasetLoader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/VariableManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HistogramGenerator.h
 )
 
 # Generate ROOT dictionary with a unique name
@@ -86,3 +87,20 @@ target_link_libraries(test_dataloader
 
 # Install the executable
 install(TARGETS test_dataloader DESTINATION bin)
+
+add_executable(test_histogramgen test_histogramgen.cpp) 
+
+target_include_directories(test_histogramgen
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${ROOT_INCLUDE_DIRS}
+        ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
+)
+
+target_link_libraries(test_histogramgen
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+)
+
+install(TARGETS test_histogramgen DESTINATION bin)

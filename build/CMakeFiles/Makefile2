@@ -63,6 +63,7 @@ CMAKE_BINARY_DIR = /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/test_histogramgen.dir/all
 all: CMakeFiles/AnalysisFramework.dir/all
 all: CMakeFiles/test_dataloader.dir/all
 .PHONY : all
@@ -72,10 +73,37 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/test_histogramgen.dir/clean
 clean: CMakeFiles/AnalysisFramework.dir/clean
 clean: CMakeFiles/test_dataloader.dir/clean
 clean: CMakeFiles/AnalysisFrameworkDict.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_histogramgen.dir
+
+# All Build rule for target.
+CMakeFiles/test_histogramgen.dir/all: CMakeFiles/AnalysisFramework.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles --progress-num=7,8 "Built target test_histogramgen"
+.PHONY : CMakeFiles/test_histogramgen.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_histogramgen.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_histogramgen.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_histogramgen.dir/rule
+
+# Convenience name for target.
+test_histogramgen: CMakeFiles/test_histogramgen.dir/rule
+.PHONY : test_histogramgen
+
+# clean rule for target.
+CMakeFiles/test_histogramgen.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_histogramgen.dir/build.make CMakeFiles/test_histogramgen.dir/clean
+.PHONY : CMakeFiles/test_histogramgen.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/AnalysisFramework.dir

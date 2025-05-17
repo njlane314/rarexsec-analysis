@@ -12,6 +12,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/DatasetLoader.h" "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/AnalysisFrameworkDict.cxx"
   "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/ConfigurationManager.h" "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/AnalysisFrameworkDict.cxx"
   "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/VariableManager.h" "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/AnalysisFrameworkDict.cxx"
+  "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/HistogramGenerator.h" "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/build/AnalysisFrameworkDict.cxx"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
