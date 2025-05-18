@@ -56,7 +56,7 @@ int main() {
         std::cout << "Base Binning selection query set to: \"" << base_binning.selection_query.Data() << "\"" << std::endl;
         std::cout << "Base Binning selection TeX set to: \"" << base_binning.selection_tex.Data() << "\"" << std::endl;
 
-        AnalysisFramework::EventCategories event_categories_manager;
+        AnalysisFramework::EventCategory event_categories_manager;
 
         // Create output ROOT file
         TFile* output_file = new TFile("output_histograms_test.root", "RECREATE");

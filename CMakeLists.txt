@@ -20,17 +20,16 @@ endif()
 
 # Define public headers
 set(ANALYSIS_FRAMEWORK_PUBLIC_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/SampleLoader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/VariableManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DataLoader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RunHistGenerator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RunPlotter.h
 )
 
 # Define headers for dictionary generation
 set(DICTIONARY_INPUT_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/SampleLoader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/VariableManager.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/HistogramGenerator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DataLoader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RunHistGenerator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RunPlotter.h
 )
 
 # Generate ROOT dictionary with a unique name
@@ -67,40 +66,25 @@ install(
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AnalysisFrameworkDict_rdict.pcm DESTINATION lib)
 
-# Add executable
-add_executable(test_sampleloader test_sampleloader.cpp)
 
-# Set include directories for the executable
-target_include_directories(test_sampleloader
+
+
+
+
+add_executable(test_plotting test_plotting.cpp) 
+
+target_include_directories(test_plotting
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${ROOT_INCLUDE_DIRS}
         ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
 )
 
-# Link the executable to the library
-target_link_libraries(test_sampleloader
+target_link_libraries(test_plotting
     PRIVATE
         AnalysisFramework
         ${ROOT_LIBRARIES}
 )
 
-# Install the executable
-install(TARGETS test_sampleloader DESTINATION bin)
+install(TARGETS test_plotting DESTINATION bin)
 
-add_executable(test_histogram test_histogram.cpp) 
-
-target_include_directories(test_histogram
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${ROOT_INCLUDE_DIRS}
-        ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
-)
-
-target_link_libraries(test_histogram
-    PRIVATE
-        AnalysisFramework
-        ${ROOT_LIBRARIES}
-)
-
-install(TARGETS test_histogram DESTINATION bin)

@@ -322,11 +322,10 @@ public:
         for(int i=0; i<n; ++i) a[i] = 1.0;
         
         TMatrixDSym temp_cov = covariance_matrix;
-        TVectorD cov_a(n); // Ensure cov_a is sized correctly
-        if (temp_cov.GetNrows() == n && temp_cov.GetNcols() == n) { // Basic check
+        TVectorD cov_a(n); 
+        if (temp_cov.GetNrows() == n && temp_cov.GetNcols() == n) { 
             cov_a = temp_cov * a;
         } else {
-            // Handle error or return 0 if matrix dimensions are wrong
             return 0.0;
         }
         double variance_sum = a * cov_a;
@@ -381,9 +380,9 @@ public:
         for (size_t i = 0; i < result.bin_counts.size(); ++i) {
             result.bin_counts[i] *= scalar;
         }
-        if (scalar != 0.0) { // Avoid multiplying by zero if covariance matrix is valid
+        if (scalar != 0.0) { 
              result.covariance_matrix *= (scalar * scalar);
-        } else { // If scalar is zero, resulting histogram has zero counts and zero errors
+        } else { 
             result.covariance_matrix.Zero();
         }
         result.updateRootHistNonConst();

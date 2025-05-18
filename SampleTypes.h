@@ -8,86 +8,76 @@
 
 namespace AnalysisFramework {
 
-// --- SampleType Definitions ---
-
 enum class SampleType : unsigned int {
-    kUnknown = 0, // Default or unspecified file type
+    kUnknown = 0, 
 
-    // On-beam data types
-    kDataBNB,       // BNB Data 
-    kDataNuMIFHC,   // NuMI FHC Data 
-    kDataNuMIRHC,   // NuMI RHC Data 
+    kDataBNB,       
+    kDataNuMIFHC,   
+    kDataNuMIRHC,  
 
-    // Beam-off / External background types
-    kEXTBNB,        // BNB EXT Data 
-    kEXTNuMIFHC,    // NuMI FHC EXT Data 
-    kEXTNuMIRHC,    // NuMI RHC EXT Data 
+    kEXTBNB,         
+    kEXTNuMIFHC,    
+    kEXTNuMIRHC,    
 
-    // Inclusive Monte Carlo simulation types 
-    kInclusiveBNB,      // BNB Inclusive MC
-    kInclusiveNuMIFHC,  // NuMI FHC Inclusive MC
-    kInclusiveNuMIRHC,  // NuMI RHC Inclusive MC
+    kInclusiveBNB,     
+    kInclusiveNuMIFHC,  
+    kInclusiveNuMIRHC,  
 
-    // Specific exclusive Monte Carlo sample for strangeness production
-    kStrangenessBNB,     // BNB Strangeness MC
-    kStrangenessNuMIFHC, // NuMI FHC Strangeness MC 
-    kStrangenessNuMIRHC, // NuMI RHC Strangeness MC 
+    kStrangenessBNB,     
+    kStrangenessNuMIFHC, 
+    kStrangenessNuMIRHC, 
 
-    // Monte Carlo for dirt (interactions outside cryostat)
-    kDirtBNB,       // BNB Dirt MC
-    kDirtNuMIFHC,   // NuMI FHC Dirt MC
-    kDirtNuMIRHC,   // NuMI RHC Dirt MC
+    kDirtBNB,      
+    kDirtNuMIFHC,  
+    kDirtNuMIRHC,   
 
-    // Detector variation Monte Carlo sample_props
-    kDetVarCV,                  // Central Value 
-    kDetVarLYAttenuation,       // Light Yield Attenuation
-    kDetVarLYDown,              // Light Yield Down
-    kDetVarLYRayleigh,          // Light Yield Rayleigh Scattering
-    kDetVarRecomb2,             // Recombination (Birks Model Param R)
-    kDetVarSCE,                 // Space Charge Effects
-    kDetVarWireModX,            // Wire Modification X-Plane Scale
-    kDetVarWireModYZ,           // Wire Modification YZ-Plane Scale
-    kDetVarWireModAngleXZ,      // Wire Modification Angle XZ
-    kDetVarWireModAngleYZ       // Wire Modification Angle YZ
+    kDetVarCV,                 
+    kDetVarLYAttenuation,      
+    kDetVarLYDown,              
+    kDetVarLYRayleigh,        
+    kDetVarRecomb2,             
+    kDetVarSCE,                
+    kDetVarWireModX,            
+    kDetVarWireModYZ,          
+    kDetVarWireModAngleXZ,    
+    kDetVarWireModAngleYZ      
 };
 
-// --- SampleType Helper Functions ---
-
-constexpr bool isSampleData(SampleType type) {
+constexpr bool is_sample_data(SampleType type) {
     return type == SampleType::kDataBNB ||
            type == SampleType::kDataNuMIFHC ||
            type == SampleType::kDataNuMIRHC;
 }
 
-constexpr bool isSampleEXT(SampleType type) {
+constexpr bool is_sample_ext(SampleType type) {
     return type == SampleType::kEXTBNB ||
            type == SampleType::kEXTNuMIFHC ||
            type == SampleType::kEXTNuMIRHC;
 }
 
-constexpr bool isSampleInclusive(SampleType type) {
+constexpr bool is_sample_inclusive(SampleType type) {
     return type == SampleType::kInclusiveBNB ||
            type == SampleType::kInclusiveNuMIFHC ||
            type == SampleType::kInclusiveNuMIRHC;
 }
 
-constexpr bool isSampleStrange(SampleType type) {
+constexpr bool is_sample_strange(SampleType type) {
     return type == SampleType::kStrangenessBNB ||
            type == SampleType::kStrangenessNuMIFHC ||
            type == SampleType::kStrangenessNuMIRHC;
 }
 
-constexpr bool isSampleDirt(SampleType type) {
+constexpr bool is_sample_dirt(SampleType type) {
     return type == SampleType::kDirtBNB ||
            type == SampleType::kDirtNuMIFHC ||
            type == SampleType::kDirtNuMIRHC;
 }
 
-constexpr bool isSampleMC(SampleType type) {
-    return isSampleInclusive(type) || isSampleStrange(type) || isSampleDirt(type);
+constexpr bool is_sample_mc(SampleType type) {
+    return is_sample_inclusive(type) || is_sample_strange(type) || is_sample_dirt(type);
 }
 
-constexpr bool isSampleDetVar(SampleType type) {
+constexpr bool is_sample_detvar(SampleType type) {
     return static_cast<unsigned int>(type) >= static_cast<unsigned int>(SampleType::kDetVarCV) &&
            static_cast<unsigned int>(type) <= static_cast<unsigned int>(SampleType::kDetVarWireModAngleYZ);
 }
