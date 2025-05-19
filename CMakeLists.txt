@@ -88,3 +88,25 @@ target_link_libraries(test_plotting
 
 install(TARGETS test_plotting DESTINATION bin)
 
+
+
+
+
+
+add_executable(test_datasaver test_datasaver.cpp) 
+
+target_include_directories(test_datasaver
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${ROOT_INCLUDE_DIRS}
+        ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
+)
+
+target_link_libraries(test_datasaver
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+)
+
+install(TARGETS test_datasaver DESTINATION bin)
+
