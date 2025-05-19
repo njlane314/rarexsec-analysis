@@ -14,7 +14,7 @@ struct VariableOptions {
     bool load_reco_track_info = false;
     bool load_truth_event_info = false;
     bool load_weights_and_systematics = false;
-    bool load_strangeness_weights = false;
+    bool load_signal_weights = false;
 };
 
 class VariableManager {
@@ -52,7 +52,7 @@ public:
 
         multi_universe_weights_ = {"weightsGenie", "weightsFlux", "weightsReint", "weightsPPFX"};
 
-        strangeness_weights = {};
+        signal_weights = {};
     }
 
     std::vector<std::string> GetVariables(const VariableOptions& options, AnalysisFramework::SampleType sample_type) const {
@@ -74,8 +74,8 @@ public:
             vars_set.insert(systematic_knob_weights_.begin(), systematic_knob_weights_.end());
             vars_set.insert(multi_universe_weights_.begin(), multi_universe_weights_.end());
         }
-        if (options.load_strangeness_weights && AnalysisFramework::is_sample_strange(sample_type)) {
-            vars_set.insert(strangeness_weights.begin(), strangeness_weights.end());
+        if (options.load_signal_weights && AnalysisFramework::is_sample_strange(sample_type)) {
+            vars_set.insert(signal_weights.begin(), signal_weights.end());
         }
 
         return std::vector<std::string>(vars_set.begin(), vars_set.end());
@@ -90,7 +90,7 @@ private:
     std::vector<std::string> nominal_mc_weights_;
     std::vector<std::string> systematic_knob_weights_;
     std::vector<std::string> multi_universe_weights_;
-    std::vector<std::string> strangeness_weights;
+    std::vector<std::string> signal_weights;
 };
 
 }

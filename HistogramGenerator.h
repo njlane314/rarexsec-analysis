@@ -28,7 +28,7 @@ public:
         const char* var_tex_cstr = binning_def.variable_tex.IsNull() ? var_name_cstr : binning_def.variable_tex.Data();
         const char* label_cstr = binning_def.label.IsNull() ? var_name_cstr : binning_def.label.Data();
 
-        ROOT::RDF::TH1DModel model = df.Histo1D(
+        auto hist_ptr = df.Histo1D(
             {var_name_cstr, 
              TString::Format("%s;%s;Events", label_cstr, var_tex_cstr), 
              static_cast<int>(binning_def.bin_edges.size()) - 1,
@@ -37,7 +37,7 @@ public:
             weight_column_name.Data()       
         );
 
-        TH1D th1d_hist = model.GetValue();
+        TH1D th1d_hist = *hist_ptr;
 
         std::vector<double> bin_counts(th1d_hist.GetNbinsX());
         TMatrixDSym covariance_matrix(th1d_hist.GetNbinsX()); 

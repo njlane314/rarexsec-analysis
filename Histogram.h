@@ -19,7 +19,7 @@
 
 #include "Binning.h"
 
-namespace Analysis {
+namespace AnalysisFramework {
 
 class Histogram : public TNamed {
 public:
@@ -122,7 +122,7 @@ private:
 public:
     Histogram() : TNamed("default_hist", "Default Histogram"), fRootHist(nullptr) {}
 
-    Histogram(const Binning& binDef, const std::vector<double>& counts, const std::vector<double>& uncertainties,
+    Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const std::vector<double>& uncertainties,
               TString name = "hist", TString title = "Histogram",
               TString plotColor = "kBlack", int plotHatch = 0, TString texStr = ""):
         TNamed(name, title), binning_def(binDef), bin_counts(counts),
@@ -146,7 +146,7 @@ public:
         updateRootHistNonConst();
     }
 
-    Histogram(const Binning& binDef, const std::vector<double>& counts, const TMatrixDSym& covMatrix,
+    Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const TMatrixDSym& covMatrix,
               TString name = "hist", TString title = "Histogram",
               TString plotColor = "kBlack", int plotHatch = 0, TString texStr = ""):
         TNamed(name, title), binning_def(binDef), bin_counts(counts), covariance_matrix(covMatrix),
@@ -165,7 +165,7 @@ public:
     }
 
     Histogram(const Histogram& other) :
-        TNamed(other),
+        TNamed(static_cast<const TNamed&>(other)),
         binning_def(other.binning_def),
         bin_counts(other.bin_counts),
         covariance_matrix(other.covariance_matrix),
@@ -183,7 +183,7 @@ public:
 
     Histogram& operator=(const Histogram& other) {
         if (this == &other) return *this;
-        TNamed::operator=(other);
+        TNamed::operator=(static_cast<const TNamed&>(other));
         binning_def = other.binning_def;
         bin_counts = other.bin_counts;
         if (covariance_matrix.GetNrows() != other.covariance_matrix.GetNrows() || covariance_matrix.GetNcols() != other.covariance_matrix.GetNcols()) {

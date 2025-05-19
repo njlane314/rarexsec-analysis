@@ -30,17 +30,17 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = VariableOptions{
+            .variable_options = AnalysisFramework::VariableOptions{
                 .load_reco_event_info = true,
                 .load_truth_event_info = true,
                 .load_weights_and_systematics = false,
-                .load_intrinsic_strangeness_weights = false
+                .load_signal_weights = false
             }
         });
 
-        AnalysisFramework::Binning binning_numucc = AnalysisFramework::Binning::from_config(
+        AnalysisFramework::Binning binning_numucc = AnalysisFramework::Binning::fromConfig(
             "nu_e", 10, {0., 10.}, "Neutrino Energy [GeV]"
-        ).set_selection("NUMU", "NUMU_CC").set_label("NUMU_CC");
+        ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
 
         AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);
         AnalysisFramework::RunPlotter plotter(hist_gen);

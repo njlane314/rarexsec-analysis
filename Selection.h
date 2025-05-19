@@ -9,7 +9,7 @@
 #include <sstream>   
 #include "TString.h"
 
-namespace Analysis {
+namespace AnalysisFramework {
 
 struct SelectionDetails {
     TString query;

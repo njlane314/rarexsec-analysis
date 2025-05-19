@@ -63,7 +63,7 @@ public:
             variable_manager_ = VariableManager();
         }
 
-    using DataFramesDict = std::map<std::string, std::vector<ROOT::RDF::RNode>>;
+    using DataFramesDict = std::map<std::string, std::pair<SampleType, std::vector<ROOT::RDF::RNode>>>;
 
     struct Parameters {
         std::string beam_key;
@@ -79,8 +79,16 @@ public:
         for (const auto& run_key : params.runs_to_load) {
             const auto& run_config = config_manager_.GetRunConfig(params.beam_key, run_key);
             auto [run_dataframes, run_pot] = this->loadSamples(run_config, params.variable_options, params.blinded);
-            for (const auto& [sample_key, rnode_weight] : run_dataframes) {
-                dataframes_dict[sample_key].push_back(rnode_weight);
+            for (const auto& [sample_key, sample_type_df_pair] : run_dataframes) {
+                auto [sample_type, df] = sample_type_df_pair;
+                if (dataframes_dict.find(sample_key) == dataframes_dict.end()) {
+                    dataframes_dict[sample_key] = {sample_type, {df}};
+                } else {
+                    if (dataframes_dict[sample_key].first != sample_type) {
+                        throw std::runtime_error("Inconsistent SampleType for sample " + sample_key);
+                    }
+                    dataframes_dict[sample_key].second.push_back(df);
+                }
             }
             data_pot += run_pot;
         }
@@ -150,26 +158,34 @@ private:
                     const auto& sample_props = sample_pair.second;
                     std::string file_path = base_directory + "/" + sample_props.relative_path;
                     ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
-                    sample_rdf = this->processDataFrame(sample_rdf, &sample_props, variable_options);
+                    sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                     sample_rdf = sample_rdf.Define("event_weight", [](){ return 1.0; });
-                    run_dataframes[sample_key] = {sample_props.type, sample_rdf};
+                    run_dataframes.emplace(
+                        std::piecewise_construct,
+                        std::forward_as_tuple(sample_key),
+                        std::forward_as_tuple(sample_props.type, std::move(sample_rdf))
+                    );
                 }
             }
         }
 
         for (const auto& sample_pair : run_config.sample_props) {
-            if (is_sample_external(sample_pair.second.type) && !sample_pair.first.empty()) {
+            if (is_sample_ext(sample_pair.second.type) && !sample_pair.first.empty()) {
                 const std::string& sample_key = sample_pair.first;
                 const auto& sample_props = sample_pair.second;
                 std::string file_path = base_directory + "/" + sample_props.relative_path;
                 ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
-                sample_rdf = this->processDataFrame(sample_rdf, &sample_props, variable_options);
+                sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                 double event_weight = 1.0;
                 if (sample_props.triggers > 0 && run_triggers > 0) {
                     event_weight = static_cast<double>(run_triggers) / sample_props.triggers;
                 }
                 sample_rdf = sample_rdf.Define("event_weight", [event_weight](){ return event_weight; });
-                run_dataframes[sample_key] = {sample_props.type, sample_rdf};
+                run_dataframes.emplace(
+                    std::piecewise_construct,
+                    std::forward_as_tuple(sample_key),
+                    std::forward_as_tuple(sample_props.type, std::move(sample_rdf))
+                );
             }
         }
 
@@ -179,7 +195,7 @@ private:
                 const auto& sample_props = sample_pair.second;
                 std::string file_path = base_directory + "/" + sample_props.relative_path;
                 ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
-                sample_rdf = this->processDataFrame(sample_rdf, &sample_props, variable_options);
+                sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                 if (!sample_props.truth_filter.empty()) {
                     sample_rdf = sample_rdf.Filter(sample_props.truth_filter);
                 }
@@ -192,16 +208,20 @@ private:
                         sample_rdf = sample_rdf.Filter(exclusion_filter);
                     }
                 }
-                double event_weight = (mc_props.pot > 0 && data_pot > 0) ? (data_pot / mc_props.pot) : 1.0;
+                double event_weight = (sample_props.pot > 0 && run_pot > 0) ? (run_pot / sample_props.pot) : 1.0;
                 sample_rdf = sample_rdf.Define("event_weight", [event_weight](){ return event_weight; });
-                run_dataframes[sample_key] = {sample_props.type, sample_rdf};
+                run_dataframes.emplace(
+                    std::piecewise_construct,
+                    std::forward_as_tuple(sample_key),
+                    std::forward_as_tuple(sample_props.type, std::move(sample_rdf))
+                );
             }
         }
 
         return {run_dataframes, run_pot};
     }
 
-    ROOT::RDF::RNode processEventCategories(ROOT::RDF::RNode df, const SampleType& sample_type) {
+    ROOT::RDF::RNode processEventCategories(ROOT::RDF::RNode df, const SampleType& sample_type) const {
         auto df_with_defs = df;
         bool is_mc = is_sample_mc(sample_type);
 
@@ -247,9 +267,9 @@ private:
                 int cat = 9999;
                 if (is_sample_data(sample_type)) {
                     cat = 0;
-                } else if (is_sample_external(sample_type)) {
+                } else if (is_sample_ext(sample_type)) {
                     cat = 1;
-                } else if (isSampleDirt(sample_type)) {
+                } else if (is_sample_dirt(sample_type)) {
                     cat = 2;
                 } else if (is_sample_mc(sample_type)) {
                     bool isnumu = std::abs(nu_pdg) == 14;
@@ -289,7 +309,7 @@ private:
         return df_with_event_category.Alias("event_category", "event_category_val");
     }
 
-    ROOT::RDF::RNode processNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) {
+    ROOT::RDF::RNode processNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) const {
         auto df_mu_mask = df.Define("muon_candidate_selection_mask_vec",
             [](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
             const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist, const ROOT::RVec<int>& gen) {

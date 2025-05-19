@@ -12,6 +12,7 @@
 #include "TString.h"
 #include "TAxis.h"
 #include "TMath.h"
+
 #include "Selection.h"
 
 namespace AnalysisFramework {
@@ -126,9 +127,9 @@ public:
     Binning& setSelection(const TString& preSelKey, const TString& selKey) {
         selection_key = selKey;
         preselection_key = preSelKey;
-        selection_query = Selection::getSelectionQuery(selKey, preSelKey);
-        selection_tex = Selection::getSelectionTitle(selKey, preSelKey, false, false);
-        selection_tex_short = Selection::getSelectionTitle(selKey, preSelKey, false, true);
+        selection_query = AnalysisFramework::Selection::getSelectionQuery(selKey, preSelKey);
+        selection_tex = AnalysisFramework::Selection::getSelectionTitle(selKey, preSelKey, false, false);
+        selection_tex_short = AnalysisFramework::Selection::getSelectionTitle(selKey, preSelKey, false, true);
         return *this;
     }
 

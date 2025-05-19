@@ -4,19 +4,19 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <memory> 
+#include <memory>
 #include <iostream>
 
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TString.h"
-#include "THStack.h" 
-#include "TLegend.h" 
-#include "TColor.h"  
+#include "THStack.h"
+#include "TLegend.h"
+#include "TColor.h"
 
-#include "RunHistGenerator.h" 
-#include "Histogram.h"       
-#include "EventCategories.h" 
+#include "RunHistGenerator.h"
+#include "Histogram.h"
+#include "EventCategory.h"
 
 namespace AnalysisFramework {
 
@@ -26,42 +26,52 @@ public:
         : run_hist_generator_(run_hist_generator) {}
 
     void Plot(
-        TCanvas* canvas,
         const std::string& category_column = "event_category",
-        const std::string& plot_title = "" 
+        const std::string& plot_title = "",
+        TCanvas* canvas = nullptr
     ) const {
-        std::vector<AnalysisFramework::Histogram> mc_hists =
-            run_hist_generator_.GetMonteCarloHists(category_column.c_str()); 
+        // Create a canvas if none is provided
+        std::unique_ptr<TCanvas> local_canvas;
+        if (!canvas) {
+            local_canvas = std::make_unique<TCanvas>("canvas", "Canvas Title", 800, 600);
+            canvas = local_canvas.get();
+        }
 
-        if (mc_hists.empty() )
+        auto mc_hists_map = run_hist_generator_.GetMonteCarloHists(category_column.c_str());
+        std::vector<AnalysisFramework::Histogram> mc_hists;
+        for (const auto& pair : mc_hists_map) {
+            mc_hists.push_back(pair.second);
+        }
+
+        if (mc_hists.empty())
             return;
-        
+
         this->PlotStackedHistogram(canvas, mc_hists, plot_title);
     }
 
-private:                  
-    const RunHistGenerator& run_hist_generator_;  
+private:
+    const RunHistGenerator& run_hist_generator_;
 
     void PlotStackedHistogram(
         TCanvas* canvas,
         const std::vector<AnalysisFramework::Histogram>& hist_vec,
         const std::string& plot_title
     ) const {
-        canvas->cd(); 
+        canvas->cd();
 
         auto hs = std::make_unique<THStack>("", plot_title.c_str());
 
-        std::string common_x_axis_title = "X-axis Title"; 
-        std::string common_y_axis_title = "Events";       
+        std::string common_x_axis_title = "X-axis Title";
+        std::string common_y_axis_title = "Events";
         bool first_hist = true;
 
         for (const auto& an_hist : hist_vec) {
-            TH1* root_hist = an_hist.getROOTHist(); 
-            if (!root_hist) 
+            TH1* root_hist = an_hist.getRootHistCopy();
+            if (!root_hist)
                 continue;
-        
-            root_hist->SetLineColor(kBlack); 
-            hs->Add(root_hist); 
+
+            root_hist->SetLineColor(kBlack);
+            hs->Add(root_hist);
 
             if (first_hist) {
                 if (root_hist->GetXaxis()->GetTitle() && strlen(root_hist->GetXaxis()->GetTitle()) > 0) {
@@ -69,34 +79,34 @@ private:
                 }
                 if (root_hist->GetYaxis()->GetTitle() && strlen(root_hist->GetYaxis()->GetTitle()) > 0) {
                     common_y_axis_title = root_hist->GetYaxis()->GetTitle();
-                } 
+                }
                 first_hist = false;
             }
         }
-        
-        if (hs->GetHists() == nullptr || hs->GetHists()->GetSize() == 0) 
+
+        if (hs->GetHists() == nullptr || hs->GetHists()->GetSize() == 0)
             return;
 
-        hs->Draw("HIST"); 
+        hs->Draw("HIST");
 
-        if (hs->GetHistogram()) { 
+        if (hs->GetHistogram()) {
             hs->GetXaxis()->SetTitle(common_x_axis_title.c_str());
             hs->GetYaxis()->SetTitle(common_y_axis_title.c_str());
         }
-        
-        if (hs->GetMaximum() > 0) { 
+
+        if (hs->GetMaximum() > 0) {
             hs->SetMaximum(hs->GetMaximum() * 1.25);
-        } else if (hs->GetMaximum() == 0 && hs->GetMinimum() == 0) { 
-             hs->SetMaximum(1.0); 
+        } else if (hs->GetMaximum() == 0 && hs->GetMinimum() == 0) {
+            hs->SetMaximum(1.0);
         }
 
-        canvas->Modified(); 
-        canvas->Update();   
+        canvas->Modified();
+        canvas->Update();
 
         std::string base_filename;
         if (!plot_title.empty()) {
             base_filename = plot_title;
-        } else if (canvas->GetName() && strlen(canvas->GetName()) > 0 && strcmp(canvas->GetName(), "Canvas_1") != 0 && strcmp(canvas->GetName(), "c1") != 0 ) {
+        } else if (canvas->GetName() && strlen(canvas->GetName()) > 0 && strcmp(canvas->GetName(), "Canvas_1") != 0 && strcmp(canvas->GetName(), "c1") != 0) {
             base_filename = canvas->GetName();
         } else {
             base_filename = "stacked_plot";
@@ -104,7 +114,7 @@ private:
 
         for (char &c : base_filename) {
             if (c == ' ' || c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|') {
-                c = '_'; 
+                c = '_';
             }
         }
         std::string output_filename_str = base_filename + ".png";
@@ -113,6 +123,6 @@ private:
     }
 };
 
-} 
+} // namespace AnalysisFramework
 
 #endif // RUN_PLOTTER_H
