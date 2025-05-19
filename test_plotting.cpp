@@ -2,6 +2,7 @@
 #include "Binning.h"
 #include "RunHistGenerator.h"
 #include "RunPlotter.h"
+#include "SampleTypes.h" 
 
 #include "TFile.h"
 #include "TH1.h"
@@ -39,12 +40,33 @@ int main() {
         });
 
         AnalysisFramework::Binning binning_numucc = AnalysisFramework::Binning::fromConfig(
-            "nu_e", 10, {0., 10.}, "", "Neutrino Energy [GeV]"
+            "selected_muon_length", 70, {0., 700.}, "", "Selected Muon Length [cm]"
         ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
 
         AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);
         AnalysisFramework::RunPlotter plotter(hist_gen);
         plotter.Plot("event_category", "");
+
+        const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
+        auto& strangeness_rnodes = dataframes_dict[strangeness_key].second;
+        if (strangeness_rnodes.empty()) {
+            throw std::runtime_error("No RNodes found for sample: " + strangeness_key);
+        }
+        ROOT::RDF::RNode df = strangeness_rnodes[0];
+
+        std::map<std::string, std::pair<AnalysisFramework::SampleType, std::vector<ROOT::RDF::RNode>>> single_sample_map = {
+            {strangeness_key, {AnalysisFramework::SampleType::kStrangenessNuMIFHC, {df}}}
+        };
+
+        AnalysisFramework::Binning binning_nu_energy = AnalysisFramework::Binning::fromConfig(
+            "nu_e", 50, {0., 10.}, "", "Neutrino Energy [GeV]"
+        ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
+
+        AnalysisFramework::RunHistGenerator hist_gen_single(single_sample_map, data_pot, binning_nu_energy);
+
+        AnalysisFramework::RunPlotter single_plotter(hist_gen_single);
+        single_plotter.Plot("event_category", "");
+
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
         return 1;

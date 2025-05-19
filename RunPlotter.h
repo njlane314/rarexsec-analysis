@@ -91,6 +91,10 @@ private:
 
         style->SetMarkerSize(1.0);
 
+        style->SetCanvasColor(0);
+        style->SetPadColor(0);
+        style->SetFrameFillColor(0);
+
         gROOT->SetStyle("ConsistentStyle");
         gROOT->ForceStyle();
     }
@@ -152,7 +156,6 @@ private:
                 continue;
             }
 
-            // Ensure errors are set
             bool has_errors = false;
             for (int i = 1; i <= root_hist->GetNbinsX(); ++i) {
                 if (root_hist->GetBinError(i) > 0) {
@@ -230,7 +233,7 @@ private:
         }
         std::string output_filename_str = base_filename + ".png";
         canvas->SaveAs(output_filename_str.c_str());
-        delete total_hist;  // Delete after saving
+        delete total_hist;  
         std::cout << "Plot saved to " << output_filename_str << std::endl;
     }
 };

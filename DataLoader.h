@@ -272,34 +272,37 @@ private:
                 } else if (is_sample_dirt(sample_type)) {
                     cat = 2;
                 } else if (is_sample_mc(sample_type)) {
-                    bool isnumu = std::abs(nu_pdg) == 14;
-                    bool isnue = std::abs(nu_pdg) == 12;
+                    bool isnumu = (std::abs(nu_pdg) == 14);
+                    bool isnue = (std::abs(nu_pdg) == 12);
                     bool iscc = (ccnc == 0);
                     bool isnc = (ccnc == 1);
 
-                    if (str_mult > 0) {
-                        if (isnumu && iscc) cat = (str_mult == 1) ? 10 : 11;
-                        else if (isnue && iscc) cat = (str_mult == 1) ? 12 : 13;
-                        else if (isnc) cat = (str_mult == 1) ? 14 : 15;
-                        else cat = 19;
-                    } else {
-                        if (isnumu) {
-                            if (iscc) {
-                                if (npi_char_true == 0) { if (npr_true == 0) cat = 100; else if (npr_true == 1) cat = 101; else cat = 102; }
-                                else if (npi_char_true == 1) { if (npr_true == 0) cat = 103; else if (npr_true == 1) cat = 104; else cat = 105; }
-                                else cat = 106;
-                            } else { 
-                                if (npi_char_true == 0) { if (npr_true == 0) cat = 110; else if (npr_true == 1) cat = 111; else cat = 112; }
-                                else if (npi_char_true == 1) { if (npr_true == 0) cat = 113; else if (npr_true == 1) cat = 114; else cat = 115; }
-                                else cat = 116;
+                    if (isnc) {
+                        cat = 20;  // All NC events
+                    } else if (isnue && iscc) {
+                        cat = 21;  // All nu_e CC events
+                    } else if (isnumu && iscc) {
+                        if (str_mult == 1) {
+                            cat = 10;  // nu_mu CC, str=1
+                        } else if (str_mult == 2) {
+                            cat = 11;  // nu_mu CC, str>1
+                        } else if (str_mult == 0) {
+                            if (npi_char_true == 0) {
+                                if (npr_true == 0) cat = 100;
+                                else if (npr_true == 1) cat = 101;
+                                else cat = 102;
+                            } else if (npi_char_true == 1) {
+                                if (npr_true == 0) cat = 103;
+                                else if (npr_true == 1) cat = 104;
+                                else cat = 105;
+                            } else {
+                                cat = 106;
                             }
-                        } else if (isnue) {
-                            if (iscc) {
-                                if (npi_char_true == 0) { if (npr_true == 0) cat = 200; else if (npr_true == 1) cat = 201; else cat = 202; }
-                                else if (npi_char_true == 1) { if (npr_true == 0) cat = 203; else if (npr_true == 1) cat = 204; else cat = 205; }
-                                else cat = 206;
-                            } else cat = 210; 
-                        } else cat = 998; 
+                        } else {
+                            cat = 998;  // Unexpected str_mult value
+                        }
+                    } else {
+                        cat = 998;  // Other MC events
                     }
                 }
                 return cat;

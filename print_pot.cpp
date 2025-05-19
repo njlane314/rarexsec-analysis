@@ -27,6 +27,7 @@ bool print_pot(const std::string& file_path) {
     Long64_t n_entries = subrun_tree->GetEntries();
     for (Long64_t i = 0; i < n_entries; ++i) {
         subrun_tree->GetEntry(i);
+        std::cout << pot << std::endl;
         total_pot += static_cast<double>(pot);
     }
     std::cout << total_pot << std::endl;

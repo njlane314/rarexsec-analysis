@@ -27,6 +27,7 @@ struct RunConfiguration {
     std::map<std::string, SampleProperties> sample_props;
 };
 
+
 class ConfigurationManager {
 public:
     ConfigurationManager(std::string file_paths = "/exp/uboone/data/users/nlane/analysis/") : ntuple_base_directory_(std::move(file_paths)) {
@@ -51,8 +52,17 @@ public:
                         "(mcf_strangeness > 0)",                                      // truth_filter: Example truth selection for MC (e.g., events with true strangeness).
                         {},                                                           // exclusion_truth_filters: List of sample_keys to exclude.
                         SampleType::kStrangenessNuMIFHC,                              // type: Enum for this specific MC type. Ensure this is defined.
-                        5.54369e+20,                                                  // pot: Equivalent POT for this MC sample. Adjust as needed.
+                        1.04271e+22,                                                  // pot: Equivalent POT for this MC sample. Adjust as needed.
                         0                                                             // triggers: Typically 0 for MC scaled by POT.
+                    }},
+                    {"numi_fhc_overlay_inclusive_genie_run1", {
+                        "numi_fhc_overlay_inclusive_genie_run1",
+                        "nlane_numi_fhc_100_ana.root",
+                        "",
+                        {"numi_fhc_overlay_intrinsic_strangeness_run1"},
+                        SampleType::kInclusiveNuMIFHC,
+                        3.04052e+19,
+                        0
                     }}
                     // To add more samples for "numi_fhc", "run1": , {"another_sample_key", { /* properties */ }}
                 } // End of samples map for this RunConfiguration.
