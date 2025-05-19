@@ -39,7 +39,7 @@ int main() {
         });
 
         AnalysisFramework::Binning binning_numucc = AnalysisFramework::Binning::fromConfig(
-            "nu_e", 10, {0., 10.}, "Neutrino Energy [GeV]"
+            "nu_e", 10, {0., 10.}, "", "Neutrino Energy [GeV]"
         ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
 
         AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);

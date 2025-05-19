@@ -20,7 +20,7 @@ public:
         const TString& weight_column_name = "event_weight",
         TString hist_name_override = "",
         TString hist_title_override = "",
-        TString plot_color = "kBlack",
+        int plot_color = kBlack,
         int plot_hatch = 0,
         TString tex_str = ""
     ) const {
@@ -30,9 +30,9 @@ public:
 
         auto hist_ptr = df.Histo1D(
             {var_name_cstr, 
-             TString::Format("%s;%s;Events", label_cstr, var_tex_cstr), 
-             static_cast<int>(binning_def.bin_edges.size()) - 1,
-             binning_def.bin_edges.data()}, 
+            TString::Format("%s;%s;Events", label_cstr, var_tex_cstr), 
+            static_cast<int>(binning_def.bin_edges.size()) - 1,
+            binning_def.bin_edges.data()}, 
             var_name_cstr,                  
             weight_column_name.Data()       
         );

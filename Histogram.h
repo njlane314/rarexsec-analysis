@@ -27,7 +27,7 @@ public:
     std::vector<double> bin_counts;
     TMatrixDSym covariance_matrix;
 
-    TString plot_color_name = "kBlack";
+    Color_t plot_color_code = kBlack;  // Changed from TString to Color_t
     int plot_hatch_idx = 0;
     TString tex_string = "";
 
@@ -66,8 +66,8 @@ private:
                 delete fRootHist;
                 TString uniqueName = TString::Format("%s_root_%p", GetName(), (void*)this);
                 fRootHist = new TH1D(uniqueName,
-                                 TString::Format("%s;%s;Events", GetTitle(), binning_def.variable_tex.Data()),
-                                 binning_def.nBins(), binning_def.bin_edges.data());
+                                     TString::Format("%s;%s;Events", GetTitle(), binning_def.variable_tex.Data()),
+                                     binning_def.nBins(), binning_def.bin_edges.data());
                 fRootHist->SetDirectory(nullptr);
             }
         }
@@ -81,32 +81,8 @@ private:
             fRootHist->SetBinError(i + 1, error);
         }
 
-        Color_t color_to_set = kBlack;
-        if (plot_color_name.IsNull() || plot_color_name.IsWhitespace()) {
-            color_to_set = kBlack;
-        } else if (plot_color_name.CompareTo("kBlack", TString::kIgnoreCase) == 0) {
-            color_to_set = kBlack;
-        } else if (plot_color_name.CompareTo("kRed", TString::kIgnoreCase) == 0) {
-            color_to_set = kRed;
-        } else if (plot_color_name.CompareTo("kBlue", TString::kIgnoreCase) == 0) {
-            color_to_set = kBlue;
-        } else if (plot_color_name.CompareTo("kGreen", TString::kIgnoreCase) == 0) {
-            color_to_set = kGreen;
-        } else if (plot_color_name.CompareTo("kMagenta", TString::kIgnoreCase) == 0) {
-            color_to_set = kMagenta;
-        } else if (plot_color_name.CompareTo("kCyan", TString::kIgnoreCase) == 0) {
-            color_to_set = kCyan;
-        } else if (plot_color_name.CompareTo("kYellow", TString::kIgnoreCase) == 0) {
-            color_to_set = kYellow;
-        } else if (plot_color_name.CompareTo("kOrange", TString::kIgnoreCase) == 0) {
-            color_to_set = kOrange;
-        } else if (plot_color_name.CompareTo("kGray", TString::kIgnoreCase) == 0 || plot_color_name.CompareTo("kGrey", TString::kIgnoreCase) == 0) {
-            color_to_set = kGray;
-        }
-        else {
-            color_to_set = TColor::GetColor(plot_color_name.Data());
-        }
-        
+        Color_t color_to_set = plot_color_code;  // Directly use the stored color code
+
         fRootHist->SetLineColor(color_to_set);
         fRootHist->SetMarkerColor(color_to_set);
         fRootHist->SetFillStyle(plot_hatch_idx);
@@ -124,9 +100,9 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const std::vector<double>& uncertainties,
               TString name = "hist", TString title = "Histogram",
-              TString plotColor = "kBlack", int plotHatch = 0, TString texStr = ""):
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  // Changed to Color_t
         TNamed(name, title), binning_def(binDef), bin_counts(counts),
-        plot_color_name(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
+        plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
         if (binDef.nBins() <= 0) {
              throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
@@ -148,9 +124,9 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const TMatrixDSym& covMatrix,
               TString name = "hist", TString title = "Histogram",
-              TString plotColor = "kBlack", int plotHatch = 0, TString texStr = ""):
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  // Changed to Color_t
         TNamed(name, title), binning_def(binDef), bin_counts(counts), covariance_matrix(covMatrix),
-        plot_color_name(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
+        plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
         if (binDef.nBins() <= 0) {
              throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
@@ -169,7 +145,7 @@ public:
         binning_def(other.binning_def),
         bin_counts(other.bin_counts),
         covariance_matrix(other.covariance_matrix),
-        plot_color_name(other.plot_color_name),
+        plot_color_code(other.plot_color_code),  // Changed to plot_color_code
         plot_hatch_idx(other.plot_hatch_idx),
         tex_string(other.tex_string),
         fRootHist(nullptr)
@@ -190,7 +166,7 @@ public:
              covariance_matrix.ResizeTo(other.covariance_matrix.GetNrows(), other.covariance_matrix.GetNcols());
         }
         covariance_matrix = other.covariance_matrix;
-        plot_color_name = other.plot_color_name;
+        plot_color_code = other.plot_color_code;  // Changed to plot_color_code
         plot_hatch_idx = other.plot_hatch_idx;
         tex_string = other.tex_string;
 

@@ -78,7 +78,6 @@ public:
 
                 TString hist_name = TString::Format("mc_hist_cat_%d", event_category);
                 TString hist_title = label.c_str();
-                TString plot_color = TString::Format("%d", color_code);
                 int plot_hatch = fill_style;
                 TString tex_str = label.c_str();
 
@@ -88,7 +87,7 @@ public:
                     "event_weight",
                     hist_name,
                     hist_title,
-                    plot_color,
+                    color_code,
                     plot_hatch,
                     tex_str
                 );
