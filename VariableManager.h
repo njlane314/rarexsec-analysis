@@ -27,11 +27,13 @@ public:
             "nu_W", "nu_X", "nu_Y", "nu_QSqr", "nu_px", "nu_py", "nu_pz", "nu_vtx_x_true", "nu_vtx_y_true", "nu_vtx_z_true",
             "mcf_nmm", "mcf_nmp", "mcf_nem", "mcf_nep", "mcf_np0", "mcf_npp", "mcf_npm", "mcf_npr", "mcf_nne",
             "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-            "mcf_nxi_0", "mcf_nxi_m", "mcf_nomega"
+            "mcf_nxi_0", "mcf_nxi_m", "mcf_nomega",
+            "true_images"  
         };
 
         reco_event_vars_ = {
-            "reco_nu_vtx_x", "reco_nu_vtx_y", "reco_nu_vtx_z", "topological_score"
+            "reco_nu_vtx_x", "reco_nu_vtx_y", "reco_nu_vtx_z", "topological_score",
+            "raw_images", "reco_images"  
         };
 
         reco_track_vars_ = {
