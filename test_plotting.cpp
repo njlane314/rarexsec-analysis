@@ -45,9 +45,9 @@ int main() {
 
         AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);
         AnalysisFramework::RunPlotter plotter(hist_gen);
-        plotter.Plot("event_category", "");
+        plotter.Plot("event_category", "", nullptr, data_pot);
 
-        const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
+        /*const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
         auto& strangeness_rnodes = dataframes_dict[strangeness_key].second;
         if (strangeness_rnodes.empty()) {
             throw std::runtime_error("No RNodes found for sample: " + strangeness_key);
@@ -65,7 +65,7 @@ int main() {
         AnalysisFramework::RunHistGenerator hist_gen_single(single_sample_map, data_pot, binning_nu_energy);
 
         AnalysisFramework::RunPlotter single_plotter(hist_gen_single);
-        single_plotter.Plot("event_category", "");
+        single_plotter.Plot("event_category", "");*/
 
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;

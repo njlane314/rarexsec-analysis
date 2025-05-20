@@ -262,7 +262,7 @@ private:
             }, {"mcf_strangeness"}
         );
 
-        auto df_with_event_category = df_strange_multiplicity.Define("event_category_val",
+        auto df_with_event_category = df_strange_multiplicity.Define("event_category",
             [sample_type](int nu_pdg, int ccnc, int npi_char_true, int npr_true, int str_mult) {
                 int cat = 9999;
                 if (is_sample_data(sample_type)) {
@@ -309,7 +309,7 @@ private:
             }, {"nu_pdg", "nu_ccnc", "mc_n_charged_pions_true", "mc_n_protons_true", "inclusive_strangeness_multiplicity_type"}
         );
 
-        return df_with_event_category.Alias("event_category", "event_category_val");
+        return df_with_event_category;
     }
 
     ROOT::RDF::RNode processNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) const {

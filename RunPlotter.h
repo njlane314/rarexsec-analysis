@@ -33,7 +33,8 @@ public:
     void Plot(
         const std::string& category_column = "event_category",
         const std::string& plot_title = "",
-        TCanvas* canvas = nullptr
+        TCanvas* canvas = nullptr,
+        double data_pot = 1.0  
     ) const {
         std::unique_ptr<TCanvas> local_canvas_ptr;
         if (!canvas) {
