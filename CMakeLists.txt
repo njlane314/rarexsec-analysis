@@ -69,44 +69,32 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AnalysisFrameworkDict_rdict.pcm DESTIN
 
 
 
+function(add_analysis_executable target_name source_file)
+    add_executable(${target_name} ${source_file})
+
+    target_include_directories(${target_name}
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include # Access to AnalysisFramework headers
+            ${ROOT_INCLUDE_DIRS}
+            ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH} # Or link against nlohmann_json::nlohmann_json
+    )
+
+    target_link_libraries(${target_name}
+        PRIVATE
+            AnalysisFramework
+            ${ROOT_LIBRARIES}
+            # If nlohmann/json is an imported target:
+            # nlohmann_json::nlohmann_json
+    )
+
+    install(TARGETS ${target_name} DESTINATION bin)
+endfunction()
 
 
-add_executable(test_plotting test_plotting.cpp) 
+add_analysis_executable(run_datasaver run_datasaver.cpp) 
+add_analysis_executable(run_plotting run_plotting.cpp)
+add_analysis_executable(run_eventdisplay run_eventdisplay.cpp) 
 
-target_include_directories(test_plotting
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${ROOT_INCLUDE_DIRS}
-        ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
-)
+add_analysis_executable(run_pot run_pot.cpp)
 
-target_link_libraries(test_plotting
-    PRIVATE
-        AnalysisFramework
-        ${ROOT_LIBRARIES}
-)
-
-install(TARGETS test_plotting DESTINATION bin)
-
-
-
-
-
-
-add_executable(test_datasaver test_datasaver.cpp) 
-
-target_include_directories(test_datasaver
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${ROOT_INCLUDE_DIRS}
-        ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH}
-)
-
-target_link_libraries(test_datasaver
-    PRIVATE
-        AnalysisFramework
-        ${ROOT_LIBRARIES}
-)
-
-install(TARGETS test_datasaver DESTINATION bin)
 

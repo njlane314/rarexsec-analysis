@@ -20,7 +20,7 @@ struct VariableOptions {
 class VariableManager {
 public:
     VariableManager() {
-        base_event_vars_ = {"run", "subrun", "event"};
+        base_event_vars_ = {"run", "sub", "evt"};
 
         truth_event_vars_ = {
             "nu_pdg", "nu_ccnc", "nu_mode", "nu_interaction", "nu_e", "nu_theta", "nu_pt", "nu_target_nucleus", "nu_hit_nucleon",

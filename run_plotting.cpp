@@ -27,7 +27,6 @@
 int main() {
     try {
         AnalysisFramework::DataLoader loader;
-
         auto [dataframes_dict, data_pot] = loader.LoadRuns({
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
