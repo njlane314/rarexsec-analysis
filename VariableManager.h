@@ -28,12 +28,13 @@ public:
             "mcf_nmm", "mcf_nmp", "mcf_nem", "mcf_nep", "mcf_np0", "mcf_npp", "mcf_npm", "mcf_npr", "mcf_nne",
             "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
             "mcf_nxi_0", "mcf_nxi_m", "mcf_nomega",
-            "true_images"  
+            "true_image_u", "true_image_v", "true_image_v"  
         };
 
         reco_event_vars_ = {
             "reco_nu_vtx_x", "reco_nu_vtx_y", "reco_nu_vtx_z", "topological_score",
-            "raw_images", "reco_images"  
+            "raw_image_u", "raw_image_v", "raw_image_w", 
+            "reco_image_u", "reco_image_v", "reco_image_w"  
         };
 
         reco_track_vars_ = {

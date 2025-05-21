@@ -20,10 +20,12 @@ int main() {
         });
 
         AnalysisFramework::DataSaver saver;
-        saver.Save(dataframes_dict, {"run1"}, "NUMU_CC", "NUMU", "filtered_data.root", {"run", "sub", "evt", 
-                                    "event_weight",
+        saver.Save(dataframes_dict, {"run1"}, "NUMU_CC", "NUMU", "filtered_data.root", 
+                                    {"run", "sub", "evt", 
+                                    "event_weight", "event_category",
                                     "raw_image_u", "raw_image_v", "raw_image_w",
-                                    "reco_image_u", "reco_image_v", "reco_image_w"});
+                                    "reco_image_u", "reco_image_v", "reco_image_w",
+                                    "true_image_u", "true_image_v", "true_image_w"});
 
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;

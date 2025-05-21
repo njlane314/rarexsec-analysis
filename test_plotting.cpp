@@ -2,7 +2,7 @@
 #include "Binning.h"
 #include "RunHistGenerator.h"
 #include "RunPlotter.h"
-#include "SampleTypes.h" 
+#include "SampleTypes.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -15,6 +15,7 @@
 #include "TAxis.h"
 #include "TStyle.h"
 #include "TLine.h"
+#include "TSystem.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -45,9 +46,12 @@ int main() {
 
         AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);
         AnalysisFramework::RunPlotter plotter(hist_gen);
-        plotter.Plot("event_category", "", nullptr, data_pot);
 
-        /*const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
+        TCanvas* canvas1 = new TCanvas("c1", "Canvas for Muon Length Plot", 800, 600);
+        plotter.Plot(canvas1, "event_category", data_pot);
+        canvas1->SaveAs("muon_length_by_event_category.png");
+
+        const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
         auto& strangeness_rnodes = dataframes_dict[strangeness_key].second;
         if (strangeness_rnodes.empty()) {
             throw std::runtime_error("No RNodes found for sample: " + strangeness_key);
@@ -59,13 +63,18 @@ int main() {
         };
 
         AnalysisFramework::Binning binning_nu_energy = AnalysisFramework::Binning::fromConfig(
-            "nu_e", 50, {0., 10.}, "", "Neutrino Energy [GeV]"
+            "nu_W", 80, {0., 4.}, "", "Hadronic Invariant Mass [GeV]"
         ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
 
         AnalysisFramework::RunHistGenerator hist_gen_single(single_sample_map, data_pot, binning_nu_energy);
 
         AnalysisFramework::RunPlotter single_plotter(hist_gen_single);
-        single_plotter.Plot("event_category", "");*/
+        TCanvas* canvas2 = new TCanvas("c2", "Canvas for Hadronic Mass Plot", 800, 600);
+        single_plotter.Plot(canvas2, "event_category");
+        canvas2->SaveAs("hadronic_mass_by_event_category.png");
+
+        delete canvas1;
+        delete canvas2;
 
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
