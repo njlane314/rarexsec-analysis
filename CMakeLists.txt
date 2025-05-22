@@ -5,6 +5,23 @@ project(AnalysisFrameworkProject)
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
+find_package(TBB COMPONENTS tbb tbbmalloc REQUIRED)
+message(STATUS "Found TBB: ${TBB_FOUND}")
+if(TBB_FOUND)
+    message(STATUS "TBB include_dirs: ${TBB_INCLUDE_DIRS}") # For debugging
+    message(STATUS "TBB libraries: ${TBB_LIBRARIES}")     # For debugging
+    if(TARGET TBB::tbb)
+        message(STATUS "SUCCESS: IMPORTED target TBB::tbb IS NOW DEFINED.")
+    else()
+        message(WARNING "TBB::tbb target STILL NOT DEFINED after requesting components.")
+    endif()
+    if(TARGET TBB::tbbmalloc) # Check if tbbmalloc target is also defined
+         message(STATUS "Found IMPORTED target TBB::tbbmalloc.")
+    endif()
+endif()
+find_package(Torch REQUIRED)
+message(STATUS "Found LibTorch version: ${TORCH_VERSION}")
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -77,12 +94,14 @@ function(add_analysis_executable target_name source_file)
             ${CMAKE_CURRENT_SOURCE_DIR}/include # Access to AnalysisFramework headers
             ${ROOT_INCLUDE_DIRS}
             ${NLOHMANN_JSON_SYSTEM_INCLUDE_PATH} # Or link against nlohmann_json::nlohmann_json
+            ${TORCH_INCLUDE_DIRS}
     )
 
     target_link_libraries(${target_name}
         PRIVATE
             AnalysisFramework
             ${ROOT_LIBRARIES}
+            ${TORCH_LIBRARIES}
             # If nlohmann/json is an imported target:
             # nlohmann_json::nlohmann_json
     )
@@ -96,5 +115,6 @@ add_analysis_executable(run_plotting run_plotting.cpp)
 add_analysis_executable(run_eventdisplay run_eventdisplay.cpp) 
 
 add_analysis_executable(run_pot run_pot.cpp)
+add_analysis_executable(run_modelinferer run_modelinferer.cpp)
 
 

@@ -178,10 +178,10 @@ private:
 
                     TCanvas* c_plane = new TCanvas(canvas_name.c_str(), canvas_title_text.c_str(), canvas_width_, canvas_height_);
                     c_plane->SetFillColor(kWhite); 
-                    c_plane->SetLeftMargin(0.08f);   
-                    c_plane->SetRightMargin(0.08f);  
-                    c_plane->SetBottomMargin(0.08f); 
-                    c_plane->SetTopMargin(0.08f);    
+                    c_plane->SetLeftMargin(0.085f);   
+                    c_plane->SetRightMargin(0.085f);  
+                    c_plane->SetBottomMargin(0.085f); 
+                    c_plane->SetTopMargin(0.085f);    
                     c_plane->SetLogz();
 
                     TH2F* h_drawn = PlotSinglePlaneHistogram(run, sub, evt, plot_type_name, hist_name_prefix, current_plane_data, current_plane_name);
