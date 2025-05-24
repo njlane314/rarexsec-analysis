@@ -53,6 +53,36 @@ public:
             "n_muon_candidates > 0",
             "NuMu CC sel.", "NuMu CC", "NUMUCC"
         };
+
+
+        /*categories["ENERGETIC_INTERACTION"] = {
+            "_topological_score > 0.20 && "      
+            "slclustfrac > 0.30 && "            
+            "slnhits > 50",                      
+            "_Slice_CaloEnergy2 > 0.030"
+            "Energetic Interaction", "EnergInter", "ENERGETIC"
+        };
+
+        categories["VETO_MUON_ENERGY_FRACTION"] = { 
+            "!( "
+            "    (_SliceCaloEnergy2 < 0.100) || "
+            "    ((leading_muon_trk_range_mom * leading_muon_trk_range_mom / (2*_muon_pdg->Mass()) + _muon_pdg->Mass()) / _SliceCaloEnergy2 > 0.20)"
+            ") ", 
+            "Muon Energy Fraction of Slice", "Muon EFrac", "VETOMUONEFRAC"
+        };
+
+        categories["VETO_CALO_DOMINANT_E_SHOWER"] = {
+            "!( "                                  
+            "   _n_showers == 1 && "
+            "   _shr_llr_pid_score_w[0] > 0.85 && " // Shower is electron-like
+            "   _shr_energy_y_w[0] > 0.040 && "     // Shower energy > 40 MeV
+            "   _SliceCaloEnergy2 > 0.010 && "      // Ensure SliceCaloEnergy2 is not zero/tiny before division
+            "   (_shr_energy_y_w[0] / _SliceCaloEnergy2 > 0.70) " // Single shower is >70% of total slice calo energy
+                // also shower distance from interaction vertex < 1 
+            ")",
+            "Veto Calorimetrically Dominant EM-Shower", "Shower EFrac", "VETOCALDOMESHR"
+        };*/
+
         return categories;
     }
 

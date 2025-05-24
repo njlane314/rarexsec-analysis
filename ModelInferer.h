@@ -11,7 +11,7 @@
 #include <torch/script.h> 
 
 #ifdef ROOT_CLASSDEF_SAVED
-#pragma pop_macro("ClassDef")o
+#pragma pop_macro("ClassDef")
 #undef ROOT_CLASSDEF_SAVED
 #endif
 

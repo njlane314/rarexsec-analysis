@@ -24,3 +24,15 @@ Implement:
 -- Is there a way to reconstruct total hadronic invariant mass
 
 -- Update image processing --> clamp betwene 1 and 1000, log10, and then normalise between 0 and 1
+
+-- fiducial volume event category
+
+-- add way more variables 
+
+-- filter out-fv, ext, nc, nue --> then background isolate remaining categories 
+
+-- train uresnet on filtered events
+
+-- train res encoder and series of multilayer perceptrons
+
+-- improve general interface of this code
