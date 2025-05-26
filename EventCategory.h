@@ -19,6 +19,7 @@ const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
             {0, "Data"},
             {1, "External"},
             {2, "Dirt"},
+            {3, "Out of Fiducial Volume"},
             {10, R"($\nu_\mu$ CC, str=1)"},
             {11, R"($\nu_\mu$ CC, str>1)"},
             {20, "NC"},
@@ -43,6 +44,7 @@ const std::map<std::string, std::map<int, int>>& GetColorMaps() {
             {0, kBlack},        // Data
             {1, 28},            // Brown (e.g., external events)
             {2, kOrange + 2},   // Light orange (e.g., dirt)
+            {3, kAzure + 1},    // Out of Fiducial Volume
             {10, kGreen},       // Signal: muon-neutrino CC with strangeness = 1
             {11, kGreen + 2},   // Signal: muon-neutrino CC with strangeness > 1
             {20, kBlue},        // Neutral current
@@ -66,6 +68,7 @@ const std::map<int, int>& GetFillStyleMap() {
         {0, 0},
         {1, 3005},
         {2, 1001},
+        {3, 3004},
         {10, 1001},
         {11, 1001},
         {20, 1001},
@@ -152,4 +155,4 @@ inline void SetHistogramStyle(const std::string& category_column, int category_i
     hist->SetStats(false);
 }
 
-} // namespace AnalysisFramework
+}

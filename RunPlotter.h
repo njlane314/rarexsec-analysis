@@ -1,6 +1,8 @@
 #ifndef RUN_PLOTTER_H
 #define RUN_PLOTTER_H
 
+//#define ENABLE_DEBUGGING
+
 #include <string>
 #include <vector>
 #include <map>
@@ -27,6 +29,9 @@ class RunPlotter {
 public:
     RunPlotter(const RunHistGenerator& run_hist_generator)
         : run_hist_generator_(run_hist_generator) {
+#ifdef ENABLE_DEBUGGING
+            std::cout << "DEBUG: RunPlotter::Constructor - Initializing..." << std::endl;
+#endif
             this->InitialiseCommonStyle();
         }
 
@@ -35,12 +40,18 @@ public:
         const std::string& category_column = "event_category",
         double data_pot = 1.0
     ) const {
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: Plot - Starting plot for category: " << category_column << std::endl;
+#endif
         if (!canvas) {
             std::cerr << "Error: RunPlotter::Plot called with a null canvas." << std::endl;
             return;
         }
 
         auto mc_hists_map = run_hist_generator_.GetMonteCarloHists(category_column.c_str());
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: Plot - Retrieved " << mc_hists_map.size() << " histograms from the generator." << std::endl;
+#endif
         std::vector<AnalysisFramework::Histogram> mc_hists_vec;
         for (const auto& pair : mc_hists_map) {
             mc_hists_vec.push_back(pair.second);
@@ -52,14 +63,20 @@ public:
         }
 
         this->PlotStackedHistogram(canvas, mc_hists_vec);
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: Plot - Plotting finished for category: " << category_column << std::endl;
+#endif
     }
 
 private:
     const RunHistGenerator& run_hist_generator_;
     mutable std::unique_ptr<THStack> current_stack;
-    mutable std::unique_ptr<TH1> current_total_hist; // Added to manage total_hist lifetime
+    mutable std::unique_ptr<TH1> current_total_hist;
 
     void InitialiseCommonStyle() {
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: InitialiseCommonStyle - Setting up TStyle." << std::endl;
+#endif
         const int font_style = 132;
         TStyle* style = new TStyle("ConsistentStyle", "Consistent Style for Analysis Plots");
 
@@ -101,7 +118,13 @@ private:
     }
 
     TH1* CreateTotalUncertaintyHistogram(const std::vector<AnalysisFramework::Histogram>& hist_vec, THStack* stack) const {
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: CreateTotalUncertaintyHistogram - Starting calculation." << std::endl;
+#endif
         if (!stack || !stack->GetStack() || !stack->GetStack()->Last()) {
+#ifdef ENABLE_DEBUGGING
+            std::cout << "DEBUG: CreateTotalUncertaintyHistogram - Input stack is invalid or empty. Returning nullptr." << std::endl;
+#endif
             return nullptr;
         }
 
@@ -121,7 +144,9 @@ private:
             double total_error = std::sqrt(total_error_squared);
             total_hist->SetBinError(i, total_error);
         }
-
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: CreateTotalUncertaintyHistogram - Calculation complete." << std::endl;
+#endif
         return total_hist;
     }
 
@@ -142,6 +167,9 @@ private:
             return;
         }
         canvas->cd();
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: PlotStackedHistogram - Plotting " << hist_vec.size() << " histograms." << std::endl;
+#endif
 
         current_stack = std::make_unique<THStack>("mc_stack", "");
 
@@ -155,25 +183,13 @@ private:
                 std::cerr << "Warning: Encountered a null histogram." << std::endl;
                 continue;
             }
-
-            bool has_errors = false;
-            for (int i = 1; i <= root_hist->GetNbinsX(); ++i) {
-                if (root_hist->GetBinError(i) > 0) {
-                    has_errors = true;
-                    break;
-                }
-            }
-            if (!has_errors) {
-                std::cout << "Note: Setting errors for " << root_hist->GetName() << " to sqrt(content)." << std::endl;
-                for (int i = 1; i <= root_hist->GetNbinsX(); ++i) {
-                    double content = root_hist->GetBinContent(i);
-                    root_hist->SetBinError(i, content > 0 ? std::sqrt(content) : 0);
-                }
-            }
-
+#ifdef ENABLE_DEBUGGING
+            std::cout << "DEBUG: PlotStackedHistogram - Adding histogram '" << root_hist->GetName() << "' to stack." << std::endl;
+#endif
             root_hist->SetLineColor(kBlack);
             root_hist->SetLineWidth(1);
             current_stack->Add(root_hist);
+
             if (first_hist) {
                 if (root_hist->GetXaxis()->GetTitle() && strlen(root_hist->GetXaxis()->GetTitle()) > 0) {
                     common_x_axis_title = root_hist->GetXaxis()->GetTitle();
@@ -189,7 +205,9 @@ private:
             std::cerr << "Warning: THStack is empty. Nothing to draw." << std::endl;
             return;
         }
-
+#ifdef ENABLE_DEBUGGING
+        std::cout << "DEBUG: PlotStackedHistogram - Drawing stack with X title: '" << common_x_axis_title << "' and Y title: '" << common_y_axis_title << "'" << std::endl;
+#endif
         current_stack->Draw("HIST");
 
         if (current_stack->GetHistogram()) {
@@ -201,6 +219,9 @@ private:
 
         TH1* total_hist = CreateTotalUncertaintyHistogram(hist_vec, current_stack.get());
         if (total_hist) {
+#ifdef ENABLE_DEBUGGING
+            std::cout << "DEBUG: PlotStackedHistogram - Drawing total uncertainty histogram." << std::endl;
+#endif
             this->SetErrorHistogramStyle(total_hist);
             total_hist->Draw("E2 SAME");
             current_total_hist.reset(total_hist); 
@@ -220,6 +241,9 @@ private:
                 current_stack->SetMaximum(1.0);
             }
             current_stack->SetMinimum(0.0);
+#ifdef ENABLE_DEBUGGING
+            std::cout << "DEBUG: PlotStackedHistogram - Final Y-axis Maximum set to: " << current_stack->GetMaximum() << std::endl;
+#endif
         }
 
         canvas->Modified();

@@ -22,8 +22,7 @@ int main() {
             .variable_options = AnalysisFramework::VariableOptions{
                 .load_reco_event_info = true,  
                 .load_truth_event_info = true, 
-                .load_weights_and_systematics = false,
-                .load_signal_weights = false
+                .load_weights_and_systematics = false
             }
         });
 

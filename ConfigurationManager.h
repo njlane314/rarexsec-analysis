@@ -48,20 +48,20 @@ public:
                     }},
                     {"numi_fhc_overlay_inclusive_genie_run1", {
                         "numi_fhc_overlay_inclusive_genie_run1",
-                        "nl_numi_fhc_beamon_run1_eventselectionfilter_ana.root",
+                        "numi_fhc_run1_beam_ana.root",
                         "",
                         {"numi_fhc_overlay_intrinsic_strangeness_run1"},
                         SampleType::kInclusiveNuMIFHC,
-                        5.9924e+20,
+                        8.94633e+20,
                         0
                     }},
                     {"numi_fhc_overlay_intrinsic_strangeness_run1", { // Definition for 'numi_overlay_intrinsic_strangeness' MC sample.
                         "numi_fhc_overlay_intrinsic_strangeness_run1",                // sample_key: Internal unique ID.
-                        "nl_strange_numi_fhc_run2_reco2_validation_982_neutrinoselection_10_new_analysis.root",            // relative_path: Path to the MC ntuple file. UPDATE THIS.
+                        "numi_fhc_run1_strangeness_ana.root",            // relative_path: Path to the MC ntuple file. UPDATE THIS.
                         "(mcf_strangeness > 0)",                                      // truth_filter: Example truth selection for MC (e.g., events with true strangeness).
                         {},                                                           // exclusion_truth_filters: List of sample_keys to exclude.
                         SampleType::kStrangenessNuMIFHC,                              // type: Enum for this specific MC type. Ensure this is defined.
-                        4.17537e+22,                                                  // pot: Equivalent POT for this MC sample. Adjust as needed.
+                        1.33766e+23,                                                  // pot: Equivalent POT for this MC sample. Adjust as needed.
                         0                                                             // triggers: Typically 0 for MC scaled by POT.
                     }}
                     // To add more samples for "numi_fhc", "run1": , {"another_sample_key", { /* properties */ }}

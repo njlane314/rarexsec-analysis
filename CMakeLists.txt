@@ -115,7 +115,5 @@ add_analysis_executable(run_plotting run_plotting.cpp)
 add_analysis_executable(run_eventdisplay run_eventdisplay.cpp) 
 
 add_analysis_executable(run_pot run_pot.cpp)
-add_analysis_executable(run_modelinferer run_modelinferer.cpp)
-
 add_analysis_executable(run_displaync run_displaync.cpp)
 

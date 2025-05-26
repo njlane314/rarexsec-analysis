@@ -2,11 +2,11 @@
 #define HISTOGRAM_GENERATOR_H
 
 #include "ROOT/RDataFrame.hxx"
-#include "TH1D.h"
-#include "TMatrixDSym.h" 
+#include "ROOT/RResultPtr.hxx"
+#include "TMatrixDSym.h"
 
-#include "Binning.h"    
-#include "Histogram.h"  
+#include "Binning.h"
+#include "Histogram.h"
 
 namespace AnalysisFramework {
 
@@ -15,7 +15,7 @@ public:
     HistogramGenerator() = default;
 
     AnalysisFramework::Histogram GenerateHistogram(
-        ROOT::RDF::RNode df, 
+        ROOT::RDF::RNode df,
         const AnalysisFramework::Binning& binning_def,
         const TString& weight_column_name = "event_weight",
         TString hist_name_override = "",
@@ -29,22 +29,22 @@ public:
         const char* label_cstr = binning_def.label.IsNull() ? var_name_cstr : binning_def.label.Data();
 
         auto hist_ptr = df.Histo1D(
-            {var_name_cstr, 
-            TString::Format("%s;%s;Events", label_cstr, var_tex_cstr), 
+            {var_name_cstr,
+            TString::Format("%s;%s;Events", label_cstr, var_tex_cstr),
             static_cast<int>(binning_def.bin_edges.size()) - 1,
-            binning_def.bin_edges.data()}, 
-            var_name_cstr,                  
-            weight_column_name.Data()       
+            binning_def.bin_edges.data()},
+            var_name_cstr,
+            weight_column_name.Data()
         );
 
         TH1D th1d_hist = *hist_ptr;
 
         std::vector<double> bin_counts(th1d_hist.GetNbinsX());
-        TMatrixDSym covariance_matrix(th1d_hist.GetNbinsX()); 
-        covariance_matrix.Zero(); 
+        TMatrixDSym covariance_matrix(th1d_hist.GetNbinsX());
+        covariance_matrix.Zero();
 
         for (int i = 0; i < th1d_hist.GetNbinsX(); ++i) {
-            bin_counts[i] = th1d_hist.GetBinContent(i + 1); 
+            bin_counts[i] = th1d_hist.GetBinContent(i + 1);
             double bin_error = th1d_hist.GetBinError(i + 1);
             covariance_matrix(i, i) = bin_error * bin_error;
         }
@@ -67,8 +67,27 @@ public:
             final_tex_str
         );
     }
+
+    ROOT::RDF::RResultPtr<TH1D> BookHistogram(
+        ROOT::RDF::RNode df,
+        const AnalysisFramework::Binning& binning_def,
+        const std::string& weight_column
+    ) const {
+        const char* var_name_cstr = binning_def.variable.Data();
+        const char* var_tex_cstr = binning_def.variable_tex.IsNull() ? var_name_cstr : binning_def.variable_tex.Data();
+        const char* label_cstr = binning_def.label.IsNull() ? var_name_cstr : binning_def.label.Data();
+
+        return df.Histo1D(
+            {var_name_cstr,
+            TString::Format("%s;%s;Events", label_cstr, var_tex_cstr), 
+            static_cast<int>(binning_def.bin_edges.size()) - 1, 
+            binning_def.bin_edges.data()}, 
+            var_name_cstr, 
+            weight_column 
+        );
+    }
 };
 
-} 
+}
 
-#endif // HISTOGRAM_GENERATOR_H
+#endif

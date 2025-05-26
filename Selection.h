@@ -36,13 +36,15 @@ public:
 
     inline static std::map<TString, SelectionDetails> getPreselectionCategories() {
         std::map<TString, SelectionDetails> categories;
-        categories["NUMU"] = {
-            "reco_nu_vtx_x > 5.0 && reco_nu_vtx_x < 251.0 && "
-            "reco_nu_vtx_y > -110.0 && reco_nu_vtx_y < 110.0 && "
-            "reco_nu_vtx_z > 20.0 && reco_nu_vtx_z < 986.0 && "
-            "(reco_nu_vtx_z < 675.0 || reco_nu_vtx_z > 775.0) && "
-            "topological_score > 0.06",
-            "NuMu Presel.", "NuMu Presel", "NUMU"
+        categories["QUALITY"] = {
+            "nslice == 1 && selected == 1 && " 
+            "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && " 
+            "reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && "
+            "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
+            "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && " 
+            "nu_slice_topo_score > 0.05 && " 
+            "(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)", 
+            "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         };
         return categories;
     }
@@ -54,34 +56,19 @@ public:
             "NuMu CC sel.", "NuMu CC", "NUMUCC"
         };
 
-
-        /*categories["ENERGETIC_INTERACTION"] = {
-            "_topological_score > 0.20 && "      
-            "slclustfrac > 0.30 && "            
-            "slnhits > 50",                      
-            "_Slice_CaloEnergy2 > 0.030"
-            "Energetic Interaction", "EnergInter", "ENERGETIC"
+        categories["HADRONIC"] = {
+            "nu_slice_topo_score > 0.5 && slnhits > 1000 && n_tracks > 2",
+            "High Hadronic Activity", "High Hadronic", "HIGHHADRONIC"
         };
 
-        categories["VETO_MUON_ENERGY_FRACTION"] = { 
-            "!( "
-            "    (_SliceCaloEnergy2 < 0.100) || "
-            "    ((leading_muon_trk_range_mom * leading_muon_trk_range_mom / (2*_muon_pdg->Mass()) + _muon_pdg->Mass()) / _SliceCaloEnergy2 > 0.20)"
-            ") ", 
-            "Muon Energy Fraction of Slice", "Muon EFrac", "VETOMUONEFRAC"
+        categories["STRANGE"] = {
+            TString::Format("(%s) && (%s) && (%s)",
+                categories["NUMU_CC"].query.Data(),
+                categories["HADRONIC"].query.Data(),
+                "(event_category == 10 || event_category == 11)"
+            ),
+            "NuMu CC Strange Candidate", "NuMu CC Strange", "STRANGE"
         };
-
-        categories["VETO_CALO_DOMINANT_E_SHOWER"] = {
-            "!( "                                  
-            "   _n_showers == 1 && "
-            "   _shr_llr_pid_score_w[0] > 0.85 && " // Shower is electron-like
-            "   _shr_energy_y_w[0] > 0.040 && "     // Shower energy > 40 MeV
-            "   _SliceCaloEnergy2 > 0.010 && "      // Ensure SliceCaloEnergy2 is not zero/tiny before division
-            "   (_shr_energy_y_w[0] / _SliceCaloEnergy2 > 0.70) " // Single shower is >70% of total slice calo energy
-                // also shower distance from interaction vertex < 1 
-            ")",
-            "Veto Calorimetrically Dominant EM-Shower", "Shower EFrac", "VETOCALDOMESHR"
-        };*/
 
         return categories;
     }

@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <numeric>
 #include <utility>
+#include <iostream>
+#include <iomanip>
 
 #include "ROOT/RDataFrame.hxx"
 #include "TString.h"
@@ -73,6 +75,10 @@ public:
     };
 
     std::pair<DataFramesDict, double> LoadRuns(const Parameters& params) const {
+        std::cout << "\n========================================\n";
+        std::cout << "Starting Data Loading Process...\n";
+        std::cout << "========================================\n" << std::endl;
+
         DataFramesDict dataframes_dict;
         double data_pot = 0.0;
 
@@ -92,6 +98,27 @@ public:
             }
             data_pot += run_pot;
         }
+
+        std::cout << "\n========================================\n";
+        std::cout << "Data Loading Finished.\n";
+        std::cout << "========================================\n" << std::endl;
+
+        long long total_entries = 0;
+        for (auto& [sample_key, sample_pair_value] : dataframes_dict) {
+            long long sample_total_count = 0;
+            for (ROOT::RDF::RNode& df_node : sample_pair_value.second) { 
+                sample_total_count += *df_node.Count(); 
+            }
+            total_entries += sample_total_count;
+        }
+
+        std::cout << "--- Data Loading Summary ---\n";
+        
+        std::cout << "------------------------------------------------------\n";
+        std::cout << "Total entries across all samples: " << total_entries << '\n';
+        std::cout << "Total Data POT: " << data_pot << '\n';
+        std::cout << "------------------------------------------------------\n" << std::endl;
+
 
         return {dataframes_dict, data_pot};
     }
@@ -114,6 +141,7 @@ private:
         ROOT::RDF::RNode df) const {
         df = processEventCategories(df, sample_props->type);
         df = processNuMuVariables(df, sample_props->type);
+        df = processBlipVariables(df);
         return df;
     }
 
@@ -157,6 +185,7 @@ private:
                     const std::string& sample_key = sample_pair.first;
                     const auto& sample_props = sample_pair.second;
                     std::string file_path = base_directory + "/" + sample_props.relative_path;
+                    std::cout << "  -> Loading sample: " << sample_key << std::endl;
                     ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
                     sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                     sample_rdf = sample_rdf.Define("event_weight", [](){ return 1.0; });
@@ -174,6 +203,7 @@ private:
                 const std::string& sample_key = sample_pair.first;
                 const auto& sample_props = sample_pair.second;
                 std::string file_path = base_directory + "/" + sample_props.relative_path;
+                std::cout << "  -> Loading sample: " << sample_key << std::endl;
                 ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
                 sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                 double event_weight = 1.0;
@@ -194,6 +224,7 @@ private:
                 const std::string& sample_key = sample_pair.first;
                 const auto& sample_props = sample_pair.second;
                 std::string file_path = base_directory + "/" + sample_props.relative_path;
+                std::cout << "  -> Loading sample: " << sample_key << std::endl;
                 ROOT::RDF::RNode sample_rdf = this->createDataFrame(&sample_props, file_path, variable_options);
                 sample_rdf = this->processDataFrame(&sample_props, variable_options, sample_rdf);
                 if (!sample_props.truth_filter.empty()) {
@@ -248,10 +279,10 @@ private:
         }
 
         auto df_total_strange = df_with_defs.Define("mcf_strangeness",
-            [](int nkp, int nkm, int nk0, int nl, int nsp, int ns0, int nsm, int nx0, int nxm, int nom) {
-                return nkp + nkm + nk0 + nl + nsp + ns0 + nsm + nx0 + nxm + nom;
+            [](int nkp, int nkm, int nk0, int nl, int nsp, int ns0, int nsm) {
+                return nkp + nkm + nk0 + nl + nsp + ns0 + nsm;
             },
-            {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m", "mcf_nxi_0", "mcf_nxi_m", "mcf_nomega"}
+            {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m"}
         );
 
         auto df_strange_multiplicity = df_total_strange.Define("inclusive_strangeness_multiplicity_type",
@@ -262,8 +293,17 @@ private:
             }, {"mcf_strangeness"}
         );
 
-        auto df_with_event_category = df_strange_multiplicity.Define("event_category",
-            [sample_type](int nu_pdg, int ccnc, int npi_char_true, int npr_true, int str_mult) {
+        auto df_with_fiducial = df_strange_multiplicity.Define("is_in_fiducial",
+            [](float vtx_x, float vtx_y, float vtx_z) {
+                return (vtx_x > 5.0 && vtx_x < 251.0 &&
+                        vtx_y > -110.0 && vtx_y < 110.0 &&
+                        vtx_z > 20.0 && vtx_z < 986.0 &&
+                        (vtx_z < 675.0 || vtx_z > 775.0));
+            }, {"true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z"}
+        );
+
+        auto df_with_event_category = df_with_fiducial.Define("event_category",
+            [sample_type](bool is_in_fiducial, int nu_pdg, int ccnc, int npi_char_true, int npr_true, int str_mult) {
                 int cat = 9999;
                 if (is_sample_data(sample_type)) {
                     cat = 0;
@@ -272,57 +312,70 @@ private:
                 } else if (is_sample_dirt(sample_type)) {
                     cat = 2;
                 } else if (is_sample_mc(sample_type)) {
-                    bool isnumu = (std::abs(nu_pdg) == 14);
-                    bool isnue = (std::abs(nu_pdg) == 12);
-                    bool iscc = (ccnc == 0);
-                    bool isnc = (ccnc == 1);
+                    if (!is_in_fiducial) {
+                        cat = 3; 
+                    } else {
+                        bool isnumu = (std::abs(nu_pdg) == 14);
+                        bool isnue = (std::abs(nu_pdg) == 12);
+                        bool iscc = (ccnc == 0);
+                        bool isnc = (ccnc == 1);
 
-                    if (isnc) {
-                        cat = 20;  // All NC events
-                    } else if (isnue && iscc) {
-                        cat = 21;  // All nu_e CC events
-                    } else if (isnumu && iscc) {
-                        if (str_mult == 1) {
-                            cat = 10;  // nu_mu CC, str=1
-                        } else if (str_mult == 2) {
-                            cat = 11;  // nu_mu CC, str>1
-                        } else if (str_mult == 0) {
-                            if (npi_char_true == 0) {
-                                if (npr_true == 0) cat = 100;
-                                else if (npr_true == 1) cat = 101;
-                                else cat = 102;
-                            } else if (npi_char_true == 1) {
-                                if (npr_true == 0) cat = 103;
-                                else if (npr_true == 1) cat = 104;
-                                else cat = 105;
+                        if (isnc) {
+                            cat = 20;
+                        } else if (isnue && iscc) {
+                            cat = 21;
+                        } else if (isnumu && iscc) {
+                            if (str_mult == 1) {
+                                cat = 10;
+                            } else if (str_mult == 2) {
+                                cat = 11;
+                            } else if (str_mult == 0) {
+                                if (npi_char_true == 0) {
+                                    if (npr_true == 0) cat = 100;
+                                    else if (npr_true == 1) cat = 101;
+                                    else cat = 102;
+                                } else if (npi_char_true == 1) {
+                                    if (npr_true == 0) cat = 103;
+                                    else if (npr_true == 1) cat = 104;
+                                    else cat = 105;
+                                } else {
+                                    cat = 106;
+                                }
                             } else {
-                                cat = 106;
+                                cat = 998;
                             }
                         } else {
-                            cat = 998;  // Unexpected str_mult value
+                            cat = 998;
                         }
-                    } else {
-                        cat = 998;  // Other MC events
                     }
                 }
                 return cat;
-            }, {"nu_pdg", "nu_ccnc", "mc_n_charged_pions_true", "mc_n_protons_true", "inclusive_strangeness_multiplicity_type"}
+            }, {"is_in_fiducial", "nu_pdg", "ccnc", "mc_n_charged_pions_true", "mc_n_protons_true", "inclusive_strangeness_multiplicity_type"}
         );
 
         return df_with_event_category;
     }
 
     ROOT::RDF::RNode processNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) const {
-        auto df_mu_mask = df.Define("muon_candidate_selection_mask_vec",
+        auto df_with_neutrino_slice_score = df.Define("nu_slice_topo_score",
+            [](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
+                if (static_cast<size_t>(neutrino_slice_id) < all_slice_scores.size()) {
+                    return all_slice_scores[neutrino_slice_id];
+                }
+                return -999.f;
+            }, {"slice_topo_score_v", "slice_id"}
+        );
+
+        auto df_mu_mask = df_with_neutrino_slice_score.Define("muon_candidate_selection_mask_vec",
             [](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
-            const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist, const ROOT::RVec<int>& gen) {
+            const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist) {
                 ROOT::RVec<bool> mask(ts.size());
                 for (size_t i = 0; i < ts.size(); ++i) {
-                    mask[i] = (ts[i] > 0.8f) && (pid[i] > 0.2f) && (l[i] > 10.f) && (dist[i] < 4.f) && (gen[i] == 2);
+                    mask[i] = (ts[i] > 0.8f) && (pid[i] > 0.2f) && (l[i] > 10.f) && (dist[i] < 4.f);
                 }
                 return mask;
             },
-            {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "trk_generation_v"}
+            {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v"}
         );
 
         auto df_sel_idx = df_mu_mask.Define("selected_muon_idx",
@@ -343,6 +396,27 @@ private:
 
         return df_mu_props
             .Define("n_muon_candidates", [](const ROOT::RVec<bool>& m) { return ROOT::VecOps::Sum(m); }, {"muon_candidate_selection_mask_vec"});
+    }
+
+    ROOT::RDF::RNode processBlipVariables(ROOT::RDF::RNode df) const {
+        bool has_blip_nplanes = false;
+        for (const auto& colName : df.GetColumnNames()) {
+            if (colName == "blip_NPlanes") {
+                has_blip_nplanes = true;
+                break;
+            }
+        }
+
+        if (!has_blip_nplanes) {
+            return df;
+        }
+
+        auto df_with_planes = df
+            .Define("blip_NPlanes_u", [](const ROOT::RVec<int>& v) { return getElementFromVector(v, 0, -1); }, {"blip_NPlanes"})
+            .Define("blip_NPlanes_v", [](const ROOT::RVec<int>& v) { return getElementFromVector(v, 1, -1); }, {"blip_NPlanes"})
+            .Define("blip_NPlanes_w", [](const ROOT::RVec<int>& v) { return getElementFromVector(v, 2, -1); }, {"blip_NPlanes"});
+
+        return df_with_planes;
     }
 };
 
