@@ -32,8 +32,6 @@ struct SelectionDetails {
 class Selection {
 public:
 
-    // --- Predefined Selection Categories ---
-
     inline static std::map<TString, SelectionDetails> getPreselectionCategories() {
         std::map<TString, SelectionDetails> categories;
         categories["QUALITY"] = {
@@ -57,7 +55,7 @@ public:
         };
 
         categories["HADRONIC"] = {
-            "nu_slice_topo_score > 0.5 && slnhits > 1000 && n_tracks > 2",
+            "nu_slice_topo_score > 0.5 && slnhits > 200 && n_tracks > 2",
             "High Hadronic Activity", "High Hadronic", "HIGHHADRONIC"
         };
 
@@ -74,8 +72,6 @@ public:
     }
 
     Selection() = default; 
-
-    // --- Utility Functions ---
 
     static TString getSelectionQuery(const TString& selectionKey, const TString& preselectionKey, const std::vector<TString>& extraQueries = {}) {
         TString fullQuery = "";
@@ -106,7 +102,6 @@ public:
         }
         
         if (!preselectionExists && !selectionExists && extraQueries.empty()){
-            // if neither preselection nor selection is defined, and no extra queries, return empty or handle as error
             return ""; 
         }
 

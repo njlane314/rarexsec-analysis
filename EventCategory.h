@@ -24,13 +24,10 @@ const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
             {11, R"($\nu_\mu$ CC, str>1)"},
             {20, "NC"},
             {21, R"($\nu_e$ CC)"},
-            {100, R"($\nu_\mu$ CC, 0$\pi$, 0p, str=0)"},
-            {101, R"($\nu_\mu$ CC, 0$\pi$, 1p, str=0)"},
-            {102, R"($\nu_\mu$ CC, 0$\pi$, Np, str=0)"},
-            {103, R"($\nu_\mu$ CC, 1$\pi$, 0p, str=0)"},
-            {104, R"($\nu_\mu$ CC, 1$\pi$, 1p, str=0)"},
-            {105, R"($\nu_\mu$ CC, 1$\pi$, Np, str=0)"},
-            {106, R"($\nu_\mu$ CC, M$\pi$, str=0)"},
+            {110, R"($\nu_\mu$ CC QE)"},
+            {111, R"($\nu_\mu$ CC RES)"},
+            {112, R"($\nu_\mu$ CC DIS)"},
+            {113, R"($\nu_\mu$ CC Other)"},
             {998, "Other"},
             {9999, "Undefined"}
         }}
@@ -41,23 +38,20 @@ const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
 const std::map<std::string, std::map<int, int>>& GetColorMaps() {
     static const std::map<std::string, std::map<int, int>> color_maps = {
         {"event_category", {
-            {0, kBlack},        // Data
-            {1, 28},            // Brown (e.g., external events)
-            {2, kOrange + 2},   // Light orange (e.g., dirt)
-            {3, kAzure + 1},    // Out of Fiducial Volume
-            {10, kGreen},       // Signal: muon-neutrino CC with strangeness = 1
-            {11, kGreen + 2},   // Signal: muon-neutrino CC with strangeness > 1
-            {20, kBlue},        // Neutral current
-            {21, kMagenta},     // Electron-neutrino CC
-            {100, kRed - 2},    // Muon-neutrino CC, str=0, 0π 0p (dark red)
-            {101, kRed},        // Muon-neutrino CC, str=0, 0π 1p (medium red)
-            {102, kRed + 2},    // Muon-neutrino CC, str=0, 0π Np (light red)
-            {103, kOrange - 4}, // Muon-neutrino CC, str=0, 1π 0p (dark orange)
-            {104, kOrange - 2}, // Muon-neutrino CC, str=0, 1π 1p (medium orange)
-            {105, kOrange},     // Muon-neutrino CC, str=0, 1π Np (standard orange)
-            {106, kCyan},       // Muon-neutrino CC, str=0, Mπ
-            {998, kGray + 2},   // Other
-            {9999, kGray + 3}   // Undefined
+            {0, kBlack},       // Data
+            {1, kCyan},        // External (improved from 28)
+            {2, kOrange + 2},  // Dirt
+            {3, kAzure + 1},      // Out of Fiducial Volume (improved from kAzure + 1)
+            {10, kGreen},      // Signal: str = 1
+            {11, kGreen + 2},  // Signal: str > 1
+            {20, kBlue},       // Neutral Current
+            {21, kMagenta},    // Electron-neutrino CC
+            {110, kRed},       // CC QE
+            {111, kOrange},    // CC RES 
+            {112, kViolet},    // CC DIS
+            {113, kCyan},      // CC Other 
+            {998, kGray + 2},  // Other
+            {9999, kGray + 3}  // Undefined
         }}
     };
     return color_maps;
@@ -65,23 +59,20 @@ const std::map<std::string, std::map<int, int>>& GetColorMaps() {
 
 const std::map<int, int>& GetFillStyleMap() {
     static const std::map<int, int> fill_style_map = {
-        {0, 0},
-        {1, 3005},
-        {2, 1001},
-        {3, 3004},
-        {10, 1001},
-        {11, 1001},
-        {20, 1001},
-        {21, 1001},
-        {100, 1001},
-        {101, 1001},
-        {102, 1001},
-        {103, 1001},
-        {104, 1001},
-        {105, 1001},
-        {106, 1001},
-        {998, 1001},
-        {9999, 1001}
+        {0, 0},     // Data (no fill)
+        {1, 3005},  // External
+        {2, 1001},  // Dirt
+        {3, 3004},  // Out of Fiducial Volume
+        {10, 1001}, // Signal: str = 1
+        {11, 1001}, // Signal: str > 1
+        {20, 1001}, // NC
+        {21, 1001}, // Nue CC
+        {110, 1001},// CC QE
+        {111, 1001},// CC RES
+        {112, 1001},// CC DIS
+        {113, 1001},// CC Other
+        {998, 1001},// Other
+        {9999, 1001} // Undefined
     };
     return fill_style_map;
 }

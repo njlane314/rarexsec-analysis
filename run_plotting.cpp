@@ -28,54 +28,42 @@ int main() {
     ROOT::EnableImplicitMT();
     try {
         AnalysisFramework::DataLoader loader;
-        auto [dataframes_dict, data_pot] = loader.LoadRuns({
+        auto [dataframes_dict, accumulated_pot] = loader.LoadRuns({
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
             .variable_options = AnalysisFramework::VariableOptions{
                 .load_reco_event_info = true,
                 .load_truth_event_info = true,
-                .load_weights_and_systematics = false,
+                .load_weights_and_systematics = true,
                 .load_blip_info = true
             }
         });
 
-        AnalysisFramework::Binning binning_numucc = AnalysisFramework::Binning::fromConfig(
-            "nu_e", 100, {0., 10.}, "", "Neutrino Energy [GeV]"
-        ).setSelection("QUALITY", "STRANGE").setLabel("");
+        AnalysisFramework::Binning binning_numucc({
+            .variable = "slnhits",
+            .label = "hits",
+            .variable_tex = "Number of Slice Hits",
+            .number_of_bins = 100,
+            .range = {0., 10000.},
+            .preselection_key = "QUALITY",
+            .selection_key = "NUMU_CC"
+        });
 
-        AnalysisFramework::RunHistGenerator hist_gen(dataframes_dict, data_pot, binning_numucc);
-        AnalysisFramework::RunPlotter plotter(hist_gen);
+        AnalysisFramework::RunHistGenerator run_hist_gen({
+            .dataframes = dataframes_dict, 
+            .data_pot = accumulated_pot, 
+            .binning = binning_numucc
+        });
 
-        TCanvas* canvas2 = new TCanvas("c1", "Canvas for Muon Length Plot", 800, 600);
-        plotter.Plot(canvas2, "event_category", data_pot);
-        canvas2->SaveAs("muon_length_by_event_category.png");
-
-        /*const std::string strangeness_key = "numi_fhc_overlay_intrinsic_strangeness_run1";
-        auto& strangeness_rnodes = dataframes_dict[strangeness_key].second;
-        if (strangeness_rnodes.empty()) {
-            throw std::runtime_error("No RNodes found for sample: " + strangeness_key);
-        }
-        ROOT::RDF::RNode df = strangeness_rnodes[0];
-
-        std::map<std::string, std::pair<AnalysisFramework::SampleType, std::vector<ROOT::RDF::RNode>>> single_sample_map = {
-            {strangeness_key, {AnalysisFramework::SampleType::kStrangenessNuMIFHC, {df}}}
-        };
-
-        AnalysisFramework::Binning binning_nu_energy = AnalysisFramework::Binning::fromConfig(
-            "nu_W", 80, {0., 4.}, "", "Hadronic Invariant Mass [GeV]"
-        ).setSelection("NUMU", "NUMU_CC").setLabel("NUMU_CC");
-
-        AnalysisFramework::RunHistGenerator hist_gen_single(single_sample_map, data_pot, binning_nu_energy);
-
-        AnalysisFramework::RunPlotter single_plotter(hist_gen_single);
-        TCanvas* canvas2 = new TCanvas("c2", "Canvas for Hadronic Mass Plot", 800, 600);
-        single_plotter.Plot(canvas2, "event_category");
-        canvas2->SaveAs("hadronic_mass_by_event_category.png");
-
-        delete canvas1;
-        delete canvas2;*/
-
+        AnalysisFramework::RunPlotter plotter(run_hist_gen);
+        plotter.Plot({
+            .name = "plot",
+            .data_pot = accumulated_pot,
+            .multisim_sources = {"weightsGenie", "weightsFlux"},
+            .plot_uncertainty_breakdown = true,
+            .plot_correlation_matrix = true
+        });
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
         return 1;

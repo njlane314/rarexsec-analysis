@@ -12,7 +12,7 @@ namespace AnalysisFramework {
 struct VariableOptions {
     bool load_reco_event_info = false;
     bool load_reco_track_info = false;
-    bool load_truth_event_info = false;
+    bool load_truth_event_info = true;
     bool load_weights_and_systematics = false;
     bool load_reco_shower_info = false; 
     bool load_blip_info = false;        

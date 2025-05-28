@@ -303,7 +303,7 @@ private:
         );
 
         auto df_with_event_category = df_with_fiducial.Define("event_category",
-            [sample_type](bool is_in_fiducial, int nu_pdg, int ccnc, int npi_char_true, int npr_true, int str_mult) {
+            [sample_type](bool is_in_fiducial, int nu_pdg, int ccnc, int interaction_type, int str_mult) {
                 int cat = 9999;
                 if (is_sample_data(sample_type)) {
                     cat = 0;
@@ -313,7 +313,7 @@ private:
                     cat = 2;
                 } else if (is_sample_mc(sample_type)) {
                     if (!is_in_fiducial) {
-                        cat = 3; 
+                        cat = 3;
                     } else {
                         bool isnumu = (std::abs(nu_pdg) == 14);
                         bool isnue = (std::abs(nu_pdg) == 12);
@@ -326,35 +326,39 @@ private:
                             cat = 21;
                         } else if (isnumu && iscc) {
                             if (str_mult == 1) {
-                                cat = 10;
-                            } else if (str_mult == 2) {
-                                cat = 11;
+                                cat = 10; // Signal: Single strange production
+                            } else if (str_mult > 1) { 
+                                cat = 11; // Signal: Multi-strange production (str_mult > 1)
                             } else if (str_mult == 0) {
-                                if (npi_char_true == 0) {
-                                    if (npr_true == 0) cat = 100;
-                                    else if (npr_true == 1) cat = 101;
-                                    else cat = 102;
-                                } else if (npi_char_true == 1) {
-                                    if (npr_true == 0) cat = 103;
-                                    else if (npr_true == 1) cat = 104;
-                                    else cat = 105;
+                                const int kQE = 0;
+                                const int kRes = 1; 
+                                const int kDIS = 2;
+                                const int kCoh = 3;
+
+                                if (interaction_type == kQE) {
+                                    cat = 110; // CC Quasi-Elastic
+                                } else if (interaction_type == kRes) {
+                                    cat = 111; // CC Resonant
+                                } else if (interaction_type == kDIS) {
+                                    cat = 112; // CC Deep Inelastic Scattering
                                 } else {
-                                    cat = 106;
+                                    cat = 113; // Other CC interaction
                                 }
                             } else {
-                                cat = 998;
+                                cat = 998; // Other
                             }
                         } else {
-                            cat = 998;
+                            cat = 998; // Other
                         }
                     }
                 }
                 return cat;
-            }, {"is_in_fiducial", "nu_pdg", "ccnc", "mc_n_charged_pions_true", "mc_n_protons_true", "inclusive_strangeness_multiplicity_type"}
+            }, {"is_in_fiducial", "nu_pdg", "ccnc", "interaction", "inclusive_strangeness_multiplicity_type"}
         );
 
         return df_with_event_category;
     }
+
 
     ROOT::RDF::RNode processNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) const {
         auto df_with_neutrino_slice_score = df.Define("nu_slice_topo_score",
