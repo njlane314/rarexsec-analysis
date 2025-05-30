@@ -42,7 +42,8 @@ public:
 
         reco_track_vars_ = {
             "trk_pfp_id_v", "trk_score_v", "trk_len_v", "trk_distance_v", "trk_llr_pid_score_v", 
-            "trk_phi_v", "trk_theta_v", "trk_range_muon_mom_v", "trk_mcs_muon_mom_v"
+            "trk_phi_v", "trk_theta_v", "trk_range_muon_mom_v", "trk_mcs_muon_mom_v",
+            "trk_start_x_v", "trk_end_x_v", "trk_start_y_v", "trk_end_y_v", "trk_start_z_v", "trk_end_z_v", 
         };
 
         reco_shower_vars_ = {
@@ -65,7 +66,7 @@ public:
             "knobxsr_scc_Fv3up", "knobxsr_scc_Fv3dn", "knobxsr_scc_Fa3up", "knobxsr_scc_Fa3dn", "RootinoFix"
         };
 
-        multi_universe_weights_ = {"weightsGenie", "weightsFlux", "weightsReint", "weightsPPFX"};
+        multi_universe_weights_ = {"weightsGenie", "weightsFlux", "weightsReint"};
     }
 
     std::vector<std::string> GetVariables(const VariableOptions& options, AnalysisFramework::SampleType sample_type) const {

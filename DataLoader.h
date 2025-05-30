@@ -372,14 +372,25 @@ private:
 
         auto df_mu_mask = df_with_neutrino_slice_score.Define("muon_candidate_selection_mask_vec",
             [](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
-            const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist) {
+               const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist,
+               const ROOT::RVec<float>& start_x, const ROOT::RVec<float>& end_x,
+               const ROOT::RVec<float>& start_y, const ROOT::RVec<float>& end_y,
+               const ROOT::RVec<float>& start_z, const ROOT::RVec<float>& end_z,
+               const ROOT::RVec<float>& mcs_mom, const ROOT::RVec<float>& range_mom) {
                 ROOT::RVec<bool> mask(ts.size());
                 for (size_t i = 0; i < ts.size(); ++i) {
-                    mask[i] = (ts[i] > 0.8f) && (pid[i] > 0.2f) && (l[i] > 10.f) && (dist[i] < 4.f);
+                    bool fiducial = (start_x[i] > 5.0 && start_x[i] < 251.0 && end_x[i] > 5.0 && end_x[i] < 251.0 &&
+                                     start_y[i] > -110.0 && start_y[i] < 110.0 && end_y[i] > -110.0 && end_y[i] < 110.0 &&
+                                     start_z[i] > 20.0 && start_z[i] < 986.0 && end_z[i] > 20.0 && end_z[i] < 986.0);
+                    bool quality = (l[i] > 10.0 && dist[i] < 4.0 &&
+                                    (range_mom[i] > 0 ? std::abs((mcs_mom[i] - range_mom[i]) / range_mom[i]) < 0.5 : true));
+                    mask[i] = (ts[i] > 0.8f) && (pid[i] > 0.2f) && fiducial && quality;
                 }
                 return mask;
             },
-            {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v"}
+            {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v",
+             "trk_start_x_v", "trk_end_x_v", "trk_start_y_v", "trk_end_y_v",
+             "trk_start_z_v", "trk_end_z_v", "trk_mcs_muon_mom_v", "trk_range_muon_mom_v"}
         );
 
         auto df_sel_idx = df_mu_mask.Define("selected_muon_idx",

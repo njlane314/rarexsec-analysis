@@ -60,7 +60,7 @@ int main() {
         plotter.Plot({
             .name = "plot",
             .data_pot = accumulated_pot,
-            .multisim_sources = {"weightsGenie", "weightsFlux"},
+            .multisim_sources = {"weightsGenie", "weightsFlux", "weightsReint"},
             .plot_uncertainty_breakdown = true,
             .plot_correlation_matrix = true
         });
