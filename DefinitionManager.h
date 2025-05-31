@@ -13,7 +13,6 @@
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/VecOps.hxx"
 
 #include "DataTypes.h"
 #include "VariableManager.h"
@@ -24,19 +23,19 @@ class DefinitionManager {
 public:
     DefinitionManager(const VariableManager& var_mgr) : variable_manager_(var_mgr) {}
 
-    ROOT::RDF::RNode ProcessNode(ROOT::RDF::RNode df, SampleCategory category,
+    ROOT::RDF::RNode ProcessNode(ROOT::RDF::RNode df, SampleType category,
                                  const VariableOptions& variable_options, bool is_variation) const {
         df = defineEventCategories(df, category);
         df = defineNuMuVariables(df, category);
 
-        if (category == SampleCategory::kMonteCarlo) {
+        if (category == SampleType::kMonteCarlo) {
             if (!is_variation && variable_options.load_weights_and_systematics) {
                 df = defineNominalCVWeight(df);
                 df = defineSingleKnobVariationWeights(df);
             } else if (is_variation) {
                 df = defineNominalCVWeight(df);
             }
-        } else if (category == SampleCategory::kData || category == SampleCategory::kExternal) {
+        } else if (category == SampleType::kData || category == SampleType::kExternal) {
             if (!df.HasColumn("event_weight_cv") && df.HasColumn("event_weight")) {
                 df = df.Alias("event_weight_cv", "event_weight");
             } else if (!df.HasColumn("event_weight_cv")) {
@@ -50,14 +49,14 @@ private:
     const VariableManager& variable_manager_;
 
     template<typename T_vec, typename T_val = typename T_vec::value_type>
-    T_val getElementFromVector(const T_vec& vec, int index, T_val default_val = T_val{}) {
+    T_val getElementFromVector(const T_vec& vec, int index, T_val default_val = T_val{}) const {
         if (index >= 0 && static_cast<size_t>(index) < vec.size()) {
             return vec[index];
         }
         return default_val;
     }
 
-    inline int getIndexFromVectorSort(const ROOT::RVec<float>& values_vec, const ROOT::RVec<bool>& mask_vec, int n_th_idx = 0, bool asc = false) {
+    inline int getIndexFromVectorSort(const ROOT::RVec<float>& values_vec, const ROOT::RVec<bool>& mask_vec, int n_th_idx = 0, bool asc = false) const {
         if (values_vec.empty() || (!mask_vec.empty() && values_vec.size() != mask_vec.size())) {
             return -1;
         }
@@ -108,9 +107,9 @@ private:
         return df;
     }
 
-    ROOT::RDF::RNode defineEventCategories(ROOT::RDF::RNode df, SampleCategory category) const {
+    ROOT::RDF::RNode defineEventCategories(ROOT::RDF::RNode df, SampleType category) const {
         auto df_with_defs = df;
-        bool is_mc = (category == SampleCategory::kMonteCarlo);
+        bool is_mc = (category == SampleType::kMonteCarlo);
 
         std::vector<std::string> truth_cols_for_cat = {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
                                                        "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z", "nu_pdg", "ccnc", "interaction"};
@@ -140,9 +139,9 @@ private:
                 df_with_defs = df_with_defs.Define("event_category",
                     [category](bool is_in_fiducial_val, int nu_pdg_val, int ccnc_val, int interaction_type_val, int str_mult_val) {
                         int cat = 9999;
-                        if (category == SampleCategory::kData) cat = 0;
-                        else if (category == SampleCategory::kExternal) cat = 1;
-                        else if (category == SampleCategory::kMonteCarlo) {
+                        if (category == SampleType::kData) cat = 0;
+                        else if (category == SampleType::kExternal) cat = 1;
+                        else if (category == SampleType::kMonteCarlo) {
                             if (!is_in_fiducial_val) cat = 3;
                             else {
                                 bool isnumu = (std::abs(nu_pdg_val) == 14); bool isnue = (std::abs(nu_pdg_val) == 12);
@@ -168,8 +167,8 @@ private:
                 df_with_defs = df_with_defs.Define("inclusive_strangeness_multiplicity_type", [](){ return -1;});
                 df_with_defs = df_with_defs.Define("is_in_fiducial", [](){ return false; });
                 df_with_defs = df_with_defs.Define("event_category", [category](){
-                     if (category == SampleCategory::kData) return 0;
-                     if (category == SampleCategory::kExternal) return 1;
+                     if (category == SampleType::kData) return 0;
+                     if (category == SampleType::kExternal) return 1;
                      return 998;
                  });
             }
@@ -180,15 +179,15 @@ private:
                                     .Define("inclusive_strangeness_multiplicity_type", [](){ return -1;})
                                     .Define("is_in_fiducial", [](){ return false; });
             df_with_defs = df_with_defs.Define("event_category", [category](){
-                if (category == SampleCategory::kData) return 0;
-                if (category == SampleCategory::kExternal) return 1;
+                if (category == SampleType::kData) return 0;
+                if (category == SampleType::kExternal) return 1;
                 return 9999;
             });
         }
         return df_with_defs;
     }
 
-    ROOT::RDF::RNode defineNuMuVariables(ROOT::RDF::RNode df, SampleCategory category) const {
+    ROOT::RDF::RNode defineNuMuVariables(ROOT::RDF::RNode df, SampleType category) const {
         std::vector<std::string> required_trk_cols = {"slice_topo_score_v", "slice_id", "trk_score_v",
             "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "trk_start_x_v", "trk_end_x_v",
             "trk_start_y_v", "trk_end_y_v", "trk_start_z_v", "trk_end_z_v", "trk_mcs_muon_mom_v",
@@ -214,30 +213,30 @@ private:
         }
 
         auto df_with_neutrino_slice_score = df.Define("nu_slice_topo_score",
-            [](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
-                return getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
+            [this](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
+                return this->getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
             }, {"slice_topo_score_v", "slice_id"}
         );
 
         auto df_mu_mask = df_with_neutrino_slice_score.Define("muon_candidate_selection_mask_vec",
-            [](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
-               const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist,
-               const ROOT::RVec<float>& start_x, const ROOT::RVec<float>& end_x,
-               const ROOT::RVec<float>& start_y, const ROOT::RVec<float>& end_y,
-               const ROOT::RVec<float>& start_z, const ROOT::RVec<float>& end_z,
-               const ROOT::RVec<float>& mcs_mom, const ROOT::RVec<float>& range_mom) {
+            [this](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
+                   const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist,
+                   const ROOT::RVec<float>& start_x, const ROOT::RVec<float>& end_x,
+                   const ROOT::RVec<float>& start_y, const ROOT::RVec<float>& end_y,
+                   const ROOT::RVec<float>& start_z, const ROOT::RVec<float>& end_z,
+                   const ROOT::RVec<float>& mcs_mom, const ROOT::RVec<float>& range_mom) {
                 ROOT::RVec<bool> mask(ts.size());
                 for (size_t i = 0; i < ts.size(); ++i) {
-                    bool fiducial = (getElementFromVector(start_x, i, 0.f) > 5.0 && getElementFromVector(start_x, i, 0.f) < 251.0 &&
-                                     getElementFromVector(end_x, i, 0.f) > 5.0 && getElementFromVector(end_x, i, 0.f) < 251.0 &&
-                                     getElementFromVector(start_y, i, 0.f) > -110.0 && getElementFromVector(start_y, i, 0.f) < 110.0 &&
-                                     getElementFromVector(end_y, i, 0.f) > -110.0 && getElementFromVector(end_y, i, 0.f) < 110.0 &&
-                                     getElementFromVector(start_z, i, 0.f) > 20.0 && getElementFromVector(start_z, i, 0.f) < 986.0 &&
-                                     getElementFromVector(end_z, i, 0.f) > 20.0 && getElementFromVector(end_z, i, 0.f) < 986.0);
-                    float current_range_mom = getElementFromVector(range_mom, i, 0.f);
-                    bool quality = (getElementFromVector(l, i, 0.f) > 10.0 && getElementFromVector(dist, i, 5.0f) < 4.0 &&
-                                    (current_range_mom > 0 ? std::abs((getElementFromVector(mcs_mom, i, 0.f) - current_range_mom) / current_range_mom) < 0.5 : true));
-                    mask[i] = (getElementFromVector(ts, i, 0.f) > 0.8f) && (getElementFromVector(pid, i, 0.f) > 0.2f) && fiducial && quality;
+                    bool fiducial = (this->getElementFromVector(start_x, i, 0.f) > 5.0 && this->getElementFromVector(start_x, i, 0.f) < 251.0 &&
+                                     this->getElementFromVector(end_x, i, 0.f) > 5.0 && this->getElementFromVector(end_x, i, 0.f) < 251.0 &&
+                                     this->getElementFromVector(start_y, i, 0.f) > -110.0 && this->getElementFromVector(start_y, i, 0.f) < 110.0 &&
+                                     this->getElementFromVector(end_y, i, 0.f) > -110.0 && this->getElementFromVector(end_y, i, 0.f) < 110.0 &&
+                                     this->getElementFromVector(start_z, i, 0.f) > 20.0 && this->getElementFromVector(start_z, i, 0.f) < 986.0 &&
+                                     this->getElementFromVector(end_z, i, 0.f) > 20.0 && this->getElementFromVector(end_z, i, 0.f) < 986.0);
+                    float current_range_mom = this->getElementFromVector(range_mom, i, 0.f);
+                    bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0 &&
+                                    (current_range_mom > 0 ? std::abs((this->getElementFromVector(mcs_mom, i, 0.f) - current_range_mom) / current_range_mom) < 0.5 : true));
+                    mask[i] = (this->getElementFromVector(ts, i, 0.f) > 0.8f) && (this->getElementFromVector(pid, i, 0.f) > 0.2f) && fiducial && quality;
                 }
                 return mask;
             },
@@ -247,20 +246,20 @@ private:
         );
 
         auto df_sel_idx = df_mu_mask.Define("selected_muon_idx",
-            [](const ROOT::RVec<float>& l, const ROOT::RVec<bool>& m) {
-                return getIndexFromVectorSort(l, m, 0, false);
+            [this](const ROOT::RVec<float>& l, const ROOT::RVec<bool>& m) {
+                return this->getIndexFromVectorSort(l, m, 0, false);
             }, {"trk_len_v", "muon_candidate_selection_mask_vec"}
         );
 
         auto df_mu_props = df_sel_idx
-            .Define("selected_muon_length", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -1.f); }, {"trk_len_v", "selected_muon_idx"})
-            .Define("selected_muon_momentum_range", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -1.f); }, {"trk_range_muon_mom_v", "selected_muon_idx"})
-            .Define("selected_muon_momentum_mcs", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -1.f); }, {"trk_mcs_muon_mom_v", "selected_muon_idx"})
-            .Define("selected_muon_phi", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -999.f); }, {"trk_phi_v", "selected_muon_idx"})
-            .Define("selected_muon_cos_theta", [](const ROOT::RVec<float>& v, int i) { float t = getElementFromVector(v, i, -999.f); return (std::abs(t) < 100.f && std::isfinite(t)) ? std::cos(t) : -999.f; }, {"trk_theta_v", "selected_muon_idx"})
+            .Define("selected_muon_length", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "selected_muon_idx"})
+            .Define("selected_muon_momentum_range", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_range_muon_mom_v", "selected_muon_idx"})
+            .Define("selected_muon_momentum_mcs", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_mcs_muon_mom_v", "selected_muon_idx"})
+            .Define("selected_muon_phi", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -999.f); }, {"trk_phi_v", "selected_muon_idx"})
+            .Define("selected_muon_cos_theta", [this](const ROOT::RVec<float>& v, int i) { float t = this->getElementFromVector(v, i, -999.f); return (std::abs(t) < 100.f && std::isfinite(t)) ? std::cos(t) : -999.f; }, {"trk_theta_v", "selected_muon_idx"})
             .Define("selected_muon_energy", [](float mom) { const float M = 0.105658f; return (mom >= 0.f && std::isfinite(mom)) ? std::sqrt(mom * mom + M * M) : -1.f; }, {"selected_muon_momentum_range"})
-            .Define("selected_muon_trk_score", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -1.f); }, {"trk_score_v", "selected_muon_idx"})
-            .Define("selected_muon_llr_pid_score", [](const ROOT::RVec<float>& v, int i) { return getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "selected_muon_idx"});
+            .Define("selected_muon_trk_score", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_score_v", "selected_muon_idx"})
+            .Define("selected_muon_llr_pid_score", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "selected_muon_idx"});
 
         return df_mu_props
             .Define("n_muon_candidates", [](const ROOT::RVec<bool>& m) { return ROOT::VecOps::Sum(m); }, {"muon_candidate_selection_mask_vec"});

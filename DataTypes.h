@@ -12,7 +12,7 @@ enum class SampleType : unsigned int {
     kMonteCarlo
 };
 
-enum class DetectorVariationType : unsigned int {
+enum class DetVarType : unsigned int {
     kUnknown = 0,
     kDetVarCV,                
     kDetVarLYAttenuation,    

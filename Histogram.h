@@ -27,7 +27,7 @@ public:
     std::vector<double> bin_counts;
     TMatrixDSym covariance_matrix;
 
-    Color_t plot_color_code = kBlack;  // Changed from TString to Color_t
+    Color_t plot_color_code = kBlack;  
     int plot_hatch_idx = 0;
     TString tex_string = "";
 
@@ -81,7 +81,7 @@ private:
             fRootHist->SetBinError(i + 1, error);
         }
 
-        Color_t color_to_set = plot_color_code;  // Directly use the stored color code
+        Color_t color_to_set = plot_color_code; 
 
         fRootHist->SetLineColor(color_to_set);
         fRootHist->SetMarkerColor(color_to_set);
@@ -100,7 +100,7 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const std::vector<double>& uncertainties,
               TString name = "hist", TString title = "Histogram",
-              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  // Changed to Color_t
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  
         TNamed(name, title), binning_def(binDef), bin_counts(counts),
         plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
@@ -124,7 +124,7 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const TMatrixDSym& covMatrix,
               TString name = "hist", TString title = "Histogram",
-              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  // Changed to Color_t
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  
         TNamed(name, title), binning_def(binDef), bin_counts(counts), covariance_matrix(covMatrix),
         plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
@@ -145,7 +145,7 @@ public:
         binning_def(other.binning_def),
         bin_counts(other.bin_counts),
         covariance_matrix(other.covariance_matrix),
-        plot_color_code(other.plot_color_code),  // Changed to plot_color_code
+        plot_color_code(other.plot_color_code),  
         plot_hatch_idx(other.plot_hatch_idx),
         tex_string(other.tex_string),
         fRootHist(nullptr)
@@ -157,6 +157,47 @@ public:
         }
     }
 
+    Histogram(const Binning& binDef, const TH1D& rootHist, TString name = "hist", TString title = "Histogram",
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = "")
+        : TNamed(name, title), binning_def(binDef), plot_color_code(plotColor),
+          plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
+    {
+        int nBins = binDef.nBins();
+        if (nBins != rootHist.GetNbinsX()) {
+            throw std::runtime_error("Histogram: Binning and TH1D have different number of bins for '" + std::string(name.Data()) + "'.");
+        }
+        bin_counts.resize(nBins);
+        for (int i = 0; i < nBins; ++i) {
+            bin_counts[i] = rootHist.GetBinContent(i + 1);
+        }
+        covariance_matrix.ResizeTo(nBins, nBins);
+        covariance_matrix.Zero();
+        for (int i = 0; i < nBins; ++i) {
+            double err = rootHist.GetBinError(i + 1);
+            covariance_matrix(i, i) = err * err;
+        }
+        TString uniqueName = TString::Format("%s_root_%p", name.Data(), (void*)this);
+        fRootHist = static_cast<TH1D*>(rootHist.Clone(uniqueName));
+        fRootHist->SetDirectory(nullptr);
+        if (this->tex_string.IsNull() || this->tex_string.IsWhitespace()) this->tex_string = name;
+    }
+
+    Histogram(const Binning& binDef, TString name = "hist", TString title = "Histogram",
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = "")
+        : TNamed(name, title), binning_def(binDef), plot_color_code(plotColor),
+          plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
+    {
+        int nBins = binDef.nBins();
+        if (nBins <= 0) {
+            throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
+        }
+        bin_counts.assign(nBins, 0.0);
+        covariance_matrix.ResizeTo(nBins, nBins);
+        covariance_matrix.Zero();
+        if (texStr.IsNull() || texStr.IsWhitespace()) this->tex_string = name;
+        updateRootHistNonConst();
+    }
+
     Histogram& operator=(const Histogram& other) {
         if (this == &other) return *this;
         TNamed::operator=(static_cast<const TNamed&>(other));
@@ -166,7 +207,7 @@ public:
              covariance_matrix.ResizeTo(other.covariance_matrix.GetNrows(), other.covariance_matrix.GetNcols());
         }
         covariance_matrix = other.covariance_matrix;
-        plot_color_code = other.plot_color_code;  // Changed to plot_color_code
+        plot_color_code = other.plot_color_code;  
         plot_hatch_idx = other.plot_hatch_idx;
         tex_string = other.tex_string;
 

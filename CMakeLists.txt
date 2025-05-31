@@ -37,16 +37,16 @@ endif()
 
 # Define public headers
 set(ANALYSIS_FRAMEWORK_PUBLIC_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/DataLoader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/RunHistGenerator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/RunPlotter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DataManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisSpace.h
 )
 
 # Define headers for dictionary generation
 set(DICTIONARY_INPUT_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/DataLoader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/RunHistGenerator.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/RunPlotter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DataManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisSpace.h
 )
 
 # Generate ROOT dictionary with a unique name
@@ -109,11 +109,4 @@ function(add_analysis_executable target_name source_file)
     install(TARGETS ${target_name} DESTINATION bin)
 endfunction()
 
-
-add_analysis_executable(run_datasaver run_datasaver.cpp) 
-add_analysis_executable(run_plotting run_plotting.cpp)
-add_analysis_executable(run_eventdisplay run_eventdisplay.cpp) 
-
-add_analysis_executable(run_pot run_pot.cpp)
-add_analysis_executable(run_displaync run_displaync.cpp)
 

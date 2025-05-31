@@ -5,7 +5,7 @@
 #include <vector>
 #include <set>
 
-#include "SampleTypes.h"
+#include "DataTypes.h"
 
 namespace AnalysisFramework {
 
@@ -96,7 +96,7 @@ public:
     std::vector<std::string> GetVariables(const VariableOptions& options, AnalysisFramework::SampleType sample_type) const {
         std::set<std::string> vars_set;
         vars_set.insert(base_event_vars_.begin(), base_event_vars_.end());
-        if (options.load_truth_event_info && AnalysisFramework::is_sample_mc(sample_type)) {
+        if (options.load_truth_event_info && sample_type == SampleType::kMonteCarlo) {
             vars_set.insert(truth_event_vars_.begin(), truth_event_vars_.end());
         }
         if (options.load_reco_event_info) {
@@ -105,7 +105,7 @@ public:
         if (options.load_reco_track_info) {
             vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
         }
-        if (options.load_weights_and_systematics && AnalysisFramework::is_sample_mc(sample_type) && !AnalysisFramework::is_sample_detvar(sample_type)) {
+        if (options.load_weights_and_systematics && sample_type == SampleType::kMonteCarlo) {
             vars_set.insert(nominal_mc_weights_.begin(), nominal_mc_weights_.end());
             vars_set.insert(systematic_knob_weights_.begin(), systematic_knob_weights_.end());
             vars_set.insert(multi_universe_weights_.begin(), multi_universe_weights_.end());
@@ -117,6 +117,15 @@ public:
             vars_set.insert(blip_vars_.begin(), blip_vars_.end());
         }
         return std::vector<std::string>(vars_set.begin(), vars_set.end());
+    }
+
+    std::map<std::string, unsigned int> GetMultiUniverseDefinitions() const {
+        return {
+            {"weightsGenie", 500},
+            {"weightsFlux", 500},
+            {"weightsReint", 500},
+            {"weightsPPFX", 500}
+        };
     }
 };
 
