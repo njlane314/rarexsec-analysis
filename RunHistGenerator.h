@@ -71,26 +71,32 @@ public:
     }
 
     std::map<int, AnalysisFramework::Histogram> GetMonteCarloHists(
+        const std::string& weight_column = "event_weight_cv",
         const TString& category_column_name = "event_category",
-        double scale_to_pot = 0.0
+        double scale_factor = 1.0
     ) const {
-        Log("Starting nominal-only histogram generation...");
+        Log("Starting histogram generation with weight column: " + weight_column + "...");
         std::map<int, AnalysisFramework::Histogram> final_mc_hists_map;
-        if (mc_filtered_dfs_.empty()) return final_mc_hists_map;
+        if (mc_filtered_dfs_.empty()) {
+            Log("No MC dataframes to process. Returning empty map.");
+            return final_mc_hists_map;
+        }
         std::map<int, std::vector<ROOT::RDF::RResultPtr<TH1D>>> category_hist_futures;
         const std::vector<int> all_categories = AnalysisFramework::GetCategories(category_column_name.Data());
-        Log("Booking nominal histograms for " + std::to_string(all_categories.size()) + " categories...");
+        Log("Booking histograms for " + std::to_string(all_categories.size()) + " categories using weight: " + weight_column + "...");
+        
         for (const auto& mc_df_ptr : mc_filtered_dfs_) {
             if (!mc_df_ptr) continue;
             ROOT::RDF::RNode mc_df = *mc_df_ptr;
             for (int event_category : all_categories) {
-                if (event_category == 0) continue;
+                if (event_category == 0) continue; // Skip data category
                 TString category_filter_str = TString::Format("%s == %d", category_column_name.Data(), event_category);
                 auto category_df = mc_df.Filter(category_filter_str.Data());
-                auto hist_future = mc_hist_generator_.BookHistogram(category_df, binning_, "event_weight");
+                auto hist_future = mc_hist_generator_.BookHistogram(category_df, binning_, weight_column);
                 category_hist_futures[event_category].push_back(std::move(hist_future));
             }
         }
+        
         Log("Booking complete. Triggering event loop and processing results...");
         for (auto& category_future_pair : category_hist_futures) {
             int event_category = category_future_pair.first;
@@ -109,7 +115,7 @@ public:
                     double bin_error = root_hist.GetBinError(i);
                     cov_matrix(i-1, i-1) = bin_error * bin_error;
                 }
-                TString hist_name = TString::Format("mc_hist_cat_%d", event_category);
+                TString hist_name = TString::Format("mc_hist_cat_%d_weight_%s", event_category, weight_column.c_str());
                 TString label_str = GetLabel(category_column_name.Data(), event_category);
                 AnalysisFramework::Histogram hist(
                     binning_,
@@ -132,20 +138,23 @@ public:
                 final_mc_hists_map[event_category] = combined_hist;
             }
         }
-        if (scale_to_pot > 0.0 && data_pot_ > 0.0) {
-            double scale_factor = scale_to_pot / data_pot_;
+        
+        if (scale_factor > 0.0 && data_pot_ > 0.0) {
+            double scale_factor = scale_factor / data_pot_;
+            Log("Scaling histograms to POT: " + std::to_string(scale_factor));
             for (auto& pair : final_mc_hists_map) {
                 pair.second = pair.second * scale_factor;
             }
         }
-        Log("Nominal-only histogram generation finished.");
+        
+        Log("Histogram generation with weight column " + weight_column + " finished.");
         return final_mc_hists_map;
     }
 
     std::map<int, AnalysisFramework::Histogram> GetMonteCarloHistsWithSystematics(
         const std::vector<std::string>& multisim_sources,
         const TString& category_column_name = "event_category",
-        double scale_to_pot = 0.0
+        double scale_factor = 0.0
     ) const {
         Log("Starting COMBINED histogram generation with systematics...");
         if (mc_filtered_dfs_.empty()) {
@@ -301,9 +310,9 @@ public:
             }
             final_hists_map[cat_id] = final_hist;
         }
-        if (scale_to_pot > 0.0 && data_pot_ > 0.0) {
-            double scale_factor = scale_to_pot / data_pot_;
-            Log("Scaling all histograms to POT: " + std::to_string(scale_to_pot));
+        if (scale_factor > 0.0 && data_pot_ > 0.0) {
+            double scale_factor = scale_factor / data_pot_;
+            Log("Scaling all histograms to POT: " + std::to_string(scale_factor));
             for (auto& pair : final_hists_map) {
                 pair.second = pair.second * scale_factor;
             }
