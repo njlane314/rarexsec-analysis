@@ -121,21 +121,36 @@ private:
             for (const auto& [sample_key, sample_info] : all_samples) {
                 if (sample_key != "data") {
                     Histogram hist(plot_task_map_[task_id], nominal_futures_[task_id][sample_key].GetValue(),
-                                   sample_key, sample_key);
+                                    sample_key, sample_key);
                     result.mc_breakdown[sample_key] = hist;
                     total_mc_nominal = total_mc_nominal + hist;
                 }
             }
             result.total_mc_hist = total_mc_nominal;
 
-            auto syst_cov_map = params_.systematics_controller.computeAllCovariances(task_id, result.total_mc_hist, task_binning);
-            for(const auto& [syst_name, cov_matrix] : syst_cov_map){
-                result.total_mc_hist.addCovariance(cov_matrix);
-                result.systematic_covariance_breakdown[syst_name] = cov_matrix;
+            std::map<std::string, TMatrixDSym> total_syst_breakdown;
+            auto all_categories = GetCategories("event_category");
+
+            for (const int category_id : all_categories) {
+                if (category_id == 0) continue;
+                auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(category_id, result.total_mc_hist, task_binning);
+
+                for (const auto& [syst_name, cov_matrix] : per_category_cov_map) {
+                    if (total_syst_breakdown.find(syst_name) == total_syst_breakdown.end()) {
+                        total_syst_breakdown[syst_name].ResizeTo(result.total_mc_hist.nBins(), result.total_mc_hist.nBins());
+                        total_syst_breakdown[syst_name].Zero();
+                    }
+                    total_syst_breakdown[syst_name] += cov_matrix;
+                }
+            }
+
+            for(const auto& [syst_name, total_cov] : total_syst_breakdown){
+                result.total_mc_hist.addCovariance(total_cov);
+                result.systematic_covariance_breakdown[syst_name] = total_cov;
             }
 
             if (params_.pot_scale_factor != 1.0) {
-                
+                // ...
             }
 
             final_results[task_id] = result;

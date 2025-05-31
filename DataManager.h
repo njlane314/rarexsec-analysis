@@ -23,6 +23,7 @@
 #include "VariableManager.h"
 #include "ConfigurationManager.h"
 #include "DefinitionManager.h"
+#include "Selection.h"  
 
 namespace AnalysisFramework {
 
@@ -69,6 +70,11 @@ public:
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
     double getDataPOT() const { return data_pot_; }
+
+    void Save(const std::string& selection_key,
+              const std::string& preselection_key,
+              const std::string& output_file,
+              const std::vector<std::string>& columns_to_save = {}) const;
 
 private:
     ConfigurationManager config_manager_;
@@ -281,6 +287,41 @@ private:
         return df;
     }
 };
+
+void DataManager::Save(const std::string& selection_key,
+                       const std::string& preselection_key,
+                       const std::string& output_file,
+                       const std::vector<std::string>& columns_to_save) const {
+    if (output_file.empty()) {
+        throw std::invalid_argument("Output file name cannot be empty.");
+    }
+
+    std::string query = Selection::getSelectionQuery(TString(selection_key.c_str()), TString(preselection_key.c_str())).Data();
+    if (query.empty()) {
+        throw std::runtime_error("Selection query is empty");
+    }
+
+    bool first_tree = true;
+    for (const auto& [sample_key, sample_info] : samples_) {
+        auto df = sample_info.getDataFrame();
+        auto filtered_df = df.Filter(query);
+
+        std::vector<std::string> final_columns_to_snapshot;
+        if (!columns_to_save.empty()) {
+            final_columns_to_snapshot = columns_to_save;
+        } else {
+            final_columns_to_snapshot = filtered_df.GetColumnNames();
+            std::sort(final_columns_to_snapshot.begin(), final_columns_to_snapshot.end());
+        }
+
+        ROOT::RDF::RSnapshotOptions opts;
+        opts.fMode = first_tree ? "RECREATE" : "UPDATE";
+
+        std::string tree_name = sample_key;
+        filtered_df.Snapshot(tree_name, output_file, final_columns_to_snapshot, opts);
+        first_tree = false;
+    }
+}
 
 }
 

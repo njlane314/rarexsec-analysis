@@ -12,6 +12,7 @@
 #include "VariableManager.h"
 #include "Histogram.h"
 #include "DataManager.h"
+#include "EventCategories.h"
 
 #include "ROOT/RDataFrame.hxx"
 #include "TH1.h"
@@ -53,41 +54,41 @@ public:
         return *this;
     }
 
-    void bookVariations(const std::string& task_id, const std::string& sample_key, ROOT::RDF::RNode df, const DataManager::AssociatedVariationMap& det_var_nodes, const Binning& binning) {
-        int category_id_placeholder = 0;
-        std::string selection_query_placeholder = "";
-        for (const auto& syst : systematics_) {
-            syst->Book(df, det_var_nodes, sample_key, category_id_placeholder, binning, selection_query_placeholder);
+    void bookVariations(const std::string& task_id, const std::string& sample_key, ROOT::RDF::RNode df,
+                        const DataManager::AssociatedVariationMap& det_var_nodes, const Binning& binning,
+                        const std::string& selection_query) {
+        std::string category_column = "event_category";
+        auto categories = GetCategories(category_column);
+        for (int category_id : categories) {
+            for (const auto& syst : systematics_) {
+                syst->Book(df, det_var_nodes, sample_key, category_id, binning, selection_query);
+            }
         }
     }
 
-    std::map<std::string, TMatrixDSym> computeAllCovariances(const std::string& task_id,
-                                                             const Histogram& total_nominal_mc,
-                                                             const Binning& binning_def) {
+    std::map<std::string, TMatrixDSym> computeAllCovariances(int category_id, const Histogram& nominal_hist,
+                                                             const Binning& binning) {
         std::map<std::string, TMatrixDSym> breakdown;
-        int category_id_placeholder = 0;
-
         for (const auto& syst : systematics_) {
-            breakdown[syst->GetName()] = syst->ComputeCovariance(category_id_placeholder, total_nominal_mc, binning_def);
+            breakdown[syst->GetName()] = syst->ComputeCovariance(category_id, nominal_hist, binning);
         }
         return breakdown;
     }
 
-    std::map<std::string, std::map<std::string, Histogram>> getAllVariedHistograms(const Binning& binning_def) {
+    std::map<std::string, std::map<std::string, Histogram>> getAllVariedHistograms(int category_id,
+                                                                                   const Binning& binning) {
         std::map<std::string, std::map<std::string, Histogram>> all_varied_hists;
-        int category_id_placeholder = 0;
         for (const auto& syst : systematics_) {
-            all_varied_hists[syst->GetName()] = syst->GetVariedHistograms(category_id_placeholder, binning_def);
+            all_varied_hists[syst->GetName()] = syst->GetVariedHistograms(category_id, binning);
         }
         return all_varied_hists;
     }
-
 
 private:
     const VariableManager& var_manager_;
     std::vector<std::unique_ptr<Systematic>> systematics_;
 };
 
-}
+} // namespace AnalysisFramework
 
-#endif
+#endif // SYSTEMATICS_CONTROLLER_H
