@@ -3,6 +3,7 @@ set(FRAMEWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisSpace.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Binning.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CorrelationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DataManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DataTypes.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DefinitionManager.h

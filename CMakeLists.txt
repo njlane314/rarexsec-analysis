@@ -41,3 +41,13 @@ target_link_libraries(numucc_snapshot
         ${TBB_LIBRARIES}
         ${TORCH_LIBRARIES}
 )
+
+
+add_executable(signal_correlation_analysis signal_correlation_analysis.cpp)
+target_link_libraries(signal_correlation_analysis
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+        ${TBB_LIBRARIES}
+        ${TORCH_LIBRARIES}
+)

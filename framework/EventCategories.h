@@ -40,7 +40,7 @@ inline const std::map<std::string, std::map<int, int>>& GetColorMaps() {
             {0,   kBlack},
             {1,   kGray},
             {2,   kGray + 2},
-            {10,  kSprint + 5},
+            {10,  kSpring + 5},
             {11,  kGreen + 2},
             {20,  kRed},
             {21,  kRed - 7},
