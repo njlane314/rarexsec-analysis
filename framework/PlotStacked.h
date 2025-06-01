@@ -2,8 +2,10 @@
 #define STACKEDPLOT_H
 
 #include <vector>
+#include <algorithm> 
+#include <iostream>  
 #include "PlotBase.h"
-#include "AnalysisRunner.h"
+#include "AnalysisRunner.h" 
 #include "EventCategories.h"
 
 namespace AnalysisFramework {
@@ -22,14 +24,17 @@ public:
 
 protected:
     inline void DrawMainPlot(TPad& pad) override {
-        data_hist_ = result_.data_hist.getRootHistCopy("data_hist");
         total_mc_hist_ = result_.total_mc_hist.getRootHistCopy("total_mc_hist");
         mc_stack_ = new THStack("mc_stack", "");
         legend_ = new TLegend(0.7, 0.65, 0.92, 0.92);
 
-        if (data_hist_ && data_hist_->GetEntries() > 0) {
-            legend_->AddEntry(data_hist_, "Data", "pe");
+        if (!result_.blinded) {
+            data_hist_ = result_.data_hist.getRootHistCopy("data_hist");
+            if (data_hist_ && data_hist_->GetEntries() > 0) {
+                legend_->AddEntry(data_hist_, "Data", "pe");
+            }
         }
+
         if (total_mc_hist_) {
             legend_->AddEntry(total_mc_hist_, "Total MC Unc.", "f");
         }
@@ -63,11 +68,16 @@ protected:
         }
 
         mc_stack_->Draw("HIST");
-        mc_stack_->GetXaxis()->SetLabelSize(0);
-        mc_stack_->GetYaxis()->SetTitle("Events");
+        if (mc_stack_->GetXaxis()) { 
+            mc_stack_->GetXaxis()->SetLabelSize(0);
+        }
+        if (mc_stack_->GetYaxis()) { 
+             mc_stack_->GetYaxis()->SetTitle("Events");
+        }
+
 
         double stack_max = mc_stack_->GetMaximum();
-        double data_max = data_hist_ ? data_hist_->GetBinContent(data_hist_->GetMaximumBin()) + data_hist_->GetBinError(data_hist_->GetMaximumBin()) : 0;
+        double data_max = (!result_.blinded && data_hist_ && data_hist_->GetEntries() > 0) ? data_hist_->GetBinContent(data_hist_->GetMaximumBin()) + data_hist_->GetBinError(data_hist_->GetMaximumBin()) : 0;
         mc_stack_->SetMaximum(std::max(stack_max, data_max) * 1.4);
 
         if (total_mc_hist_) {
@@ -75,14 +85,14 @@ protected:
             total_mc_hist_->Draw("E2 SAME");
         }
         
-        if (data_hist_ && data_hist_->GetEntries() > 0) {
+        if (!result_.blinded && data_hist_ && data_hist_->GetEntries() > 0) {
             StyleDataHist(data_hist_);
             data_hist_->Draw("PE SAME");
         }
     }
 
     inline void DrawRatioPlot(TPad& pad) override {
-        if (!data_hist_ || !total_mc_hist_ || data_hist_->GetEntries() == 0 || total_mc_hist_->GetEntries() == 0) return;
+        if (result_.blinded || !data_hist_ || !total_mc_hist_ || data_hist_->GetEntries() == 0 || total_mc_hist_->GetEntries() == 0) return;
 
         TH1D* ratio_hist = static_cast<TH1D*>(data_hist_->Clone("ratio"));
         ratio_hist->Divide(total_mc_hist_);
@@ -96,20 +106,24 @@ protected:
         mc_ratio_unc->SetMarkerSize(0);
         mc_ratio_unc->Draw("E2 SAME");
         
-        TLine* line = new TLine(ratio_hist->GetXaxis()->GetXmin(), 1, ratio_hist->GetXaxis()->GetXmax(), 1);
-        line->SetLineStyle(2);
-        line->Draw("SAME");
-        
-        delete ratio_hist;
-        delete mc_ratio_unc;
-        delete line;
+        TLine* line = nullptr;
+        if (ratio_hist->GetXaxis()){ 
+            line = new TLine(ratio_hist->GetXaxis()->GetXmin(), 1, ratio_hist->GetXaxis()->GetXmax(), 1);
+            line->SetLineStyle(2);
+            line->Draw("SAME");
+        }
     }
 
     inline void DrawLabels(TPad& pad) override {
         if (legend_) {
             legend_->Draw();
         }
-        double pot_to_draw = (data_hist_ && data_hist_->GetEntries() > 0) ? result_.data_hist.sum() : -1.0;
+        double pot_to_draw = -1.0;
+        if (!result_.blinded && result_.data_pot > 0) {
+             pot_to_draw = result_.data_pot;
+        } else if (result_.blinded && result_.data_pot > 0) {
+            pot_to_draw = result_.data_pot;
+        }
         DrawBrand(pot_to_draw);
     }
 

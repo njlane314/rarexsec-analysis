@@ -70,13 +70,15 @@ public:
         : config_manager_(params.config_file),
           variable_manager_(),
           definition_manager_(variable_manager_),
-          data_pot_(0.0) {
-        loadRuns(params.beam_key, params.runs_to_load, params.blinded, params.variable_options);
+          data_pot_(0.0),
+          blinded_(params.blinded) {
+        loadRuns(params.beam_key, params.runs_to_load, params.variable_options);
     }
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
     double getDataPOT() const { return data_pot_; }
     const VariableManager& getVariableManager() const { return variable_manager_; }
+    bool isBlinded() const { return blinded_; }
 
     AssociatedVariationMap getAssociatedVariations() const {
         AssociatedVariationMap all_det_vars;
@@ -100,6 +102,7 @@ private:
 
     std::map<std::string, DataManager::SampleInfo> samples_;
     double data_pot_;
+    bool blinded_;
 
     struct LoadedData {
         NominalDataFrameMap nominal_samples;
@@ -109,13 +112,12 @@ private:
 
     void loadRuns(const std::string& beam_key_val,
                   const std::vector<std::string>& runs_to_load_val,
-                  bool blinded_val,
                   const VariableOptions& variable_options_val) {
         LoadedData loaded_data;
         loaded_data.data_pot = 0.0;
         for (const auto& run_key : runs_to_load_val) {
             const auto& run_config = config_manager_.GetRunConfig(beam_key_val, run_key);
-            auto [nominal_dataframes, associated_detvars, run_pot_for_current_run] = loadSamples(run_config, variable_options_val, blinded_val);
+            auto [nominal_dataframes, associated_detvars, run_pot_for_current_run] = loadSamples(run_config, variable_options_val);
             
             for (const auto& [sample_key, rnode_pair] : nominal_dataframes) {
                 loaded_data.nominal_samples.emplace(sample_key, rnode_pair);
@@ -145,8 +147,7 @@ private:
 
     std::tuple<NominalDataFrameMap, AssociatedVariationMap, double> loadSamples(
         const RunConfiguration& run_config,
-        const VariableOptions& variable_options,
-        bool blinded) const {
+        const VariableOptions& variable_options) const {
         NominalDataFrameMap nominal_dataframes;
         AssociatedVariationMap associated_detvars;
         double current_run_pot = 0.0;
@@ -161,7 +162,7 @@ private:
         if (data_props_iter != run_config.sample_props.end()) {
             current_run_pot = data_props_iter->second.pot;
             current_run_triggers = data_props_iter->second.triggers;
-        } else if (!blinded) {
+        } else if (!blinded_) {
             std::cout << "-- Info: No data sample for POT/trigger reference (unblinded)." << std::endl;
         }
 
@@ -171,7 +172,7 @@ private:
             std::string file_path = base_directory + "/" + sample_props.relative_path;
 
             if (sample_props.sample_type == SampleType::kData) {
-                if (!blinded) {
+                if (!blinded_) {
                     ROOT::RDF::RNode df = loadDataSample(file_path, variable_options);
                     nominal_dataframes.emplace(sample_key, RNodePair{SampleType::kData, std::move(df)});
                 }
@@ -280,7 +281,7 @@ private:
         df = definition_manager_.ProcessNode(df, SampleType::kMonteCarlo, variable_options, is_variation);
         
         if (!truth_filter.empty()) {
-            df = df.Filter(truth_filter, "Truth Filter: " + truth_filter);
+            df = df.Filter(truth_filter, ("Truth Filter: " + truth_filter).c_str());
         }
         if (!exclusion_truth_filters.empty()) {
             std::string exclusion_filter_str = buildExclusiveFilter(exclusion_truth_filters, all_samples);
@@ -320,8 +321,8 @@ inline void DataManager::Save(const std::string& selection_key,
                 }
             }
         } else { 
-            for(const auto& col_name : available_columns) { 
-                final_columns_to_snapshot.push_back(col_name); 
+            for(const auto& col_name_obj : available_columns) { 
+                final_columns_to_snapshot.push_back(std::string(col_name_obj.data(), col_name_obj.length()));
             }
             std::sort(final_columns_to_snapshot.begin(), final_columns_to_snapshot.end()); 
         }

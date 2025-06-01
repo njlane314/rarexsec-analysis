@@ -25,6 +25,8 @@ namespace AnalysisFramework {
 struct AnalysisResult {
     Histogram total_mc_hist;
     Histogram data_hist;
+    double data_pot = 0.0;
+    bool blinded = true; 
     std::map<std::string, Histogram> mc_breakdown;
     std::map<std::string, TMatrixDSym> systematic_covariance_breakdown;
     std::map<std::string, std::map<std::string, Histogram>> systematic_variations;
@@ -115,7 +117,9 @@ private:
                         task_binning.selection_query.Data(), params_.category_column);
 
                 } else { 
-                    data_futures_[task_id] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                    if (!params_.data_manager.isBlinded()){
+                        data_futures_[task_id] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                    }
                 }
             }
         }
@@ -127,8 +131,10 @@ private:
 
         for (const auto& [task_id, task_binning] : plot_task_map_) {
             AnalysisResult result;
+            result.blinded = params_.data_manager.isBlinded();
+            result.data_pot = params_.data_manager.getDataPOT();
             
-            if (data_futures_.count(task_id)) {
+            if (!result.blinded && data_futures_.count(task_id)) {
                 result.data_hist = Histogram(task_binning, *data_futures_.at(task_id).GetPtr(), "data_hist", "Data");
             }
 
@@ -142,10 +148,14 @@ private:
 
                 for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
                     if (sample_info.isMonteCarlo()) {
-                        auto hist_ptr = mc_category_futures_.at(task_id).at(sample_key).at(category_id).GetPtr();
-                        if (hist_ptr) {
-                            Histogram temp_hist(task_binning, *hist_ptr);
-                            category_hist = category_hist + temp_hist;
+                         if (mc_category_futures_.count(task_id) && 
+                            mc_category_futures_.at(task_id).count(sample_key) &&
+                            mc_category_futures_.at(task_id).at(sample_key).count(category_id)) {
+                            auto hist_ptr = mc_category_futures_.at(task_id).at(sample_key).at(category_id).GetPtr();
+                            if (hist_ptr) {
+                                Histogram temp_hist(task_binning, *hist_ptr);
+                                category_hist = category_hist + temp_hist;
+                            }
                         }
                     }
                 }
