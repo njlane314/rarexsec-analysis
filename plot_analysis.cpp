@@ -9,8 +9,8 @@ int main() {
     try {
         ROOT::EnableImplicitMT();
 
-        AnalysisFramework::DataManager::Params dm_params {
-            .config_file = "config.json",
+        AnalysisFramework::DataManager data_manager({
+            .config_file = "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/config.json",
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
@@ -19,9 +19,8 @@ int main() {
                 .load_truth_event_info = true,
                 .load_weights_and_systematics = true
             }
-        };
-        AnalysisFramework::DataManager data_manager(dm_params);
-
+        });
+        
         AnalysisFramework::AnalysisSpace analysis_space;
         analysis_space
             .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 50, 0, 5)
@@ -31,13 +30,13 @@ int main() {
         systematics_controller
             .addWeightSystematic("RPA")
             .addWeightSystematic("CCMEC");
-        
-        AnalysisFramework::AnalysisRunner::Parameters runner_params {
+
+        AnalysisFramework::AnalysisRunner runner({
             .data_manager = data_manager,
             .analysis_space = analysis_space,
-            .systematics_controller = systematics_controller
-        };
-        AnalysisFramework::AnalysisRunner runner(runner_params);
+            .systematics_controller = systematics_controller,
+            .category_column = "analysis_channel"
+        });
         
         auto results = runner.run();
 

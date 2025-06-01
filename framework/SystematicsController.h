@@ -56,30 +56,30 @@ public:
 
     void bookVariations(const std::string& task_id, const std::string& sample_key, ROOT::RDF::RNode df,
                         const DataManager::AssociatedVariationMap& det_var_nodes, const Binning& binning,
-                        const std::string& selection_query) {
-        std::string category_column = "event_category";
+                        const std::string& selection_query, const std::string& category_column) {
         auto categories = GetCategories(category_column);
         for (int category_id : categories) {
             for (const auto& syst : systematics_) {
-                syst->Book(df, det_var_nodes, sample_key, category_id, binning, selection_query);
+                syst->Book(df, det_var_nodes, sample_key, category_id, binning, selection_query, category_column);
             }
         }
     }
 
     std::map<std::string, TMatrixDSym> computeAllCovariances(int category_id, const Histogram& nominal_hist,
-                                                             const Binning& binning) {
+                                                             const Binning& binning, const std::string& category_column) {
         std::map<std::string, TMatrixDSym> breakdown;
         for (const auto& syst : systematics_) {
-            breakdown.emplace(syst->GetName(), syst->ComputeCovariance(category_id, nominal_hist, binning));
+            breakdown.emplace(syst->GetName(), syst->ComputeCovariance(category_id, nominal_hist, binning, category_column));
         }
         return breakdown;
     }
 
     std::map<std::string, std::map<std::string, Histogram>> getAllVariedHistograms(int category_id,
-                                                                                   const Binning& binning) {
+                                                                                   const Binning& binning,
+                                                                                   const std::string& category_column) {
         std::map<std::string, std::map<std::string, Histogram>> all_varied_hists;
         for (const auto& syst : systematics_) {
-            all_varied_hists[syst->GetName()] = syst->GetVariedHistograms(category_id, binning);
+            all_varied_hists[syst->GetName()] = syst->GetVariedHistograms(category_id, binning, category_column);
         }
         return all_varied_hists;
     }
@@ -89,6 +89,6 @@ private:
     std::vector<std::unique_ptr<Systematic>> systematics_;
 };
 
-} // namespace AnalysisFramework
+}
 
-#endif // SYSTEMATICS_CONTROLLER_H
+#endif

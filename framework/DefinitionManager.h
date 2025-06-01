@@ -111,77 +111,44 @@ private:
         auto df_with_defs = df;
         bool is_mc = (category == SampleType::kMonteCarlo);
 
-        std::vector<std::string> truth_cols_for_cat = {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-                                                       "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z", "nu_pdg", "ccnc", "interaction"};
-        bool has_all_truth_cols_for_cat = true;
+        std::vector<std::string> truth_cols = {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
+                                               "true_nu_vtx_x", "nu_pdg", "ccnc", "interaction", "mcf_npp", "mcf_npm", "mcf_npr"};
+        bool has_all_truth_cols = is_mc;
         if (is_mc) {
-            for(const auto& col : truth_cols_for_cat){
-                if(!df.HasColumn(col)){
-                    has_all_truth_cols_for_cat = false;
-                    break;
-                }
-            }
+            for(const auto& col : truth_cols){ if(!df.HasColumn(col)){ has_all_truth_cols = false; break; } }
         }
 
-        if (is_mc) {
-            bool has_npp = df.HasColumn("mcf_npp"); bool has_npm = df.HasColumn("mcf_npm"); bool has_npr = df.HasColumn("mcf_npr");
-            if (has_npp && has_npm) df_with_defs = df_with_defs.Define("mc_n_charged_pions_true", "mcf_npp + mcf_npm");
-            else df_with_defs = df_with_defs.Define("mc_n_charged_pions_true", [](){ return -1; });
-            if (has_npr) df_with_defs = df_with_defs.Define("mc_n_protons_true", "mcf_npr");
-            else df_with_defs = df_with_defs.Define("mc_n_protons_true", [](){ return -1; });
+        if (is_mc && has_all_truth_cols) {
+            df_with_defs = df_with_defs.Define("is_in_fiducial", "(true_nu_vtx_x > 5.0 && true_nu_vtx_x < 251.0 && true_nu_vtx_y > -110.0 && true_nu_vtx_y < 110.0 && true_nu_vtx_z > 20.0 && true_nu_vtx_z < 986.0)");
+            df_with_defs = df_with_defs.Define("mcf_strangeness", "mcf_nkp + mcf_nkm + mcf_nk0 + mcf_nlambda + mcf_nsigma_p + mcf_nsigma_0 + mcf_nsigma_m");
+            df_with_defs = df_with_defs.Define("mc_n_pions", "mcf_npp + mcf_npm");
+            df_with_defs = df_with_defs.Define("mc_n_protons", "mcf_npr");
 
-            if (has_all_truth_cols_for_cat) {
-                 df_with_defs = df_with_defs.Define("mcf_strangeness", "mcf_nkp + mcf_nkm + mcf_nk0 + mcf_nlambda + mcf_nsigma_p + mcf_nsigma_0 + mcf_nsigma_m");
-                 df_with_defs = df_with_defs.Define("inclusive_strangeness_multiplicity_type",
-                    [](int ts) { if (ts == 0) return 0; if (ts == 1) return 1; return 2; }, {"mcf_strangeness"});
-                 df_with_defs = df_with_defs.Define("is_in_fiducial",
-                    "(true_nu_vtx_x > 5.0 && true_nu_vtx_x < 251.0 && true_nu_vtx_y > -110.0 && true_nu_vtx_y < 110.0 && true_nu_vtx_z > 20.0 && true_nu_vtx_z < 986.0 && (true_nu_vtx_z < 675.0 || true_nu_vtx_z > 775.0))");
-                df_with_defs = df_with_defs.Define("event_category",
-                    [category](bool is_in_fiducial_val, int nu_pdg_val, int ccnc_val, int interaction_type_val, int str_mult_val) {
-                        int cat = 9999;
-                        if (category == SampleType::kData) cat = 0;
-                        else if (category == SampleType::kExternal) cat = 1;
-                        else if (category == SampleType::kMonteCarlo) {
-                            if (!is_in_fiducial_val) cat = 3;
-                            else {
-                                bool isnumu = (std::abs(nu_pdg_val) == 14); bool isnue = (std::abs(nu_pdg_val) == 12);
-                                bool iscc = (ccnc_val == 0); bool isnc = (ccnc_val == 1);
-                                if (isnc) cat = 20;
-                                else if (isnue && iscc) cat = 21;
-                                else if (isnumu && iscc) {
-                                    if (str_mult_val == 1) cat = 10;
-                                    else if (str_mult_val > 1) cat = 11;
-                                    else if (str_mult_val == 0) {
-                                        if (interaction_type_val == 0) cat = 110;
-                                        else if (interaction_type_val == 1) cat = 111;
-                                        else if (interaction_type_val == 2) cat = 112;
-                                        else cat = 113;
-                                    } else cat = 998;
-                                } else cat = 998;
-                            }
+            df_with_defs = df_with_defs.Define("analysis_channel",
+                [](bool is_fid, int nu, int cc, int strange, int n_pi, int n_p) {
+                    if (!is_fid) return 98;
+                    if (cc == 1) return 31;
+                    if (std::abs(nu) == 12 && cc == 0) return 30;
+
+                    if (std::abs(nu) == 14 && cc == 0) {
+                        if (strange == 1) return 10;
+                        if (strange > 1) return 11;
+
+                        if (n_pi == 0) {
+                            if (n_p == 1) return 20;
+                            return 21;
                         }
-                        return cat;
-                    }, {"is_in_fiducial", "nu_pdg", "ccnc", "interaction", "inclusive_strangeness_multiplicity_type"});
-            } else {
-                df_with_defs = df_with_defs.Define("mcf_strangeness", [](){ return -1;});
-                df_with_defs = df_with_defs.Define("inclusive_strangeness_multiplicity_type", [](){ return -1;});
-                df_with_defs = df_with_defs.Define("is_in_fiducial", [](){ return false; });
-                df_with_defs = df_with_defs.Define("event_category", [category](){
-                     if (category == SampleType::kData) return 0;
-                     if (category == SampleType::kExternal) return 1;
-                     return 998;
-                 });
-            }
+                        if (n_pi == 1) return 22;
+                        return 23;
+                    }
+                    return 99;
+                }, {"is_in_fiducial", "nu_pdg", "ccnc", "mcf_strangeness", "mc_n_pions", "mc_n_protons"});
+
         } else {
-            df_with_defs = df_with_defs.Define("mc_n_charged_pions_true", [](){ return -1;})
-                                    .Define("mc_n_protons_true", [](){ return -1;})
-                                    .Define("mcf_strangeness", [](){ return -1;})
-                                    .Define("inclusive_strangeness_multiplicity_type", [](){ return -1;})
-                                    .Define("is_in_fiducial", [](){ return false; });
-            df_with_defs = df_with_defs.Define("event_category", [category](){
+            df_with_defs = df_with_defs.Define("analysis_channel", [category](){
                 if (category == SampleType::kData) return 0;
                 if (category == SampleType::kExternal) return 1;
-                return 9999;
+                return 99;
             });
         }
         return df_with_defs;

@@ -15,21 +15,20 @@ namespace AnalysisFramework {
 
 inline const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
     static const std::map<std::string, std::map<int, std::string>> label_maps = {
-        {"event_category", {
-            {0, "Data"},
-            {1, "External"},
-            {2, "Dirt"},
-            {3, "Out of Fiducial Volume"},
-            {10, R"($\nu_\mu$ CC, str=1)"},
-            {11, R"($\nu_\mu$ CC, str>1)"},
-            {20, "NC"},
-            {21, R"($\nu_e$ CC)"},
-            {110, R"($\nu_\mu$ CC QE)"},
-            {111, R"($\nu_\mu$ CC RES)"},
-            {112, R"($\nu_\mu$ CC DIS)"},
-            {113, R"($\nu_\mu$ CC Other)"},
-            {998, "Other"},
-            {9999, "Undefined"}
+        {"analysis_channel", {
+            {0,   "Data"},
+            {1,   "External"},
+            {2,   "Dirt"},
+            {10,  "Signal (S=1)"},
+            {11,  "Signal (S>1)"},
+            {20,  R"($\nu_\mu$ CC (1p, 0$\pi$, S=0))"},
+            {21,  R"($\nu_\mu$ CC (Np, 0$\pi$, S=0))"},
+            {22,  R"($\nu_\mu$ CC (1$\pi$, S=0))"},
+            {23,  R"($\nu_\mu$ CC (Other, S=0))"},
+            {30,  R"($\nu_e$ CC)"},
+            {31,  "NC"},
+            {98,  "Out of FV"},
+            {99,  "Other"}
         }}
     };
     return label_maps;
@@ -37,21 +36,20 @@ inline const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
 
 inline const std::map<std::string, std::map<int, int>>& GetColorMaps() {
     static const std::map<std::string, std::map<int, int>> color_maps = {
-        {"event_category", {
-            {0, kBlack},       // Data
-            {1, kCyan},        // External (improved from 28)
-            {2, kOrange + 2},  // Dirt
-            {3, kAzure + 1},      // Out of Fiducial Volume (improved from kAzure + 1)
-            {10, kGreen},      // Signal: str = 1
-            {11, kGreen + 2},  // Signal: str > 1
-            {20, kBlue},       // Neutral Current
-            {21, kMagenta},    // Electron-neutrino CC
-            {110, kRed},       // CC QE
-            {111, kOrange},    // CC RES 
-            {112, kViolet},    // CC DIS
-            {113, kCyan},      // CC Other 
-            {998, kGray + 2},  // Other
-            {9999, kGray + 3}  // Undefined
+        {"analysis_channel", {
+            {0,   kBlack},
+            {1,   kGray},
+            {2,   kGray + 2},
+            {10,  kGreen + 2},
+            {11,  kSpring + 5},
+            {20,  kRed},
+            {21,  kRed - 7},
+            {22,  kOrange},
+            {23,  kViolet},
+            {30,  kMagenta},
+            {31,  kBlue},
+            {98,  kGray + 1},
+            {99,  kCyan}
         }}
     };
     return color_maps;
@@ -59,20 +57,19 @@ inline const std::map<std::string, std::map<int, int>>& GetColorMaps() {
 
 inline const std::map<int, int>& GetFillStyleMap() {
     static const std::map<int, int> fill_style_map = {
-        {0, 0},     // Data (no fill)
-        {1, 3005},  // External
-        {2, 1001},  // Dirt
-        {3, 3004},  // Out of Fiducial Volume
-        {10, 1001}, // Signal: str = 1
-        {11, 1001}, // Signal: str > 1
-        {20, 1001}, // NC
-        {21, 1001}, // Nue CC
-        {110, 1001},// CC QE
-        {111, 1001},// CC RES
-        {112, 1001},// CC DIS
-        {113, 1001},// CC Other
-        {998, 1001},// Other
-        {9999, 1001} // Undefined
+        {0,   0},
+        {1,   3005},
+        {2,   1001},
+        {10,  1001},
+        {11,  1001},
+        {20,  1001},
+        {21,  1001},
+        {22,  1001},
+        {23,  1001},
+        {30,  1001},
+        {31,  1001},
+        {98,  3004},
+        {99,  1001}
     };
     return fill_style_map;
 }
@@ -99,7 +96,7 @@ inline int GetColorCode(const std::string& category_column, int category_id) {
     return (it != colors.end()) ? it->second : kGray + 1;
 }
 
-inline int GetFillStyle(const std::string& category_column, int category_id) {
+inline int GetFillStyle(const std::string&, int category_id) {
     const auto& fill_styles = GetFillStyleMap();
     auto it = fill_styles.find(category_id);
     return (it != fill_styles.end()) ? it->second : 1001;
@@ -132,11 +129,6 @@ inline void SetHistogramStyle(const std::string& category_column, int category_i
         hist->SetMarkerStyle(20);
         hist->SetMarkerSize(0.8);
         hist->SetFillStyle(0);
-    } else if (category_id == 1) {
-        hist->SetFillColor(color);
-        hist->SetLineColor(color);
-        hist->SetLineWidth(2);
-        hist->SetFillStyle(fill_style);
     } else {
         hist->SetFillColor(color);
         hist->SetLineColor(color);

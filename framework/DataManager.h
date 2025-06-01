@@ -56,7 +56,7 @@ public:
 
         ROOT::RDF::RNode getDataFrame() const {
             if (!nominal_df_) {
-                throw std::runtime_error("Attempt to access null RNode");
+                throw std::runtime_error("Attempt to access null RNode in SampleInfo");
             }
             return *nominal_df_;
         }
@@ -66,26 +66,13 @@ public:
         void setVariations(VariationDataFrameMap vars) { variations_ = std::move(vars); }
     };
 
-    DataManager(const std::string& config_file_val,
-                const std::string& beam_key_val,
-                const std::vector<std::string>& runs_to_load_val,
-                bool blinded_val,
-                const VariableOptions& variable_options_val)
-        : config_manager_(config_file_val),
-          variable_manager_(),
-          definition_manager_(variable_manager_) {
-        LoadRunsParameterSet internal_params = {beam_key_val, runs_to_load_val, blinded_val, variable_options_val};
-        loadRuns(internal_params);
-    }
-
     explicit DataManager(const Params& params)
-        : DataManager(params.config_file,
-                      params.beam_key,
-                      params.runs_to_load,
-                      params.blinded,
-                      params.variable_options) {
+        : config_manager_(params.config_file),
+          variable_manager_(),
+          definition_manager_(variable_manager_),
+          data_pot_(0.0) {
+        loadRuns(params.beam_key, params.runs_to_load, params.blinded, params.variable_options);
     }
-
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
     double getDataPOT() const { return data_pot_; }
@@ -114,62 +101,44 @@ private:
     std::map<std::string, DataManager::SampleInfo> samples_;
     double data_pot_;
 
-    struct LoadRunsParameterSet {
-        std::string beam_key;
-        std::vector<std::string> runs_to_load;
-        bool blinded = true;
-        VariableOptions variable_options = VariableOptions{};
-    };
-
     struct LoadedData {
         NominalDataFrameMap nominal_samples;
         AssociatedVariationMap associated_detvars;
         double data_pot;
     };
 
-    void loadRuns(const LoadRunsParameterSet& params) {
+    void loadRuns(const std::string& beam_key_val,
+                  const std::vector<std::string>& runs_to_load_val,
+                  bool blinded_val,
+                  const VariableOptions& variable_options_val) {
         LoadedData loaded_data;
-        double data_pot = 0.0;
-        for (const auto& run_key : params.runs_to_load) {
-            const auto& run_config = config_manager_.GetRunConfig(params.beam_key, run_key);
-            auto [nominal_dataframes, associated_detvars, run_pot] = loadSamples(run_config, params.variable_options, params.blinded);
+        loaded_data.data_pot = 0.0;
+        for (const auto& run_key : runs_to_load_val) {
+            const auto& run_config = config_manager_.GetRunConfig(beam_key_val, run_key);
+            auto [nominal_dataframes, associated_detvars, run_pot_for_current_run] = loadSamples(run_config, variable_options_val, blinded_val);
+            
             for (const auto& [sample_key, rnode_pair] : nominal_dataframes) {
-                auto it = loaded_data.nominal_samples.find(sample_key);
-                if (it == loaded_data.nominal_samples.end()) {
-                    loaded_data.nominal_samples.emplace(sample_key, std::move(rnode_pair));
-                }
+                loaded_data.nominal_samples.emplace(sample_key, rnode_pair);
             }
             for (const auto& [assoc_key, detvar_map] : associated_detvars) {
-                auto outer_it = loaded_data.associated_detvars.find(assoc_key);
-                if (outer_it == loaded_data.associated_detvars.end()) {
-                    VariationDataFrameMap new_map;
-                    for (const auto& [detvar_key, rnode] : detvar_map) {
-                        new_map.emplace(detvar_key, std::move(rnode));
-                    }
-                    loaded_data.associated_detvars.emplace(assoc_key, std::move(new_map));
-                } else {
-                    for (const auto& [detvar_key, rnode] : detvar_map) {
-                        auto inner_it = outer_it->second.find(detvar_key);
-                        if (inner_it == outer_it->second.end()) {
-                            outer_it->second.emplace(detvar_key, std::move(rnode));
-                        }
-                    }
+                auto& target_map = loaded_data.associated_detvars.try_emplace(assoc_key).first->second;
+                for (const auto& [detvar_key, rnode] : detvar_map) {
+                    target_map.emplace(detvar_key, rnode);
                 }
             }
-            data_pot += run_pot;
+            loaded_data.data_pot += run_pot_for_current_run;
         }
-        loaded_data.data_pot = data_pot;
-        std::cout << "-- Total Data POT: " << data_pot << std::endl;
+        std::cout << "-- Total Data POT: " << loaded_data.data_pot << std::endl;
 
         samples_.clear();
         for (const auto& [sample_key, rnode_pair] : loaded_data.nominal_samples) {
-            SampleInfo info(rnode_pair.first, std::move(rnode_pair.second), {});
+            VariationDataFrameMap variations_for_sample;
             if (rnode_pair.first == SampleType::kMonteCarlo) {
-                 if (loaded_data.associated_detvars.count(sample_key)) {
-                    info.setVariations(std::move(loaded_data.associated_detvars[sample_key]));
+                 if (auto it = loaded_data.associated_detvars.find(sample_key); it != loaded_data.associated_detvars.end()) {
+                    variations_for_sample = std::move(it->second);
                 }
             }
-            samples_.emplace(sample_key, std::move(info));
+            samples_.emplace(sample_key, SampleInfo(rnode_pair.first, rnode_pair.second, std::move(variations_for_sample)));
         }
         data_pot_ = loaded_data.data_pot;
     }
@@ -193,7 +162,7 @@ private:
             current_run_pot = data_props_iter->second.pot;
             current_run_triggers = data_props_iter->second.triggers;
         } else if (!blinded) {
-            std::cout << "-- Info: No data sample found in run configuration for POT/trigger reference, but analysis is unblinded." << std::endl;
+            std::cout << "-- Info: No data sample for POT/trigger reference (unblinded)." << std::endl;
         }
 
         const auto& base_directory = config_manager_.GetBaseDirectory();
@@ -219,7 +188,7 @@ private:
                     run_config.sample_props,
                     variable_options,
                     false,
-                    sample_key
+                    sample_key 
                 );
                 nominal_dataframes.emplace(sample_key, RNodePair{SampleType::kMonteCarlo, std::move(nominal_df)});
 
@@ -227,13 +196,13 @@ private:
                     std::string detvar_file_path = base_directory + "/" + detvar_props.relative_path;
                     ROOT::RDF::RNode detvar_df = loadAndProcessMCDataFrame(
                         detvar_file_path,
-                        detvar_props.pot,
+                        detvar_props.pot, 
                         current_run_pot,
-                        sample_props.truth_filter,
-                        sample_props.exclusion_truth_filters,
+                        sample_props.truth_filter, 
+                        sample_props.exclusion_truth_filters, 
                         run_config.sample_props,
                         variable_options,
-                        true,
+                        true, 
                         detvar_props.sample_key
                     );
                     associated_detvars[sample_key].emplace(detvar_props.sample_key, std::move(detvar_df));
@@ -248,45 +217,45 @@ private:
         const std::string& file_path,
         const VariableOptions& variable_options) const {
         std::vector<std::string> variables = variable_manager_.GetVariables(variable_options, sample_type);
-        std::set<std::string> unique_vars(variables.begin(), variables.end());
-        variables.assign(unique_vars.begin(), unique_vars.end());
-        return ROOT::RDataFrame("nuselection/EventSelectionFilter", file_path, variables);
+        std::set<std::string> unique_vars_set(variables.begin(), variables.end());
+        std::vector<std::string> unique_vars(unique_vars_set.begin(), unique_vars_set.end());
+        return ROOT::RDataFrame("nuselection/EventSelectionFilter", file_path, unique_vars);
     }
 
     std::string buildExclusiveFilter(const std::vector<std::string>& mc_keys,
                                      const std::map<std::string, NominalSampleProperties>& samples) const {
-        std::string filter = "true";
+        std::string filter_expression = "true"; 
+        bool first_condition = true;
         for (const auto& key : mc_keys) {
             auto it = samples.find(key);
             if (it != samples.end() && !it->second.truth_filter.empty()) {
-                if (filter == "true") {
-                    filter = "!(" + it->second.truth_filter + ")";
+                if (first_condition) {
+                    filter_expression = "!(" + it->second.truth_filter + ")";
+                    first_condition = false;
                 } else {
-                    filter += " && !(" + it->second.truth_filter + ")";
+                    filter_expression += " && !(" + it->second.truth_filter + ")";
                 }
             }
         }
-        return filter;
+        return filter_expression;
     }
 
     ROOT::RDF::RNode loadDataSample(const std::string& file_path, const VariableOptions& variable_options) const {
-        std::cout << "-- Loading data sample from " << file_path << std::endl;
+        std::cout << "-- Loading data: " << file_path << std::endl;
         ROOT::RDF::RNode df = createDataFrame(SampleType::kData, file_path, variable_options);
         df = definition_manager_.ProcessNode(df, SampleType::kData, variable_options, false);
-        df = df.Define("event_weight", [](){ return 1.0; });
-        return df;
+        return df.Define("event_weight", [](){ return 1.0; }); 
     }
 
     ROOT::RDF::RNode loadExternalSample(const std::string& file_path, int sample_triggers, int current_run_triggers, const VariableOptions& variable_options) const {
-        std::cout << "-- Loading external sample from " << file_path << std::endl;
+        std::cout << "-- Loading external: " << file_path << std::endl;
         ROOT::RDF::RNode df = createDataFrame(SampleType::kExternal, file_path, variable_options);
         df = definition_manager_.ProcessNode(df, SampleType::kExternal, variable_options, false);
-        double event_weight = 1.0;
-        if (sample_triggers > 0 && current_run_triggers > 0) {
-            event_weight = static_cast<double>(current_run_triggers) / sample_triggers;
+        double calculated_event_weight = 1.0;
+        if (sample_triggers > 0 && current_run_triggers > 0) { 
+            calculated_event_weight = static_cast<double>(current_run_triggers) / sample_triggers;
         }
-        df = df.Define("event_weight", [event_weight](){ return event_weight; });
-        return df;
+        return df.Define("event_weight", [calculated_event_weight](){ return calculated_event_weight; });
     }
 
     ROOT::RDF::RNode loadAndProcessMCDataFrame(
@@ -295,67 +264,80 @@ private:
         double current_run_pot,
         const std::string& truth_filter,
         const std::vector<std::string>& exclusion_truth_filters,
-        const std::map<std::string, NominalSampleProperties>& all_samples,
+        const std::map<std::string, NominalSampleProperties>& all_samples, 
         const VariableOptions& variable_options,
         bool is_variation,
-        const std::string& sample_key) const {
-        std::cout << "-- Loading " << (is_variation ? "detector variation" : "nominal MC") << " sample: " << sample_key << " from " << file_path << std::endl;
+        const std::string& sample_key_for_log) const { 
+        std::cout << "-- Loading " << (is_variation ? "variation" : "MC") << ": " << sample_key_for_log << " from " << file_path << std::endl;
         ROOT::RDF::RNode df = createDataFrame(SampleType::kMonteCarlo, file_path, variable_options);
-        double event_weight = 1.0;
-        if (sample_pot > 0 && current_run_pot > 0) {
-            event_weight = current_run_pot / sample_pot;
+        
+        double calculated_event_weight = 1.0;
+        if (sample_pot > 0 && current_run_pot > 0) { 
+            calculated_event_weight = current_run_pot / sample_pot;
         }
-        df = df.Define("event_weight", [event_weight](){ return event_weight; });
+        df = df.Define("event_weight", [calculated_event_weight](){ return calculated_event_weight; });
+        
         df = definition_manager_.ProcessNode(df, SampleType::kMonteCarlo, variable_options, is_variation);
+        
         if (!truth_filter.empty()) {
-            df = df.Filter(truth_filter);
+            df = df.Filter(truth_filter, "Truth Filter: " + truth_filter);
         }
         if (!exclusion_truth_filters.empty()) {
-            std::string exclusion_filter = buildExclusiveFilter(exclusion_truth_filters, all_samples);
-            if (exclusion_filter != "true") {
-                df = df.Filter(exclusion_filter);
+            std::string exclusion_filter_str = buildExclusiveFilter(exclusion_truth_filters, all_samples);
+            if (exclusion_filter_str != "true" && !exclusion_filter_str.empty()) { 
+                df = df.Filter(exclusion_filter_str, "Exclusion Filter");
             }
         }
         return df;
     }
-};
+}; 
 
 inline void DataManager::Save(const std::string& selection_key,
                        const std::string& preselection_key,
                        const std::string& output_file,
                        const std::vector<std::string>& columns_to_save) const {
-    if (output_file.empty()) {
-        throw std::invalid_argument("Output file name cannot be empty.");
-    }
-
     std::string query = Selection::getSelectionQuery(TString(selection_key.c_str()), TString(preselection_key.c_str())).Data();
-    if (query.empty()) {
-        throw std::runtime_error("Selection query is empty for selection_key: " + selection_key + ", preselection_key: " + preselection_key);
-    }
 
     bool first_tree = true;
-    for (const auto& [sample_key, sample_info] : samples_) {
-        auto df = sample_info.getDataFrame();
-        auto filtered_df = df.Filter(query);
+    ROOT::RDF::RSnapshotOptions opts; 
+
+    for (const auto& [sample_key_str, sample_info_obj] : samples_) {
+        ROOT::RDF::RNode current_df_node = sample_info_obj.getDataFrame(); 
+        ROOT::RDF::RNode filtered_df_node = query.empty() ? current_df_node : current_df_node.Filter(query);
 
         std::vector<std::string> final_columns_to_snapshot;
+        auto available_columns = filtered_df_node.GetColumnNames(); 
+
         if (!columns_to_save.empty()) {
-            final_columns_to_snapshot = columns_to_save;
-        } else {
-            final_columns_to_snapshot = filtered_df.GetColumnNames();
-            std::sort(final_columns_to_snapshot.begin(), final_columns_to_snapshot.end());
+            for(const auto& col_req : columns_to_save) {
+                bool found = false;
+                for(const auto& col_avail : available_columns) { 
+                    if (col_req == col_avail) { 
+                        final_columns_to_snapshot.push_back(col_req);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        } else { 
+            for(const auto& col_name : available_columns) { 
+                final_columns_to_snapshot.push_back(col_name); 
+            }
+            std::sort(final_columns_to_snapshot.begin(), final_columns_to_snapshot.end()); 
         }
 
-        ROOT::RDF::RSnapshotOptions opts;
         opts.fMode = first_tree ? "RECREATE" : "UPDATE";
+        std::string tree_name = sample_key_str; 
 
-        std::string tree_name = sample_key;
-        std::cout << "Saving snapshot for sample: " << sample_key << " to tree: " << tree_name << " in file: " << output_file << std::endl;
-        filtered_df.Snapshot(tree_name, output_file, final_columns_to_snapshot, opts);
+        if (!final_columns_to_snapshot.empty()) { 
+             filtered_df_node.Snapshot(tree_name, output_file, final_columns_to_snapshot, opts);
+        } else if (available_columns.empty() && query.empty()) { 
+            filtered_df_node.Snapshot(tree_name, output_file, {}, opts); 
+        } 
         first_tree = false;
     }
 }
 
-}
+} 
 
 #endif

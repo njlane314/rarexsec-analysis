@@ -1,21 +1,31 @@
 # rarexsec_analysis
 
+An analysis framework for rare cross-section measurements.
 
-Implement: 
+## Build Instructions
 
--- selection efficiency and purity
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd rarexsec_analysis
+    ```
 
--- final state statistics 
+2.  **Create a build directory:**
+    It's good practice to build the project in a separate directory to keep the source tree clean.
+    ```bash
+    mkdir build
+    cd build
+    ```
 
--- understand systematic uncertainties
+3.  **Run CMake and build:**
+    ```bash
+    cmake ..
+    make -jN 
+    ```
 
--- filter out-fv, ext, nc, nue --> then background isolate remaining categories 
-
--- train uresnet on filtered events
-
--- train res encoder and series of multilayer perceptrons
-
--- improve general interface of this code
-
-
-
+4.  **Setup the environment and run the analysis:**
+    After the build is complete, you need to source the setup script and then you can run the executable.
+    ```bash
+    source ../.setup.sh
+    ./plot_analysis ../config.json
+    ```

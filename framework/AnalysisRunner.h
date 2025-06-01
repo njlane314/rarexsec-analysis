@@ -36,6 +36,7 @@ public:
         AnalysisSpace& analysis_space;
         SystematicsController& systematics_controller;
         double pot_scale_factor = 1.0;
+        std::string category_column = "analysis_channel";
     };
 
     explicit AnalysisRunner(Parameters params) : params_(params) {}
@@ -103,7 +104,7 @@ private:
                 auto filtered_df = df.Filter(task_binning.selection_query.Data());
                 TH1D model(task_id.c_str(), task_id.c_str(), task_binning.nBins(), task_binning.bin_edges.data());
                 auto future = filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
-                
+
                 nominal_futures_[task_id][sample_key] = future;
                 future_handles_.emplace_back(future);
 
@@ -114,7 +115,8 @@ private:
                         df,
                         det_var_nodes,
                         task_binning,
-                        task_binning.selection_query.Data()
+                        task_binning.selection_query.Data(),
+                        params_.category_column
                     );
                 }
             }
@@ -144,11 +146,11 @@ private:
             result.total_mc_hist = total_mc_nominal;
 
             std::map<std::string, TMatrixDSym> total_syst_breakdown;
-            auto all_categories = GetCategories("event_category");
+            auto all_categories = GetCategories(params_.category_column);
 
             for (const int category_id : all_categories) {
-                if (category_id == 0) continue; 
-                auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(category_id, result.total_mc_hist, task_binning);
+                if (category_id == 0) continue;
+                auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(category_id, result.total_mc_hist, task_binning, params_.category_column);
 
                 for (const auto& [syst_name, cov_matrix] : per_category_cov_map) {
                     if (total_syst_breakdown.find(syst_name) == total_syst_breakdown.end()) {
