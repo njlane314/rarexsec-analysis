@@ -70,7 +70,7 @@ public:
                                                              const Binning& binning) {
         std::map<std::string, TMatrixDSym> breakdown;
         for (const auto& syst : systematics_) {
-            breakdown[syst->GetName()] = syst->ComputeCovariance(category_id, nominal_hist, binning);
+            breakdown.emplace(syst->GetName(), syst->ComputeCovariance(category_id, nominal_hist, binning));
         }
         return breakdown;
     }

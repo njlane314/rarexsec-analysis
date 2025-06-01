@@ -91,6 +91,16 @@ public:
     double getDataPOT() const { return data_pot_; }
     const VariableManager& getVariableManager() const { return variable_manager_; }
 
+    AssociatedVariationMap getAssociatedVariations() const {
+        AssociatedVariationMap all_det_vars;
+        for (const auto& [sample_key, sample_info] : samples_) {
+            if (sample_info.isMonteCarlo()) {
+                all_det_vars[sample_key] = sample_info.getVariations();
+            }
+        }
+        return all_det_vars;
+    }
+
     void Save(const std::string& selection_key,
               const std::string& preselection_key,
               const std::string& output_file,
