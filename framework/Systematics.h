@@ -19,7 +19,7 @@
 
 namespace AnalysisFramework {
 
-TH1D* CombineFuturesToHistogram(std::vector<ROOT::RDF::RResultPtr<TH1D>>& futures, const Binning& binning, const std::string& hist_name) {
+inline TH1D* CombineFuturesToHistogram(std::vector<ROOT::RDF::RResultPtr<TH1D>>& futures, const Binning& binning, const std::string& hist_name) {
     auto first_valid_future_it = std::find_if(futures.begin(), futures.end(), [](const auto& ptr) { return ptr; });
     if (first_valid_future_it == futures.end()) return nullptr;
     auto combined_th1d = static_cast<TH1D*>((*first_valid_future_it)->Clone(hist_name.c_str()));

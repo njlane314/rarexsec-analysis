@@ -23,12 +23,20 @@
 #include "VariableManager.h"
 #include "ConfigurationManager.h"
 #include "DefinitionManager.h"
-#include "Selection.h"  
+#include "Selection.h"
 
 namespace AnalysisFramework {
 
 class DataManager {
 public:
+    struct Params {
+        std::string config_file;
+        std::string beam_key;
+        std::vector<std::string> runs_to_load;
+        bool blinded = true;
+        VariableOptions variable_options = {};
+    };
+
     using RNodePair = std::pair<SampleType, ROOT::RDF::RNode>;
     using NominalDataFrameMap = std::map<std::string, RNodePair>;
     using VariationDataFrameMap = std::map<std::string, ROOT::RDF::RNode>;
@@ -41,35 +49,47 @@ public:
         VariationDataFrameMap variations_;
     public:
         SampleInfo() : type_(SampleType::kData), nominal_df_(nullptr), variations_() {}
-        
+
         SampleInfo(SampleType type, ROOT::RDF::RNode df,
-                   VariationDataFrameMap vars = {}) 
+                   VariationDataFrameMap vars = {})
             : type_(type), nominal_df_(std::make_shared<ROOT::RDF::RNode>(std::move(df))), variations_(std::move(vars)) {}
-        
+
         ROOT::RDF::RNode getDataFrame() const {
             if (!nominal_df_) {
                 throw std::runtime_error("Attempt to access null RNode");
             }
             return *nominal_df_;
         }
-        
+
         bool isMonteCarlo() const { return type_ == SampleType::kMonteCarlo; }
-        const VariationDataFrameMap& getVariations() const { return variations_; } 
-        void setVariations(VariationDataFrameMap vars) { variations_ = std::move(vars); } 
+        const VariationDataFrameMap& getVariations() const { return variations_; }
+        void setVariations(VariationDataFrameMap vars) { variations_ = std::move(vars); }
     };
 
-    DataManager(const std::string& config_file,
-                const std::string& beam_key,
-                const std::vector<std::string>& runs_to_load,
-                bool blinded,
-                const VariableOptions& variable_options)
-        : config_manager_(config_file), variable_manager_(), definition_manager_(variable_manager_) {
-        LoadRunsParameterSet params = {beam_key, runs_to_load, blinded, variable_options};
-        loadRuns(params);
+    DataManager(const std::string& config_file_val,
+                const std::string& beam_key_val,
+                const std::vector<std::string>& runs_to_load_val,
+                bool blinded_val,
+                const VariableOptions& variable_options_val)
+        : config_manager_(config_file_val),
+          variable_manager_(),
+          definition_manager_(variable_manager_) {
+        LoadRunsParameterSet internal_params = {beam_key_val, runs_to_load_val, blinded_val, variable_options_val};
+        loadRuns(internal_params);
     }
+
+    explicit DataManager(const Params& params)
+        : DataManager(params.config_file,
+                      params.beam_key,
+                      params.runs_to_load,
+                      params.blinded,
+                      params.variable_options) {
+    }
+
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
     double getDataPOT() const { return data_pot_; }
+    const VariableManager& getVariableManager() const { return variable_manager_; }
 
     void Save(const std::string& selection_key,
               const std::string& preselection_key,
@@ -135,7 +155,9 @@ private:
         for (const auto& [sample_key, rnode_pair] : loaded_data.nominal_samples) {
             SampleInfo info(rnode_pair.first, std::move(rnode_pair.second), {});
             if (rnode_pair.first == SampleType::kMonteCarlo) {
-                info.setVariations(std::move(loaded_data.associated_detvars[sample_key]));
+                 if (loaded_data.associated_detvars.count(sample_key)) {
+                    info.setVariations(std::move(loaded_data.associated_detvars[sample_key]));
+                }
             }
             samples_.emplace(sample_key, std::move(info));
         }
@@ -154,7 +176,7 @@ private:
         auto data_props_iter = std::find_if(
             run_config.sample_props.begin(),
             run_config.sample_props.end(),
-            [](const auto& pair) { return pair.second.category == SampleType::kData; }
+            [](const auto& pair) { return pair.second.sample_type == SampleType::kData; }
         );
 
         if (data_props_iter != run_config.sample_props.end()) {
@@ -169,15 +191,15 @@ private:
         for (const auto& [sample_key, sample_props] : run_config.sample_props) {
             std::string file_path = base_directory + "/" + sample_props.relative_path;
 
-            if (sample_props.category == SampleType::kData) {
+            if (sample_props.sample_type == SampleType::kData) {
                 if (!blinded) {
                     ROOT::RDF::RNode df = loadDataSample(file_path, variable_options);
                     nominal_dataframes.emplace(sample_key, RNodePair{SampleType::kData, std::move(df)});
                 }
-            } else if (sample_props.category == SampleType::kExternal) {
+            } else if (sample_props.sample_type == SampleType::kExternal) {
                 ROOT::RDF::RNode df = loadExternalSample(file_path, sample_props.triggers, current_run_triggers, variable_options);
                 nominal_dataframes.emplace(sample_key, RNodePair{SampleType::kExternal, std::move(df)});
-            } else if (sample_props.category == SampleType::kMonteCarlo) {
+            } else if (sample_props.sample_type == SampleType::kMonteCarlo) {
                 ROOT::RDF::RNode nominal_df = loadAndProcessMCDataFrame(
                     file_path,
                     sample_props.pot,
@@ -212,10 +234,10 @@ private:
     }
 
     ROOT::RDF::RNode createDataFrame(
-        SampleType category,
+        SampleType sample_type,
         const std::string& file_path,
         const VariableOptions& variable_options) const {
-        std::vector<std::string> variables = variable_manager_.GetVariables(variable_options, category);
+        std::vector<std::string> variables = variable_manager_.GetVariables(variable_options, sample_type);
         std::set<std::string> unique_vars(variables.begin(), variables.end());
         variables.assign(unique_vars.begin(), unique_vars.end());
         return ROOT::RDataFrame("nuselection/EventSelectionFilter", file_path, variables);
@@ -288,7 +310,7 @@ private:
     }
 };
 
-void DataManager::Save(const std::string& selection_key,
+inline void DataManager::Save(const std::string& selection_key,
                        const std::string& preselection_key,
                        const std::string& output_file,
                        const std::vector<std::string>& columns_to_save) const {
@@ -298,7 +320,7 @@ void DataManager::Save(const std::string& selection_key,
 
     std::string query = Selection::getSelectionQuery(TString(selection_key.c_str()), TString(preselection_key.c_str())).Data();
     if (query.empty()) {
-        throw std::runtime_error("Selection query is empty");
+        throw std::runtime_error("Selection query is empty for selection_key: " + selection_key + ", preselection_key: " + preselection_key);
     }
 
     bool first_tree = true;
@@ -318,6 +340,7 @@ void DataManager::Save(const std::string& selection_key,
         opts.fMode = first_tree ? "RECREATE" : "UPDATE";
 
         std::string tree_name = sample_key;
+        std::cout << "Saving snapshot for sample: " << sample_key << " to tree: " << tree_name << " in file: " << output_file << std::endl;
         filtered_df.Snapshot(tree_name, output_file, final_columns_to_snapshot, opts);
         first_tree = false;
     }
@@ -325,4 +348,4 @@ void DataManager::Save(const std::string& selection_key,
 
 }
 
-#endif // DATAMANAGER_H
+#endif

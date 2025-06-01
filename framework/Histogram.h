@@ -446,6 +446,8 @@ public:
         result.updateRootHistNonConst();
         return result;
     }
+
+    ClassDef(Histogram, 1);
 };
 
 inline Histogram operator*(double scalar, const Histogram& hist) {

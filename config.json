@@ -7,7 +7,7 @@
                     {
                         "sample_key": "data_run1_fhc",
                         "sample_type": "data",
-                        "relative_path": "your_data_file.root",
+                        "relative_path": "",
                         "pot": 1.0e20,
                         "triggers": 1000000
                     },
@@ -16,21 +16,7 @@
                         "sample_type": "mc",
                         "relative_path": "numi_fhc_run1_beam_ana.root",
                         "pot": 8.94633e+20,
-                        "exclusion_truth_filters": ["mc_strangeness_run1_fhc"],
-                        "detector_variations": [
-                            {
-                                "sample_key": "mc_inclusive_run1_fhc_lydown",
-                                "variation_type": "lydown",
-                                "relative_path": "numi_fhc_run1_beam_ana_lydown.root",
-                                "pot": 8.94633e+20
-                            },
-                            {
-                                "sample_key": "mc_inclusive_run1_fhc_sce",
-                                "variation_type": "sce",
-                                "relative_path": "numi_fhc_run1_beam_ana_sce.root",
-                                "pot": 8.94633e+20
-                            }
-                        ]
+                        "exclusion_truth_filters": ["mc_strangeness_run1_fhc"]
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",

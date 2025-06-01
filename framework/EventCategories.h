@@ -13,7 +13,7 @@
 
 namespace AnalysisFramework {
 
-const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
+inline const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
     static const std::map<std::string, std::map<int, std::string>> label_maps = {
         {"event_category", {
             {0, "Data"},
@@ -35,7 +35,7 @@ const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
     return label_maps;
 }
 
-const std::map<std::string, std::map<int, int>>& GetColorMaps() {
+inline const std::map<std::string, std::map<int, int>>& GetColorMaps() {
     static const std::map<std::string, std::map<int, int>> color_maps = {
         {"event_category", {
             {0, kBlack},       // Data
@@ -57,7 +57,7 @@ const std::map<std::string, std::map<int, int>>& GetColorMaps() {
     return color_maps;
 }
 
-const std::map<int, int>& GetFillStyleMap() {
+inline const std::map<int, int>& GetFillStyleMap() {
     static const std::map<int, int> fill_style_map = {
         {0, 0},     // Data (no fill)
         {1, 3005},  // External

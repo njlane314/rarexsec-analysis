@@ -23,7 +23,7 @@ struct DetectorVariationProperties {
 
 struct NominalSampleProperties {
     std::string sample_key;
-    SampleType category;
+    SampleType sample_type;
     std::string relative_path;
     std::string truth_filter;
     std::vector<std::string> exclusion_truth_filters;
@@ -103,7 +103,7 @@ private:
                 for (const auto& sample_json : run_it.value().at("samples")) {
                     NominalSampleProperties props;
                     props.sample_key = sample_json.at("sample_key").get<std::string>();
-                    props.category = StringToSampleCategory(sample_json.at("category").get<std::string>());
+                    props.sample_type = StringToSampleCategory(sample_json.at("sample_type").get<std::string>());
                     props.relative_path = sample_json.value("relative_path", "");
                     if (sample_json.contains("truth_filter")) props.truth_filter = sample_json.at("truth_filter").get<std::string>();
                     if (sample_json.contains("exclusion_truth_filters")) props.exclusion_truth_filters = sample_json.at("exclusion_truth_filters").get<std::vector<std::string>>();
@@ -144,14 +144,14 @@ private:
 
     void validateNominalSample(const NominalSampleProperties& props) const {
         if (props.sample_key.empty()) throw std::invalid_argument("Nominal sample key is empty");
-        if (props.category == SampleType::kUnknown) throw std::invalid_argument("Nominal sample category is kUnknown for " + props.sample_key);
-        if (props.category == SampleType::kMonteCarlo && props.pot <= 0) {
+        if (props.sample_type == SampleType::kUnknown) throw std::invalid_argument("Nominal sample sample_type is kUnknown for " + props.sample_key);
+        if (props.sample_type == SampleType::kMonteCarlo && props.pot <= 0) {
             throw std::invalid_argument("POT must be positive for MonteCarlo sample " + props.sample_key);
         }
-        if (props.category == SampleType::kData && props.triggers <= 0) {
+        if (props.sample_type == SampleType::kData && props.triggers <= 0) {
             throw std::invalid_argument("Triggers must be positive for Data sample " + props.sample_key);
         }
-        if (props.category != SampleType::kData && props.relative_path.empty()) {
+        if (props.sample_type != SampleType::kData && props.relative_path.empty()) {
             throw std::invalid_argument("Relative path is empty for non-Data sample " + props.sample_key);
         }
         if (!props.relative_path.empty() && !std::ifstream(ntuple_base_directory_ + "/" + props.relative_path)) {
