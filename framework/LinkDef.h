@@ -11,7 +11,6 @@
 #pragma link C++ class AnalysisFramework::PlotBase+;
 #pragma link C++ class AnalysisFramework::PlotManager+;
 #pragma link C++ class AnalysisFramework::PlotStacked+;
-#pragma link C++ class AnalysisFramework::PlotSystematics+;
 #pragma link C++ class AnalysisFramework::Selection+;
 #pragma link C++ class AnalysisFramework::SystematicsController+;
 #pragma link C++ class AnalysisFramework::VariableManager+;

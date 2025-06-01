@@ -22,120 +22,63 @@ namespace AnalysisFramework {
 class PlotBase {
 public:
     inline PlotBase(std::string name, std::string output_dir = "plots")
-        : name_(std::move(name)), output_dir_(std::move(output_dir)) {
+        : plot_name_(std::move(name)), output_dir_(std::move(output_dir)) {
         gSystem->mkdir(output_dir_.c_str(), true);
     }
+
+    virtual void DrawMainPlot(TCanvas& canvas) = 0;
 
     virtual ~PlotBase() = default;
 
     void drawAndSave(const std::string& format = "png") {
-        SetGlobalStyle();
+        this->SetGlobalStyle();
 
-        TCanvas canvas(name_.c_str(), name_.c_str(), 800, 750);
-        TPad main_pad("main_pad", "main_pad", 0.0, 0.3, 1.0, 1.0);
-        TPad ratio_pad("ratio_pad", "ratio_pad", 0.0, 0.0, 1.0, 0.3);
+        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
+        this->DrawMainPlot(canvas);
         
-        SetupPads(main_pad, ratio_pad);
-        main_pad.Draw();
-        ratio_pad.Draw();
-
-        main_pad.cd();
-        DrawMainPlot(main_pad);
-
-        ratio_pad.cd();
-        DrawRatioPlot(ratio_pad);
-
-        main_pad.cd();
-        DrawLabels(main_pad);
-
-        canvas.SaveAs((output_dir_ + "/" + name_ + "." + format).c_str());
+        canvas.SaveAs((output_dir_ + "/" + plot_name_ + "." + format).c_str());
     }
 
 protected:
     inline virtual void SetGlobalStyle() const {
+        const int font_style = 132;
         TStyle* style = new TStyle("PlotterStyle", "Plotter Style");
-        style->SetCanvasBorderMode(0);
-        style->SetPadBorderMode(0);
-        style->SetPadColor(0);
+        style->SetTitleFont(font_style, "X"); 
+        style->SetTitleFont(font_style, "Y"); 
+        style->SetTitleFont(font_style, "Z");
+        style->SetTitleSize(0.04, "X"); 
+        style->SetTitleSize(0.04, "Y"); 
+        style->SetTitleSize(0.04, "Z");
+        style->SetLabelFont(font_style, "X");
+        style->SetLabelFont(font_style, "Y"); 
+        style->SetLabelFont(font_style, "Z");
+        style->SetLabelSize(0.035, "X"); 
+        style->SetLabelSize(0.035, "Y"); 
+        style->SetLabelSize(0.035, "Z");
+        style->SetTitleOffset(1.2, "X"); 
+        style->SetTitleOffset(1.4, "Y");
+        style->SetOptStat(0); 
+        style->SetPadTickX(1); 
+        style->SetPadTickY(1);
+        style->SetPadLeftMargin(0.15); 
+        style->SetPadRightMargin(0.05);
+        style->SetPadTopMargin(0.07); 
+        style->SetPadBottomMargin(0.12);
+        style->SetMarkerSize(1.0); 
         style->SetCanvasColor(0);
+        style->SetPadColor(0); 
+        style->SetFrameFillColor(0);
+        /*style->SetCanvasBorderMode(0);
+        style->SetPadBorderMode(0);
         style->SetStatColor(0);
         style->SetFrameBorderMode(0);
         style->SetTitleFillColor(0);
-        style->SetTitleBorderSize(0);
-        style->SetPadTopMargin(0.07);
-        style->SetPadRightMargin(0.05);
-        style->SetPadBottomMargin(0.16);
-        style->SetPadLeftMargin(0.18);
-        style->SetTitleOffset(1.2, "Y");
-        style->SetLabelFont(42, "XYZ");
-        style->SetTitleFont(42, "XYZ");
-        style->SetTitleSize(0.055, "XYZ");
-        style->SetLabelSize(0.045, "XYZ");
-        style->SetNdivisions(505, "XYZ");
-        style->SetOptStat(0);
+        style->SetTitleBorderSize(0);*/
         gROOT->SetStyle("PlotterStyle");
         gROOT->ForceStyle();
     }
 
-    inline virtual void SetupPads(TPad& main_pad, TPad& ratio_pad) const {
-        main_pad.SetBottomMargin(0.02);
-        ratio_pad.SetTopMargin(0.05);
-        ratio_pad.SetBottomMargin(0.35);
-        ratio_pad.SetGridy();
-    }
-
-    inline virtual void DrawMainPlot(TPad& pad) = 0;
-    inline virtual void DrawRatioPlot(TPad& pad) = 0;
-    inline virtual void DrawLabels(TPad& pad) = 0;
-    
-    inline virtual void StyleDataHist(TH1D* hist) const {
-        if (!hist) return;
-        hist->SetMarkerStyle(20);
-        hist->SetMarkerSize(1.0);
-        hist->SetLineColor(kBlack);
-    }
-
-    inline virtual void StyleTotalMCHist(TH1D* hist) const {
-        if (!hist) return;
-        hist->SetFillStyle(3354);
-        hist->SetFillColor(kGray+2);
-        hist->SetMarkerSize(0);
-        hist->SetLineWidth(0);
-    }
-
-    inline virtual void StyleRatioHist(TH1D* hist) const {
-        if (!hist) return;
-        hist->SetTitle("");
-        hist->GetYaxis()->SetTitle("Data / MC");
-        hist->GetYaxis()->SetNdivisions(505);
-        hist->GetYaxis()->CenterTitle();
-        hist->GetXaxis()->SetTitleSize(0.14);
-        hist->GetXaxis()->SetLabelSize(0.14);
-        hist->GetXaxis()->SetTitleOffset(1.0);
-        hist->GetYaxis()->SetTitleSize(0.12);
-        hist->GetYaxis()->SetLabelSize(0.12);
-        hist->GetYaxis()->SetTitleOffset(0.5);
-        hist->SetMinimum(0.5);
-        hist->SetMaximum(1.5);
-    }
-    
-    inline virtual void DrawBrand(double pot = -1) const {
-        TLatex latex;
-        latex.SetNDC();
-        latex.SetTextFont(62);
-        latex.SetTextSize(0.05);
-        latex.SetTextAlign(11);
-        latex.DrawLatex(0.18, 0.96, "MicroBooNE");
-        
-        if (pot > 0) {
-            latex.SetTextFont(42);
-            latex.SetTextSize(0.04);
-            latex.SetTextAlign(31);
-            latex.DrawLatex(0.95, 0.96, Form("POT: %.2e", pot));
-        }
-    }
-    
-    std::string name_;
+    std::string plot_name_;
     std::string output_dir_;
 };
 

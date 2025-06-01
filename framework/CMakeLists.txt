@@ -12,7 +12,6 @@ set(FRAMEWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotBase.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotStacked.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/PlotSystematics.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Selection.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Systematics.h
     ${CMAKE_CURRENT_SOURCE_DIR}/SystematicsController.h

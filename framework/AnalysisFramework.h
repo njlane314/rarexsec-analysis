@@ -14,7 +14,6 @@
 #include "PlotBase.h"
 #include "PlotManager.h"
 #include "PlotStacked.h"
-#include "PlotSystematics.h"
 #include "Selection.h"
 #include "Systematics.h"
 #include "SystematicsController.h"
