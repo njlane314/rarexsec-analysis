@@ -16,14 +16,17 @@ int main() {
             .blinded = true,
             .variable_options = {
                 .load_reco_event_info = true,
+                .load_reco_track_info = true,
                 .load_truth_event_info = true,
-                .load_weights_and_systematics = true
+                .load_weights_and_systematics = true,
+                .load_reco_shower_info = true,
+                .load_blip_info = true
             }
         });
         
         AnalysisFramework::AnalysisSpace analysis_space;
         analysis_space
-            .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 50, 0, 5)
+            .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 80, 0, 2)
             .defineRegion("numu_cc_sel", "NuMu CC Selection", "NUMU_CC", "QUALITY");
 
         AnalysisFramework::SystematicsController systematics_controller(data_manager.getVariableManager());

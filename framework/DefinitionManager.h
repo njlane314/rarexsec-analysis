@@ -81,7 +81,21 @@ private:
     }
 
     ROOT::RDF::RNode defineNominalCVWeight(ROOT::RDF::RNode df) const {
-        return df.Define("event_weight_cv", "event_weight * weightSpline * weightTune * ppfx_cv");
+        auto standard_weight_calculator = [](double w, float w_spline, float w_tune) {
+            double final_weight = w;
+            if (std::isfinite(w_spline) && w_spline > 0) {
+                final_weight *= w_spline;
+            }
+            if (std::isfinite(w_tune) && w_tune > 0) {
+                final_weight *= w_tune;
+            }
+            if (!std::isfinite(final_weight) || final_weight < 0) {
+                return 1.0;
+            }
+            return final_weight;
+        };
+
+        return df.Define("event_weight_cv", standard_weight_calculator, {"event_weight", "weightSpline", "weightTune"});
     }
 
     ROOT::RDF::RNode defineSingleKnobVariationWeights(ROOT::RDF::RNode df) const {
@@ -165,18 +179,7 @@ private:
         }
 
         if(!all_trk_cols_present){
-            return df.Define("nu_slice_topo_score", [](){return -999.f;})
-                     .Define("muon_candidate_selection_mask_vec", [](){ return ROOT::RVec<bool>{};})
-                     .Define("selected_muon_idx", [](){ return -1;})
-                     .Define("selected_muon_length", [](){ return -1.f;})
-                     .Define("selected_muon_momentum_range", [](){ return -1.f;})
-                     .Define("selected_muon_momentum_mcs", [](){ return -1.f;})
-                     .Define("selected_muon_phi", [](){ return -999.f;})
-                     .Define("selected_muon_cos_theta", [](){ return -999.f;})
-                     .Define("selected_muon_energy", [](){ return -1.f;})
-                     .Define("selected_muon_trk_score", [](){ return -1.f;})
-                     .Define("selected_muon_llr_pid_score", [](){ return -999.f;})
-                     .Define("n_muon_candidates", [](){ return 0;});
+            throw std::runtime_error("Required track columns are missing from the input file.");
         }
 
         auto df_with_neutrino_slice_score = df.Define("nu_slice_topo_score",

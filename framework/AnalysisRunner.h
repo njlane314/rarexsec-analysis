@@ -133,7 +133,7 @@ private:
             AnalysisResult result;
             result.blinded = params_.data_manager.isBlinded();
             result.data_pot = params_.data_manager.getDataPOT();
-            
+
             if (!result.blinded && data_futures_.count(task_id)) {
                 result.data_hist = Histogram(task_binning, *data_futures_.at(task_id).GetPtr(), "data_hist", "Data");
             }
@@ -144,11 +144,14 @@ private:
             for (const int category_id : all_categories) {
                 if (category_id == 0) continue;
                 std::string category_label = GetLabel(params_.category_column, category_id);
-                Histogram category_hist(task_binning, category_label, category_label);
+                int color = GetColorCode(params_.category_column, category_id);
+                int fill_style = GetFillStyle(params_.category_column, category_id);
+
+                Histogram category_hist(task_binning, category_label, category_label, color, fill_style);
 
                 for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
                     if (sample_info.isMonteCarlo()) {
-                         if (mc_category_futures_.count(task_id) && 
+                        if (mc_category_futures_.count(task_id) &&
                             mc_category_futures_.at(task_id).count(sample_key) &&
                             mc_category_futures_.at(task_id).at(sample_key).count(category_id)) {
                             auto hist_ptr = mc_category_futures_.at(task_id).at(sample_key).at(category_id).GetPtr();
@@ -162,7 +165,7 @@ private:
 
                 if (category_hist.sum() > 1e-6) {
                     result.mc_breakdown[category_label] = category_hist;
-                    total_mc_nominal = total_mc_nominal + category_hist;
+                    total_mc_nominal = total_mc_nominal + total_mc_nominal; 
                 }
             }
             result.total_mc_hist = total_mc_nominal;

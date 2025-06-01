@@ -25,7 +25,7 @@ public:
 protected:
     inline void DrawMainPlot(TPad& pad) override {
         total_mc_hist_ = result_.total_mc_hist.getRootHistCopy("total_mc_hist");
-        mc_stack_ = new THStack("mc_stack", "");
+        mc_stack_ = new THStack("mc_stack", TString::Format(";%s;Events", result_.total_mc_hist.binning_def.variable_tex.Data()));
         legend_ = new TLegend(0.7, 0.65, 0.92, 0.92);
 
         if (!result_.blinded) {
@@ -47,9 +47,15 @@ protected:
             return a.sum() < b.sum();
         });
 
+        std::cout << "DEBUG: Found " << mc_hists.size() << " MC histograms to stack." << std::endl;
+
+
         const auto& label_map = GetLabelMaps().at("analysis_channel");
         for (const auto& hist : mc_hists) {
+            std::cout << "DEBUG PLOTTING - Hist Name: " << hist.GetName() << ", Title: " << hist.GetTitle() << ", Sum: " << hist.sum() << std::endl;
+
             TH1D* h = hist.getRootHistCopy();
+            
             
             int category_id = -1;
             for(const auto& [id, label] : label_map){
@@ -67,18 +73,23 @@ protected:
             legend_->AddEntry(h, hist.GetTitle(), "f");
         }
 
-        mc_stack_->Draw("HIST");
-        if (mc_stack_->GetXaxis()) { 
-            mc_stack_->GetXaxis()->SetLabelSize(0);
-        }
-        if (mc_stack_->GetYaxis()) { 
-             mc_stack_->GetYaxis()->SetTitle("Events");
-        }
-
-
-        double stack_max = mc_stack_->GetMaximum();
+        // Determine the maximum Y value before drawing
+        double stack_max = (mc_stack_->GetHists() && mc_stack_->GetHists()->GetEntries() > 0) ? mc_stack_->GetMaximum() : 0.0;
         double data_max = (!result_.blinded && data_hist_ && data_hist_->GetEntries() > 0) ? data_hist_->GetBinContent(data_hist_->GetMaximumBin()) + data_hist_->GetBinError(data_hist_->GetMaximumBin()) : 0;
-        mc_stack_->SetMaximum(std::max(stack_max, data_max) * 1.4);
+        double max_y = std::max(stack_max, data_max);
+        if (max_y <= 0) { max_y = 1.0; } // To get a proper frame even if empty
+
+        // Set maximum before drawing
+        mc_stack_->SetMaximum(max_y * 1.4);
+
+        // Draw the stack. This creates the frame and axes.
+        mc_stack_->Draw("HIST");
+
+        // Style the axes on the frame histogram
+        if (mc_stack_->GetHistogram()) {
+            mc_stack_->GetHistogram()->GetXaxis()->SetLabelSize(0);
+            mc_stack_->GetYaxis()->SetTitle("Events");
+        }
 
         if (total_mc_hist_) {
             StyleTotalMCHist(total_mc_hist_);
