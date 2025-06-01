@@ -1,5 +1,5 @@
 {
-    "ntuple_base_directory": "/exp/uboone/data/users/nlane/analysis/",
+    "ntuple_base_directory": "/exp/uboone/data/users/nlane/analysis",
     "run_configurations": {
         "numi_fhc": {
             "run1": {

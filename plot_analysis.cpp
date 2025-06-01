@@ -42,6 +42,12 @@ int main() {
 
         std::cout << "Analysis run completed successfully." << std::endl;
 
+        AnalysisFramework::PlotManager plot_manager("plots");
+        plot_manager.saveStackedPlot("muon_momentum_stacked", results.at("muon_momentum@numu_cc_sel"));
+        plot_manager.saveSystematicPlots("muon_momentum_systematics", results.at("muon_momentum@numu_cc_sel"));
+
+        std::cout << "Plotting completed successfully. Plots are in the 'plots' directory." << std::endl;
+
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
         return 1;

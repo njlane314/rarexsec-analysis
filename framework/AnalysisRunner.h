@@ -27,6 +27,7 @@ struct AnalysisResult {
     Histogram data_hist;
     std::map<std::string, Histogram> mc_breakdown;
     std::map<std::string, TMatrixDSym> systematic_covariance_breakdown;
+    std::map<std::string, std::map<std::string, Histogram>> systematic_variations;
 };
 
 class AnalysisRunner {
@@ -45,10 +46,6 @@ public:
         this->generateTasks();
         this->bookHistograms();
 
-        for (auto& future : future_handles_) {
-            future.GetValue();
-        }
-
         auto final_results = this->processResults();
         return final_results;
     }
@@ -57,8 +54,9 @@ private:
     Parameters params_;
     std::vector<Binning> plot_tasks_;
     std::map<std::string, Binning> plot_task_map_;
-    std::vector<ROOT::RDF::RResultPtr<TH1D>> future_handles_;
-    std::map<std::string, std::map<std::string, ROOT::RDF::RResultPtr<TH1D>>> nominal_futures_;
+    
+    std::map<std::string, ROOT::RDF::RResultPtr<TH1D>> data_futures_;
+    std::map<std::string, std::map<std::string, std::map<int, ROOT::RDF::RResultPtr<TH1D>>>> mc_category_futures_;
 
     void generateTasks() {
         const auto& variables = params_.analysis_space.getVariables();
@@ -95,29 +93,29 @@ private:
     }
 
     void bookHistograms() {
+        const auto all_categories = GetCategories(params_.category_column);
         const auto det_var_nodes = params_.data_manager.getAssociatedVariations();
 
         for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
             ROOT::RDF::RNode df = sample_info.getDataFrame();
-
+            
             for (const auto& [task_id, task_binning] : plot_task_map_) {
-                auto filtered_df = df.Filter(task_binning.selection_query.Data());
+                auto main_filtered_df = df.Filter(task_binning.selection_query.Data());
                 TH1D model(task_id.c_str(), task_id.c_str(), task_binning.nBins(), task_binning.bin_edges.data());
-                auto future = filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
-
-                nominal_futures_[task_id][sample_key] = future;
-                future_handles_.emplace_back(future);
 
                 if (sample_info.isMonteCarlo()) {
+                     for (const int category_id : all_categories) {
+                        if (category_id == 0) continue;
+                        TString category_filter = TString::Format("%s == %d", params_.category_column.c_str(), category_id);
+                        auto category_df = main_filtered_df.Filter(category_filter.Data());
+                        mc_category_futures_[task_id][sample_key][category_id] = category_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                    }
                     params_.systematics_controller.bookVariations(
-                        task_id,
-                        sample_key,
-                        df,
-                        det_var_nodes,
-                        task_binning,
-                        task_binning.selection_query.Data(),
-                        params_.category_column
-                    );
+                        task_id, sample_key, df, det_var_nodes, task_binning,
+                        task_binning.selection_query.Data(), params_.category_column);
+
+                } else { 
+                    data_futures_[task_id] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
                 }
             }
         }
@@ -125,29 +123,41 @@ private:
 
     std::map<std::string, AnalysisResult> processResults() {
         std::map<std::string, AnalysisResult> final_results;
+        const auto all_categories = GetCategories(params_.category_column);
 
         for (const auto& [task_id, task_binning] : plot_task_map_) {
             AnalysisResult result;
-            const auto& all_samples = params_.data_manager.getAllSamples();
-
-            if (all_samples.count("data")) {
-                result.data_hist = Histogram(plot_task_map_.at(task_id), nominal_futures_.at(task_id).at("data").GetValue(), "data_hist", "Data Histogram");
+            
+            if (data_futures_.count(task_id)) {
+                result.data_hist = Histogram(task_binning, *data_futures_.at(task_id).GetPtr(), "data_hist", "Data");
             }
 
             Histogram total_mc_nominal(task_binning, "total_mc", "Total MC");
-            for (const auto& [sample_key, sample_info] : all_samples) {
-                if (sample_key != "data" && sample_info.isMonteCarlo()) {
-                    Histogram hist(plot_task_map_.at(task_id), nominal_futures_.at(task_id).at(sample_key).GetValue(),
-                                    sample_key, sample_key);
-                    result.mc_breakdown[sample_key] = hist;
-                    total_mc_nominal = total_mc_nominal + hist;
+            result.mc_breakdown.clear();
+
+            for (const int category_id : all_categories) {
+                if (category_id == 0) continue;
+                std::string category_label = GetLabel(params_.category_column, category_id);
+                Histogram category_hist(task_binning, category_label, category_label);
+
+                for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
+                    if (sample_info.isMonteCarlo()) {
+                        auto hist_ptr = mc_category_futures_.at(task_id).at(sample_key).at(category_id).GetPtr();
+                        if (hist_ptr) {
+                            Histogram temp_hist(task_binning, *hist_ptr);
+                            category_hist = category_hist + temp_hist;
+                        }
+                    }
+                }
+
+                if (category_hist.sum() > 1e-6) {
+                    result.mc_breakdown[category_label] = category_hist;
+                    total_mc_nominal = total_mc_nominal + category_hist;
                 }
             }
             result.total_mc_hist = total_mc_nominal;
 
             std::map<std::string, TMatrixDSym> total_syst_breakdown;
-            auto all_categories = GetCategories(params_.category_column);
-
             for (const int category_id : all_categories) {
                 if (category_id == 0) continue;
                 auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(category_id, result.total_mc_hist, task_binning, params_.category_column);
@@ -160,16 +170,35 @@ private:
                     total_syst_breakdown[syst_name] += cov_matrix;
                 }
             }
-
+            
             for(const auto& [syst_name, total_cov] : total_syst_breakdown){
                 result.total_mc_hist.addCovariance(total_cov);
                 result.systematic_covariance_breakdown.emplace(syst_name, total_cov);
+            }
+
+            for (const int category_id : all_categories) {
+                if (category_id == 0) continue;
+                auto per_category_varied_hists = params_.systematics_controller.getAllVariedHistograms(category_id, task_binning, params_.category_column);
+                for(const auto& [syst_name, varied_hists] : per_category_varied_hists){
+                    for(const auto& [var_name, hist] : varied_hists){
+                         if (result.systematic_variations[syst_name].find(var_name) == result.systematic_variations[syst_name].end()) {
+                                result.systematic_variations[syst_name][var_name] = hist;
+                            } else {
+                                result.systematic_variations[syst_name][var_name] = result.systematic_variations[syst_name][var_name] + hist;
+                            }
+                    }
+                }
             }
 
             if (params_.pot_scale_factor != 1.0) {
                  result.total_mc_hist = result.total_mc_hist * params_.pot_scale_factor;
                  for(auto& pair : result.mc_breakdown){
                      pair.second = pair.second * params_.pot_scale_factor;
+                 }
+                 for(auto& syst_pair : result.systematic_variations){
+                    for(auto& var_pair : syst_pair.second){
+                        var_pair.second = var_pair.second * params_.pot_scale_factor;
+                    }
                  }
             }
 
