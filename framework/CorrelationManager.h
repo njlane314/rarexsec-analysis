@@ -7,7 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include "ROOT/RDataFrame.hxx"
-#include "ROOT/RResultPtr.hxx" // Required for RResultPtr
+#include "ROOT/RResultPtr.hxx" 
 #include "TMatrixD.h"
 #include "TH2D.h"
 #include "TCanvas.h"
@@ -15,7 +15,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TLatex.h"
-#include "Selection.h" // Assuming this is AnalysisFramework::Selection
+#include "Selection.h" 
 
 namespace AnalysisFramework {
 
@@ -42,24 +42,20 @@ public:
 
         ROOT::RDF::RNode current_df = df_base_.Filter(selection_query_);
 
-        // 1. Future for Sum of weights
         auto sum_w_ptr = current_df.Sum<double>("event_weight_cv");
 
-        // 2. Futures for Sum of (weight * variable_i)
         std::vector<ROOT::RDF::RResultPtr<double>> sum_wx_ptrs;
         ROOT::RDF::RNode df_for_sum_wx = current_df; 
         for (size_t i = 0; i < variables_.size(); ++i) {
             std::string temp_col_name = "wx_var_" + std::to_string(i);
-            // Explicitly cast to double for safety in arithmetic operations
             df_for_sum_wx = df_for_sum_wx.Define(temp_col_name, "static_cast<double>(event_weight_cv) * static_cast<double>(" + variables_[i] + ")");
             sum_wx_ptrs.push_back(df_for_sum_wx.Sum<double>(temp_col_name));
         }
 
-        // 3. Futures for Sum of (weight * variable_i * variable_j)
         std::vector<std::vector<ROOT::RDF::RResultPtr<double>>> sum_wxy_ptrs(variables_.size());
         ROOT::RDF::RNode df_for_sum_wxy = current_df; 
         for (size_t i = 0; i < variables_.size(); ++i) {
-            sum_wxy_ptrs[i].resize(variables_.size()); // Correctly size inner vector
+            sum_wxy_ptrs[i].resize(variables_.size()); 
             for (size_t j = 0; j <= i; ++j) { 
                 std::string temp_col_name = "wxy_var_" + std::to_string(i) + "_" + std::to_string(j);
                 df_for_sum_wxy = df_for_sum_wxy.Define(temp_col_name, "static_cast<double>(event_weight_cv) * static_cast<double>(" + variables_[i] + ") * static_cast<double>(" + variables_[j] + ")");
@@ -67,8 +63,6 @@ public:
             }
         }
 
-        // 4. Trigger computations (by accessing the RResultPtr values) and calculate
-        // Dereferencing the first RResultPtr will trigger the event loop for all booked actions.
         double sum_w = *sum_w_ptr;
 
         if (sum_w <= 1e-9) { 

@@ -47,12 +47,11 @@ int main() {
             "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m"
         };
         
-        // Correctly get both up and down knobs from the VariableManager
-        AnalysisFramework::VariableManager var_manager; // Create an instance
+        AnalysisFramework::VariableManager var_manager; 
         std::vector<std::string> genie_knobs;
         for (const auto& knob_pair : var_manager.GetKnobVariations()) {
-            genie_knobs.push_back(knob_pair.second.first);  // Add the "up" knob
-            genie_knobs.push_back(knob_pair.second.second); // Add the "down" knob
+            genie_knobs.push_back(knob_pair.second.first);  
+            genie_knobs.push_back(knob_pair.second.second); 
         }
         
         std::vector<std::string> all_vars;
@@ -69,7 +68,6 @@ int main() {
         
         std::cout << "Plotting correlation matrix..." << std::endl;
         correlation_manager.Plot("plots/correlation_matrix_signal.png");
-        std::cout << "Plot saved to plots/correlation_matrix_signal.png" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "An exception occurred: " << e.what() << std::endl;
