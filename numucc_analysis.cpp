@@ -1,9 +1,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "ROOT/RDataFrame.hxx"
 #include "framework/AnalysisFramework.h"
+#include "TString.h"
+#include "TSystem.h"
 
 int main() {
     try {
@@ -23,16 +26,19 @@ int main() {
                 .load_blip_info = true
             }
         });
-        
+
         AnalysisFramework::AnalysisSpace analysis_space;
         analysis_space
-            .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 100, 0, 2)
-            .defineVariable("neutrino_energy", "nu_e", "Neutrino Energy [GeV]", 100, 0, 10)
-            .defineVariable("slice_hits", "slnhits", "Slice Hits", 80, 0, 8000)
-            .defineRegion("base_sel", "Base Selection", "", "QUALITY")
-            .defineRegion("numu_cc_sel", "NuMu CC Selection", "NUMU_CC", "QUALITY")
-            .defineRegion("signal", "Signal Selection", "SIGNAL", "QUALITY")
-            .defineRegion("nc", "Neutral Current Filter", "NC", "QUALITY");
+            .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 30, 0, 2)
+            .defineVariable("muon_length", "selected_muon_length", "Muon Length [cm]", 50, 0, 500)
+            .defineVariable("muon_cos_theta", "selected_muon_cos_theta", "Muon cos(#theta)", 40, -1, 1)
+            .defineRegion("numu_loose", "Loose NuMu Selection", "NUMU_CC_LOOSE", "QUALITY")
+            .defineRegion("numu_tight", "Tight NuMu Selection", "NUMU_CC_TIGHT", "QUALITY")
+            .defineRegion("track_score", "Track Score Selection", "TRACK_SCORE", "QUALITY")
+            .defineRegion("pid_score", "PID Score Selection", "PID_SCORE", "QUALITY")
+            .defineRegion("fiducial", "Fiducial Volume Selection", "FIDUCIAL_VOLUME", "QUALITY")
+            .defineRegion("track_length", "Track Length Selection", "TRACK_LENGTH", "QUALITY");
+
 
         AnalysisFramework::SystematicsController systematics_controller(data_manager.getVariableManager());
 
@@ -42,14 +48,14 @@ int main() {
             .systematics_controller = systematics_controller,
             .category_column = "analysis_channel"
         });
+
         auto results = runner.run();
+        std::cout << "Analysis run completed successfully." << std::endl;
 
         AnalysisFramework::PlotManager plot_manager("plots");
-        plot_manager.saveStackedPlot("muon_momentum_stacked", results.at("muon_momentum@numu_cc_sel"));
-        plot_manager.saveStackedPlot("neutrino_energy_base_stacked", results.at("neutrino_energy@base_sel"));
-        plot_manager.saveStackedPlot("neutrino_energy_numucc_stacked", results.at("neutrino_energy@numu_cc_sel"));
-        plot_manager.saveStackedPlot("slice_hits_signal_stacked", results.at("slice_hits@signal"));
-        plot_manager.saveStackedPlot("slice_hits_nc_stacked", results.at("slice_hits@nc"));
+        plot_manager.saveAllStackedPlots(results, analysis_space);
+
+        std::cout << "Plotting completed successfully. Plots are in the 'plots' directory." << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;

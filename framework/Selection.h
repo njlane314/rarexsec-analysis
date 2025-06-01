@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 #include <algorithm>
-#include <sstream>   
+#include <sstream>
 #include "TString.h"
 
 namespace AnalysisFramework {
@@ -14,8 +14,8 @@ namespace AnalysisFramework {
 struct SelectionDetails {
     TString query;
     TString title;
-    TString shortTitle; 
-    TString dirName;   
+    TString shortTitle;
+    TString dirName;
 
     SelectionDetails(TString q = "", TString t = "", TString st = "", TString d = "") :
         query(q), title(t), shortTitle(st), dirName(d) {
@@ -35,13 +35,13 @@ public:
     inline static std::map<TString, SelectionDetails> getPreselectionCategories() {
         std::map<TString, SelectionDetails> categories;
         categories["QUALITY"] = {
-            "nslice == 1 && selected == 1 && " 
-            "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && " 
+            "nslice == 1 && selected == 1 && "
+            "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && "
             "reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && "
             "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
-            "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && " 
-            "nu_slice_topo_score > 0.05 && " 
-            "(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)", 
+            "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && "
+            "nu_slice_topo_score > 0.05 && "
+            "(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         };
         return categories;
@@ -49,29 +49,26 @@ public:
 
     inline static std::map<TString, SelectionDetails> getSelectionCategories() {
         std::map<TString, SelectionDetails> categories;
+        
         categories["NUMU_CC"] = {
             "n_muon_candidates > 0",
-            "NuMu CC sel.", "NuMu CC", "NUMUCC"
+            "NuMu CC sel.", "NuMu CC", "NUMU_CC"
         };
 
-        categories["HADRONIC"] = {
-            "nu_slice_topo_score > 0.5 && slnhits > 200 && n_tracks > 2",
-            "High Hadronic Activity", "High Hadronic", "HIGHHADRONIC"
+        categories["SIGNAL"] = {
+            "analysis_channel == 10 || analysis_channel == 11",
+            "Truth Signal sel.", "Signal", "SIGNAL"
         };
 
-        categories["STRANGE"] = {
-            TString::Format("(%s) && (%s) && (%s)",
-                categories["NUMU_CC"].query.Data(),
-                categories["HADRONIC"].query.Data(),
-                "(event_category == 10 || event_category == 11)"
-            ),
-            "NuMu CC Strange Candidate", "NuMu CC Strange", "STRANGE"
+        categories["NC"] = {
+            "analysis_channel == 31",
+            "Truth Neutral Current sel.", "NC", "NC"
         };
 
         return categories;
     }
 
-    Selection() = default; 
+    Selection() = default;
 
     static TString getSelectionQuery(const TString& selectionKey, const TString& preselectionKey, const std::vector<TString>& extraQueries = {}) {
         TString fullQuery = "";
@@ -100,9 +97,9 @@ public:
                 selectionExists = true;
             }
         }
-        
+
         if (!preselectionExists && !selectionExists && extraQueries.empty()){
-            return ""; 
+            return "";
         }
 
 
@@ -156,6 +153,6 @@ private:
 
 };
 
-} 
+}
 
 #endif // SELECTION_H

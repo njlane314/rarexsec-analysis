@@ -32,10 +32,8 @@ public:
 
     void drawAndSave(const std::string& format = "png") {
         this->SetGlobalStyle();
-
         TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
         this->DrawMainPlot(canvas);
-        
         canvas.SaveAs((output_dir_ + "/" + plot_name_ + "." + format).c_str());
     }
 
@@ -68,12 +66,12 @@ protected:
         style->SetCanvasColor(0);
         style->SetPadColor(0); 
         style->SetFrameFillColor(0);
-        /*style->SetCanvasBorderMode(0);
+        style->SetCanvasBorderMode(0);
         style->SetPadBorderMode(0);
         style->SetStatColor(0);
         style->SetFrameBorderMode(0);
         style->SetTitleFillColor(0);
-        style->SetTitleBorderSize(0);*/
+        style->SetTitleBorderSize(0);
         gROOT->SetStyle("PlotterStyle");
         gROOT->ForceStyle();
     }
