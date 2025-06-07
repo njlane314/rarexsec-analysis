@@ -1,6 +1,7 @@
 #ifndef ANALYSIS_FRAMEWORK_H
 #define ANALYSIS_FRAMEWORK_H
 
+#include "AnalysisResult.h"
 #include "AnalysisRunner.h"
 #include "AnalysisSpace.h"
 #include "Binning.h"

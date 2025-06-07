@@ -51,3 +51,21 @@ target_link_libraries(signal_correlation_analysis
         ${TBB_LIBRARIES}
         ${TORCH_LIBRARIES}
 )
+
+add_executable(save_mlp_features save_mlp_features.cpp)
+target_link_libraries(save_mlp_features
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+        ${TBB_LIBRARIES}
+        ${TORCH_LIBRARIES}
+)
+
+add_executable(event_displays event_displays.cpp)
+target_link_libraries(event_displays
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+        ${TBB_LIBRARIES}
+        ${TORCH_LIBRARIES}
+)

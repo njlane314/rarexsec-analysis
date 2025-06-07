@@ -1,4 +1,5 @@
 set(FRAMEWORK_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisResult.h
     ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisRunner.h
     ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisSpace.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Binning.h
@@ -8,6 +9,7 @@ set(FRAMEWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/DataTypes.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DefinitionManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/EventCategories.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EventDisplay.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Histogram.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HistogramGenerator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotBase.h

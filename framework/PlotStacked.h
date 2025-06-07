@@ -24,13 +24,13 @@ public:
     }
 
 protected:
-    inline void DrawMainPlot(TCanvas& canvas) override {
+    inline void draw(TCanvas& canvas) override {
         canvas.cd();
 
         mc_stack_ = new THStack("mc_stack", ""); 
 
         std::vector<Histogram> mc_hists;
-        for (auto const& [key, val] : result_.mc_breakdown) {
+        for (auto const& [key, val] : result_.getHistBreakdown()) {
             mc_hists.push_back(val);
         }
         std::sort(mc_hists.begin(), mc_hists.end(), [](const Histogram& a, const Histogram& b) {
@@ -75,8 +75,13 @@ protected:
 
         mc_stack_->SetMaximum(max_y * 1.5);
         mc_stack_->SetMinimum(0.0);
-        
-        mc_stack_->GetXaxis()->SetTitle(result_.mc_breakdown.begin()->second.binning_def.variable_tex.Data());
+
+        if (!result_.getHistBreakdown().empty()) {
+            const auto& first_hist = result_.getHistBreakdown().begin()->second;
+            mc_stack_->GetXaxis()->SetTitle(first_hist.binning_def.variable_tex.Data());
+        } else {
+            mc_stack_->GetXaxis()->SetTitle(""); 
+        }
         mc_stack_->GetXaxis()->CenterTitle();
         mc_stack_->GetYaxis()->SetTitle("Events");
         mc_stack_->GetYaxis()->CenterTitle();

@@ -26,19 +26,19 @@ public:
         gSystem->mkdir(output_dir_.c_str(), true);
     }
 
-    virtual void DrawMainPlot(TCanvas& canvas) = 0;
+    virtual void draw(TCanvas& canvas) = 0;
 
     virtual ~PlotBase() = default;
 
     void drawAndSave(const std::string& format = "png") {
-        this->SetGlobalStyle();
+        this->setGlobalStyle();
         TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
-        this->DrawMainPlot(canvas);
+        this->draw(canvas);
         canvas.SaveAs((output_dir_ + "/" + plot_name_ + "." + format).c_str());
     }
 
 protected:
-    inline virtual void SetGlobalStyle() const {
+    inline virtual void setGlobalStyle() const {
         const int font_style = 132;
         TStyle* style = new TStyle("PlotterStyle", "Plotter Style");
         style->SetTitleFont(font_style, "X"); 

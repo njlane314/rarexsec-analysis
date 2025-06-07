@@ -65,6 +65,11 @@ public:
             "Truth Neutral Current sel.", "NC", "NC"
         };
 
+        categories["NUMU_CC_BACKGROUND"] = { // Added
+            "n_muon_candidates > 0 && !(analysis_channel == 10 || analysis_channel == 11)",
+            "NuMu CC Background sel.", "NuMu CC BG", "NUMU_CC_BACKGROUND"
+        };
+
         return categories;
     }
 

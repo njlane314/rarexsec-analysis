@@ -53,7 +53,6 @@ int main() {
         std::cout << "Analysis run completed successfully." << std::endl;
 
         AnalysisFramework::PlotManager plot_manager("plots");
-        plot_manager.saveAllStackedPlots(results, analysis_space);
 
         std::cout << "Plotting completed successfully. Plots are in the 'plots' directory." << std::endl;
 
