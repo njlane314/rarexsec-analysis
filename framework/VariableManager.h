@@ -26,7 +26,7 @@ private:
         "nu_pdg", "ccnc", "interaction", "nu_e", "lep_e",
         "mcf_nmm", "mcf_nmp", "mcf_nem", "mcf_nep", "mcf_np0", "mcf_npp", "mcf_npm", "mcf_npr", "mcf_nne",
         "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-        "semantic_image_u", "semantic_image_v", "semantic_image_w", 
+        //"true_image_u", "true_image_v", "true_image_w", 
         "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z"
     };
 

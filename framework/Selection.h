@@ -41,7 +41,7 @@ public:
             "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
             "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && "
             "nu_slice_topo_score > 0.05 && "
-            "(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)",
+            //"(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         };
         return categories;

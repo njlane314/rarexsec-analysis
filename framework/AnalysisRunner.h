@@ -121,8 +121,11 @@ private:
 
         for (const auto& [task_id, task_binning] : plot_task_map_) {
             AnalysisResult result;
+            
             result.setBlinded(params_.data_manager.isBlinded());
             result.setPOT(params_.data_manager.getDataPOT());
+            result.setBeamKey(params_.data_manager.getBeamKey());
+            result.setRuns(params_.data_manager.getRunsToLoad());
 
             if (!result.isBlinded() && data_futures_.count(task_id)) {
                 result.setDataHist(Histogram(task_binning, *data_futures_.at(task_id).GetPtr(), "data_hist", "Data"));

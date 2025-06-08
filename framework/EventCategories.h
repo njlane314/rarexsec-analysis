@@ -16,19 +16,19 @@ namespace AnalysisFramework {
 inline const std::map<std::string, std::map<int, std::string>>& GetLabelMaps() {
     static const std::map<std::string, std::map<int, std::string>> label_maps = {
         {"analysis_channel", {
-            {0,   "Data"},
-            {1,   "External"},
-            {2,   "Dirt"},
-            {10,  "Signal (S=1)"},
-            {11,  "Signal (S>1)"},
-            {20,  R"($\nu_\mu$ CC (1p, 0$\pi$, S=0))"},
-            {21,  R"($\nu_\mu$ CC (Np, 0$\pi$, S=0))"},
-            {22,  R"($\nu_\mu$ CC (1$\pi$, S=0))"},
-            {23,  R"($\nu_\mu$ CC (Other, S=0))"},
-            {30,  R"($\nu_e$ CC)"},
-            {31,  "NC"},
-            {98,  "Out of FV"},
-            {99,  "Other"}
+            {0,  "Data"},
+            {1,  "External"},
+            {2,  "Dirt"},
+            {10, R"(#nu_{#mu}CC 1s)"},
+            {11, R"(#nu_{#mu}CC Ns)"},
+            {20, R"(#nu_{#mu}CC 1p0#pi)"},
+            {21, R"(#nu_{#mu}CC Np0#pi)"},
+            {22, R"(#nu_{#mu}CC 1#pi)"},
+            {23, R"(#nu_{#mu}CC Other)"},
+            {30, R"(#nu_{e}CC)"},
+            {31, R"(#nu_{x}NC)"},
+            {98, "Out FV"},
+            {99, "Other"}
         }}
     };
     return label_maps;

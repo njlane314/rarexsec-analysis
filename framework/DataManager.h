@@ -71,8 +71,10 @@ public:
           variable_manager_(),
           definition_manager_(variable_manager_),
           data_pot_(0.0),
-          blinded_(params.blinded) {
-        loadRuns(params.beam_key, params.runs_to_load, params.variable_options);
+          blinded_(params.blinded),
+          beam_key_(params.beam_key),
+          runs_to_load_(params.runs_to_load) {
+        loadRuns(beam_key_, runs_to_load_, params.variable_options);
     }
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
@@ -95,10 +97,20 @@ public:
               const std::string& output_file,
               const std::vector<std::string>& columns_to_save = {}) const;
 
+    const std::string& getBeamKey() const {
+        return beam_key_;
+    }
+
+    const std::vector<std::string>& getRunsToLoad() const {
+        return runs_to_load_;
+    }
+
 private:
     ConfigurationManager config_manager_;
     VariableManager variable_manager_;
     DefinitionManager definition_manager_;
+    std::string beam_key_; 
+    std::vector<std::string> runs_to_load_;
 
     std::map<std::string, DataManager::SampleInfo> samples_;
     double data_pot_;

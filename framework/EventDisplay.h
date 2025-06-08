@@ -139,7 +139,7 @@ private:
         }
 
         //std::string hist_name = hist_name_prefix + "_" + plane_name + "_" +
-                                std::to_string(run) + "_" + std::to_string(sub) + "_" + std::to_string(evt);
+        //                        std::to_string(run) + "_" + std::to_string(sub) + "_" + std::to_string(evt);
         std::string title = "Plane " + plane_name + " raw" +
                             " (Run " + std::to_string(run) +
                             ", Subrun " + std::to_string(sub) +

@@ -69,3 +69,12 @@ target_link_libraries(event_displays
         ${TBB_LIBRARIES}
         ${TORCH_LIBRARIES}
 )
+
+add_executable(efficiency_analysis efficiency_analysis.cpp) 
+target_link_libraries(efficiency_analysis
+    PRIVATE
+        AnalysisFramework
+        ${ROOT_LIBRARIES}
+        ${TBB_LIBRARIES}
+        ${TORCH_LIBRARIES}
+)
