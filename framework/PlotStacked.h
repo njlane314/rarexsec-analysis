@@ -23,13 +23,14 @@ namespace AnalysisFramework {
 
 class PlotStacked : public PlotBase {
 public:
-    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& output_dir = "plots")
-        : PlotBase(name, output_dir), result_(result) {}
+    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& output_dir = "plots", bool draw_signal_overlay = true)
+        : PlotBase(name, output_dir), result_(result), draw_signal_overlay_(draw_signal_overlay) {}
 
     inline ~PlotStacked() {
         delete total_mc_hist_;
         delete mc_stack_;
         delete legend_;
+        delete signal_hist_;
     }
 
 protected:
@@ -70,9 +71,37 @@ protected:
         });
         std::reverse(mc_hists.begin(), mc_hists.end());
         
+        Histogram signal_hist;
+        bool signal_overlay_hist_initialised = false;
+        if (draw_signal_overlay_) {
+            const auto& label_map = GetLabelMaps().at("analysis_channel");
+            for (const auto& hist : mc_hists) {
+                int category_id = -1;
+                for (const auto& [id, label] : label_map) {
+                    if (TString(label) == hist.GetTitle()) {
+                        category_id = id;
+                        break;
+                    }
+                }
+                if (category_id == 10 || category_id == 11) {
+                    if (!signal_overlay_hist_initialised) {
+                        signal_hist = hist;
+                        signal_overlay_hist_initialised = true;
+                    } else {
+                        signal_hist = signal_hist + hist;
+                    }
+                }
+            }
+        }
+        
         double total_mc_events = 0.0;
         for(const auto& hist : mc_hists) {
             total_mc_events += hist.sum();
+        }
+
+        if (draw_signal_overlay_ && signal_overlay_hist_initialised && signal_hist.sum() > 0) {
+            double scale_factor = total_mc_events / signal_hist.sum();
+            signal_hist = signal_hist * scale_factor;
         }
 
         p_legend->cd();
@@ -80,7 +109,7 @@ protected:
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
-        const int n_entries = mc_hists.size() + 1;
+        const int n_entries = mc_hists.size() + 1 + (draw_signal_overlay_ && signal_overlay_hist_initialised);
         int n_cols = (n_entries > 4) ? 3 : 2;
         legend_->SetNColumns(n_cols);
         auto format_double = [](double val, int precision) {
@@ -107,6 +136,16 @@ protected:
                 legend_->AddEntry(h_leg, legend_label.c_str(), "f");
             }
         }
+
+        if (draw_signal_overlay_ && signal_overlay_hist_initialised) {
+            signal_hist_ = signal_hist.getRootHistCopy("signal_hist_overlay");
+            signal_hist_->SetLineColor(kGreen + 2);
+            signal_hist_->SetLineStyle(kDashed);
+            signal_hist_->SetFillStyle(0); // Unfilled
+            signal_hist_->SetLineWidth(3);
+            legend_->AddEntry(signal_hist_, "Signal (norm.)", "l");
+        }
+
         if (!mc_hists.empty()) {
             TH1D* h_unc = new TH1D();
             h_unc->SetFillColor(kBlack);
@@ -143,6 +182,9 @@ protected:
         }
 
         double max_y = total_mc_hist_ ? total_mc_hist_->GetMaximum() + total_mc_hist_->GetBinError(total_mc_hist_->GetMaximumBin()) : 1.0;
+        if (draw_signal_overlay_ && signal_hist_) {
+            max_y = std::max(max_y, signal_hist_->GetMaximum());
+        }
         mc_stack_->Draw("HIST");
         mc_stack_->SetMaximum(max_y * 1.3);
         mc_stack_->SetMinimum(0.0);
@@ -151,6 +193,10 @@ protected:
             total_mc_hist_->SetFillStyle(3004);
             total_mc_hist_->SetMarkerSize(0);
             total_mc_hist_->Draw("E2 SAME");
+        }
+        
+        if (draw_signal_overlay_ && signal_hist_) {
+            signal_hist_->Draw("HIST SAME");
         }
         
         TH1* frame = mc_stack_->GetHistogram();
@@ -252,6 +298,8 @@ private:
     TH1D* total_mc_hist_ = nullptr;
     THStack* mc_stack_ = nullptr;
     TLegend* legend_ = nullptr;
+    bool draw_signal_overlay_ = false;
+    TH1D* signal_hist_ = nullptr;
 };
 
 }

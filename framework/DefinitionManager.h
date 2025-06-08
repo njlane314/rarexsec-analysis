@@ -203,9 +203,9 @@ private:
                                      this->getElementFromVector(end_y, i, 0.f) > -110.0 && this->getElementFromVector(end_y, i, 0.f) < 110.0 &&
                                      this->getElementFromVector(start_z, i, 0.f) > 20.0 && this->getElementFromVector(start_z, i, 0.f) < 986.0 &&
                                      this->getElementFromVector(end_z, i, 0.f) > 20.0 && this->getElementFromVector(end_z, i, 0.f) < 986.0);
-                    float current_range_mom = this->getElementFromVector(range_mom, i, 0.f);
-                    bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0 &&
-                                    (current_range_mom > 0 ? std::abs((this->getElementFromVector(mcs_mom, i, 0.f) - current_range_mom) / current_range_mom) < 0.5 : true));
+                    //float current_range_mom = this->getElementFromVector(range_mom, i, 0.f);
+                    bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0);
+                                    //(current_range_mom > 0 ? std::abs((this->getElementFromVector(mcs_mom, i, 0.f) - current_range_mom) / current_range_mom) < 0.5 : true));
                     mask[i] = (this->getElementFromVector(ts, i, 0.f) > 0.8f) && (this->getElementFromVector(pid, i, 0.f) > 0.2f) && fiducial && quality;
                 }
                 return mask;

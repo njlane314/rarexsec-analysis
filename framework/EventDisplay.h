@@ -91,16 +91,18 @@ public:
             TString filter_str = TString::Format("run == %d && sub == %d && evt == %d", run, sub, evt);
             auto single_event_df = df.Filter(filter_str.Data()).Range(0,1);
 
-            auto u_data = single_event_df.Take<std::vector<float>>("detector_image_u").GetValue().at(0);
-            auto v_data = single_event_df.Take<std::vector<float>>("detector_image_v").GetValue().at(0);
-            auto w_data = single_event_df.Take<std::vector<float>>("detector_image_w").GetValue().at(0);
+            auto u_data = single_event_df.Take<std::vector<float>>("raw_image_u").GetValue().at(0);
+            auto v_data = single_event_df.Take<std::vector<float>>("raw_image_v").GetValue().at(0);
+            auto w_data = single_event_df.Take<std::vector<float>>("raw_image_w").GetValue().at(0);
 
             std::vector<std::string> planes = {"U", "V", "W"};
             for (const std::string& plane : planes) {
                 const std::vector<float>& plane_data = (plane.compare("U") == 0 ? u_data : 
                                                     (plane.compare("V") == 0 ? v_data : w_data));
+                
+                // The TCanvas title is now a single space " " to suppress the automatic title.
                 TCanvas* c = new TCanvas(("c_" + plane + "_" + std::to_string(run) + "_" + 
-                                        std::to_string(sub) + "_" + std::to_string(evt)).c_str(), "", 800, 800);
+                                        std::to_string(sub) + "_" + std::to_string(evt)).c_str(), " ", 1200, 1200);
                 c->SetLogz();
                 TH2F* hist = PlotSinglePlaneHistogram(run, sub, evt, "raw", "h_raw", plane_data, plane);
                 hist->Draw("COL");
@@ -111,10 +113,10 @@ public:
                 latex->DrawLatex(0.1, 0.95, Form("Run %d, Subrun %d, Event %d, Plane %s", 
                                                 run, sub, evt, plane.c_str()));
                 
-                std::string file_name = "event_display_" + plane + "_" + 
+                std::string file_name = output_dir_ + "/event_display_" + plane + "_" + 
                                           std::to_string(run) + "_" + 
                                           std::to_string(sub) + "_" + 
-                                          std::to_string(evt) + "_" + plane + ".png";
+                                          std::to_string(evt) + ".png";
                 c->Print(file_name.c_str());
                 delete latex;
                 delete c;
@@ -137,15 +139,8 @@ private:
         if (plane_data.size() != static_cast<size_t>(img_size_ * img_size_)) {
             throw std::runtime_error("Image size mismatch");
         }
-
-        //std::string hist_name = hist_name_prefix + "_" + plane_name + "_" +
-        //                        std::to_string(run) + "_" + std::to_string(sub) + "_" + std::to_string(evt);
-        std::string title = "Plane " + plane_name + " raw" +
-                            " (Run " + std::to_string(run) +
-                            ", Subrun " + std::to_string(sub) +
-                            ", Event " + std::to_string(evt) + ")";
-
-        TH2F* hist = new TH2F("", title.c_str(), img_size_, 0, img_size_, img_size_, 0, img_size_);
+        
+        TH2F* hist = new TH2F("", "", img_size_, 0, img_size_, img_size_, 0, img_size_);
         float threshold = 1.0;
         float min_display_value = 1.0;
 

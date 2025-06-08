@@ -20,7 +20,7 @@ public:
     }
 
     inline void saveStackedPlot(const std::string& name, const AnalysisResult& result) {
-        PlotStacked plot(name, result, output_dir_);
+        PlotStacked plot(name, result, output_dir_, true);
         plot.drawAndSave();
     }
 

@@ -15,11 +15,11 @@ int main() {
             .blinded = true,
             .variable_options = {
                 .load_reco_event_info = true,
-                .load_reco_track_info = true,
+                .load_reco_track_info = false,
                 .load_truth_event_info = true,
                 .load_weights_and_systematics = true,
-                .load_reco_shower_info = true,
-                .load_blip_info = true
+                .load_reco_shower_info = false,
+                .load_blip_info = false
             }
         };
         AnalysisFramework::DataManager data_manager(params);
@@ -27,11 +27,7 @@ int main() {
         AnalysisFramework::AnalysisSpace analysis_space;
         analysis_space
             .defineVariable("muon_momentum", "selected_muon_momentum_range", "Muon Momentum [GeV]", 30, 0, 2)
-            .defineVariable("muon_length", "selected_muon_length", "Muon Length [cm]", 50, 0, 500)
-            .defineVariable("muon_cos_theta", "selected_muon_cos_theta", "Muon cos(#theta)", 40, -1, 1)
-            .defineRegion("numu_loose", "Loose NuMu Selection", "NUMU_CC_LOOSE", "QUALITY")
-            .defineRegion("numu_tight", "Tight NuMu Selection", "NUMU_CC_TIGHT", "QUALITY")
-            .defineRegion("track_score", "Track Score Selection", "TRACK_SCORE", "QUALITY");
+            .defineRegion("numu_loose", "Loose NuMu Selection", "NUMU_CC_LOOSE", "QUALITY");
 
         int img_size = 512;
         std::string output_dir = "event_display_plots";
@@ -40,7 +36,7 @@ int main() {
         std::string selection_key = "SIGNAL";
         std::string preselection_key = "QUALITY";
         std::string additional_selection = "";
-        int num_events = 10;
+        int num_events = 1;
         std::string output_file = "event_display_numu_tight.pdf";
 
         event_display.VisualiseEventsInRegion(
