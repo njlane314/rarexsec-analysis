@@ -29,3 +29,9 @@ An analysis framework for rare cross-section measurements.
     source ../.setup.sh
     ./plot_analysis ../config.json
     ```
+
+
+
+
+    prod_strange_resample_fhc_run1_fhc_reco2_reco2
+    New_NuMI_Flux_Run_1_FHC_Pandora_Reco2_reco2_reco2

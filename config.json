@@ -1,34 +1,38 @@
 {
-    "ntuple_base_directory": "/exp/uboone/data/users/nlane/analysis",
+    "hadd_output_directory": "/exp/uboone/data/users/nlane/analysis",
     "run_configurations": {
         "numi_fhc": {
             "run1": {
                 "samples": [
                     {
                         "sample_key": "data_run1_fhc",
+                        "stage_name": "selection_numi_fhc_data",
                         "sample_type": "data",
-                        "relative_path": "",
                         "pot": 1e+20,
-                        "triggers": 1000000
+                        "triggers": 10000
                     },
                     {
                         "sample_key": "mc_inclusive_run1_fhc",
                         "sample_type": "mc",
-                        "relative_path": "numi_fhc_run1_beam_ana.root",
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
                         ],
-                        "pot": 9.146705993760653e+20
+                        "relative_path": "mc_inclusive_run1_fhc.root",
+                        "effective_pot": 1e+20,
+                        "pot": 9.146706697448094e+20,
+                        "triggers": 0
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",
                         "sample_type": "mc",
-                        "relative_path": "numi_fhc_run1_strangeness_ana.root",
                         "truth_filter": "(mcf_strangeness > 0)",
-                        "pot": 1.088915265838747e+23
+                        "relative_path": "mc_strangeness_run1_fhc.root",
+                        "pot": 1.1030886342980372e+23,
+                        "triggers": 0
                     }
                 ]
             }
         }
-    }
+    },
+    "ntuple_base_directory": "/exp/uboone/data/users/nlane/analysis"
 }

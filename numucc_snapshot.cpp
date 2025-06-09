@@ -28,7 +28,6 @@ int main() {
         std::vector<std::string> columns_to_save = {
             "run", "sub", "evt",
             "raw_image_u", "raw_image_v", "raw_image_w",
-            "reco_image_u", "reco_image_v", "reco_image_w",
             "true_image_u", "true_image_v", "true_image_w",
             "analysis_channel", "event_weight_cv"
         };

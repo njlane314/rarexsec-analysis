@@ -36,11 +36,15 @@ int main() {
         std::string selection_key = "SIGNAL";
         std::string preselection_key = "QUALITY";
         std::string additional_selection = "";
-        int num_events = 1;
+        int num_events = 5;
         std::string output_file = "event_display_numu_tight.pdf";
 
-        event_display.VisualiseEventsInRegion(
+        /*event_display.VisualiseEventsInRegion(
             selection_key, preselection_key, additional_selection, num_events, output_file
+        );*/
+
+        event_display.VisualiseTrueEventsInRegion(
+            selection_key, preselection_key, additional_selection, num_events
         );
 
         std::cout << "Event displays generated successfully in " << output_dir << "/" << output_file << std::endl;
