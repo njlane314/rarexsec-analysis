@@ -29,13 +29,11 @@ public:
         df = defineNuMuVariables(df, category);
 
         if (category == SampleType::kMonteCarlo) {
-            if (!is_variation && variable_options.load_weights_and_systematics) {
-                df = defineNominalCVWeight(df);
+            df = defineNominalCVWeight(df);
+            if (variable_options.load_weights_and_systematics) {
                 df = defineSingleKnobVariationWeights(df);
-            } else if (is_variation) {
-                df = defineNominalCVWeight(df);
-            }
-        } else if (category == SampleType::kData || category == SampleType::kExternal) {
+            } 
+        } else if (category == SampleType::kData || category == SampleType::kExternal || category == SampleType::kDetVar) {
             if (!df.HasColumn("event_weight_cv") && df.HasColumn("event_weight")) {
                 df = df.Alias("event_weight_cv", "event_weight");
             } else if (!df.HasColumn("event_weight_cv")) {

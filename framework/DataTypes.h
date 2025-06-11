@@ -9,7 +9,8 @@ enum class SampleType : unsigned int {
     kUnknown = 0,
     kData,
     kExternal,
-    kMonteCarlo
+    kMonteCarlo, 
+    kDetVar
 };
 
 enum class DetVarType : unsigned int {

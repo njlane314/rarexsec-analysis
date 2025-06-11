@@ -7,9 +7,7 @@
                     {
                         "sample_key": "data_run1_fhc",
                         "stage_name": "selection_numi_fhc_data",
-                        "sample_type": "data",
-                        "pot": 1e+20,
-                        "triggers": 10000
+                        "sample_type": "data"
                     },
                     {
                         "sample_key": "mc_inclusive_run1_fhc",
@@ -19,16 +17,15 @@
                         ],
                         "relative_path": "mc_inclusive_run1_fhc.root",
                         "effective_pot": 1e+20,
-                        "pot": 9.146706697448094e+20,
-                        "triggers": 0
+                        "pot": 9.136423712861412e+20
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",
                         "sample_type": "mc",
                         "truth_filter": "(mcf_strangeness > 0)",
                         "relative_path": "mc_strangeness_run1_fhc.root",
-                        "pot": 1.1030886342980372e+23,
-                        "triggers": 0
+                        "effective_pot": 1e+20,
+                        "pot": 1.100877006593028e+23
                     }
                 ]
             }
