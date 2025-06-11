@@ -12,6 +12,7 @@
 #include <iostream>
 #include <cmath>
 #include <iomanip>
+#include "TStyle.h" 
 
 namespace AnalysisFramework {
 
@@ -45,34 +46,50 @@ public:
 
 protected:
     inline void draw(TCanvas& canvas) override {
+        const double Matrix_CanvasX = 800;
+        const double Matrix_CanvasY = 600;
+        const double Matrix_XaxisTitleSize = 0.05;
+        const double Matrix_YaxisTitleSize = 0.05;
+        const double Matrix_XaxisTitleOffset = 0.93;
+        const double Matrix_YaxisTitleOffset = 1.02;
+        const double Matrix_XaxisLabelSize = 0.045;
+        const double Matrix_YaxisLabelSize = 0.045;
+        const double Matrix_ZaxisLabelSize = 0.045;
+        const double Matrix_TextLabelSize = 0.07;
+
         int n_bins = nominal_hist_bins_.size() - 1;
         if (n_bins == 0 || systematic_correlation_matrix_.GetNrows() == 0) {
             return;
         }
         
         gROOT->SetStyle("Plain");
-        TStyle* style = gROOT->GetStyle("Plain");
-        if (style) {
-            style->SetPalette(kCool);
-            style->SetCanvasBorderMode(0);
-            style->SetCanvasColor(kWhite);
-            style->SetPadBorderMode(0);
-            style->SetPadColor(kWhite);
-            style->SetFrameBorderMode(0);
-            style->SetTitleColor(1, "XYZ");
-            style->SetTitleFont(42, "XYZ");
-            style->SetTitleSize(0.04, "XYZ");
-            style->SetTitleXOffset(1.2);
-            style->SetTitleYOffset(1.2);
-            style->SetLabelColor(1, "XYZ");
-            style->SetLabelFont(42, "XYZ");
-            style->SetLabelOffset(0.007, "XYZ");
-            style->SetLabelSize(0.035, "XYZ");
-            style->SetNdivisions(505, "Z");
+        TStyle* current_style = gROOT->GetStyle("Plain");
+        if (current_style) {
+            current_style->SetPalette(kCool);
+            current_style->SetCanvasBorderMode(0);
+            current_style->SetCanvasColor(kWhite);
+            current_style->SetPadBorderMode(0);
+            current_style->SetPadColor(kWhite);
+            current_style->SetFrameBorderMode(0);
+            current_style->SetTitleColor(1, "XYZ");
+            current_style->SetTitleFont(42, "XYZ");
+            current_style->SetTitleSize(Matrix_XaxisTitleSize, "X");
+            current_style->SetTitleSize(Matrix_YaxisTitleSize, "Y");
+            current_style->SetTitleSize(Matrix_ZaxisLabelSize, "Z");
+            current_style->SetTitleXOffset(Matrix_XaxisTitleOffset);
+            current_style->SetTitleYOffset(Matrix_YaxisTitleOffset);
+            current_style->SetLabelColor(1, "XYZ");
+            current_style->SetLabelFont(42, "XYZ");
+            current_style->SetLabelOffset(0.007, "XYZ");
+            current_style->SetLabelSize(Matrix_XaxisLabelSize, "X");
+            current_style->SetLabelSize(Matrix_YaxisLabelSize, "Y");
+            current_style->SetLabelSize(Matrix_ZaxisLabelSize, "Z");
+            current_style->SetNdivisions(505, "Z");
             gROOT->ForceStyle();
         }
 
-        canvas.SetMargin(0.15, 0.18, 0.15, 0.1); 
+        canvas.SetCanvasSize(Matrix_CanvasX, Matrix_CanvasY);
+        canvas.SetMargin(0.15, 0.18, 0.15, 0.1);
 
         plot_hist_ = new TH2D(("corr_matrix_" + plot_name_).c_str(), 
                               ("Correlation Matrix: " + systematic_name_ + ";Bin;Bin").c_str(), 
@@ -97,18 +114,37 @@ protected:
         plot_hist_->Draw("colz");
 
         TLatex latex;
-        latex.SetTextSize(std::max(0.005, 0.035 - n_bins * 0.0005));
+        latex.SetTextSize(std::max(0.005, Matrix_TextLabelSize - n_bins * 0.0005));
         latex.SetTextAlign(22);
 
         for (int i = 0; i < n_bins; ++i) {
             for (int j = 0; j < n_bins; ++j) {
                 double val = systematic_correlation_matrix_(j, i);
                 if (std::abs(val) > 0.001) {
-                    TString text = TString::Format("%.2f", val);
-                    latex.DrawLatex(i + 0.5, j + 0.5, text);
+                    std::string text_str;
+                    if (std::abs(val) < 1e-4 || std::abs(val) > 1e4) {
+                        int order_of_magnitude = static_cast<int>(std::floor(std::log10(std::abs(val))));
+                        text_str = formatDoublePrecision(val * std::pow(10, -order_of_magnitude), 2) + " #times 10^{" + std::to_string(order_of_magnitude) + "}";
+                    } else {
+                        text_str = formatDoublePrecision(val, 2);
+                    }
+                    if(std::abs(val) < 1e-10) text_str = "0.00";
+                    
+                    latex.DrawLatex(i + 0.5, j + 0.5, text_str.c_str());
                 }
             }
         }
+
+        TLegend *l_Watermark = new TLegend(0.445,0.91,0.910,0.99);
+        l_Watermark->SetBorderSize(0);
+        l_Watermark->SetMargin(0.001);
+        l_Watermark->SetTextAlign(32);
+        l_Watermark->SetTextFont(62);
+        l_Watermark->SetTextSize(0.05);
+        l_Watermark->SetHeader("MicroBooNE Simulation, Preliminary","R");
+        l_Watermark->Draw();
+
+        gROOT->ForceStyle();
     }
 
 private:
@@ -132,6 +168,12 @@ private:
             }
         }
         return corrMatrix;
+    }
+
+    std::string formatDoublePrecision(double val, int precision) {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(precision) << val;
+        return ss.str();
     }
 
     std::vector<double> nominal_hist_bins_;
