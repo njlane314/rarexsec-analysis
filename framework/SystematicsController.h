@@ -27,7 +27,7 @@ public:
     SystematicsController& addWeightSystematic(const std::string& name) {
         for (const auto& knob : var_manager_.getKnobVariations()) {
             if (knob.first == name) {
-                systematics_.push_back(std::make_unique<WeightSystematic>(knob.first, knob.second.first, knob.second.second));
+                weight_systematics_.push_back(std::make_unique<WeightSystematic>(knob.first, knob.second.first, knob.second.second));
                 return *this;
             }
         }
@@ -38,19 +38,19 @@ public:
         const auto& univ_defs = var_manager_.getMultiUniverseDefinitions();
         auto it = univ_defs.find(name);
         if (it != univ_defs.end()) {
-            systematics_.push_back(std::make_unique<UniverseSystematic>(name, it->first, it->second));
+            universe_systematics_.push_back(std::make_unique<UniverseSystematic>(name, it->first, it->second));
             return *this;
         }
         throw std::runtime_error("Universe systematic '" + name + "' not found in VariableManager.");
     }
 
     SystematicsController& addDetectorSystematic(const std::string& name) {
-        systematics_.push_back(std::make_unique<DetectorVariationSystematic>(name));
+        detector_systematics_.push_back(std::make_unique<DetectorVariationSystematic>(name));
         return *this;
     }
 
     SystematicsController& addNormaliseUncertainty(const std::string& name, double uncertainty) {
-        systematics_.push_back(std::make_unique<NormalisationSystematic>(name, uncertainty));
+        normalisation_systematics_.push_back(std::make_unique<NormalisationSystematic>(name, uncertainty));
         return *this;
     }
 
@@ -59,7 +59,16 @@ public:
                         const std::string& selection_query, const std::string& analysis_channel_column) {
         auto analysis_channel_keys = getChannelKeys(analysis_channel_column);
         for (int channel_key : analysis_channel_keys) {
-            for (const auto& syst : systematics_) {
+            for (const auto& syst : weight_systematics_) {
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+            }
+            for (const auto& syst : universe_systematics_) {
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+            }
+            for (const auto& syst : detector_systematics_) {
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+            }
+            for (const auto& syst : normalisation_systematics_) {
                 syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
             }
         }
@@ -68,7 +77,16 @@ public:
     std::map<std::string, TMatrixDSym> computeAllCovariances(int channel_key, const Histogram& nominal_hist,
                                                              const Binning& binning, const std::string& analysis_channel_column) {
         std::map<std::string, TMatrixDSym> breakdown;
-        for (const auto& syst : systematics_) {
+        for (const auto& syst : weight_systematics_) {
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+        }
+        for (const auto& syst : universe_systematics_) {
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+        }
+        for (const auto& syst : detector_systematics_) {
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+        }
+        for (const auto& syst : normalisation_systematics_) {
             breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
         }
         return breakdown;
@@ -78,7 +96,16 @@ public:
                                                                                    const Binning& binning,
                                                                                    const std::string& analysis_channel_column) {
         std::map<std::string, std::map<std::string, Histogram>> all_varied_hists;
-        for (const auto& syst : systematics_) {
+        for (const auto& syst : weight_systematics_) {
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+        }
+        for (const auto& syst : universe_systematics_) {
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+        }
+        for (const auto& syst : detector_systematics_) {
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+        }
+        for (const auto& syst : normalisation_systematics_) {
             all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
         }
         return all_varied_hists;
@@ -86,7 +113,10 @@ public:
 
 private:
     const VariableManager& var_manager_;
-    std::vector<std::unique_ptr<Systematic>> systematics_;
+    std::vector<std::unique_ptr<WeightSystematic>> weight_systematics_;
+    std::vector<std::unique_ptr<UniverseSystematic>> universe_systematics_;
+    std::vector<std::unique_ptr<DetectorVariationSystematic>> detector_systematics_;
+    std::vector<std::unique_ptr<NormalisationSystematic>> normalisation_systematics_;
 };
 
 }

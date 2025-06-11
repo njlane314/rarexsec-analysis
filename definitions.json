@@ -18,6 +18,16 @@
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
                                 "stage_name": "selection_detvar_cv"
+                            },
+                            {
+                                "sample_key": "mc_inclusive_run1_fhc_detvar_sce",
+                                "variation_type": "sce",
+                                "stage_name": "selection_detvar_sce"
+                            },
+                            {
+                                "sample_key": "mc_inclusiv_run1_fhc_detvar_recomb2",
+                                "variation_type": "recomb2",
+                                "stage_name": "selection_detvar_recomb2"
                             }
                         ]
                     },

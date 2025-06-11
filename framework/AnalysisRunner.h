@@ -29,7 +29,7 @@ public:
         AnalysisSpace& analysis_space;
         SystematicsController& systematics_controller;
         double pot_scale_factor = 1.0;
-        std::string category_column = "analysis_channel";
+        std::string category_column;
     };
 
     explicit AnalysisRunner(Parameters params) : params_(params) {}
@@ -100,7 +100,7 @@ private:
                         if (channel_key == 0) continue;
                         TString category_filter = TString::Format("%s == %d", params_.category_column.c_str(), channel_key);
                         auto category_df = main_filtered_df.Filter(category_filter.Data());
-                        mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                        mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "base_event_weight");
                     }
                     params_.systematics_controller.bookVariations(
                         task_key, sample_key, df, det_var_nodes, task_binning,
@@ -108,7 +108,7 @@ private:
 
                 } else { 
                     if (!params_.data_manager.isBlinded()){
-                        data_futures_[task_key] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                        data_futures_[task_key] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "base_event_weight");
                     }
                 }
             }

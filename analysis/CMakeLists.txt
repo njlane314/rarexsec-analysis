@@ -4,7 +4,6 @@ set(ANALYSIS_EXECUTABLES
     numucc_analysis
     numucc_snapshot
     plot_analysis
-    signal_correlation_analysis
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <numeric>
+#include <algorithm>
 
 #include "Histogram.h"
 #include "Binning.h"
@@ -34,6 +35,56 @@ inline TH1D* combineFuturesToHistogram(std::vector<ROOT::RDF::RResultPtr<TH1D>>&
     }
     return combined_th1d;
 }
+
+inline TMatrixDSym calculateTwoPointVariationCovariance(const Histogram& nominal, const Histogram& up, const Histogram& dn) {
+    int nBins = nominal.nBins();
+    TMatrixDSym cov(nBins);
+    cov.Zero();
+    for (int i = 0; i < nBins; ++i) {
+        double diff = 0.5 * (up.getBinContent(i) - dn.getBinContent(i));
+        cov(i, i) = diff * diff;
+    }
+    return cov;
+}
+
+inline TMatrixDSym calculateOneSidedVariationCovariance(const Histogram& nominal, const Histogram& varied) {
+    int nBins = nominal.nBins();
+    TMatrixDSym cov(nBins);
+    cov.Zero();
+    for (int i = 0; i < nBins; ++i) {
+        double diff = varied.getBinContent(i) - nominal.getBinContent(i);
+        cov(i, i) = diff * diff;
+    }
+    return cov;
+}
+
+inline TMatrixDSym calculateMultiUniverseCovariance(const Histogram& nominal_hist, const std::map<std::string, Histogram>& universe_hists_map) {
+    int nBins = nominal_hist.nBins();
+    TMatrixDSym cov(nBins);
+    cov.Zero();
+    if (universe_hists_map.empty()) return cov;
+
+    std::vector<const Histogram*> universe_hists_ptrs;
+    universe_hists_ptrs.reserve(universe_hists_map.size());
+    for (const auto& pair : universe_hists_map) {
+        universe_hists_ptrs.push_back(&pair.second);
+    }
+
+    for (int i = 0; i < nBins; ++i) {
+        for (int j = 0; j <= i; ++j) {
+            double sum_diff_prod = 0.0;
+            for (const auto* universe_hist : universe_hists_ptrs) {
+                double diff_i = universe_hist->getBinContent(i) - nominal_hist.getBinContent(i);
+                double diff_j = universe_hist->getBinContent(j) - nominal_hist.getBinContent(j);
+                sum_diff_prod += diff_i * diff_j;
+            }
+            cov(i, j) = sum_diff_prod / universe_hists_ptrs.size();
+            if (i != j) cov(j, i) = cov(i, j);
+        }
+    }
+    return cov;
+}
+
 
 class Systematic {
 public:
@@ -86,19 +137,12 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym computeCovariance(int category_id, const Histogram&, const Binning& binning, const std::string& category_column) override {
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
         auto varied_hists = getVariedHistograms(category_id, binning, category_column);
-        TMatrixDSym cov(binning.nBins());
-        cov.Zero();
         if (varied_hists.count("up") && varied_hists.count("dn")) {
-            const auto& hist_up = varied_hists.at("up");
-            const auto& hist_dn = varied_hists.at("dn");
-            for (int i = 0; i < binning.nBins(); ++i) {
-                double diff = 0.5 * (hist_up.getBinContent(i) - hist_dn.getBinContent(i));
-                cov(i, i) = diff * diff;
-            }
+            return calculateTwoPointVariationCovariance(nominal_hist, varied_hists.at("up"), varied_hists.at("dn"));
         }
-        return cov;
+        return TMatrixDSym(binning.nBins());
     }
 
 private:
@@ -117,7 +161,7 @@ public:
     }
 
     void book(
-        ROOT::RDF::RNode,
+        ROOT::RDF::RNode df_nominal,
         const DataManager::AssociatedVariationMap& det_var_nodes,
         const std::string& sample_key,
         int category_id,
@@ -129,7 +173,7 @@ public:
             auto var_df_selected_cat = var_node.Filter(selection_query)
                                     .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
             futures_[category_id].push_back(
-                hist_generator_.bookHistogram(var_df_selected_cat, binning, "event_weight_cv"));
+                hist_generator_.bookHistogram(var_df_selected_cat, binning, "central_value_weight"));
         }
     }
 
@@ -147,16 +191,10 @@ public:
 
     TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
         auto varied_hists = getVariedHistograms(category_id, binning, category_column);
-        TMatrixDSym cov(binning.nBins());
-        cov.Zero();
         if (varied_hists.count("var")) {
-            const auto& hist_varied = varied_hists.at("var");
-            for (int i = 0; i < binning.nBins(); ++i) {
-                double diff = hist_varied.getBinContent(i) - nominal_hist.getBinContent(i);
-                cov(i, i) = diff * diff;
-            }
+            return calculateOneSidedVariationCovariance(nominal_hist, varied_hists.at("var"));
         }
-        return cov;
+        return TMatrixDSym(binning.nBins());
     }
 
 private:
@@ -188,7 +226,7 @@ public:
                                               .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
 
         for (unsigned int u = 0; u < n_universes_; ++u) {
-            auto df_universe = df_filtered.Define("univ_weight_" + name_, weight_func, {std::to_string(u), weight_vector_name_, "event_weight_cv"});
+            auto df_universe = df_filtered.Define("univ_weight_" + name_, weight_func, {std::to_string(u), weight_vector_name_, "central_value_weight"});
             universe_futures_[category_id][u].push_back(hist_generator_.bookHistogram(df_universe, binning, "univ_weight_" + name_));
         }
     }
@@ -212,25 +250,7 @@ public:
 
     TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
         auto universe_hists_map = getVariedHistograms(category_id, binning, category_column);
-
-        TMatrixDSym cov(binning.nBins());
-        cov.Zero();
-        if (universe_hists_map.empty()) return cov;
-
-        for (int i = 0; i < binning.nBins(); ++i) {
-            for (int j = 0; j <= i; ++j) {
-                double sum_diff_prod = 0.0;
-                for (const auto& pair : universe_hists_map) {
-                    const auto& universe_hist = pair.second;
-                    double diff_i = universe_hist.getBinContent(i) - nominal_hist.getBinContent(i);
-                    double diff_j = universe_hist.getBinContent(j) - nominal_hist.getBinContent(j);
-                    sum_diff_prod += diff_i * diff_j;
-                }
-                cov(i, j) = sum_diff_prod / universe_hists_map.size();
-                if (i != j) cov(j, i) = cov(i, j);
-            }
-        }
-        return cov;
+        return calculateMultiUniverseCovariance(nominal_hist, universe_hists_map);
     }
 
 private:

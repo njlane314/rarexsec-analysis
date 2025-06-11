@@ -9,7 +9,6 @@
 
 #pragma link C++ class AnalysisFramework::Binning+;
 #pragma link C++ class AnalysisFramework::ConfigurationManager+;
-#pragma link C++ class AnalysisFramework::CorrelationManager+;
 #pragma link C++ class AnalysisFramework::DataManager+;
 #pragma link C++ class AnalysisFramework::DefinitionManager+;
 #pragma link C++ class AnalysisFramework::Histogram+;

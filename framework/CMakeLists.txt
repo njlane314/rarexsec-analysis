@@ -5,7 +5,6 @@ set(FRAMEWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisSpace.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Binning.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationManager.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/CorrelationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DataManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DataTypes.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DefinitionManager.h
@@ -15,6 +14,8 @@ set(FRAMEWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotBase.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotStacked.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PlotSysCorrelation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PlotVarCorrelation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Selection.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Systematics.h
     ${CMAKE_CURRENT_SOURCE_DIR}/SystematicsController.h

@@ -64,6 +64,7 @@ public:
         bool isMonteCarlo() const { return type_ == SampleType::kMonteCarlo; }
         
         void setVariations(VariationDataFrameMap vars) { variations_ = std::move(vars); }
+        
         const VariationDataFrameMap& getVariations() const { return variations_; }
     };
 

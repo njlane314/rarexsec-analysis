@@ -84,11 +84,11 @@ public:
             preselection_key = p.preselection_key;
 
         } else {
-             selection_query = p.selection_query;
-             selection_key = p.selection_key;
-             preselection_key = p.preselection_key;
-             selection_tex = p.selection_tex;
-             selection_tex_short = p.selection_tex_short;
+            selection_query = p.selection_query;
+            selection_key = p.selection_key;
+            preselection_key = p.preselection_key;
+            selection_tex = p.selection_tex;
+            selection_tex_short = p.selection_tex_short;
         }
 
 
