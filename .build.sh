@@ -12,3 +12,5 @@ NUM_CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu 2>
 cmake "${REPO_ROOT}" || { cd "${REPO_ROOT}"; return 1; }
 
 make -j"${NUM_CORES}" || { cd "${REPO_ROOT}"; return 1; }
+
+cd "${REPO_ROOT}" || { return 0; }

@@ -38,6 +38,9 @@ public:
                 df = df.Define("central_value_weight", "1.0");
             }
         }
+        
+        df = df.Define("constant_0_5", "0.5"); 
+        
         return df;
     }
 

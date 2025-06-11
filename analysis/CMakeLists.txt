@@ -1,9 +1,7 @@
 set(ANALYSIS_EXECUTABLES
-    efficiency_analysis
-    event_displays
-    numucc_analysis
-    numucc_snapshot
-    plot_analysis
+    analyse_numu_cc
+    display_numu_cc
+    snapshot_numu_cc
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})
