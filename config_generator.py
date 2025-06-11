@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import argparse
 import sys
 from pathlib import Path
 import subprocess
@@ -60,19 +59,57 @@ def get_total_triggers(file_path: Path) -> int:
         return 0
     return 0
 
+def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdirs: dict, entities: dict, nominal_pot: float, execute_hadd: bool, is_detvar: bool = False):
+    stage_name = entry.get("stage_name")
+    sample_key = entry.get("sample_key")
+    sample_type = entry.get("sample_type", "mc") 
+
+    print(f"  Processing {'detector variation' if is_detvar else 'sample'}: {sample_key} (from stage: {stage_name})")
+
+    if not stage_name or stage_name not in stage_outdirs:
+        print(f"    Warning: Stage '{stage_name}' not found in XML outdirs. Skipping {'detector variation' if is_detvar else 'sample'} '{sample_key}'.", file=sys.stderr)
+        return False
+
+    input_dir_template = stage_outdirs[stage_name]
+    input_dir = input_dir_template
+    for name, value in entities.items():
+        input_dir = input_dir.replace(f"&{name};", value)
+
+    output_file = processed_analysis_path / f"{sample_key}.root"
+    entry["relative_path"] = output_file.name
+
+    root_files = sorted([str(f) for f in Path(input_dir).rglob("*.root")])
+    if not root_files:
+        print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
+
+    command = ["hadd", "-f", str(output_file)] + root_files
+    if not run_command(command, execute_hadd) and execute_hadd:
+        return False
+    
+    if sample_type == "mc" or is_detvar:
+        entry["pot"] = get_total_pot(output_file)
+        if entry["pot"] == 0.0:
+            entry["pot"] = nominal_pot
+    elif sample_type == "data":
+        entry["pot"] = nominal_pot 
+        entry["triggers"] = get_total_triggers(output_file)
+
+    del entry["stage_name"]
+    return True
+
+
 def main():
-    parser = argparse.ArgumentParser(description="A seamless workflow tool to HADD grid outputs and generate the analysis config.json.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--master-config", required=True, help="Path to the master JSON configuration file.")
-    parser.add_argument("--xml-file", required=True, help="Path to the project.xml file.")
-    parser.add_argument("--output-config", default="config.json", help="Name of the final generated config file.")
-    parser.add_argument("--execute-hadd", action="store_true", help="Actually execute the hadd commands. Default is a dry run.")
-    args = parser.parse_args()
+    DEFINITIONS_PATH = "config_definitions.json"
+    XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
+    CONFIG_PATH = "config.json"
+    EXECUTE_HADD = False
+    RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
-    master_config_path = Path(args.master_config)
-    xml_path = Path(args.xml_file)
+    input_definitions_path = Path(DEFINITIONS_PATH)
+    xml_path = Path(XML_PATH)
 
-    with open(master_config_path) as f:
+    with open(input_definitions_path) as f:
         config = json.load(f)
 
     entities = get_xml_entities(xml_path)
@@ -85,59 +122,31 @@ def main():
     stage_outdirs = {s.get("name"): s.find("outdir").text for s in project_node.findall("stage") if s.find("outdir") is not None}
 
     print("\n===== PART 2: Hadding Files and Calculating Metadata =====")
-    hadd_output_dir = Path(config["hadd_output_directory"])
-    hadd_output_dir.mkdir(parents=True, exist_ok=True)
-    config["ntuple_base_directory"] = str(hadd_output_dir.resolve())
+    processed_analysis_path = Path(config["ntuple_base_directory"])
+    processed_analysis_path.mkdir(parents=True, exist_ok=True)
 
     for beam, run_configs in config.get("run_configurations", {}).items():
         for run, run_details in run_configs.items():
+            if RUNS_PROCESS and run not in RUNS_PROCESS:
+                print(f"\nSkipping run: {run} (not in specified RUNS_PROCESS list)")
+                continue
+
             print(f"\nProcessing run: {run}")
 
-            reference_pot = run_details.get("target_pot", 0.0)
-            if reference_pot == 0.0:
-                print(f"  Warning: No target_pot specified for run '{run}'. MC scaling will be incorrect.", file=sys.stderr)
+            nominal_pot = run_details.get("nominal_pot", 0.0)
+            if nominal_pot == 0.0:
+                print(f"  Warning: No nominal_pot specified for run '{run}'. MC scaling might be incorrect.", file=sys.stderr)
             else:
-                print(f"  Using target POT for this run: {reference_pot:.4e}")
+                print(f"  Using nominal POT for this run: {nominal_pot:.4e}")
 
             for sample in run_details.get("samples", []):
-                stage_name = sample.get("stage_name")
-                sample_key = sample.get("sample_key")
-                print(f"  Processing sample: {sample_key} (from stage: {stage_name})")
+                process_sample_entry(sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, EXECUTE_HADD)
 
-                if not stage_name or stage_name not in stage_outdirs:
-                    print(f"    Warning: Stage '{stage_name}' not found in XML outdirs. Skipping sample '{sample_key}'.", file=sys.stderr)
-                    continue
-
-                input_dir_template = stage_outdirs[stage_name]
-                input_dir = input_dir_template
-                for name, value in entities.items():
-                    input_dir = input_dir.replace(f"&{name};", value)
-
-                output_file = hadd_output_dir / f"{sample_key}.root"
-                sample["relative_path"] = output_file.name
-
-                root_files = sorted([str(f) for f in Path(input_dir).rglob("*.root")])
-                if not root_files:
-                    print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
-
-                command = ["hadd", "-f", str(output_file)] + root_files
-                if not run_command(command, args.execute_hadd) and args.execute_hadd:
-                    continue
-                
-                sample["effective_pot"] = reference_pot
-
-                if sample["sample_type"] == "mc":
-                    sample["pot"] = get_total_pot(output_file)
-                elif sample["sample_type"] == "data":
-                    sample["pot"] = reference_pot
-                    sample["triggers"] = get_total_triggers(output_file)
-
-                del sample["stage_name"]
-
-            if "target_pot" in run_details:
-                del run_details["target_pot"]
-
-    output_path = Path(args.output_config)
+                if "detector_variations" in sample:
+                    for detvar_sample in sample["detector_variations"]:
+                        process_sample_entry(detvar_sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, EXECUTE_HADD, is_detvar=True)
+            
+    output_path = Path(CONFIG_PATH)
     with open(output_path, "w") as f:
         json.dump(config, f, indent=4)
 

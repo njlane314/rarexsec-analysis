@@ -3,10 +3,11 @@
     "run_configurations": {
         "numi_fhc": {
             "run1": {
-                "nominal_pot": 1e+20,
+                "nominal_pot": 1.0e+20,
                 "samples": [
                     {
                         "sample_key": "mc_inclusive_run1_fhc",
+                        "stage_name": "selection_numi_fhc_run1_beam",
                         "sample_type": "mc",
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
@@ -15,27 +16,22 @@
                             {
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
-                                "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
-                                "pot": 1e+20
+                                "stage_name": "selection_detvar_cv"
                             }
-                        ],
-                        "relative_path": "mc_inclusive_run1_fhc.root",
-                        "pot": 9.136423712861412e+20
+                        ]
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",
+                        "stage_name": "selection_numi_fhc_run1_strangeness",
                         "sample_type": "mc",
                         "truth_filter": "(mcf_strangeness > 0)",
                         "detector_variations": [
                             {
                                 "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
-                                "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
-                                "pot": 1e+20
+                                "stage_name": "selection_detvar_cv_strangeness"
                             }
-                        ],
-                        "relative_path": "mc_strangeness_run1_fhc.root",
-                        "pot": 1.100877006593028e+23
+                        ]
                     }
                 ]
             }

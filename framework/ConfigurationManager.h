@@ -41,7 +41,7 @@ struct RunConfiguration {
 class ConfigurationManager {
 public:
     ConfigurationManager(const std::string& config_file_path) {
-        LoadConfigurations(config_file_path);
+        this->LoadConfigurations(config_file_path);
     }
 
     const std::string& GetBaseDirectory() const {
@@ -122,7 +122,7 @@ private:
                     }
                     new_config.sample_props[props.sample_key] = props;
                 }
-                AddRunConfig(new_config);
+                this->AddRunConfig(new_config);
             }
         }
     }
@@ -138,7 +138,7 @@ private:
         if (config.sample_props.empty()) throw std::invalid_argument("Sample properties are empty for " + config.beam_key + "/" + config.run_key);
         for (const auto& [key, props] : config.sample_props) {
             if (key != props.sample_key) throw std::invalid_argument("Sample key mismatch: " + key + " vs " + props.sample_key);
-            validateNominalSample(props);
+            this->validateNominalSample(props);
         }
     }
 
@@ -158,7 +158,7 @@ private:
             throw std::runtime_error("File does not exist: " + ntuple_base_directory_ + "/" + props.relative_path);
         }
         for (const auto& detvar_props : props.detector_variations) {
-            validateDetVarSample(detvar_props, props.sample_key);
+            this->validateDetVarSample(detvar_props, props.sample_key);
         }
     }
 
