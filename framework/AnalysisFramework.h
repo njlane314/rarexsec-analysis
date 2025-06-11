@@ -1,6 +1,7 @@
 #ifndef ANALYSIS_FRAMEWORK_H
 #define ANALYSIS_FRAMEWORK_H
 
+#include "AnalysisChannels.h"
 #include "AnalysisResult.h"
 #include "AnalysisRunner.h"
 #include "AnalysisSpace.h"
@@ -9,7 +10,6 @@
 #include "DataManager.h"
 #include "DataTypes.h"
 #include "DefinitionManager.h"
-#include "EventCategories.h"
 #include "Histogram.h"
 #include "HistogramGenerator.h"
 #include "PlotBase.h"

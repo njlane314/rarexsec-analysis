@@ -17,14 +17,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = {
-                .load_reco_event_info = true,
-                .load_reco_track_info = true,
-                .load_truth_event_info = true,
-                .load_weights_and_systematics = true,
-                .load_reco_shower_info = true,
-                .load_blip_info = true
-            }
+            .variable_options = {}
         });
 
         AnalysisFramework::AnalysisSpace analysis_space;

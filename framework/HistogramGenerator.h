@@ -14,7 +14,7 @@ class HistogramGenerator {
 public:
     HistogramGenerator() = default;
 
-    AnalysisFramework::Histogram GenerateHistogram(
+    AnalysisFramework::Histogram generateHistogram(
         ROOT::RDF::RNode df,
         const AnalysisFramework::Binning& binning_def,
         const TString& weight_column_name = "event_weight",
@@ -68,7 +68,7 @@ public:
         );
     }
 
-    ROOT::RDF::RResultPtr<TH1D> BookHistogram(
+    ROOT::RDF::RResultPtr<TH1D> bookHistogram(
         ROOT::RDF::RNode df,
         const AnalysisFramework::Binning& binning_def,
         const std::string& weight_column

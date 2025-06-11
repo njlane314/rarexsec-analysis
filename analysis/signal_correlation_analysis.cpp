@@ -20,14 +20,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = {
-                .load_reco_event_info = true,
-                .load_reco_track_info = true,
-                .load_truth_event_info = true,
-                .load_weights_and_systematics = true,
-                .load_reco_shower_info = false,
-                .load_blip_info = false
-            }
+            .variable_options = {}
         };
         AnalysisFramework::DataManager data_manager(dm_params);
 
@@ -49,7 +42,7 @@ int main() {
         
         AnalysisFramework::VariableManager var_manager; 
         std::vector<std::string> genie_knobs;
-        for (const auto& knob_pair : var_manager.GetKnobVariations()) {
+        for (const auto& knob_pair : var_manager.getKnobVariations()) {
             genie_knobs.push_back(knob_pair.second.first);  
             genie_knobs.push_back(knob_pair.second.second); 
         }
@@ -64,10 +57,10 @@ int main() {
                                                                 all_vars);
         
         std::cout << "Running correlation analysis..." << std::endl;
-        correlation_manager.Run(); 
+        correlation_manager.runCorrelationCalculations(); 
         
         std::cout << "Plotting correlation matrix..." << std::endl;
-        correlation_manager.Plot("plots/correlation_matrix_signal.png");
+        correlation_manager.plot("plots/correlation_matrix_signal.png");
 
     } catch (const std::exception& e) {
         std::cerr << "An exception occurred: " << e.what() << std::endl;

@@ -10,17 +10,14 @@
 namespace AnalysisFramework {
 
 struct VariableOptions {
-    bool load_reco_event_info = false;
-    bool load_reco_track_info = false;
-    bool load_truth_event_info = true;
-    bool load_weights_and_systematics = false;
-    bool load_reco_shower_info = false;
-    bool load_blip_info = false;
+    bool load_showers = false;
 };
 
 class VariableManager {
 private:
-    std::vector<std::string> base_event_vars_ = {"run", "sub", "evt"};
+    std::vector<std::string> base_event_vars_ = {
+        "run", "sub", "evt"
+    };
 
     std::vector<std::string> truth_event_vars_ = {
         "nu_pdg", "ccnc", "interaction", "nu_e", "lep_e",
@@ -51,11 +48,8 @@ private:
         "shr_pfp_id_v"
     };
 
-    std::vector<std::string> blip_vars_ = {"blip_NPlanes"};
-
     std::vector<std::string> nominal_mc_weights_ = {
-        "event_weight", "weights", "weightSpline", "weightTune", 
-        "weightSplineTimesTune", "ppfx_cv", "nu_decay_mode"
+        "weightSpline", "weightTune", "ppfx_cv"
     };
 
     std::vector<std::string> systematic_knob_weights_ = {
@@ -85,47 +79,41 @@ private:
     std::vector<std::string> multi_universe_weights_ = {"weightsGenie", "weightsFlux", "weightsReint", "weightsPPFX"};
 
 public:
-    std::vector<std::pair<std::string, std::pair<std::string, std::string>>> GetKnobVariations() const {
+    std::vector<std::pair<std::string, std::pair<std::string, std::string>>> getKnobVariations() const {
         return knob_variations_;
     }
 
-    std::string GetSingleKnobVariation() const {
+    std::string getSingleKnobVariation() const {
         return single_variation_variable_;
     }
 
-    std::vector<std::string> GetVariables(const VariableOptions& options, AnalysisFramework::SampleType sample_type) const {
-        std::set<std::string> vars_set;
-        vars_set.insert(base_event_vars_.begin(), base_event_vars_.end());
-        if (options.load_truth_event_info && sample_type == SampleType::kMonteCarlo) {
-            vars_set.insert(truth_event_vars_.begin(), truth_event_vars_.end());
-        }
-        if (options.load_reco_event_info) {
-            vars_set.insert(reco_event_vars_.begin(), reco_event_vars_.end());
-        }
-        if (options.load_reco_track_info) {
-            vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
-        }
-        if (options.load_weights_and_systematics && sample_type == SampleType::kMonteCarlo) {
-            vars_set.insert(nominal_mc_weights_.begin(), nominal_mc_weights_.end());
-            vars_set.insert(systematic_knob_weights_.begin(), systematic_knob_weights_.end());
-            vars_set.insert(multi_universe_weights_.begin(), multi_universe_weights_.end());
-        }
-        if (options.load_reco_shower_info) {
-            vars_set.insert(reco_shower_vars_.begin(), reco_shower_vars_.end());
-        }
-        if (options.load_blip_info) {
-            vars_set.insert(blip_vars_.begin(), blip_vars_.end());
-        }
-        return std::vector<std::string>(vars_set.begin(), vars_set.end());
-    }
-
-    std::map<std::string, unsigned int> GetMultiUniverseDefinitions() const {
+    std::map<std::string, unsigned int> getMultiUniverseDefinitions() const {
         return {
             {"weightsGenie", 500},
             {"weightsFlux", 500},
             {"weightsReint", 500},
             {"weightsPPFX", 500}
         };
+    }
+
+    std::vector<std::string> getVariables(const VariableOptions& options, AnalysisFramework::SampleType sample_type) const {
+        std::set<std::string> vars_set;
+
+        vars_set.insert(base_event_vars_.begin(), base_event_vars_.end());
+        if (sample_type == SampleType::kMonteCarlo) {
+            vars_set.insert(truth_event_vars_.begin(), truth_event_vars_.end());
+            vars_set.insert(nominal_mc_weights_.begin(), nominal_mc_weights_.end());
+            vars_set.insert(systematic_knob_weights_.begin(), systematic_knob_weights_.end());
+            vars_set.insert(multi_universe_weights_.begin(), multi_universe_weights_.end());
+        }
+     
+        vars_set.insert(reco_event_vars_.begin(), reco_event_vars_.end());
+        vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
+        if (options.load_showers) {
+            vars_set.insert(reco_shower_vars_.begin(), reco_shower_vars_.end());
+        }
+    
+        return std::vector<std::string>(vars_set.begin(), vars_set.end());
     }
 };
 

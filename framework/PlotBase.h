@@ -26,9 +26,9 @@ public:
         gSystem->mkdir(output_dir_.c_str(), true);
     }
 
-    virtual void draw(TCanvas& canvas) = 0;
-
     virtual ~PlotBase() = default;
+
+    virtual void draw(TCanvas& canvas) = 0;
 
     void drawAndSave(const std::string& format = "png") {
         this->setGlobalStyle();

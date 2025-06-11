@@ -35,20 +35,22 @@ struct NominalSampleProperties {
 struct RunConfiguration {
     std::string beam_key;
     std::string run_key;
+    double nominal_pot;
+    double nominal_triggers;
     std::map<std::string, NominalSampleProperties> sample_props;
 };
 
 class ConfigurationManager {
 public:
     ConfigurationManager(const std::string& config_file_path) {
-        this->LoadConfigurations(config_file_path);
+        this->loadConfigurations(config_file_path);
     }
 
-    const std::string& GetBaseDirectory() const {
+    const std::string& getBaseDirectory() const {
         return ntuple_base_directory_;
     }
 
-    const RunConfiguration& GetRunConfig(const std::string& beam_key, const std::string& run_key) const {
+    const RunConfiguration& getRunConfig(const std::string& beam_key, const std::string& run_key) const {
         auto beam_it = run_configs_.find(beam_key);
         if (beam_it == run_configs_.end()) {
             throw std::runtime_error("ConfigurationManager: Beam mode not found: " + beam_key);
@@ -64,14 +66,14 @@ private:
     std::string ntuple_base_directory_;
     std::map<std::string, std::map<std::string, RunConfiguration>> run_configs_;
 
-    SampleType StringToSampleCategory(const std::string& s) const {
+    SampleType stringToSampleType(const std::string& s) const {
         if (s == "data") return SampleType::kData;
         if (s == "ext") return SampleType::kExternal;
         if (s == "mc") return SampleType::kMonteCarlo;
         return SampleType::kUnknown;
     }
 
-    DetVarType StringToDetVarType(const std::string& s) const {
+    DetVarType stringToDetVarType(const std::string& s) const {
         if (s == "cv") return DetVarType::kDetVarCV;
         if (s == "lyatt") return DetVarType::kDetVarLYAttenuation;
         if (s == "lydown") return DetVarType::kDetVarLYDown;
@@ -85,7 +87,7 @@ private:
         throw std::invalid_argument("Unknown detector variation type: " + s);
     }
 
-    void LoadConfigurations(const std::string& config_file_path) {
+    void loadConfigurations(const std::string& config_file_path) {
         std::ifstream f(config_file_path);
         if (!f) {
             throw std::runtime_error("ConfigurationManager: Cannot open config file " + config_file_path);
@@ -99,11 +101,13 @@ private:
                 RunConfiguration new_config;
                 new_config.beam_key = beam_it.key();
                 new_config.run_key = run_it.key();
+                new_config.nominal_pot = run_it.value().value("nominal_pot", 0.0);
+                new_config.nominal_triggers = run_it.value().value("nominal_triggers", 0L);
                 
                 for (const auto& sample_json : run_it.value().at("samples")) {
                     NominalSampleProperties props;
                     props.sample_key = sample_json.at("sample_key").get<std::string>();
-                    props.sample_type = StringToSampleCategory(sample_json.at("sample_type").get<std::string>());
+                    props.sample_type = stringToSampleType(sample_json.at("sample_type").get<std::string>());
                     props.relative_path = sample_json.value("relative_path", "");
                     if (sample_json.contains("truth_filter")) props.truth_filter = sample_json.at("truth_filter").get<std::string>();
                     if (sample_json.contains("exclusion_truth_filters")) props.exclusion_truth_filters = sample_json.at("exclusion_truth_filters").get<std::vector<std::string>>();
@@ -114,7 +118,7 @@ private:
                         for (const auto& detvar_json : sample_json.at("detector_variations")) {
                             DetectorVariationProperties detvar_props;
                             detvar_props.sample_key = detvar_json.at("sample_key").get<std::string>();
-                            detvar_props.variation_type = StringToDetVarType(detvar_json.at("variation_type").get<std::string>());
+                            detvar_props.variation_type = stringToDetVarType(detvar_json.at("variation_type").get<std::string>());
                             detvar_props.relative_path = detvar_json.at("relative_path").get<std::string>();
                             detvar_props.pot = detvar_json.at("pot").get<double>();
                             props.detector_variations.push_back(detvar_props);
@@ -122,13 +126,13 @@ private:
                     }
                     new_config.sample_props[props.sample_key] = props;
                 }
-                this->AddRunConfig(new_config);
+                this->addRunConfig(new_config);
             }
         }
     }
 
-    void AddRunConfig(const RunConfiguration& config) {
-        validateRunConfiguration(config);
+    void addRunConfig(const RunConfiguration& config) {
+        this->validateRunConfiguration(config);
         run_configs_[config.beam_key][config.run_key] = config;
     }
 

@@ -17,7 +17,7 @@
 #include "AnalysisSpace.h"
 #include "Binning.h"
 #include "SystematicsController.h"
-#include "EventCategories.h"
+#include "AnalysisChannels.h"
 #include "AnalysisResult.h"
 
 namespace AnalysisFramework {
@@ -77,38 +77,38 @@ private:
                     }
                 }, var_props.binning);
 
-                std::string task_id = var_name + "@" + reg_name;
+                std::string task_key = var_name + "@" + reg_name;
                 plot_tasks_.emplace_back(p);
-                plot_task_map_[task_id] = plot_tasks_.back();
+                plot_task_map_[task_key] = plot_tasks_.back();
             }
         }
     }
 
     void bookHistograms() {
-        const auto all_categories = GetCategories(params_.category_column);
+        const auto analysis_channel_keys = getChannelKeys(params_.category_column);
         const auto det_var_nodes = params_.data_manager.getAssociatedVariations();
 
         for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
             ROOT::RDF::RNode df = sample_info.getDataFrame();
             
-            for (const auto& [task_id, task_binning] : plot_task_map_) {
+            for (const auto& [task_key, task_binning] : plot_task_map_) {
                 auto main_filtered_df = df.Filter(task_binning.selection_query.Data());
-                TH1D model(task_id.c_str(), task_id.c_str(), task_binning.nBins(), task_binning.bin_edges.data());
+                TH1D model(task_key.c_str(), task_key.c_str(), task_binning.nBins(), task_binning.bin_edges.data());
 
                 if (sample_info.isMonteCarlo()) {
-                     for (const int category_id : all_categories) {
-                        if (category_id == 0) continue;
-                        TString category_filter = TString::Format("%s == %d", params_.category_column.c_str(), category_id);
+                     for (const int channel_key : analysis_channel_keys) {
+                        if (channel_key == 0) continue;
+                        TString category_filter = TString::Format("%s == %d", params_.category_column.c_str(), channel_key);
                         auto category_df = main_filtered_df.Filter(category_filter.Data());
-                        mc_category_futures_[task_id][sample_key][category_id] = category_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                        mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
                     }
                     params_.systematics_controller.bookVariations(
-                        task_id, sample_key, df, det_var_nodes, task_binning,
+                        task_key, sample_key, df, det_var_nodes, task_binning,
                         task_binning.selection_query.Data(), params_.category_column);
 
                 } else { 
                     if (!params_.data_manager.isBlinded()){
-                        data_futures_[task_id] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
+                        data_futures_[task_key] = main_filtered_df.Histo1D(model, task_binning.variable.Data(), "event_weight_cv");
                     }
                 }
             }
@@ -117,9 +117,9 @@ private:
 
     AnalysisPhaseSpace processResults() {
         AnalysisPhaseSpace analysis_phase_space;
-        const auto all_categories = GetCategories(params_.category_column);
+        const auto analysis_channel_keys = getChannelKeys(params_.category_column);
 
-        for (const auto& [task_id, task_binning] : plot_task_map_) {
+        for (const auto& [task_key, task_binning] : plot_task_map_) {
             AnalysisResult result;
             
             result.setBlinded(params_.data_manager.isBlinded());
@@ -127,25 +127,25 @@ private:
             result.setBeamKey(params_.data_manager.getBeamKey());
             result.setRuns(params_.data_manager.getRunsToLoad());
 
-            if (!result.isBlinded() && data_futures_.count(task_id)) {
-                result.setDataHist(Histogram(task_binning, *data_futures_.at(task_id).GetPtr(), "data_hist", "Data"));
+            if (!result.isBlinded() && data_futures_.count(task_key)) {
+                result.setDataHist(Histogram(task_binning, *data_futures_.at(task_key).GetPtr(), "data_hist", "Data"));
             }
 
             Histogram total_mc_nominal(task_binning, "total_mc", "Total MC");
 
-            for (const int category_id : all_categories) {
-                if (category_id == 0) continue;
-                std::string category_label = GetLabel(params_.category_column, category_id);
-                int color = GetColorCode(params_.category_column, category_id);
-                int fill_style = GetFillStyle(params_.category_column, category_id);
+            for (const int channel_key : analysis_channel_keys) {
+                if (channel_key == 0) continue;
+                std::string category_label = getChannelLabel(params_.category_column, channel_key);
+                int color = getChannelColourCode(params_.category_column, channel_key);
+                int fill_style = getChannelFillStyle(params_.category_column, channel_key);
                 Histogram category_hist(task_binning, category_label, category_label, color, fill_style);
 
                 for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
                     if (sample_info.isMonteCarlo()) {
-                        if (mc_category_futures_.count(task_id) &&
-                            mc_category_futures_.at(task_id).count(sample_key) &&
-                            mc_category_futures_.at(task_id).at(sample_key).count(category_id)) {
-                            auto hist_ptr = mc_category_futures_.at(task_id).at(sample_key).at(category_id).GetPtr();
+                        if (mc_category_futures_.count(task_key) &&
+                            mc_category_futures_.at(task_key).count(sample_key) &&
+                            mc_category_futures_.at(task_key).at(sample_key).count(channel_key)) {
+                            auto hist_ptr = mc_category_futures_.at(task_key).at(sample_key).at(channel_key).GetPtr();
                             if (hist_ptr) {
                                 category_hist = category_hist + Histogram(task_binning, *hist_ptr);
                             }
@@ -162,9 +162,9 @@ private:
             
             const auto nominal_hist_for_cov = result.getTotalHist();
             std::map<std::string, TMatrixDSym> total_syst_breakdown;
-            for (const int category_id : all_categories) {
-                if (category_id == 0) continue;
-                auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(category_id, nominal_hist_for_cov, task_binning, params_.category_column);
+            for (const int channel_key : analysis_channel_keys) {
+                if (channel_key == 0) continue;
+                auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(channel_key, nominal_hist_for_cov, task_binning, params_.category_column);
                 for (const auto& [syst_name, cov_matrix] : per_category_cov_map) {
                     if (total_syst_breakdown.find(syst_name) == total_syst_breakdown.end()) {
                         total_syst_breakdown[syst_name].ResizeTo(nominal_hist_for_cov.nBins(), nominal_hist_for_cov.nBins());
@@ -181,9 +181,9 @@ private:
             }
             result.setTotalHist(final_total_mc_hist);
 
-            for (const int category_id : all_categories) {
-                if (category_id == 0) continue;
-                auto per_category_varied_hists = params_.systematics_controller.getAllVariedHistograms(category_id, task_binning, params_.category_column);
+            for (const int channel_key : analysis_channel_keys) {
+                if (channel_key == 0) continue;
+                auto per_category_varied_hists = params_.systematics_controller.getAllVariedHistograms(channel_key, task_binning, params_.category_column);
                 for(const auto& [syst_name, varied_hists] : per_category_varied_hists){
                     for(const auto& [var_name, hist] : varied_hists){
                         const auto& current_variations = result.getSystematicVariations();
@@ -200,7 +200,7 @@ private:
                 result.scale(params_.pot_scale_factor);
             }
 
-            analysis_phase_space[task_id] = result;
+            analysis_phase_space[task_key] = result;
         }
         return analysis_phase_space;
     }

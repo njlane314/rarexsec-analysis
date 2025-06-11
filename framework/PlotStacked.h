@@ -8,11 +8,11 @@
 #include <sstream>
 #include <iomanip>
 #include <numeric>
-#include <tuple> // Required for std::tuple
+#include <tuple> 
 
 #include "PlotBase.h"
 #include "AnalysisRunner.h"
-#include "EventCategories.h"
+#include "AnalysisChannels.h"
 #include "TColor.h"
 #include "TPad.h"
 #include "TLegend.h"
@@ -23,8 +23,8 @@ namespace AnalysisFramework {
 
 class PlotStacked : public PlotBase {
 public:
-    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& output_dir = "plots", bool draw_signal_overlay = true)
-        : PlotBase(name, output_dir), result_(result), draw_signal_overlay_(draw_signal_overlay) {}
+    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& analysis_channel_column, const std::string& output_dir = "plots", bool draw_signal_overlay = true)
+        : PlotBase(name, output_dir), result_(result), analysis_channel_column_(analysis_channel_column), draw_signal_overlay_(draw_signal_overlay) {}
 
     inline ~PlotStacked() {
         delete total_mc_hist_;
@@ -32,6 +32,15 @@ public:
         delete legend_;
         delete signal_hist_;
     }
+
+private: 
+    AnalysisResult result_;
+    std::string analysis_channel_column_;
+    TH1D* total_mc_hist_ = nullptr;
+    THStack* mc_stack_ = nullptr;
+    TLegend* legend_ = nullptr;
+    bool draw_signal_overlay_ = false;
+    TH1D* signal_hist_ = nullptr;
 
 protected:
     inline void draw(TCanvas& canvas) override {
@@ -74,16 +83,17 @@ protected:
         Histogram signal_hist;
         bool signal_overlay_hist_initialised = false;
         if (draw_signal_overlay_) {
-            const auto& label_map = GetLabelMaps().at("analysis_channel");
+            const auto& label_map = getChannelLabelMap().at(analysis_channel_column_);
+            const auto& signal_channels = getSignalChannelKeys(analysis_channel_column_);
             for (const auto& hist : mc_hists) {
-                int category_id = -1;
-                for (const auto& [id, label] : label_map) {
+                int channel_key = -1;
+                for (const auto& [key, label] : label_map) {
                     if (TString(label) == hist.GetTitle()) {
-                        category_id = id;
+                        channel_key = key;
                         break;
                     }
                 }
-                if (category_id == 10 || category_id == 11) {
+                if (std::find(signal_channels.begin(), signal_channels.end(), channel_key) != signal_channels.end()) {
                     if (!signal_overlay_hist_initialised) {
                         signal_hist = hist;
                         signal_overlay_hist_initialised = true;
@@ -117,21 +127,21 @@ protected:
             stream << std::fixed << std::setprecision(precision) << val;
             return stream.str();
         };
-        const auto& label_map = GetLabelMaps().at("analysis_channel");
+        const auto& label_map = getChannelLabelMap().at(analysis_channel_column_);
         for (const auto& hist : mc_hists) {
             TH1D* h_leg = new TH1D();
-            int category_id = -1;
-            for (const auto& [id, label] : label_map) {
+            int channel_key = -1;
+            for (const auto& [key, label] : label_map) {
                 if (TString(label) == hist.GetTitle()) {
-                    category_id = id;
+                    channel_key = key;
                     break;
                 }
             }
-            if (category_id != -1) {
-                SetHistogramStyle("analysis_channel", category_id, h_leg);
+            if (channel_key != -1) {
+                setChannelHistogramStyle(analysis_channel_column_, channel_key, h_leg);
                 h_leg->SetLineColor(kBlack);
                 h_leg->SetLineWidth(1.5);
-                std::string base_label = GetLabel("analysis_channel", category_id);
+                std::string base_label = getChannelLabel(analysis_channel_column_, channel_key);
                 std::string legend_label = base_label + " : " + format_double(hist.sum(), 2);
                 legend_->AddEntry(h_leg, legend_label.c_str(), "f");
             }
@@ -141,7 +151,7 @@ protected:
             signal_hist_ = signal_hist.getRootHistCopy("signal_hist_overlay");
             signal_hist_->SetLineColor(kGreen + 2);
             signal_hist_->SetLineStyle(kDashed);
-            signal_hist_->SetFillStyle(0); // Unfilled
+            signal_hist_->SetFillStyle(0); 
             signal_hist_->SetLineWidth(3);
             legend_->AddEntry(signal_hist_, "Signal (norm.)", "l");
         }
@@ -160,15 +170,15 @@ protected:
         p_main->cd();
         for (const auto& hist : mc_hists) {
             TH1D* h = hist.getRootHistCopy();
-            int category_id = -1;
-            for (const auto& [id, label] : label_map) {
+            int channel_key = -1;
+            for (const auto& [key, label] : label_map) {
                 if (TString(label) == hist.GetTitle()) {
-                    category_id = id;
+                    channel_key = key;
                     break;
                 }
             }
-            if (category_id != -1) {
-                SetHistogramStyle("analysis_channel", category_id, h);
+            if (channel_key != -1) {
+                setChannelHistogramStyle(analysis_channel_column_, channel_key, h);
                 h->SetLineColor(kBlack);
                 h->SetLineWidth(1);
             }
@@ -293,13 +303,6 @@ private:
         
         return {line1, line2, line3};
     }
-
-    AnalysisResult result_;
-    TH1D* total_mc_hist_ = nullptr;
-    THStack* mc_stack_ = nullptr;
-    TLegend* legend_ = nullptr;
-    bool draw_signal_overlay_ = false;
-    TH1D* signal_hist_ = nullptr;
 };
 
 }

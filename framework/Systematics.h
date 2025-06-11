@@ -11,7 +11,7 @@
 #include "Binning.h"
 #include "HistogramGenerator.h"
 #include "DataManager.h"
-#include "EventCategories.h" 
+#include "AnalysisChannels.h" 
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RResultPtr.hxx"
@@ -21,7 +21,7 @@
 
 namespace AnalysisFramework {
 
-inline TH1D* CombineFuturesToHistogram(std::vector<ROOT::RDF::RResultPtr<TH1D>>& futures, const Binning&, const std::string& hist_name) {
+inline TH1D* combineFuturesToHistogram(std::vector<ROOT::RDF::RResultPtr<TH1D>>& futures, const Binning&, const std::string& hist_name) {
     TH1D* combined_th1d = nullptr;
     for (auto& future : futures) {
         if (future) {
@@ -39,12 +39,12 @@ class Systematic {
 public:
     explicit Systematic(std::string name) : name_(std::move(name)) {}
     virtual ~Systematic() = default;
-    const std::string& GetName() const { return name_; }
-
-    virtual std::unique_ptr<Systematic> Clone() const = 0;
-    virtual void Book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap& det_var_nodes, const std::string& sample_key, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) = 0;
-    virtual TMatrixDSym ComputeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) = 0;
-    virtual std::map<std::string, Histogram> GetVariedHistograms(int category_id, const Binning& binning, const std::string& category_column) = 0;
+    
+    const std::string& getName() const { return name_; }
+    virtual std::unique_ptr<Systematic> clone() const = 0;
+    virtual void book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap& det_var_nodes, const std::string& sample_key, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) = 0;
+    virtual TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) = 0;
+    virtual std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string& category_column) = 0;
 
 protected:
     std::string name_;
@@ -56,28 +56,28 @@ public:
     explicit WeightSystematic(const std::string& name, std::string up_weight_col, std::string dn_weight_col)
         : Systematic(name), up_weight_col_(std::move(up_weight_col)), dn_weight_col_(std::move(dn_weight_col)) {}
 
-    std::unique_ptr<Systematic> Clone() const override {
+    std::unique_ptr<Systematic> clone() const override {
         return std::make_unique<WeightSystematic>(name_, up_weight_col_, dn_weight_col_);
     }
 
-    void Book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
+    void book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
         auto df_filtered = df_nominal_for_sample.Filter(selection_query)
                                           .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
-        futures_up_[category_id].push_back(hist_generator_.BookHistogram(df_filtered, binning, up_weight_col_));
-        futures_dn_[category_id].push_back(hist_generator_.BookHistogram(df_filtered, binning, dn_weight_col_));
+        futures_up_[category_id].push_back(hist_generator_.bookHistogram(df_filtered, binning, up_weight_col_));
+        futures_dn_[category_id].push_back(hist_generator_.bookHistogram(df_filtered, binning, dn_weight_col_));
     }
 
-    std::map<std::string, Histogram> GetVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
+    std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
         std::map<std::string, Histogram> varied_hists;
         if (futures_up_.count(category_id)) {
-            TH1D* hist_up = CombineFuturesToHistogram(futures_up_.at(category_id), binning, name_ + "_up");
+            TH1D* hist_up = combineFuturesToHistogram(futures_up_.at(category_id), binning, name_ + "_up");
             if (hist_up) {
                 varied_hists["up"] = Histogram(binning, *hist_up, name_ + "_up", "Up variation");
                 delete hist_up;
             }
         }
         if (futures_dn_.count(category_id)) {
-            TH1D* hist_dn = CombineFuturesToHistogram(futures_dn_.at(category_id), binning, name_ + "_dn");
+            TH1D* hist_dn = combineFuturesToHistogram(futures_dn_.at(category_id), binning, name_ + "_dn");
             if (hist_dn) {
                 varied_hists["dn"] = Histogram(binning, *hist_dn, name_ + "_dn", "Down variation");
                 delete hist_dn;
@@ -86,8 +86,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym ComputeCovariance(int category_id, const Histogram&, const Binning& binning, const std::string& category_column) override {
-        auto varied_hists = GetVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram&, const Binning& binning, const std::string& category_column) override {
+        auto varied_hists = getVariedHistograms(category_id, binning, category_column);
         TMatrixDSym cov(binning.nBins());
         cov.Zero();
         if (varied_hists.count("up") && varied_hists.count("dn")) {
@@ -112,11 +112,11 @@ class DetectorVariationSystematic : public Systematic {
 public:
     explicit DetectorVariationSystematic(const std::string& name) : Systematic(name) {}
 
-    std::unique_ptr<Systematic> Clone() const override {
+    std::unique_ptr<Systematic> clone() const override {
         return std::make_unique<DetectorVariationSystematic>(name_);
     }
 
-    void Book(
+    void book(
         ROOT::RDF::RNode,
         const DataManager::AssociatedVariationMap& det_var_nodes,
         const std::string& sample_key,
@@ -129,14 +129,14 @@ public:
             auto var_df_selected_cat = var_node.Filter(selection_query)
                                     .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
             futures_[category_id].push_back(
-                hist_generator_.BookHistogram(var_df_selected_cat, binning, "event_weight_cv"));
+                hist_generator_.bookHistogram(var_df_selected_cat, binning, "event_weight_cv"));
         }
     }
 
-    std::map<std::string, Histogram> GetVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
+    std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
         std::map<std::string, Histogram> varied_hists;
         if (futures_.count(category_id)) {
-            TH1D* hist_var = CombineFuturesToHistogram(futures_.at(category_id), binning, name_ + "_var");
+            TH1D* hist_var = combineFuturesToHistogram(futures_.at(category_id), binning, name_ + "_var");
             if (hist_var) {
                 varied_hists["var"] = Histogram(binning, *hist_var, name_ + "_var", "Variation");
                 delete hist_var;
@@ -145,8 +145,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym ComputeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
-        auto varied_hists = GetVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
+        auto varied_hists = getVariedHistograms(category_id, binning, category_column);
         TMatrixDSym cov(binning.nBins());
         cov.Zero();
         if (varied_hists.count("var")) {
@@ -168,11 +168,11 @@ public:
     UniverseSystematic(const std::string& name, std::string weight_vector_name, unsigned int n_universes)
         : Systematic(name), weight_vector_name_(std::move(weight_vector_name)), n_universes_(n_universes) {}
 
-    std::unique_ptr<Systematic> Clone() const override {
+    std::unique_ptr<Systematic> clone() const override {
         return std::make_unique<UniverseSystematic>(name_, weight_vector_name_, n_universes_);
     }
 
-    void Book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
+    void book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
         if (!df_nominal_for_sample.HasColumn(weight_vector_name_)) return;
 
         universe_futures_[category_id].resize(n_universes_);
@@ -189,11 +189,11 @@ public:
 
         for (unsigned int u = 0; u < n_universes_; ++u) {
             auto df_universe = df_filtered.Define("univ_weight_" + name_, weight_func, {std::to_string(u), weight_vector_name_, "event_weight_cv"});
-            universe_futures_[category_id][u].push_back(hist_generator_.BookHistogram(df_universe, binning, "univ_weight_" + name_));
+            universe_futures_[category_id][u].push_back(hist_generator_.bookHistogram(df_universe, binning, "univ_weight_" + name_));
         }
     }
 
-    std::map<std::string, Histogram> GetVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
+    std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
         std::map<std::string, Histogram> varied_hists;
         if (universe_futures_.find(category_id) == universe_futures_.end()) {
             return varied_hists;
@@ -201,7 +201,7 @@ public:
 
         for (unsigned int u = 0; u < n_universes_; ++u) {
             if (universe_futures_.at(category_id).size() <= u || universe_futures_.at(category_id)[u].empty()) continue;
-            TH1D* hist_univ = CombineFuturesToHistogram(universe_futures_.at(category_id)[u], binning, name_ + "_univ" + std::to_string(u));
+            TH1D* hist_univ = combineFuturesToHistogram(universe_futures_.at(category_id)[u], binning, name_ + "_univ" + std::to_string(u));
             if (hist_univ) {
                 varied_hists["univ_" + std::to_string(u)] = Histogram(binning, *hist_univ, name_ + "_univ" + std::to_string(u), "Universe " + std::to_string(u));
                 delete hist_univ;
@@ -210,8 +210,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym ComputeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
-        auto universe_hists_map = GetVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
+        auto universe_hists_map = getVariedHistograms(category_id, binning, category_column);
 
         TMatrixDSym cov(binning.nBins());
         cov.Zero();
@@ -244,9 +244,9 @@ public:
     NormalisationSystematic(const std::string& name, double fractional_uncertainty)
         : Systematic(name), uncertainty_(fractional_uncertainty) {}
 
-    void Book(ROOT::RDF::RNode, const DataManager::AssociatedVariationMap&, const std::string&, int, const Binning&, const std::string&, const std::string&) override {}
+    void book(ROOT::RDF::RNode, const DataManager::AssociatedVariationMap&, const std::string&, int, const Binning&, const std::string&, const std::string&) override {}
 
-    TMatrixDSym ComputeCovariance(int, const Histogram& nominal_hist, const Binning& binning, const std::string&) override {
+    TMatrixDSym computeCovariance(int, const Histogram& nominal_hist, const Binning& binning, const std::string&) override {
         TMatrixDSym cov(binning.nBins());
         cov.Zero();
         for (int i = 0; i < binning.nBins(); ++i) {
@@ -259,9 +259,9 @@ public:
         return cov;
     }
 
-    std::map<std::string, Histogram> GetVariedHistograms(int, const Binning&, const std::string&) override { return {}; }
+    std::map<std::string, Histogram> getVariedHistograms(int, const Binning&, const std::string&) override { return {}; }
 
-    std::unique_ptr<Systematic> Clone() const override {
+    std::unique_ptr<Systematic> clone() const override {
         return std::make_unique<NormalisationSystematic>(name_, uncertainty_);
     }
 

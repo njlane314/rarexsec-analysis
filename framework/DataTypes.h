@@ -8,9 +8,9 @@ namespace AnalysisFramework {
 enum class SampleType : unsigned int {
     kUnknown = 0,
     kData,
+    kMonteCarlo,
     kExternal,
-    kMonteCarlo, 
-    kDetVar
+    kDirt
 };
 
 enum class DetVarType : unsigned int {

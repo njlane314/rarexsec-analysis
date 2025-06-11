@@ -15,14 +15,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = {
-                .load_reco_event_info = true,
-                .load_reco_track_info = true,
-                .load_truth_event_info = true,
-                .load_weights_and_systematics = true,
-                .load_reco_shower_info = true,
-                .load_blip_info = true
-            }
+            .variable_options = {}
         });
 
         std::vector<std::string> columns_to_save = {
@@ -32,7 +25,7 @@ int main() {
             "analysis_channel", "event_weight_cv"
         };
 
-        data_manager.Save("NUMU_CC", "QUALITY", "numucc_snapshot.root", columns_to_save);
+        data_manager.snapshotDataFrames("NUMU_CC", "QUALITY", "numucc_snapshot.root", columns_to_save);
         std::cout << "Snapshot of filtered events saved!" << std::endl;
 
     } catch (const std::exception& e) {

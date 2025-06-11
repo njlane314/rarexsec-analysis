@@ -34,7 +34,7 @@ public:
         }
     }
 
-    void Run() {
+    void runCorrelationCalculations() {
         if (variables_.empty()) {
             std::cerr << "Warning: No variables provided for correlation matrix calculation." << std::endl;
             return;
@@ -104,11 +104,11 @@ public:
         }
     }
 
-    void Plot(const std::string& output_path) {
-        SetStyle();
+    void plot(const std::string& output_path) {
+        this->setStyle();
         int n_vars = variables_.size();
         if (n_vars == 0) {
-            std::cerr << "Warning: No variables to plot in CorrelationManager's Plot method." << std::endl;
+            std::cerr << "Warning: No variables to plot in CorrelationManager's plot method." << std::endl;
             return;
         }
         correlation_hist_ = new TH2D("corr_matrix", "Correlation Matrix", n_vars, 0, n_vars, n_vars, 0, n_vars);
@@ -147,7 +147,7 @@ private:
     TMatrixD correlation_matrix_;
     TH2D* correlation_hist_ = nullptr;
 
-    void SetStyle() {
+    void setStyle() {
         gROOT->SetStyle("Plain");
         TStyle* style = gROOT->GetStyle("Plain");
         if (style) { 

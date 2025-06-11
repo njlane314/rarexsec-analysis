@@ -4,6 +4,7 @@
         "numi_fhc": {
             "run1": {
                 "nominal_pot": 1.0e+20,
+                "nominal_triggers": 1.0e+6,
                 "samples": [
                     {
                         "sample_key": "mc_inclusive_run1_fhc",

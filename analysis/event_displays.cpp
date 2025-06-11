@@ -13,14 +13,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = {
-                .load_reco_event_info = true,
-                .load_reco_track_info = false,
-                .load_truth_event_info = true,
-                .load_weights_and_systematics = true,
-                .load_reco_shower_info = false,
-                .load_blip_info = false
-            }
+            .variable_options = {}
         };
         AnalysisFramework::DataManager data_manager(params);
 
@@ -43,7 +36,7 @@ int main() {
             selection_key, preselection_key, additional_selection, num_events, output_file
         );*/
 
-        event_display.VisualiseTrueEventsInRegion(
+        event_display.visualiseSemanticViews(
             selection_key, preselection_key, additional_selection, num_events
         );
 

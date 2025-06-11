@@ -88,6 +88,7 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
     
     if sample_type == "mc" or is_detvar:
         entry["pot"] = get_total_pot(output_file)
+        entry["triggers"] = get_total_triggers(output_file)
         if entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
     elif sample_type == "data":
@@ -99,10 +100,10 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
 
 
 def main():
-    DEFINITIONS_PATH = "config_definitions.json"
+    DEFINITIONS_PATH = "definitions.json"
     XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
     CONFIG_PATH = "config.json"
-    EXECUTE_HADD = False
+    EXECUTE_HADD = True
     RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
@@ -134,6 +135,7 @@ def main():
             print(f"\nProcessing run: {run}")
 
             nominal_pot = run_details.get("nominal_pot", 0.0)
+            nominal_triggers = run_details.get("nominal_triggers", 0)
             if nominal_pot == 0.0:
                 print(f"  Warning: No nominal_pot specified for run '{run}'. MC scaling might be incorrect.", file=sys.stderr)
             else:

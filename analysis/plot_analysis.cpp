@@ -14,14 +14,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = true,
-            .variable_options = {
-                .load_reco_event_info = true,
-                .load_reco_track_info = true,
-                .load_truth_event_info = true,
-                .load_weights_and_systematics = true,
-                .load_reco_shower_info = true,
-                .load_blip_info = true
-            }
+            .variable_options = {}
         });
         
         AnalysisFramework::AnalysisSpace analysis_space;
@@ -45,11 +38,12 @@ int main() {
         auto results = runner.run();
 
         AnalysisFramework::PlotManager plot_manager("plots");
-        plot_manager.saveStackedPlot("muon_momentum_stacked", results.at("muon_momentum@numu_cc_sel"));
-        plot_manager.saveStackedPlot("neutrino_energy_base_stacked", results.at("neutrino_energy@base_sel"));
-        plot_manager.saveStackedPlot("neutrino_energy_numucc_stacked", results.at("neutrino_energy@numu_cc_sel"));
-        plot_manager.saveStackedPlot("slice_hits_signal_stacked", results.at("slice_hits@signal"));
-        plot_manager.saveStackedPlot("slice_hits_nc_stacked", results.at("slice_hits@nc"));
+        std::string analysis_channel_column = "inclusive_strange_channels";
+        plot_manager.saveStackedPlot("muon_momentum_stacked", results.at("muon_momentum@numu_cc_sel"), analysis_channel_column);
+        plot_manager.saveStackedPlot("neutrino_energy_base_stacked", results.at("neutrino_energy@base_sel"), analysis_channel_column);
+        plot_manager.saveStackedPlot("neutrino_energy_numucc_stacked", results.at("neutrino_energy@numu_cc_sel"), analysis_channel_column);
+        plot_manager.saveStackedPlot("slice_hits_signal_stacked", results.at("slice_hits@signal"), analysis_channel_column);
+        plot_manager.saveStackedPlot("slice_hits_nc_stacked", results.at("slice_hits@nc"), analysis_channel_column);
 
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;

@@ -27,7 +27,7 @@ public:
     EventDisplay(const DataManager& data_manager, int img_size, const std::string& output_dir)
         : data_manager_(data_manager), img_size_(img_size), output_dir_(output_dir), rand_gen_(0) {}
 
-    void VisualiseEventsInRegion(const std::string& selection_key,
+    void visualiseDetectorViews(const std::string& selection_key,
                                  const std::string& preselection_key,
                                  const std::string& additional_selection = "",
                                  int num_events = 1,
@@ -95,7 +95,7 @@ public:
                 std::string title = "Plane " + plane +
                             " (Run " + std::to_string(run) +
                             ", Subrun " + std::to_string(sub) + ", Event " + std::to_string(evt) + ")";
-                TH2F* hist = PlotSinglePlaneHistogram(run, sub, evt, "raw", "h_raw", plane_data, plane, title);
+                TH2F* hist = plotDetectorView(run, sub, evt, "raw", "h_raw", plane_data, plane, title);
                 hist->Draw("COL");
                 
                 std::string file_name = "./event_display_" + plane + "_" + 
@@ -108,7 +108,7 @@ public:
         }
     }
 
-    void VisualiseTrueEventsInRegion(const std::string& selection_key,
+    void visualiseSemanticViews(const std::string& selection_key,
                                  const std::string& preselection_key,
                                  const std::string& additional_selection = "",
                                  int num_events = 1) {
@@ -183,7 +183,7 @@ public:
                 std::string title = "True Plane " + plane +
                             " (Run " + std::to_string(run) +
                             ", Subrun " + std::to_string(sub) + ", Event " + std::to_string(evt) + ")";
-                TH2F* hist = PlotSinglePlaneHistogram(run, sub, evt, "true", "h_true", plane_data, plane, title);
+                TH2F* hist = plotSemanticView(run, sub, evt, "true", "h_true", plane_data, plane, title);
                 hist->Draw("COL");
                 
                 c->cd();
@@ -207,7 +207,7 @@ public:
                 static const std::array<int, 10> label_colors = { kWhite, kGray + 1, kRed, kBlue, kGreen + 1, kMagenta, kCyan, kOrange, kViolet, kTeal };
 
                 for (int label_idx : unique_labels) {
-                    if (label_idx > 0 && label_idx < (int)truth_primary_label_names.size()) { // Don't add "Empty" to legend
+                    if (label_idx > 0 && label_idx < (int)truth_primary_label_names.size()) { 
                         TH1F* h_leg = new TH1F("", "", 1, 0, 1);
                         h_leg->SetFillColor(label_colors[label_idx]);
                         h_leg->SetLineColor(kBlack);
@@ -235,7 +235,7 @@ private:
     std::vector<std::string> plane_names_ = {"U", "V", "W"};
     TRandom3 rand_gen_;
 
-    TH2F* PlotSinglePlaneHistogram(int run, int sub, int evt,
+    TH2F* plotDetectorView(int run, int sub, int evt,
                                    const std::string& plot_type_name,
                                    const std::string& hist_name_prefix,
                                    const std::vector<float>& plane_data,
@@ -278,7 +278,7 @@ private:
         return hist;
     }
 
-    TH2F* PlotSinglePlaneHistogram(int run, int sub, int evt,
+    TH2F* plotSemanticView(int run, int sub, int evt,
                                    const std::string& plot_type_name,
                                    const std::string& hist_name_prefix,
                                    const std::vector<int>& plane_data,
