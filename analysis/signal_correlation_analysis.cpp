@@ -6,10 +6,10 @@
 
 #include "ROOT/RDataFrame.hxx"
 
-#include "framework/DataManager.h"
-#include "framework/CorrelationManager.h"
-#include "framework/VariableManager.h"
-#include "framework/DataTypes.h"
+#include "DataManager.h"
+#include "CorrelationManager.h"
+#include "VariableManager.h"
+#include "DataTypes.h"
 
 int main() {
     try {

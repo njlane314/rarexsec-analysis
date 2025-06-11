@@ -1,6 +1,6 @@
 #include <iostream>
-#include "framework/AnalysisFramework.h"
-#include "framework/CommonAnalysisSpace.h"
+#include "AnalysisFramework.h"
+#include "AnalysisSpace.h"
 #include "TFile.h"
 
 int main() {

@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 
-#include "framework/AnalysisFramework.h"
+#include "AnalysisFramework.h"
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TAxis.h"

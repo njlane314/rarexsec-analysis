@@ -4,7 +4,7 @@
 #include <exception>
 
 #include "ROOT/RDataFrame.hxx"
-#include "framework/AnalysisFramework.h"
+#include "AnalysisFramework.h"
 
 int main() {
     try {
