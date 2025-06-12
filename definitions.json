@@ -10,6 +10,8 @@
                         "sample_key": "mc_inclusive_run1_fhc",
                         "stage_name": "selection_numi_fhc_run1_beam",
                         "sample_type": "mc",
+                        "active": false,
+                        "do_hadd": false,
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
                         ],
@@ -18,19 +20,22 @@
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
                                 "stage_name": "selection_detvar_cv",
-                                "active": true
+                                "active": false,
+                                "do_hadd": false
                             },
                             {
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_sce",
                                 "variation_type": "sce",
                                 "stage_name": "selection_detvar_sce",
-                                "active": false
+                                "active": false,
+                                "do_hadd": false
                             },
                             {
                                 "sample_key": "mc_inclusiv_run1_fhc_detvar_recomb2",
                                 "variation_type": "recomb2",
                                 "stage_name": "selection_detvar_recomb2",
-                                "active": false
+                                "active": false,
+                                "do_hadd": false
                             }
                         ]
                     },
@@ -38,13 +43,16 @@
                         "sample_key": "mc_strangeness_run1_fhc",
                         "stage_name": "selection_numi_fhc_run1_strangeness",
                         "sample_type": "mc",
+                        "active": true,
+                        "do_hadd": false,
                         "truth_filter": "(mcf_strangeness > 0)",
                         "detector_variations": [
                             {
                                 "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
                                 "stage_name": "selection_detvar_cv_strangeness",
-                                "active": true
+                                "active": true,
+                                "do_hadd": true
                             }
                         ]
                     }

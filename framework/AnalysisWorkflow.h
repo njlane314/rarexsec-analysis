@@ -10,6 +10,7 @@
 #include "PlotManager.h"
 #include "SystematicsController.h"
 #include "DataManager.h"
+#include "BDTManager.h"
 
 namespace AnalysisFramework {
 
@@ -132,14 +133,39 @@ public:
         return analysis_channel_column_;
     }
 
+    void trainBDT(
+        const std::vector<std::string>& features,
+        const std::string& signal_cut,
+        const std::string& background_cut,
+        const std::string& output_model_path,
+        const std::string& method_name,
+        const std::string& method_options
+    ) {
+        fBDTManager.trainBDT(data_manager_.getDataFrame(), features, signal_cut, background_cut, output_model_path, method_name, method_options);
+    }
+
+    void addBDTScoreColumn(
+        const std::string& bdt_output_column_name,
+        const std::string& model_file_path,
+        const std::string& method_name,
+        const std::vector<std::string>& feature_column_names
+    ) {
+        data_manager_.getDataFrame() = data_manager_.getDataFrame().Define(
+            bdt_output_column_name,
+            fBDTManager.createBDTScoreLambda(model_file_path, method_name),
+            feature_column_names
+        );
+    }
+
 private:
     DataManager data_manager_;
     AnalysisSpace analysis_space_;
     SystematicsController systematics_controller_;
     PlotManager plot_manager_;
+    BDTManager fBDTManager;
     std::string analysis_channel_column_;
 };
 
-} 
+}
 
-#endif // ANALYSIS_WORKFLOW_H
+#endif
