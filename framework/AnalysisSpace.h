@@ -31,13 +31,25 @@ struct Variable {
     std::string axis_label;
     std::string axis_label_short;
     BinningDef binning;
+
+    Variable() = default;
+
+    Variable(std::string be, std::string al, std::string als, BinningDef bd) :
+        branch_expression(std::move(be)), axis_label(std::move(al)), axis_label_short(std::move(als)), binning(std::move(bd)) {}
 };
+
 
 struct Region {
     std::string title;
     std::string title_short;
     TString preselection_key;
     TString selection_key;
+    std::vector<TString> extra_queries;
+
+    Region() = default;
+
+    Region(std::string t, std::string ts, TString pk, TString sk, std::vector<TString> eq) :
+        title(std::move(t)), title_short(std::move(ts)), preselection_key(std::move(pk)), selection_key(std::move(sk)), extra_queries(std::move(eq)) {}
 };
 
 class AnalysisSpace {
@@ -48,7 +60,7 @@ public:
         if (variables_.count(name)) {
             throw std::runtime_error("Variable with name '" + name + "' already defined.");
         }
-        variables_[name] = {branch, label, short_label, UniformBinning{n_bins, low, high, is_log}};
+        variables_.emplace(name, Variable(branch, label, short_label, UniformBinning{n_bins, low, high, is_log}));
         return *this;
     }
 
@@ -56,15 +68,15 @@ public:
         if (variables_.count(name)) {
             throw std::runtime_error("Variable with name '" + name + "' already defined.");
         }
-        variables_[name] = {branch, label, short_label, VariableBinning{edges, is_log}};
+        variables_.emplace(name, Variable(branch, label, short_label, VariableBinning{edges, is_log}));
         return *this;
     }
 
-    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, const TString& selectionKey, const TString& preselectionKey = "None", const std::string& short_title = "") {
+    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, const TString& selectionKey, const TString& preselectionKey = "None", const std::string& short_title = "", const std::vector<TString>& extraQueries = {}) {
         if (regions_.count(name)) {
             throw std::runtime_error("Region with name '" + name + "' already defined.");
         }
-        regions_[name] = {title, short_title, preselectionKey, selectionKey};
+        regions_.emplace(name, Region(title, short_title, preselectionKey, selectionKey, extraQueries));
         return *this;
     }
 

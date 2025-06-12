@@ -34,41 +34,40 @@ public:
 
     inline static std::map<TString, SelectionDetails> getPreselectionCategories() {
         std::map<TString, SelectionDetails> categories;
-        categories["QUALITY"] = {
+        categories.emplace("QUALITY", SelectionDetails(
             "nslice == 1 && selected == 1 && "
             "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && "
             "reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && "
             "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
             "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && "
             "nu_slice_topo_score > 0.05 ",
-            //"(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
-        };
+        ));
         return categories;
     }
 
     inline static std::map<TString, SelectionDetails> getSelectionCategories() {
         std::map<TString, SelectionDetails> categories;
         
-        categories["NUMU_CC"] = {
+        categories.emplace("NUMU_CC", SelectionDetails(
             "n_muon_candidates > 0",
             "NuMu CC sel.", "NuMu CC", "NUMU_CC"
-        };
+        ));
 
-        categories["SIGNAL"] = {
+        categories.emplace("SIGNAL", SelectionDetails(
             "analysis_channel == 10 || analysis_channel == 11",
             "Truth Signal sel.", "Signal", "SIGNAL"
-        };
+        ));
 
-        categories["NC"] = {
+        categories.emplace("NC", SelectionDetails(
             "analysis_channel == 31",
             "Truth Neutral Current sel.", "NC", "NC"
-        };
+        ));
 
-        categories["NUMU_CC_BACKGROUND"] = { 
+        categories.emplace("NUMU_CC_BACKGROUND", SelectionDetails( 
             "n_muon_candidates > 0 && !(analysis_channel == 10 || analysis_channel == 11)",
             "NuMu CC Background sel.", "NuMu CC BG", "NUMU_CC_BACKGROUND"
-        };
+        ));
 
         return categories;
     }
@@ -160,4 +159,4 @@ private:
 
 }
 
-#endif // SELECTION_H
+#endif

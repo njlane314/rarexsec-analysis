@@ -4,29 +4,34 @@
 #include <exception>
 
 #include "ROOT/RDataFrame.hxx"
-#include "AnalysisFramework.h"
+#include "AnalysisWorkflow.h"
 
 int main() {
     try {
         ROOT::EnableImplicitMT();
-
-        AnalysisFramework::DataManager data_manager({
-            .config_file = "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/config.json",
-            .beam_key = "numi_fhc",
-            .runs_to_load = {"run1"},
-            .blinded = true,
-            .variable_options = {}
-        });
+        
+        std::cout << "Initializing AnalysisWorkflow..." << std::endl;
+        AnalysisFramework::AnalysisWorkflow workflow(
+            "/exp/uboone/app/users/nlane/analysis/rarexsec_analysis/config.json",
+            "numi_fhc",
+            {"run1"},
+            true,
+            "inclusive_strange_channels",
+            "plots_snapshot"
+        );
 
         std::vector<std::string> columns_to_save = {
             "run", "sub", "evt",
-            "raw_image_u", "raw_image_v", "raw_image_w",
-            "true_image_u", "true_image_v", "true_image_w",
-            "analysis_channel", "event_weight_cv"
+            "detector_image_u", "detector_image_v", "detector_image_w",
+            "semantic_image_u", "semantic_image_v", "semantic_image_w",
+            "inclusive_strange_channels",
+            "exclusive_strange_channels",
+            "central_value_weight"
         };
-
-        data_manager.snapshotDataFrames("NUMU_CC", "QUALITY", "numucc_snapshot.root", columns_to_save);
-        std::cout << "Snapshot of filtered events saved!" << std::endl;
+        
+        std::cout << "Starting data snapshot..." << std::endl;
+        workflow.snapshotDataFrames("NUMU_CC", "QUALITY", "numucc_snapshot.root", columns_to_save);
+        std::cout << "Snapshot completed successfully and saved to numucc_snapshot.root!" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "An exception occurred: " << e.what() << std::endl;

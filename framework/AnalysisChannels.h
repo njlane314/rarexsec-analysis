@@ -129,8 +129,9 @@ inline const std::vector<int>& getSignalChannelKeys(const std::string& category_
     if (it != signal_id_map.end()) {
         return it->second;
     }
+    static const std::vector<int> empty_vec;
+    return empty_vec;
 }
-
 
 inline std::string getChannelLabel(const std::string& category_column, int category_id) {
     const auto& label_map = getChannelLabelMap();

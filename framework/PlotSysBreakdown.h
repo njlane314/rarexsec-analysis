@@ -17,7 +17,7 @@
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TLegend.h"
-#include "TH1D.h" // Corrected: was "TH1D.h "
+#include "TH1D.h"
 #include "TLatex.h"
 #include "TStyle.h"
 #include "TMatrixDSym.h"

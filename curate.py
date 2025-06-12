@@ -60,6 +60,11 @@ def get_total_triggers(file_path: Path) -> int:
     return 0
 
 def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdirs: dict, entities: dict, nominal_pot: float, execute_hadd: bool, is_detvar: bool = False):
+    if not entry.get("active", True):
+        sample_key = entry.get("sample_key", "UNKNOWN")
+        print(f"  Skipping {'detector variation' if is_detvar else 'sample'}: {sample_key} (marked as inactive)")
+        return False
+
     stage_name = entry.get("stage_name")
     sample_key = entry.get("sample_key")
     sample_type = entry.get("sample_type", "mc") 
@@ -81,21 +86,22 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
     root_files = sorted([str(f) for f in Path(input_dir).rglob("*.root")])
     if not root_files:
         print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
-
-    command = ["hadd", "-f", str(output_file)] + root_files
-    if not run_command(command, execute_hadd) and execute_hadd:
-        return False
     
+    if root_files and not run_command(["hadd", "-f", str(output_file)] + root_files, execute_hadd) and execute_hadd:
+        return False
+    elif not root_files and execute_hadd:
+        print(f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata.")
+
     if sample_type == "mc" or is_detvar:
         entry["pot"] = get_total_pot(output_file)
         entry["triggers"] = get_total_triggers(output_file)
         if entry["pot"] == 0.0:
-            entry["pot"] = nominal_pot
+            entry["pot"] = nominal_pot 
     elif sample_type == "data":
         entry["pot"] = nominal_pot 
         entry["triggers"] = get_total_triggers(output_file)
 
-    del entry["stage_name"]
+    del entry["stage_name"] 
     return True
 
 

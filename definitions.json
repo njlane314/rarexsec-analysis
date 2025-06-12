@@ -17,17 +17,20 @@
                             {
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
-                                "stage_name": "selection_detvar_cv"
+                                "stage_name": "selection_detvar_cv",
+                                "active": true
                             },
                             {
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_sce",
                                 "variation_type": "sce",
-                                "stage_name": "selection_detvar_sce"
+                                "stage_name": "selection_detvar_sce",
+                                "active": false
                             },
                             {
                                 "sample_key": "mc_inclusiv_run1_fhc_detvar_recomb2",
                                 "variation_type": "recomb2",
-                                "stage_name": "selection_detvar_recomb2"
+                                "stage_name": "selection_detvar_recomb2",
+                                "active": false
                             }
                         ]
                     },
@@ -40,7 +43,8 @@
                             {
                                 "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
-                                "stage_name": "selection_detvar_cv_strangeness"
+                                "stage_name": "selection_detvar_cv_strangeness",
+                                "active": true
                             }
                         ]
                     }

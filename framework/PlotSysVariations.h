@@ -94,24 +94,24 @@ protected:
             TH1D* h_dn = varied_hists_.at("dn").getRootHistCopy("h_dn");
             h_dn->SetLineColor(kRed);
             hists_to_draw.push_back(h_dn);
-            legend_->AddEntry(h_dn, (systematic_label_ + " -1#sigma").c_str(), "L"); // Corrected: .c_str()
+            legend_->AddEntry(h_dn, (systematic_label_ + " -1#sigma").c_str(), "L"); 
 
             TH1D* h_up = varied_hists_.at("up").getRootHistCopy("h_up");
             h_up->SetLineColor(kBlue);
             hists_to_draw.push_back(h_up);
-            legend_->AddEntry(h_up, (systematic_label_ + " +1#sigma").c_str(), "L"); // Corrected: .c_str()
+            legend_->AddEntry(h_up, (systematic_label_ + " +1#sigma").c_str(), "L"); 
         } else if (varied_hists_.size() == 1 && varied_hists_.count("var")) {
             TH1D* h_var = varied_hists_.at("var").getRootHistCopy("h_var");
             h_var->SetLineColor(kRed);
             hists_to_draw.push_back(h_var);
-            legend_->AddEntry(h_var, (systematic_label_ + " Alt. Model").c_str(), "L"); // Corrected: .c_str()
+            legend_->AddEntry(h_var, (systematic_label_ + " Alt. Model").c_str(), "L"); 
         } else {
             int color_idx = 0;
             for (const auto& pair : varied_hists_) {
                 TH1D* h_var = pair.second.getRootHistCopy(TString::Format("h_var_%d", color_idx).Data());
                 h_var->SetLineColor(kGreen + (color_idx % 4));
                 hists_to_draw.push_back(h_var);
-                legend_->AddEntry(h_var, (systematic_label_ + " Var " + pair.first).c_str(), "L"); // Corrected: .c_str()
+                legend_->AddEntry(h_var, (systematic_label_ + " Var " + pair.first).c_str(), "L"); 
                 color_idx++;
             }
             if (hists_to_draw.size() > 2) {
