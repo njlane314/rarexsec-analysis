@@ -5,7 +5,6 @@
 #include "AnalysisResult.h"
 #include "AnalysisRunner.h"
 #include "AnalysisSpace.h"
-#include "AnalysisWorkflow.h"
 #include "BDTManager.h"
 #include "Binning.h"
 #include "ConfigurationManager.h"

@@ -1,7 +1,5 @@
 set(ANALYSIS_EXECUTABLES
-    analyse_numu_cc
-    display_numu_cc
-    snapshot_numu_cc
+
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

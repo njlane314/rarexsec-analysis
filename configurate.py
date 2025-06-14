@@ -78,12 +78,12 @@ def get_total_triggers_from_files_parallel(file_paths: list[str]) -> int:
 
 
 def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdirs: dict, entities: dict, nominal_pot: float, is_detvar: bool = False):
+    execute_hadd_for_sample = entry.pop("do_hadd", False)
+    
     if not entry.get("active", True):
         sample_key = entry.get("sample_key", "UNKNOWN")
         print(f"  Skipping {'detector variation' if is_detvar else 'sample'}: {sample_key} (marked as inactive)")
         return False
-
-    execute_hadd_for_sample = entry.pop("do_hadd", False) 
 
     stage_name = entry.get("stage_name")
     sample_key = entry.get("sample_key")
@@ -138,7 +138,7 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
 
 
 def main():
-    DEFINITIONS_PATH = "definitions.json"
+    DEFINITIONS_PATH = "samples.json"
     XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
     CONFIG_PATH = "config.json"
     RUNS_PROCESS = ["run1"] 

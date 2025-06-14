@@ -1,5 +1,5 @@
 {
-    "ntuple_base_directory": "/exp/uboone/data/users/nlane/analysis",
+    "ntuple_base_directory": "/exp/uboone/data/users/nlane/ntuples",
     "run_configurations": {
         "numi_fhc": {
             "run1": {
@@ -10,7 +10,7 @@
                         "sample_key": "mc_inclusive_run1_fhc",
                         "stage_name": "selection_numi_fhc_run1_beam",
                         "sample_type": "mc",
-                        "active": false,
+                        "active": true,
                         "do_hadd": false,
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
@@ -20,8 +20,8 @@
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
                                 "stage_name": "selection_detvar_cv",
-                                "active": false,
-                                "do_hadd": false
+                                "active": true,
+                                "do_hadd": true
                             },
                             {
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_sce",

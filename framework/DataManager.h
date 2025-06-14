@@ -60,6 +60,10 @@ public:
             }
             return *nominal_df_;
         }
+        
+        void setDataFrame(ROOT::RDF::RNode df) {
+            nominal_df_ = std::make_shared<ROOT::RDF::RNode>(std::move(df));
+        }
 
         bool isMonteCarlo() const { return type_ == SampleType::kMonteCarlo; }
         
@@ -82,6 +86,8 @@ public:
 
     const std::map<std::string, SampleInfo>& getAllSamples() const { return samples_; }
     
+    std::map<std::string, SampleInfo>& getAllSamplesMutable() { return samples_; }
+
     const VariableManager& getVariableManager() const { return variable_manager_; }
 
     AssociatedVariationMap getAssociatedVariations() const {

@@ -33,7 +33,10 @@ private:
         "_opfilter_pe_beam", "_opfilter_pe_veto",
         "n_pfps", "n_tracks", "n_showers",
         "detector_image_u", "detector_image_v", "detector_image_w",
-        "evnhits", "slclustfrac"
+        "evnhits", "slclustfrac",
+        "nhits_u", "charge_u", "wirerange_u", "timerange_u",
+        "nhit_v", "charge_v", "wirerange_v", "timerange_v",
+        "nhit_w", "charge_w", "wirerange_w", "timerange_w"
     };
 
     std::vector<std::string> reco_track_vars_ = {
