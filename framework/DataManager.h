@@ -80,7 +80,8 @@ public:
           data_triggers_(0L),
           blinded_(params.blinded),
           beam_key_(params.beam_key),
-          runs_to_load_(params.runs_to_load) {
+          runs_to_load_(params.runs_to_load),
+          variable_options_(params.variable_options) {
         this->loadRuns(beam_key_, runs_to_load_, params.variable_options);
     }
 
@@ -89,6 +90,8 @@ public:
     std::map<std::string, SampleInfo>& getAllSamplesMutable() { return samples_; }
 
     const VariableManager& getVariableManager() const { return variable_manager_; }
+
+    const VariableOptions& getVariableOptions() const { return variable_options_; }
 
     AssociatedVariationMap getAssociatedVariations() const {
         AssociatedVariationMap all_det_vars;
@@ -160,6 +163,7 @@ private:
     ConfigurationManager config_manager_;
     VariableManager variable_manager_;
     DefinitionManager definition_manager_;
+    VariableOptions variable_options_;
     std::string beam_key_; 
     std::vector<std::string> runs_to_load_;
 

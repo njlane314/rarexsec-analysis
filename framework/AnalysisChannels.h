@@ -43,8 +43,10 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {53, R"(#nu_{#mu}CC #Sigma^{#pm})"},
             {54, R"(#nu_{#mu}CC #Lambda K^{#pm})"},
             {55, R"(#nu_{#mu}CC #Sigma^{#pm} K^{0})"},
-            {56, R"(#nu_{#mu}CC Ns (S=2))"},
-            {57, R"(#nu_{#mu}CC Ns (S#ge3))"},
+            {56, R"(#nu_{#mu}CC #Sigma^{#pm} K^{#pm})"},
+            {57, R"(#nu_{#mu}CC #Lambda K^{0})"},
+            {58, R"(#nu_{#mu}CC K^{#pm} K^{#mp})"},
+            {59, R"(#nu_{#mu}CC Other Strange)"},
             {98, "Out FV"},
             {99, "Other"}
         }}
@@ -84,6 +86,8 @@ inline const std::map<std::string, std::map<int, int>>& getChannelColourMap() {
             {55, kPink + 10},
             {56, kTeal - 5},
             {57, kYellow - 7},
+            {58, kCyan + 2},
+            {59, kBlue + 3},
             {98, kGray + 1},
             {99, kCyan}
         }}
@@ -113,6 +117,8 @@ inline const std::map<int, int>& getChannelFillStyle() {
         {55,  1001}, 
         {56,  1001}, 
         {57,  1001}, 
+        {58,  1001},
+        {59,  1001},
         {98,  3004},
         {99,  1001}
     };
@@ -122,7 +128,7 @@ inline const std::map<int, int>& getChannelFillStyle() {
 inline const std::vector<int>& getSignalChannelKeys(const std::string& category_column) {
     static const std::map<std::string, std::vector<int>> signal_id_map = {
         {"inclusive_strange_channels", {10, 11}}, 
-        {"exclusive_strange_channels", {50, 51, 52, 53, 54, 55, 56, 57}} 
+        {"exclusive_strange_channels", {50, 51, 52, 53, 54, 55, 56, 57, 58, 59}} 
     };
 
     auto it = signal_id_map.find(category_column);

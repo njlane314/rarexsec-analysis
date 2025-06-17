@@ -34,3 +34,7 @@
 build/*
 .vscode/*
 venv/*
+plots/*
+
+*.png
+*.root

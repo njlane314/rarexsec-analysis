@@ -60,8 +60,7 @@ private:
                 p.variable = var_props.branch_expression.c_str();
                 p.variable_tex = var_props.axis_label.c_str();
                 p.variable_tex_short = var_props.axis_label_short.c_str();
-                p.selection_key = reg_props.selection_key;
-                p.preselection_key = reg_props.preselection_key;
+                p.selection_keys = reg_props.selection_keys;
                 p.selection_tex = reg_props.title.c_str();
                 p.selection_tex_short = reg_props.title_short.c_str();
 

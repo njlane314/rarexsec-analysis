@@ -31,18 +31,22 @@ private:
         "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z",
         "nslice", "slnhits", "selected", "slice_id", "slice_topo_score_v",
         "_opfilter_pe_beam", "_opfilter_pe_veto",
-        "n_pfps", "n_tracks", "n_showers",
+        "n_pfps", "n_tracks", "n_showers", "pfnhits",
         "detector_image_u", "detector_image_v", "detector_image_w",
         "evnhits", "slclustfrac",
         "nhits_u", "charge_u", "wirerange_u", "timerange_u",
-        "nhit_v", "charge_v", "wirerange_v", "timerange_v",
-        "nhit_w", "charge_w", "wirerange_w", "timerange_w"
+        "nhits_v", "charge_v", "wirerange_v", "timerange_v",
+        "nhits_w", "charge_w", "wirerange_w", "timerange_w",
+        "semantic_salience",
+        "nclusters_u", "nclusters_v", "nclusters_w",
+        "pfp_generation_v"
     };
 
     std::vector<std::string> reco_track_vars_ = {
         "trk_pfp_id_v", "trk_score_v", "trk_len_v", "trk_distance_v", "trk_llr_pid_score_v",
         "trk_phi_v", "trk_theta_v", "trk_range_muon_mom_v", "trk_mcs_muon_mom_v",
-        "trk_start_x_v", "trk_end_x_v", "trk_start_y_v", "trk_end_y_v", "trk_start_z_v", "trk_end_z_v"
+        "trk_start_x_v", "trk_end_x_v", "trk_start_y_v", "trk_end_y_v", "trk_start_z_v", "trk_end_z_v",
+        "trk_theta_v", "trk_phi_v"
     };
 
     std::vector<std::string> reco_shower_vars_ = {

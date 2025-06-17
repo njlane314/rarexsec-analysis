@@ -13,18 +13,8 @@
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
                         ],
-                        "detector_variations": [
-                            {
-                                "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
-                                "variation_type": "cv",
-                                "active": true,
-                                "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
-                                "pot": 3.047131637597948e+20,
-                                "triggers": 168124
-                            }
-                        ],
                         "relative_path": "mc_inclusive_run1_fhc.root",
-                        "pot": 1.2216066663192157e+21,
+                        "pot": 1.2216067469488045e+21,
                         "triggers": 521975
                     },
                     {
@@ -32,18 +22,8 @@
                         "sample_type": "mc",
                         "active": true,
                         "truth_filter": "(mcf_strangeness > 0)",
-                        "detector_variations": [
-                            {
-                                "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
-                                "variation_type": "cv",
-                                "active": true,
-                                "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
-                                "pot": 4.81790008075716e+23,
-                                "triggers": 1021576
-                            }
-                        ],
                         "relative_path": "mc_strangeness_run1_fhc.root",
-                        "pot": 1.0426720381756126e+23,
+                        "pot": 1.042672034648929e+23,
                         "triggers": 220254
                     }
                 ]

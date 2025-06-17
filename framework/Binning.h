@@ -28,8 +28,7 @@ public:
         std::pair<double, double> range = {0.0, 0.0};
         std::vector<double> bin_edges;
         bool is_log = false;
-        TString selection_query = "";
-        TString preselection_key = "";
+        std::vector<TString> selection_keys;
         TString selection_key = "";
         TString selection_tex = "";
         TString selection_tex_short = "";
@@ -42,8 +41,7 @@ public:
     TString variable_tex_short;
     bool is_log;
     TString selection_query;
-    TString selection_key;
-    TString preselection_key;
+    std::vector<TString> selection_keys; 
     TString selection_tex;
     TString selection_tex_short;
 
@@ -64,33 +62,12 @@ public:
         variable_tex_short = p.variable_tex_short;
         is_log = p.is_log;
         
-        if (!p.selection_key.IsNull() || !p.preselection_key.IsNull()) {
-            if (!p.selection_query.IsNull()){
-                 selection_query = p.selection_query;
-            } else {
-                 selection_query = AnalysisFramework::Selection::getSelectionQuery(p.selection_key, p.preselection_key);
-            }
-            if (!p.selection_tex.IsNull()){
-                selection_tex = p.selection_tex;
-            } else {
-                selection_tex = AnalysisFramework::Selection::getSelectionTitle(p.selection_key, p.preselection_key, false, false);
-            }
-            if (!p.selection_tex_short.IsNull()){
-                 selection_tex_short = p.selection_tex_short;
-            } else {
-                 selection_tex_short = AnalysisFramework::Selection::getSelectionTitle(p.selection_key, p.preselection_key, false, true);
-            }
-            selection_key = p.selection_key;
-            preselection_key = p.preselection_key;
-
-        } else {
-            selection_query = p.selection_query;
-            selection_key = p.selection_key;
-            preselection_key = p.preselection_key;
+        if (!p.selection_keys.empty()) {
+            selection_keys = p.selection_keys;
+            selection_query = AnalysisFramework::Selection::getSelectionQuery(p.selection_keys);
             selection_tex = p.selection_tex;
             selection_tex_short = p.selection_tex_short;
         }
-
 
         if (p.number_of_bins > 0) { 
             const auto [minVal, maxVal] = p.range;
@@ -133,18 +110,6 @@ public:
             }
         }
         return centers;
-    }
-
-    inline Binning& setSelection(std::string_view preSelKey_sv, std::string_view selKey_sv) {
-        TString preSelKey(preSelKey_sv.data());
-        TString selKey(selKey_sv.data());
-
-        preselection_key = preSelKey;
-        selection_key = selKey;
-        selection_query = AnalysisFramework::Selection::getSelectionQuery(selKey, preSelKey);
-        selection_tex = AnalysisFramework::Selection::getSelectionTitle(selKey, preSelKey, false, false);
-        selection_tex_short = AnalysisFramework::Selection::getSelectionTitle(selKey, preSelKey, false, true);
-        return *this;
     }
 
     inline bool isCompatible(const Binning& other) const noexcept {

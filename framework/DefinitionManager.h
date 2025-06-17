@@ -171,9 +171,11 @@ private:
                         
                         if (n_lambda == 1 && (n_kp == 1 || n_km == 1) && strange == 2) return 54; 
                         if ((n_sigma_p == 1 || n_sigma_m == 1) && n_k0 == 1 && strange == 2) return 55; 
+                        if ((n_sigma_p == 1 || n_sigma_m == 1) && (n_kp == 1 || n_km == 1) && strange == 2) return 56;
+                        if (n_lambda == 1 && n_k0 == 1) return 57;
+                        if (n_kp == 1 && n_km == 1) return 58;
 
-                        if (strange == 2) return 56;
-                        if (strange >= 3) return 57; 
+                        if (strange >= 2) return 59;
 
                         return 32;
                     }
@@ -200,7 +202,8 @@ private:
         ROOT::RDF::RNode df_with_defs = df;
         std::vector<std::string> track_cols = {"slice_topo_score_v", "slice_id", "trk_score_v",
             "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "trk_range_muon_mom_v", "trk_phi_v", 
-            "trk_theta_v"};
+            "trk_theta_v", "n_tracks", "n_showers", "trk_end_x_v", "trk_end_y_v", "trk_end_z_v"
+        };
 
         bool has_track_cols = true;
         for(const auto& col : track_cols){
@@ -214,24 +217,113 @@ private:
                 }, {"slice_topo_score_v", "slice_id"}
             );
 
-            df_with_defs = df_with_defs.Define("muon_candidates_mask",
-                [this](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
-                    const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist) {
-                    ROOT::RVec<bool> mask(ts.size());
-                    for (size_t i = 0; i < ts.size(); ++i) {
-                        bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0);
-                        mask[i] = (this->getElementFromVector(ts, i, 0.f) > 0.8f) && (this->getElementFromVector(pid, i, 0.f) > 0.2f && quality);
-                    }
-                    return mask;
-                },
-                {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v"}
-            );
+            if (df_with_defs.HasColumn("pfp_generation_v")) {
+                df_with_defs = df_with_defs.Define("n_pfp_gen_0",
+                    [](const ROOT::RVec<unsigned int>& generations) {
+                        return ROOT::VecOps::Sum(generations == 0);
+                    }, {"pfp_generation_v"});
 
-            df_with_defs = df_with_defs.Define("selected_muon_idx",
-                [this](const ROOT::RVec<float>& l, const ROOT::RVec<bool>& m) {
-                    return this->getIndexFromVectorSort(l, m, 0, false);
-                }, {"trk_len_v", "muon_candidates_mask"}
-            );
+                df_with_defs = df_with_defs.Define("n_pfp_gen_1",
+                    [](const ROOT::RVec<unsigned int>& generations) {
+                        return ROOT::VecOps::Sum(generations == 1);
+                    }, {"pfp_generation_v"});
+
+                df_with_defs = df_with_defs.Define("n_pfp_gen_2",
+                    [](const ROOT::RVec<unsigned int>& generations) {
+                        return ROOT::VecOps::Sum(generations == 2);
+                    }, {"pfp_generation_v"});
+
+                df_with_defs = df_with_defs.Define("n_pfp_gen_3",
+                    [](const ROOT::RVec<unsigned int>& generations) {
+                        return ROOT::VecOps::Sum(generations == 3);
+                    }, {"pfp_generation_v"});
+
+                df_with_defs = df_with_defs.Define("n_pfp_gen_4",
+                    [](const ROOT::RVec<unsigned int>& generations) {
+                        return ROOT::VecOps::Sum(generations == 4);
+                    }, {"pfp_generation_v"});
+            
+                auto create_muon_mask = [this](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
+                        const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist, const ROOT::RVec<unsigned int>& gen) {
+                        ROOT::RVec<bool> mask(ts.size());
+                        for (size_t i = 0; i < ts.size(); ++i) {
+                            bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0);
+                            bool generation_cut = (this->getElementFromVector(gen, i, 0) == 2);
+                            mask[i] = (this->getElementFromVector(ts, i, 0.f) > 0.8f) && (this->getElementFromVector(pid, i, 0.f) > 0.2f && quality && generation_cut);
+                        }
+                        return mask;
+                    };
+                df_with_defs = df_with_defs.Define("muon_candidates_mask", create_muon_mask,
+                    {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v"}
+                );
+
+                df_with_defs = df_with_defs.Define("selected_muon_idx",
+                    [this](const ROOT::RVec<float>& l, const ROOT::RVec<bool>& m) {
+                        return this->getIndexFromVectorSort(l, m, 0, false);
+                    }, {"trk_len_v", "muon_candidates_mask"}
+                );
+
+                auto create_proton_mask = [this](
+                    const ROOT::RVec<float>& track_scores,
+                    const ROOT::RVec<float>& pid_scores,
+                    const ROOT::RVec<float>& end_x,
+                    const ROOT::RVec<float>& end_y,
+                    const ROOT::RVec<float>& end_z,
+                    const ROOT::RVec<unsigned int>& gen,
+                    const ROOT::RVec<float>& dist,
+                    int muon_idx
+                ) {
+                    ROOT::RVec<bool> proton_mask(track_scores.size(), false);
+                    for (size_t i = 0; i < track_scores.size(); ++i) {
+                        if (static_cast<int>(i) == muon_idx) continue;
+
+                        bool is_neutrino_daughter = (this->getElementFromVector(gen, i, 0) == 2);
+                        bool is_track_like = this->getElementFromVector(track_scores, i, 0.f) > 0.5;
+                        bool is_proton_like = this->getElementFromVector(pid_scores, i, 1.f) < 0.2;
+                        bool is_close_to_nu_vtx = this->getElementFromVector(dist, i, 5.0f) < 1.0;
+
+                        if (is_neutrino_daughter && is_track_like && is_proton_like && is_close_to_nu_vtx) {
+                            proton_mask[i] = true;
+                        }
+                    }
+                    return proton_mask;
+                };
+
+                df_with_defs = df_with_defs.Define("proton_candidates_mask", create_proton_mask,
+                    {"trk_score_v", "trk_llr_pid_score_v", "trk_end_x_v", "trk_end_y_v", "trk_end_z_v", "pfp_generation_v", "trk_distance_v", "selected_muon_idx"});
+
+                df_with_defs = df_with_defs.Define("n_reco_protons", "ROOT::VecOps::Sum(proton_candidates_mask)");
+
+                auto count_pions_updated = [this](
+                    const ROOT::RVec<float>& track_scores,
+                    const ROOT::RVec<float>& pid_scores,
+                    const ROOT::RVec<unsigned int>& gen,
+                    const ROOT::RVec<float>& dist,
+                    int muon_idx
+                ) {
+                    int pion_count = 0;
+                    for (size_t i = 0; i < pid_scores.size(); ++i) {
+                        if (static_cast<int>(i) == muon_idx) continue;
+                        
+                        bool is_neutrino_daughter = (this->getElementFromVector(gen, i, 0) == 2);
+                        bool is_track_like = this->getElementFromVector(pid_scores, i, 0.f) > 0.5;
+                        bool is_close_to_nu_vtx = this->getElementFromVector(dist, i, 5.0f) < 1.0;
+                        if (is_neutrino_daughter && is_track_like && is_close_to_nu_vtx && this->getElementFromVector(pid_scores, i, 0.f) > 0.2) {
+                            pion_count++;
+                        }
+                    }
+                    return pion_count;
+                };
+
+                df_with_defs = df_with_defs.Define("n_reco_pions", count_pions_updated,
+                    {"trk_score_v", "trk_llr_pid_score_v", "pfp_generation_v", "trk_distance_v", "selected_muon_idx"});
+                
+                df_with_defs = df_with_defs.Define("is_0p0pi", "(n_reco_protons == 0 && n_reco_pions == 0 && n_pfp_gen_2 == 1 && n_pfp_gen_3  == 0)");
+                df_with_defs = df_with_defs.Define("is_1p0pi", "(n_reco_protons == 1 && n_reco_pions == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)");
+                df_with_defs = df_with_defs.Define("is_Np0pi", "(n_reco_protons > 1 && n_reco_pions == 0 && n_pfp_gen_2 > 2 && n_pfp_gen_3  == 0)");
+                df_with_defs = df_with_defs.Define("is_1pi", "(n_reco_pions == 1 && n_reco_protons == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)");
+                df_with_defs = df_with_defs.Define("is_1p1pi", "(n_reco_pions == 1 && n_reco_protons == 1 && n_pfp_gen_2 == 3 && n_pfp_gen_3  == 0)");
+            }
 
             df_with_defs = df_with_defs
                 .Define("selected_muon_length", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "selected_muon_idx"})
@@ -242,8 +334,8 @@ private:
                 .Define("selected_muon_llr_pid_score", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "selected_muon_idx"});
 
             df_with_defs = df_with_defs.Define("n_muon_candidates", [](const ROOT::RVec<bool>& m) { return ROOT::VecOps::Sum(m); }, {"muon_candidates_mask"});
+            df_with_defs = df_with_defs.Define("has_muon_candidate", [](const ROOT::RVec<bool>& m) { return static_cast<int>(ROOT::VecOps::Any(m)); }, {"muon_candidates_mask"});
         }
-
         return df_with_defs;
     }
 };

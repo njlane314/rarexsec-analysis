@@ -40,8 +40,13 @@ public:
             "reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && "
             "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
             "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && "
-            "nu_slice_topo_score > 0.05 ",
+            "nu_slice_topo_score > 0.2 && _opfilter_pe_beam > 20.0 && "
+            "nhits_u > 0 && nhits_v > 0 && nhits_w > 0",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
+        ));
+        categories.emplace("NONE", SelectionDetails(
+            "1 == 1",
+            "No Preselection", "None", "NONEPRESEL"
         ));
         return categories;
     }
@@ -50,29 +55,75 @@ public:
         std::map<TString, SelectionDetails> categories;
         
         categories.emplace("NUMU_CC", SelectionDetails(
-            "n_muon_candidates > 0",
+            "n_muon_candidates > 0 && n_pfp_gen_2 > 1",
             "NuMu CC sel.", "NuMu CC", "NUMU_CC"
         ));
 
+        categories.emplace("VETO_1P0PI", SelectionDetails(
+            "!(n_reco_protons == 1 && n_reco_pions == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)",
+            "Veto NuMuCC 1p0pi", "Veto 1p0pi", "VETO_1P0PI"
+        ));
+
+        categories.emplace("VETO_NP0PI", SelectionDetails(
+            "!(n_reco_protons > 1 && n_reco_pions == 0 && n_pfp_gen_2 > 2 && n_pfp_gen_3  == 0)",
+            "Veto NuMuCC Np0pi", "Veto Np0pi", "VETO_NP0PI"
+        ));
+
+        categories.emplace("VETO_1PI", SelectionDetails(
+            "!(n_reco_pions == 1 && n_reco_protons == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)",
+            "Veto NuMuCC 1pi", "Veto 1pi", "VETO_1PI"
+        ));
+
+        categories.emplace("VETO_1P1PI", SelectionDetails(
+            "!(n_reco_pions == 1 && n_reco_protons == 1 && n_pfp_gen_2 == 3 && n_pfp_gen_3  == 0)",
+            "Veto NuMuCC 1p1pi", "Veto 1p1pi", "VETO_1P1PI"
+        ));
+
+        categories.emplace("ALL_EVENTS", SelectionDetails(
+            "1 == 1",
+            "All Events", "All", "ALL_EVENTS"
+        ));
+
         categories.emplace("SIGNAL", SelectionDetails(
-            "analysis_channel == 10 || analysis_channel == 11",
-            "Truth Signal sel.", "Signal", "SIGNAL"
-        ));
-
-        categories.emplace("NC", SelectionDetails(
-            "analysis_channel == 31",
-            "Truth Neutral Current sel.", "NC", "NC"
-        ));
-
-        categories.emplace("NUMU_CC_BACKGROUND", SelectionDetails( 
-            "n_muon_candidates > 0 && !(analysis_channel == 10 || analysis_channel == 11)",
-            "NuMu CC Background sel.", "NuMu CC BG", "NUMU_CC_BACKGROUND"
+            "inclusive_strange_channels == 10 || inclusive_strange_channels == 11",
+            "Inclusive Strange Channels", "Inclusive Strange", "SIGNAL"
         ));
 
         return categories;
     }
 
     Selection() = default;
+
+    static TString getSelectionQuery(const std::vector<TString>& selectionKeys) {
+        if (selectionKeys.empty()) {
+            return "1";
+        }
+
+        auto preselectionCategories = getPreselectionCategories();
+        auto selectionCategories = getSelectionCategories();
+        TString fullQuery = "";
+
+        for (const auto& key : selectionKeys) {
+            TString currentQuery = "";
+            auto it_pre = preselectionCategories.find(key);
+            if (it_pre != preselectionCategories.end()) {
+                currentQuery = it_pre->second.query;
+            } else {
+                auto it_sel = selectionCategories.find(key);
+                if (it_sel != selectionCategories.end()) {
+                    currentQuery = it_sel->second.query;
+                }
+            }
+
+            if (!currentQuery.IsNull() && !currentQuery.IsWhitespace()) {
+                if (!fullQuery.IsNull() && !fullQuery.IsWhitespace()) {
+                    fullQuery += " && ";
+                }
+                fullQuery += "(" + currentQuery + ")";
+            }
+        }
+        return fullQuery.IsNull() || fullQuery.IsWhitespace() ? "1" : fullQuery;
+    }
 
     static TString getSelectionQuery(const TString& selectionKey, const TString& preselectionKey, const std::vector<TString>& extraQueries = {}) {
         TString fullQuery = "";
@@ -103,7 +154,7 @@ public:
         }
 
         if (!preselectionExists && !selectionExists && extraQueries.empty()){
-            return "";
+            return "1"; 
         }
 
 

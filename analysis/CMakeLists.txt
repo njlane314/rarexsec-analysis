@@ -1,5 +1,8 @@
 set(ANALYSIS_EXECUTABLES
-
+    analyse_numu_cc
+    train_bdt_model
+    analyse_bdt_model
+    snapshot_numu_cc
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})
@@ -10,6 +13,7 @@ foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})
             ${ROOT_LIBRARIES}
             ${TBB_LIBRARIES}
             ${TORCH_LIBRARIES}
+            TMVA
     )
     target_include_directories(${EXE_NAME}
         PRIVATE

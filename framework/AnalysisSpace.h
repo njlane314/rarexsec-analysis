@@ -42,14 +42,12 @@ struct Variable {
 struct Region {
     std::string title;
     std::string title_short;
-    TString preselection_key;
-    TString selection_key;
-    std::vector<TString> extra_queries;
+    std::vector<TString> selection_keys;
 
     Region() = default;
 
-    Region(std::string t, std::string ts, TString pk, TString sk, std::vector<TString> eq) :
-        title(std::move(t)), title_short(std::move(ts)), preselection_key(std::move(pk)), selection_key(std::move(sk)), extra_queries(std::move(eq)) {}
+    Region(std::string t, std::string ts, std::vector<TString> sk) :
+        title(std::move(t)), title_short(std::move(ts)), selection_keys(std::move(sk)) {}
 };
 
 class AnalysisSpace {
@@ -72,11 +70,11 @@ public:
         return *this;
     }
 
-    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, const TString& selectionKey, const TString& preselectionKey = "None", const std::string& short_title = "", const std::vector<TString>& extraQueries = {}) {
+    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, std::initializer_list<TString> keys, const std::string& short_title = "") {
         if (regions_.count(name)) {
             throw std::runtime_error("Region with name '" + name + "' already defined.");
         }
-        regions_.emplace(name, Region(title, short_title, preselectionKey, selectionKey, extraQueries));
+        regions_.emplace(name, Region(title, short_title, std::vector<TString>(keys)));
         return *this;
     }
 
