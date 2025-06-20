@@ -21,16 +21,16 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {2,  "Dirt"},
             {10, R"(#nu_{#mu}CC 1s)"},
             {11, R"(#nu_{#mu}CC Ns)"},
-            {20, R"(#nu_{#mu}CC 1p0#pi)"},
-            {21, R"(#nu_{#mu}CC Np0#pi)"},
-            {22, R"(#nu_{#mu}CC 1#pi)"},
+            {20, R"(#nu_{#mu}CC Np0#pi)"},
+            {21, R"(#nu_{#mu}CC 0pN#pi)"},
+            {22, R"(#nu_{#mu}CC NpN#pi)"},
             {23, R"(#nu_{#mu}CC Other)"},
             {30, R"(#nu_{e}CC)"},
             {31, R"(#nu_{x}NC)"},
             {98, "Out FV"},
             {99, "Other"}
         }},
-        {"exclusive_strange_channels", { 
+        {"exclusive_strange_channels", {
             {0, "Data"},
             {1, "External"},
             {2, "Dirt"},
@@ -39,14 +39,16 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {32, R"(#nu_{#mu}CC Other)"},
             {50, R"(#nu_{#mu}CC K^{#pm})"},
             {51, R"(#nu_{#mu}CC K^{0})"},
-            {52, R"(#nu_{#mu}CC #Lambda)"},
+            {52, R"(#nu_{#mu}CC #Lambda^{0})"},
             {53, R"(#nu_{#mu}CC #Sigma^{#pm})"},
-            {54, R"(#nu_{#mu}CC #Lambda K^{#pm})"},
+            {54, R"(#nu_{#mu}CC #Lambda^{0} K^{#pm})"},
             {55, R"(#nu_{#mu}CC #Sigma^{#pm} K^{0})"},
-            {56, R"(#nu_{#mu}CC #Sigma^{#pm} K^{#pm})"},
-            {57, R"(#nu_{#mu}CC #Lambda K^{0})"},
+            {56, R"(#nu_{#mu}CC #Sigma^{#pm} K^{#mp})"},
+            {57, R"(#nu_{#mu}CC #Lambda^{0} K^{0})"},
             {58, R"(#nu_{#mu}CC K^{#pm} K^{#mp})"},
-            {59, R"(#nu_{#mu}CC Other Strange)"},
+            {59, R"(#nu_{#mu}CC #Sigma^{0})"},
+            {60, R"(#nu_{#mu}CC #Sigma^{0} K^{#pm})"},
+            {61, R"(#nu_{#mu}CC Other Strange)"},
             {98, "Out FV"},
             {99, "Other"}
         }}
@@ -75,21 +77,23 @@ inline const std::map<std::string, std::map<int, int>>& getChannelColourMap() {
             {0, kBlack},
             {1, kGray},
             {2, kGray + 2},
-            {30, kMagenta},
-            {31, kBlue},
-            {32, kViolet},
-            {50, kGreen + 2},
-            {51, kAzure - 2},
-            {52, kOrange + 7},
-            {53, kRed + 2},
-            {54, kSpring - 7},
-            {55, kPink + 10},
-            {56, kTeal - 5},
-            {57, kYellow - 7},
-            {58, kCyan + 2},
-            {59, kBlue + 3},
+            {30, kGreen+2},
+            {31, kBlue+1},
+            {32, kCyan+2},
+            {50, kYellow+2},
+            {51, kOrange-2},
+            {52, kOrange+8},
+            {53, kRed+2},
+            {54, kRed+1},
+            {55, kRed-7},
+            {56, kPink+8},
+            {57, kPink+2},
+            {58, kMagenta+2},
+            {59, kMagenta+1},
+            {60, kViolet+1},
+            {61, kPink-9},
             {98, kGray + 1},
-            {99, kCyan}
+            {99, kGray+3}
         }}
     };
     return colour_maps;
@@ -106,29 +110,34 @@ inline const std::map<int, int>& getChannelFillStyle() {
         {21,  1001},
         {22,  1001},
         {23,  1001},
+        {24,  1001},
         {30,  1001},
         {31,  1001},
-        {32,  1001}, 
-        {50,  1001}, 
-        {51,  1001}, 
-        {52,  1001}, 
-        {53,  1001}, 
-        {54,  1001}, 
-        {55,  1001}, 
-        {56,  1001}, 
-        {57,  1001}, 
+        {32,  1001},
+        {50,  1001},
+        {51,  1001},
+        {52,  1001},
+        {53,  1001},
+        {54,  1001},
+        {55,  1001},
+        {56,  1001},
+        {57,  1001},
         {58,  1001},
         {59,  1001},
+        {60,  1001},
+        {61,  1001},
         {98,  3004},
-        {99,  1001}
+        {99,  1001},
+        {100, 1001},
+        {101, 1001}
     };
     return fill_style_map;
 }
 
 inline const std::vector<int>& getSignalChannelKeys(const std::string& category_column) {
     static const std::map<std::string, std::vector<int>> signal_id_map = {
-        {"inclusive_strange_channels", {10, 11}}, 
-        {"exclusive_strange_channels", {50, 51, 52, 53, 54, 55, 56, 57, 58, 59}} 
+        {"inclusive_strange_channels", {10, 11}},
+        {"exclusive_strange_channels", {50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61}}
     };
 
     auto it = signal_id_map.find(category_column);

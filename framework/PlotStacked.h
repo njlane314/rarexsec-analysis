@@ -153,7 +153,7 @@ protected:
             signal_hist_->SetLineStyle(kDashed);
             signal_hist_->SetFillStyle(0); 
             signal_hist_->SetLineWidth(3);
-            legend_->AddEntry(signal_hist_, "Signal (norm.)", "l");
+            legend_->AddEntry(signal_hist_, "Signal shape", "l");
         }
 
         if (!mc_hists.empty()) {

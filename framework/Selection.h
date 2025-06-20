@@ -33,63 +33,60 @@ class Selection {
 public:
 
     inline static std::map<TString, SelectionDetails> getPreselectionCategories() {
-        std::map<TString, SelectionDetails> categories;
-        categories.emplace("QUALITY", SelectionDetails(
-            "nslice == 1 && selected == 1 && "
-            "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && "
-            "reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && "
-            "reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0 && "
-            "(reco_nu_vtx_sce_z < 675.0 || reco_nu_vtx_sce_z > 775.0) && "
+        std::map<TString, SelectionDetails> selections;
+        selections.emplace("QUALITY", SelectionDetails(
+            "nslice == 1 && selected == 1 &&"
+            "is_reco_fv && "
             "nu_slice_topo_score > 0.2 && _opfilter_pe_beam > 20.0 && "
             "nhits_u > 0 && nhits_v > 0 && nhits_w > 0",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         ));
-        categories.emplace("NONE", SelectionDetails(
+        selections.emplace("NONE", SelectionDetails(
             "1 == 1",
             "No Preselection", "None", "NONEPRESEL"
         ));
-        return categories;
+        return selections;
     }
 
     inline static std::map<TString, SelectionDetails> getSelectionCategories() {
-        std::map<TString, SelectionDetails> categories;
+        std::map<TString, SelectionDetails> selections;
         
-        categories.emplace("NUMU_CC", SelectionDetails(
-            "n_muon_candidates > 0 && n_pfp_gen_2 > 1",
+        selections.emplace("NUMU_CC", SelectionDetails(
+            "n_muons > 0 && nu_slice_topo_score > 0.7 && n_pfp_gen_2 > 1",
             "NuMu CC sel.", "NuMu CC", "NUMU_CC"
         ));
 
-        categories.emplace("VETO_1P0PI", SelectionDetails(
-            "!(n_reco_protons == 1 && n_reco_pions == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)",
-            "Veto NuMuCC 1p0pi", "Veto 1p0pi", "VETO_1P0PI"
+       selections.emplace("IS_1P0PI", SelectionDetails(
+            "is_1mu1p0pi",
+            "1p0pi Selection", "1p0pi", "IS_1P0PI"
         ));
 
-        categories.emplace("VETO_NP0PI", SelectionDetails(
-            "!(n_reco_protons > 1 && n_reco_pions == 0 && n_pfp_gen_2 > 2 && n_pfp_gen_3  == 0)",
-            "Veto NuMuCC Np0pi", "Veto Np0pi", "VETO_NP0PI"
+        selections.emplace("IS_NP0PI", SelectionDetails(
+            "is_1muNp0pi",
+            "Np0pi Selection", "Np0pi", "IS_NP0PI"
         ));
 
-        categories.emplace("VETO_1PI", SelectionDetails(
-            "!(n_reco_pions == 1 && n_reco_protons == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)",
-            "Veto NuMuCC 1pi", "Veto 1pi", "VETO_1PI"
+        selections.emplace("IS_0P1PI", SelectionDetails(
+            "is_1mu0p1pi",
+            "0p1pi Selection", "0p1pi", "IS_0P1PI"
         ));
 
-        categories.emplace("VETO_1P1PI", SelectionDetails(
-            "!(n_reco_pions == 1 && n_reco_protons == 1 && n_pfp_gen_2 == 3 && n_pfp_gen_3  == 0)",
-            "Veto NuMuCC 1p1pi", "Veto 1p1pi", "VETO_1P1PI"
+        selections.emplace("IS_1P1PI", SelectionDetails(
+            "is_1mu1p1pi",
+            "1p1pi Selection", "1p1pi", "IS_1P1PI"
         ));
 
-        categories.emplace("ALL_EVENTS", SelectionDetails(
+        selections.emplace("ALL_EVENTS", SelectionDetails(
             "1 == 1",
             "All Events", "All", "ALL_EVENTS"
         ));
 
-        categories.emplace("SIGNAL", SelectionDetails(
+        selections.emplace("SIGNAL", SelectionDetails(
             "inclusive_strange_channels == 10 || inclusive_strange_channels == 11",
             "Inclusive Strange Channels", "Inclusive Strange", "SIGNAL"
         ));
 
-        return categories;
+        return selections;
     }
 
     Selection() = default;
@@ -103,7 +100,15 @@ public:
         auto selectionCategories = getSelectionCategories();
         TString fullQuery = "";
 
-        for (const auto& key : selectionKeys) {
+        for (const auto& key_raw : selectionKeys) {
+            TString key = key_raw;
+            bool negate = false;
+
+            if (key.BeginsWith("!")) {
+                negate = true;
+                key.Remove(TString::kLeading, '!');
+            }
+
             TString currentQuery = "";
             auto it_pre = preselectionCategories.find(key);
             if (it_pre != preselectionCategories.end()) {
@@ -119,7 +124,12 @@ public:
                 if (!fullQuery.IsNull() && !fullQuery.IsWhitespace()) {
                     fullQuery += " && ";
                 }
-                fullQuery += "(" + currentQuery + ")";
+                
+                if (negate) {
+                    fullQuery += "!(" + currentQuery + ")";
+                } else {
+                    fullQuery += "(" + currentQuery + ")";
+                }
             }
         }
         return fullQuery.IsNull() || fullQuery.IsWhitespace() ? "1" : fullQuery;
@@ -156,7 +166,6 @@ public:
         if (!preselectionExists && !selectionExists && extraQueries.empty()){
             return "1"; 
         }
-
 
         for (const auto& q : extraQueries) {
             if (!q.IsNull()) {

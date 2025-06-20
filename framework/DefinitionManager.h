@@ -10,6 +10,10 @@
 #include <numeric>
 #include <set>
 #include <functional>
+#include <iostream>
+
+#include "TVector3.h"
+#include "TLorentzVector.h"
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
@@ -26,7 +30,8 @@ public:
     ROOT::RDF::RNode processNode(ROOT::RDF::RNode df, SampleType sample_type,
                                  const VariableOptions& variable_options, bool is_variation) const {
         df = this->defineAnalysisChannels(df, sample_type);
-        df = this->defineNuMuVariables(df, sample_type);
+        df = this->defineEventFeatures(df);
+        df = this->defineTopologicalFeatures(df);
 
         if (sample_type == SampleType::kMonteCarlo) {
             df = this->defineNominalWeight(df);
@@ -79,6 +84,34 @@ private:
         return masked_values[n_th_idx].second;
     }
 
+    inline double PionMomentum(double TrackLength) const { return 0.25798 + 0.0024088*TrackLength - 0.18828*pow(TrackLength,-0.11687); }
+    inline double ProtonMomentum(double TrackLength) const { return 14.96 + 0.0043489*TrackLength - 14.688*pow(TrackLength,-0.0053518); }
+    inline double getKE(double momentum, double mass) const { return sqrt(momentum*momentum + mass*mass) - mass; }
+
+    double angleBetweenTracks(
+        const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z,
+        int idx1, int idx2
+    ) const {
+        if (idx1 < 0 || idx2 < 0 || idx1 == idx2) return -1.0;
+        TVector3 vec1(this->getElementFromVector(dir_x, idx1, 0.f), this->getElementFromVector(dir_y, idx1, 0.f), this->getElementFromVector(dir_z, idx1, 0.f));
+        TVector3 vec2(this->getElementFromVector(dir_x, idx2, 0.f), this->getElementFromVector(dir_y, idx2, 0.f), this->getElementFromVector(dir_z, idx2, 0.f));
+        if (vec1.Mag() == 0 || vec2.Mag() == 0) return -1.0;
+        return vec1.Angle(vec2);
+    }
+
+    TLorentzVector getTrackLorentzVector(int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z, double mass) const {
+        TLorentzVector p(0,0,0,0);
+        if (idx < 0) return p;
+        float E = this->getElementFromVector(energy, idx, 0.f);
+        if (E <= 0 || E*E < mass*mass) return p;
+        double momentum = sqrt(E*E - mass*mass);
+        p.SetPxPyPzE(momentum * this->getElementFromVector(dir_x, idx, 0.f),
+                     momentum * this->getElementFromVector(dir_y, idx, 0.f),
+                     momentum * this->getElementFromVector(dir_z, idx, 0.f),
+                     E);
+        return p;
+    }
+
     ROOT::RDF::RNode defineNominalWeight(ROOT::RDF::RNode df) const {
         auto standard_weight_calculator = [](double w, float w_spline, float w_tune) {
             double final_weight = w;
@@ -125,7 +158,7 @@ private:
         bool is_mc = (sample_type == SampleType::kMonteCarlo);
 
         std::vector<std::string> truth_cols = {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-                                               "true_nu_vtx_x", "nu_pdg", "ccnc", "interaction", "mcf_npp", "mcf_npm", "mcf_npr"};
+                                               "true_nu_vtx_x", "nu_pdg", "ccnc", "interaction", "mcf_npp", "mcf_npm", "mcf_np0", "mcf_npr"};
         bool has_all_truth_cols = is_mc;
         if (is_mc) {
             for(const auto& col : truth_cols){ if(!df.HasColumn(col)){ has_all_truth_cols = false; break; } }
@@ -134,7 +167,7 @@ private:
         if (is_mc && has_all_truth_cols) {
             df_with_defs = df_with_defs.Define("in_fv", "(true_nu_vtx_x > 5.0 && true_nu_vtx_x < 251.0 && true_nu_vtx_y > -110.0 && true_nu_vtx_y < 110.0 && true_nu_vtx_z > 20.0 && true_nu_vtx_z < 986.0)");
             df_with_defs = df_with_defs.Define("mcf_strangeness", "mcf_nkp + mcf_nkm + mcf_nk0 + mcf_nlambda + mcf_nsigma_p + mcf_nsigma_0 + mcf_nsigma_m");
-            df_with_defs = df_with_defs.Define("mc_n_pions", "mcf_npp + mcf_npm");
+            df_with_defs = df_with_defs.Define("mc_n_pions", "mcf_npp + mcf_npm + mcf_np0");
             df_with_defs = df_with_defs.Define("mc_n_protons", "mcf_npr");
 
             df_with_defs = df_with_defs.Define("inclusive_strange_channels",
@@ -143,16 +176,15 @@ private:
                     if (cc == 1) return 31;
                     if (std::abs(nu) == 12 && cc == 0) return 30;
 
-                    if (std::abs(nu) == 14 && cc == 0) {
-                        if (strange == 1) return 10;
-                        if (strange > 1) return 11;
+                    if (std::abs(nu) == 14 && cc == 0) {  
+                        if (strange == 1) return 10;  
+                        if (strange > 1) return 11;  
 
-                        if (n_pi == 0) {
-                            if (n_p == 1) return 20;
-                            return 21;
-                        }
-                        if (n_pi == 1) return 22;
-                        return 23;
+                        if (n_p >= 1 && n_pi == 0) return 20;
+                        if (n_p == 0 && n_pi >= 1) return 21;  
+                        if (n_p >= 1 && n_pi >= 1) return 22;  
+                        
+                        return 23; 
                     }
                     return 99;
                 }, {"in_fv", "nu_pdg", "ccnc", "mcf_strangeness", "mc_n_pions", "mc_n_protons"});
@@ -164,6 +196,7 @@ private:
                     if (std::abs(nu) == 12 && cc == 0) return 30; 
 
                     if (std::abs(nu) == 14 && cc == 0) { 
+                        if (strange == 0) return 32;
                         if ((n_kp == 1 || n_km == 1) && strange == 1) return 50; 
                         if (n_k0 == 1 && strange == 1) return 51; 
                         if (n_lambda == 1 && strange == 1) return 52; 
@@ -172,12 +205,12 @@ private:
                         if (n_lambda == 1 && (n_kp == 1 || n_km == 1) && strange == 2) return 54; 
                         if ((n_sigma_p == 1 || n_sigma_m == 1) && n_k0 == 1 && strange == 2) return 55; 
                         if ((n_sigma_p == 1 || n_sigma_m == 1) && (n_kp == 1 || n_km == 1) && strange == 2) return 56;
-                        if (n_lambda == 1 && n_k0 == 1) return 57;
-                        if (n_kp == 1 && n_km == 1) return 58;
+                        if (n_lambda == 1 && n_k0 == 1 && strange == 2) return 57; 
+                        if (n_kp == 1 && n_km == 1 && strange == 2) return 58; 
+                        if (n_sigma_0 == 1 && strange == 1) return 59;
+                        if (n_sigma_0 == 1 && n_kp == 1 && strange == 2) return 60;
 
-                        if (strange >= 2) return 59;
-
-                        return 32;
+                        return 61;
                     }
                     return 99;
                 }, {"in_fv", "nu_pdg", "ccnc", "mcf_strangeness", "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m"});
@@ -198,145 +231,183 @@ private:
         return df_with_defs;
     }
 
-    ROOT::RDF::RNode defineNuMuVariables(ROOT::RDF::RNode df, SampleType sample_type) const {
-        ROOT::RDF::RNode df_with_defs = df;
-        std::vector<std::string> track_cols = {"slice_topo_score_v", "slice_id", "trk_score_v",
-            "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "trk_range_muon_mom_v", "trk_phi_v", 
-            "trk_theta_v", "n_tracks", "n_showers", "trk_end_x_v", "trk_end_y_v", "trk_end_z_v"
-        };
+    ROOT::RDF::RNode defineEventFeatures(ROOT::RDF::RNode df) const {
+        auto d = df;
 
-        bool has_track_cols = true;
-        for(const auto& col : track_cols){
-            if(!df_with_defs.HasColumn(col)){ has_track_cols = false; break; }
-        }
+        d = d.Define("nu_slice_topo_score",
+            [this](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
+                return this->getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
+            }, {"slice_topo_score_v", "slice_id"}
+        );
+
+        d = d.Define("n_pfp_gen_2",
+            [](const ROOT::RVec<unsigned int>& generations) {
+                return ROOT::VecOps::Sum(generations == 2);
+            }, {"pfp_generation_v"});
+
+        d = d.Define("n_pfp_gen_3",
+            [](const ROOT::RVec<unsigned int>& generations) {
+                return ROOT::VecOps::Sum(generations == 3);
+            }, {"pfp_generation_v"});
         
-        if (has_track_cols) {
-            df_with_defs  = df_with_defs.Define("nu_slice_topo_score",
-                [this](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
-                    return this->getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
-                }, {"slice_topo_score_v", "slice_id"}
-            );
+        return d;
+    }
 
-            if (df_with_defs.HasColumn("pfp_generation_v")) {
-                df_with_defs = df_with_defs.Define("n_pfp_gen_0",
-                    [](const ROOT::RVec<unsigned int>& generations) {
-                        return ROOT::VecOps::Sum(generations == 0);
-                    }, {"pfp_generation_v"});
-
-                df_with_defs = df_with_defs.Define("n_pfp_gen_1",
-                    [](const ROOT::RVec<unsigned int>& generations) {
-                        return ROOT::VecOps::Sum(generations == 1);
-                    }, {"pfp_generation_v"});
-
-                df_with_defs = df_with_defs.Define("n_pfp_gen_2",
-                    [](const ROOT::RVec<unsigned int>& generations) {
-                        return ROOT::VecOps::Sum(generations == 2);
-                    }, {"pfp_generation_v"});
-
-                df_with_defs = df_with_defs.Define("n_pfp_gen_3",
-                    [](const ROOT::RVec<unsigned int>& generations) {
-                        return ROOT::VecOps::Sum(generations == 3);
-                    }, {"pfp_generation_v"});
-
-                df_with_defs = df_with_defs.Define("n_pfp_gen_4",
-                    [](const ROOT::RVec<unsigned int>& generations) {
-                        return ROOT::VecOps::Sum(generations == 4);
-                    }, {"pfp_generation_v"});
-            
-                auto create_muon_mask = [this](const ROOT::RVec<float>& ts, const ROOT::RVec<float>& pid,
-                        const ROOT::RVec<float>& l, const ROOT::RVec<float>& dist, const ROOT::RVec<unsigned int>& gen) {
-                        ROOT::RVec<bool> mask(ts.size());
-                        for (size_t i = 0; i < ts.size(); ++i) {
-                            bool quality = (this->getElementFromVector(l, i, 0.f) > 10.0 && this->getElementFromVector(dist, i, 5.0f) < 4.0);
-                            bool generation_cut = (this->getElementFromVector(gen, i, 0) == 2);
-                            mask[i] = (this->getElementFromVector(ts, i, 0.f) > 0.8f) && (this->getElementFromVector(pid, i, 0.f) > 0.2f && quality && generation_cut);
-                        }
-                        return mask;
-                    };
-                df_with_defs = df_with_defs.Define("muon_candidates_mask", create_muon_mask,
-                    {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v"}
-                );
-
-                df_with_defs = df_with_defs.Define("selected_muon_idx",
-                    [this](const ROOT::RVec<float>& l, const ROOT::RVec<bool>& m) {
-                        return this->getIndexFromVectorSort(l, m, 0, false);
-                    }, {"trk_len_v", "muon_candidates_mask"}
-                );
-
-                auto create_proton_mask = [this](
-                    const ROOT::RVec<float>& track_scores,
-                    const ROOT::RVec<float>& pid_scores,
-                    const ROOT::RVec<float>& end_x,
-                    const ROOT::RVec<float>& end_y,
-                    const ROOT::RVec<float>& end_z,
-                    const ROOT::RVec<unsigned int>& gen,
-                    const ROOT::RVec<float>& dist,
-                    int muon_idx
-                ) {
-                    ROOT::RVec<bool> proton_mask(track_scores.size(), false);
-                    for (size_t i = 0; i < track_scores.size(); ++i) {
-                        if (static_cast<int>(i) == muon_idx) continue;
-
-                        bool is_neutrino_daughter = (this->getElementFromVector(gen, i, 0) == 2);
-                        bool is_track_like = this->getElementFromVector(track_scores, i, 0.f) > 0.5;
-                        bool is_proton_like = this->getElementFromVector(pid_scores, i, 1.f) < 0.2;
-                        bool is_close_to_nu_vtx = this->getElementFromVector(dist, i, 5.0f) < 1.0;
-
-                        if (is_neutrino_daughter && is_track_like && is_proton_like && is_close_to_nu_vtx) {
-                            proton_mask[i] = true;
-                        }
-                    }
-                    return proton_mask;
-                };
-
-                df_with_defs = df_with_defs.Define("proton_candidates_mask", create_proton_mask,
-                    {"trk_score_v", "trk_llr_pid_score_v", "trk_end_x_v", "trk_end_y_v", "trk_end_z_v", "pfp_generation_v", "trk_distance_v", "selected_muon_idx"});
-
-                df_with_defs = df_with_defs.Define("n_reco_protons", "ROOT::VecOps::Sum(proton_candidates_mask)");
-
-                auto count_pions_updated = [this](
-                    const ROOT::RVec<float>& track_scores,
-                    const ROOT::RVec<float>& pid_scores,
-                    const ROOT::RVec<unsigned int>& gen,
-                    const ROOT::RVec<float>& dist,
-                    int muon_idx
-                ) {
-                    int pion_count = 0;
-                    for (size_t i = 0; i < pid_scores.size(); ++i) {
-                        if (static_cast<int>(i) == muon_idx) continue;
-                        
-                        bool is_neutrino_daughter = (this->getElementFromVector(gen, i, 0) == 2);
-                        bool is_track_like = this->getElementFromVector(pid_scores, i, 0.f) > 0.5;
-                        bool is_close_to_nu_vtx = this->getElementFromVector(dist, i, 5.0f) < 1.0;
-                        if (is_neutrino_daughter && is_track_like && is_close_to_nu_vtx && this->getElementFromVector(pid_scores, i, 0.f) > 0.2) {
-                            pion_count++;
-                        }
-                    }
-                    return pion_count;
-                };
-
-                df_with_defs = df_with_defs.Define("n_reco_pions", count_pions_updated,
-                    {"trk_score_v", "trk_llr_pid_score_v", "pfp_generation_v", "trk_distance_v", "selected_muon_idx"});
-                
-                df_with_defs = df_with_defs.Define("is_0p0pi", "(n_reco_protons == 0 && n_reco_pions == 0 && n_pfp_gen_2 == 1 && n_pfp_gen_3  == 0)");
-                df_with_defs = df_with_defs.Define("is_1p0pi", "(n_reco_protons == 1 && n_reco_pions == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)");
-                df_with_defs = df_with_defs.Define("is_Np0pi", "(n_reco_protons > 1 && n_reco_pions == 0 && n_pfp_gen_2 > 2 && n_pfp_gen_3  == 0)");
-                df_with_defs = df_with_defs.Define("is_1pi", "(n_reco_pions == 1 && n_reco_protons == 0 && n_pfp_gen_2 == 2 && n_pfp_gen_3  == 0)");
-                df_with_defs = df_with_defs.Define("is_1p1pi", "(n_reco_pions == 1 && n_reco_protons == 1 && n_pfp_gen_2 == 3 && n_pfp_gen_3  == 0)");
+    ROOT::RDF::RNode defineTopologicalFeatures(ROOT::RDF::RNode df) const {
+        auto d = df;
+        
+        std::vector<std::string> essential_cols = {"trk_len_v", "pfp_generation_v", "shr_energy_y_v", "trk_distance_v", "trk_score_v", "trk_llr_pid_score_v"};
+        for(const auto& col : essential_cols){
+            if(!d.HasColumn(col)){
+                std::cerr << "Warning: Essential column '" << col << "' not found. Skipping topological feature definitions." << std::endl;
+                return d;
             }
-
-            df_with_defs = df_with_defs
-                .Define("selected_muon_length", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "selected_muon_idx"})
-                .Define("selected_muon_momentum_range", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_range_muon_mom_v", "selected_muon_idx"})
-                .Define("selected_muon_phi", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -999.f); }, {"trk_phi_v", "selected_muon_idx"})
-                .Define("selected_muon_cos_theta", [this](const ROOT::RVec<float>& v, int i) { float t = this->getElementFromVector(v, i, -999.f); return (std::abs(t) < 100.f && std::isfinite(t)) ? std::cos(t) : -999.f; }, {"trk_theta_v", "selected_muon_idx"})
-                .Define("selected_muon_trk_score", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -1.f); }, {"trk_score_v", "selected_muon_idx"})
-                .Define("selected_muon_llr_pid_score", [this](const ROOT::RVec<float>& v, int i) { return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "selected_muon_idx"});
-
-            df_with_defs = df_with_defs.Define("n_muon_candidates", [](const ROOT::RVec<bool>& m) { return ROOT::VecOps::Sum(m); }, {"muon_candidates_mask"});
-            df_with_defs = df_with_defs.Define("has_muon_candidate", [](const ROOT::RVec<bool>& m) { return static_cast<int>(ROOT::VecOps::Any(m)); }, {"muon_candidates_mask"});
         }
-        return df_with_defs;
+
+        d = d.Define("is_reco_fv", "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0");
+
+        d = d.Define("track_is_primary",
+            [](const ROOT::RVec<unsigned int>& gen, const ROOT::RVec<float>& dist) {
+                return ROOT::RVec<bool>((gen == 2) && (dist < 4.0));
+            }, {"pfp_generation_v", "trk_distance_v"}
+        );
+
+        d = d.Define("track_is_good_quality",
+            [](const ROOT::RVec<float>& len, const ROOT::RVec<float>& score) {
+                return ROOT::RVec<bool>((len > 10.0) && (score > 0.5));
+            }, {"trk_len_v", "trk_score_v"}
+        );
+
+        d = d.Define("shower_is_primary",
+            [](const ROOT::RVec<unsigned int>& gen) {
+                return ROOT::RVec<bool>(gen == 2);
+            }, {"pfp_generation_v"}
+        );
+
+        d = d.Define("shower_is_good_quality",
+            [](const ROOT::RVec<float>& score, const ROOT::RVec<float>& energy) {
+                return ROOT::RVec<bool>((score < 0.5) && (energy > 0.07));
+            }, {"trk_score_v", "shr_energy_y_v"}
+        );
+
+        d = d.Define("muon_candidate_mask",
+            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<float>& trk_score) {
+                return ROOT::RVec<bool>(is_primary && is_good && pid_score > 0.6 && trk_score > 0.9);
+            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "trk_score_v"}
+        );
+
+        d = d.Define("proton_candidate_mask",
+            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask) {
+                return ROOT::RVec<bool>(is_primary && is_good && pid_score < -0.4 && !muon_mask);
+            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask"}
+        );
+
+        d = d.Define("pion_candidate_mask",
+            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask, const ROOT::RVec<bool>& proton_mask) {
+                return ROOT::RVec<bool>(is_primary && is_good && pid_score > 0.4 && !muon_mask && !proton_mask);
+            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask", "proton_candidate_mask"}
+        );
+
+        d = d.Define("electron_candidate_mask",
+            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& dedx, const ROOT::RVec<float>& moliere) {
+                return ROOT::RVec<bool>(is_primary && is_good && dedx > 0.5 && dedx < 5.5 && moliere < 9.0);
+            }, {"shower_is_primary", "shower_is_good_quality", "shr_tkfit_dedx_y_v", "shr_moliere_avg_v"}
+        );
+        
+        d = d.Define("leading_muon_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * muon_candidate_mask))");
+        d = d.Define("leading_proton_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * proton_candidate_mask))");
+        d = d.Define("leading_pion_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * pion_candidate_mask))");
+        d = d.Define("leading_electron_idx", "static_cast<int>(ROOT::VecOps::ArgMax(shr_energy_y_v * electron_candidate_mask))");
+
+        d = d.Define("n_muons", "static_cast<int>(ROOT::VecOps::Sum(muon_candidate_mask))");
+        d = d.Define("n_protons", "static_cast<int>(ROOT::VecOps::Sum(proton_candidate_mask))");
+        d = d.Define("n_pions", "static_cast<int>(ROOT::VecOps::Sum(pion_candidate_mask))");
+        d = d.Define("n_electrons", "static_cast<int>(ROOT::VecOps::Sum(electron_candidate_mask))");
+        
+        d = d.Define("muon_len", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "leading_muon_idx"})
+                .Define("muon_pid", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "leading_muon_idx"})
+                .Define("muon_pida", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pida_v", "leading_muon_idx"})
+                .Define("muon_chi2_muon", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chimu_v", "leading_muon_idx"})
+                .Define("muon_chi2_proton", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chipr_v", "leading_muon_idx"})
+                .Define("muon_mcs_mom", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_mcs_muon_mom_v", "leading_muon_idx"})
+                .Define("muon_deflection_std", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_avg_deflection_stdev_v", "leading_muon_idx"})
+                .Define("muon_end_sp", [this](const ROOT::RVec<int>& v, int i){ return static_cast<unsigned int>(this->getElementFromVector(v, i, 0u)); }, {"trk_end_spacepoints_v", "leading_muon_idx"});
+
+        d = d.Define("proton_len", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "leading_proton_idx"})
+                .Define("proton_pid", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "leading_proton_idx"})
+                .Define("proton_pida", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pida_v", "leading_proton_idx"})
+                .Define("proton_chi2_proton", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chipr_v", "leading_proton_idx"})
+                .Define("proton_E", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_energy_proton_v", "leading_proton_idx"});
+
+        auto p4_def = [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z, double mass) {
+            return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, mass);
+        };
+        
+        d = d.Define("muon_p4", 
+            [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z) {
+                const double muon_mass = 0.105658; 
+                return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, muon_mass);
+            }, 
+            {"leading_muon_idx", "trk_energy_muon_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
+
+        d = d.Define("proton_p4", 
+            [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z) {
+                const double proton_mass = 0.938272; 
+                return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, proton_mass);
+            },
+            {"leading_proton_idx", "trk_energy_proton_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
+
+        auto buildHadronicSystem = [this](const ROOT::RVec<bool>& p_mask, const ROOT::RVec<bool>& pi_mask, const ROOT::RVec<float>& len, const ROOT::RVec<float>& E_p, const ROOT::RVec<float>& dx, const ROOT::RVec<float>& dy, const ROOT::RVec<float>& dz) {
+            TLorentzVector p4_hadronic(0,0,0,0);
+            for(size_t i=0; i<len.size(); ++i){
+                if(i < p_mask.size() && p_mask[i]) {
+                    p4_hadronic += this->getTrackLorentzVector(i, E_p, dx, dy, dz, 0.938272);
+                }
+                if(i < pi_mask.size() && pi_mask[i]) {
+                    double pi_mom = this->PionMomentum(this->getElementFromVector(len, i, 0.f));
+                    double E = sqrt(pi_mom*pi_mom + 0.13957*0.13957);
+                    TLorentzVector p_pi;
+                    if (E*E >= 0.13957*0.13957) {
+                        double momentum = sqrt(E*E - 0.13957*0.13957);
+                        p_pi.SetPxPyPzE(momentum * this->getElementFromVector(dx, i, 0.f),
+                                            momentum * this->getElementFromVector(dy, i, 0.f),
+                                            momentum * this->getElementFromVector(dz, i, 0.f),
+                                            E);
+                        p4_hadronic += p_pi;
+                    }
+                }
+            }
+            return p4_hadronic;
+        };
+        d = d.Define("hadronic_p4", buildHadronicSystem, {"proton_candidate_mask", "pion_candidate_mask", "trk_len_v", "trk_energy_proton_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
+        
+        d = d.Define("hadronic_E", "hadronic_p4.E()");
+        d = d.Define("hadronic_W", "hadronic_p4.M() > 0 ? hadronic_p4.M() : 0.0");
+        
+        d = d.Define("total_E_visible_numu", "muon_p4.E() + hadronic_E");
+        d = d.Define("missing_pT_numu", "(muon_p4 + hadronic_p4).Pt()");
+        d = d.Define("muon_E_fraction", "total_E_visible_numu > 0 ? muon_p4.E() / total_E_visible_numu : -1.0");
+        
+        auto angle_def = [this](const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z, int idx1, int idx2) {
+            return this->angleBetweenTracks(dir_x, dir_y, dir_z, idx1, idx2);
+        };
+        d = d.Define("muon_proton_angle", angle_def, {"trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v", "leading_muon_idx", "leading_proton_idx"});
+
+        d = d.Define("is_1mu0p0pi", "n_muons == 1 && n_protons == 0 && n_pions == 0 && n_pfp_gen_2 == 1");
+        d = d.Define("is_1mu1p0pi", "n_muons == 1 && n_protons == 1 && n_pions == 0 && n_pfp_gen_2 == 2");
+        d = d.Define("is_1muNp0pi", "n_muons == 1 && n_protons > 1 && n_pions == 0 && n_pfp_gen_2 > 2");
+        d = d.Define("is_1mu0p1pi", "n_muons == 1 && n_protons == 0 && n_pions == 1 && n_pfp_gen_2 == 2");
+        d = d.Define("is_1mu1p1pi", "n_muons == 1 && n_protons == 1 && n_pions == 1 && n_pfp_gen_2 == 3");
+        d = d.Define("is_1mu_other", "n_muons == 1 && !(is_1mu0p0pi || is_1mu1p0pi || is_1muNp0pi || is_1mu0p1pi || is_1mu1p1pi)");
+        
+        d = d.Define("is_1e0p", "n_electrons == 1 && n_protons == 0 && n_muons == 0 && n_pfp_gen_2 == 1");
+        d = d.Define("is_1e1p", "n_electrons == 1 && n_protons == 1 && n_muons == 0 && n_pfp_gen_2 == 2");
+        d = d.Define("is_1eNp", "n_electrons == 1 && n_protons > 0 && n_muons == 0 && n_pfp_gen_2 > 2");
+        
+        d = d.Define("is_mulit_mu", "n_muons > 1 ");
+        d = d.Define("is_nc_like", "n_muons == 0 && n_electrons == 0");
+        d = d.Define("is_cc_nue_like", "n_electrons == 1 && n_muons == 0 && n_pfp_gen_2 > 1");
+        return d;
     }
 };
 

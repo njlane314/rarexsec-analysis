@@ -3,6 +3,7 @@ set(ANALYSIS_EXECUTABLES
     train_bdt_model
     analyse_bdt_model
     snapshot_numu_cc
+    analyse_signal
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

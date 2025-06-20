@@ -38,3 +38,5 @@ plots/*
 
 *.png
 *.root
+
+dataset/*

@@ -46,13 +46,19 @@ private:
         "trk_pfp_id_v", "trk_score_v", "trk_len_v", "trk_distance_v", "trk_llr_pid_score_v",
         "trk_phi_v", "trk_theta_v", "trk_range_muon_mom_v", "trk_mcs_muon_mom_v",
         "trk_start_x_v", "trk_end_x_v", "trk_start_y_v", "trk_end_y_v", "trk_start_z_v", "trk_end_z_v",
-        "trk_theta_v", "trk_phi_v"
+        "trk_theta_v", "trk_phi_v",
+        "trk_pida_v", "trk_pid_chimu_v", "trk_pid_chipr_v", 
+        "trk_energy_muon_v", "trk_energy_proton_v",      
+        "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v",     
+        "trk_avg_deflection_stdev_v",                    
+        "trk_end_spacepoints_v" 
     };
 
     std::vector<std::string> reco_shower_vars_ = {
         "shr_dedx_u_v", "shr_dedx_v_v", "shr_dedx_y_v",
         "shr_energy_u_v", "shr_energy_v_v", "shr_energy_y_v",
-        "shr_pfp_id_v"
+        "shr_pfp_id_v",
+        "shr_tkfit_dedx_y_v", "shr_moliere_avg_v", "shr_openangle_v", "shr_openangle_v", "shr_tkfit_dedx_y_v"
     };
 
     std::vector<std::string> nominal_mc_weights_ = {
