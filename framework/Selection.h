@@ -86,6 +86,16 @@ public:
             "Inclusive Strange Channels", "Inclusive Strange", "SIGNAL"
         ));
 
+        selections.emplace("ZERO_HITS_PLANE", SelectionDetails(
+            "nhits_u == 0 || nhits_v == 0 || nhits_w == 0",
+            "Zero Hits in a Plane", "Zero Hits", "ZERO_HITS_PLANE"
+        ));
+
+        selections.emplace("ZERO_HITS_COLLECTION_PLANE", SelectionDetails(
+            "nhits_w == 0",
+            "Zero Hits in Collection Plane", "Zero Hits Collection", "ZERO_HITS_COLLECTION_PLANE"
+        ));
+
         return selections;
     }
 

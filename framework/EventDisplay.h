@@ -59,51 +59,58 @@ public:
         }
 
         int K = std::min((ULong64_t)num_events, total_events);
+        int events_processed = 0;
 
-        for (int i = 0; i < K; ++i) {
-            ULong64_t random_event_index = rand_gen_.Integer(total_events);
-            ULong64_t cumulative_count = 0;
-            size_t sample_idx = 0;
-            for(size_t j=0; j<counts.size(); ++j){
-                cumulative_count += counts[j];
-                if(random_event_index < cumulative_count){
-                    sample_idx = j;
-                    break;
+        for (int i = 0; events_processed < K && i < total_events * 2; ++i) {
+            try {
+                ULong64_t random_event_index = rand_gen_.Integer(total_events);
+                ULong64_t cumulative_count = 0;
+                size_t sample_idx = 0;
+                for(size_t j=0; j<counts.size(); ++j){
+                    cumulative_count += counts[j];
+                    if(random_event_index < cumulative_count){
+                        sample_idx = j;
+                        break;
+                    }
                 }
-            }
-            ULong64_t index_in_sample = random_event_index - (cumulative_count - counts[sample_idx]);
+                ULong64_t index_in_sample = random_event_index - (cumulative_count - counts[sample_idx]);
 
-            auto single_event_df = filtered_dfs[sample_idx].Range(index_in_sample, index_in_sample + 1);
+                auto single_event_df = filtered_dfs[sample_idx].Range(index_in_sample, index_in_sample + 1);
 
-            int run = single_event_df.Take<int>("run").GetValue()[0];
-            int sub = single_event_df.Take<int>("sub").GetValue()[0];
-            int evt = single_event_df.Take<int>("evt").GetValue()[0];
+                int run = single_event_df.Take<int>("run").GetValue()[0];
+                int sub = single_event_df.Take<int>("sub").GetValue()[0];
+                int evt = single_event_df.Take<int>("evt").GetValue()[0];
 
-            auto u_data = single_event_df.Take<std::vector<float>>("raw_image_u").GetValue().at(0);
-            auto v_data = single_event_df.Take<std::vector<float>>("raw_image_v").GetValue().at(0);
-            auto w_data = single_event_df.Take<std::vector<float>>("raw_image_w").GetValue().at(0);
+                auto u_data = single_event_df.Take<std::vector<float>>("detector_image_u").GetValue().at(0);
+                auto v_data = single_event_df.Take<std::vector<float>>("detector_image_v").GetValue().at(0);
+                auto w_data = single_event_df.Take<std::vector<float>>("detector_image_w").GetValue().at(0);
 
-            std::vector<std::string> planes = {"U", "V", "W"};
-            for (const std::string& plane : planes) {
-                const std::vector<float>& plane_data = (plane.compare("U") == 0 ? u_data : 
-                                                    (plane.compare("V") == 0 ? v_data : w_data));
-                TCanvas* c = new TCanvas(("c_" + plane + "_" + std::to_string(run) + "_" + 
-                                        std::to_string(sub) + "_" + std::to_string(evt)).c_str(), "", 1200, 1000);
-                gStyle->SetTitleY(0.96); 
-                c->SetLogz();
+                std::vector<std::string> planes = {"U", "V", "W"};
+                for (const std::string& plane : planes) {
+                    const std::vector<float>& plane_data = (plane.compare("U") == 0 ? u_data : 
+                                                        (plane.compare("V") == 0 ? v_data : w_data));
+                    TCanvas* c = new TCanvas(("c_" + plane + "_" + std::to_string(run) + "_" + 
+                                            std::to_string(sub) + "_" + std::to_string(evt)).c_str(), "", 1200, 1200);
+                    gStyle->SetTitleY(0.96); 
+                    c->SetLogz();
+                    
+                    std::string title = "Plane " + plane +
+                                " (Run " + std::to_string(run) +
+                                ", Subrun " + std::to_string(sub) + ", Event " + std::to_string(evt) + ")";
+                    TH2F* hist = plotDetectorView(run, sub, evt, "raw", "h_raw", plane_data, plane, title);
+                    hist->Draw("COL");
                 
-                std::string title = "Plane " + plane +
-                            " (Run " + std::to_string(run) +
-                            ", Subrun " + std::to_string(sub) + ", Event " + std::to_string(evt) + ")";
-                TH2F* hist = plotDetectorView(run, sub, evt, "raw", "h_raw", plane_data, plane, title);
-                hist->Draw("COL");
-                
-                std::string file_name = "./event_display_" + plane + "_" + 
-                                          std::to_string(run) + "_" + 
-                                          std::to_string(sub) + "_" + 
-                                          std::to_string(evt) + ".png";
-                c->Print(file_name.c_str());
-                delete c;
+                    std::string file_name = "./event_display_" + plane + "_" + 
+                                            std::to_string(run) + "_" + 
+                                            std::to_string(sub) + "_" + 
+                                            std::to_string(evt) + ".png";
+                    c->Print(file_name.c_str());
+                    delete c;
+                }
+                events_processed++;
+            } catch (const std::runtime_error& e) {
+                std::cerr << "Warning: Skipping event due to error: " << e.what() << ". Trying next event." << std::endl;
+                continue;
             }
         }
     }
@@ -159,9 +166,9 @@ public:
             int sub = single_event_df.Take<int>("sub").GetValue()[0];
             int evt = single_event_df.Take<int>("evt").GetValue()[0];
 
-            auto u_data = single_event_df.Take<std::vector<int>>("true_image_u").GetValue().at(0);
-            auto v_data = single_event_df.Take<std::vector<int>>("true_image_v").GetValue().at(0);
-            auto w_data = single_event_df.Take<std::vector<int>>("true_image_w").GetValue().at(0);
+            auto u_data = single_event_df.Take<std::vector<int>>("semantic_image_u").GetValue().at(0);
+            auto v_data = single_event_df.Take<std::vector<int>>("semantic_image_v").GetValue().at(0);
+            auto w_data = single_event_df.Take<std::vector<int>>("semantic_image_w").GetValue().at(0);
 
             std::vector<std::string> planes = {"U", "V", "W"};
             for (const std::string& plane : planes) {
@@ -169,7 +176,7 @@ public:
                                                     (plane.compare("V") == 0 ? v_data : w_data));
                 
                 const double PLOT_LEGEND_SPLIT = 0.85;
-                TCanvas* c = new TCanvas(("c_true_" + plane + "_" + std::to_string(run) + "_" + 
+                TCanvas* c = new TCanvas(("c_semantic_" + plane + "_" + std::to_string(run) + "_" + 
                                         std::to_string(sub) + "_" + std::to_string(evt)).c_str(), "", 1200, 800);
                 
                 TPad* main_pad = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
@@ -217,7 +224,7 @@ public:
                 }
                 legend->Draw();
 
-                std::string file_name = "./true_event_display_" + plane + "_" + 
+                std::string file_name = "./semantic_event_display_" + plane + "_" + 
                                           std::to_string(run) + "_" + 
                                           std::to_string(sub) + "_" + 
                                           std::to_string(evt) + ".png";

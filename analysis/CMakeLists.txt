@@ -4,6 +4,7 @@ set(ANALYSIS_EXECUTABLES
     analyse_bdt_model
     snapshot_numu_cc
     analyse_signal
+    analyse_vertex
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

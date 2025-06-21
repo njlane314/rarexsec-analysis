@@ -14,8 +14,8 @@
                             "mc_strangeness_run1_fhc"
                         ],
                         "relative_path": "mc_inclusive_run1_fhc.root",
-                        "pot": 1.2216067469488045e+21,
-                        "triggers": 521975
+                        "pot": 1.9761565762795717e+21,
+                        "triggers": 845024
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",

@@ -11,6 +11,7 @@
 #include "DataManager.h"
 #include "DataTypes.h"
 #include "DefinitionManager.h"
+#include "EventDisplay.h"
 #include "Histogram.h"
 #include "HistogramGenerator.h"
 #include "PlotBase.h"
