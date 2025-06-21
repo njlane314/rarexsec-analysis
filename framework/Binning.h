@@ -32,6 +32,7 @@ public:
         TString selection_key = "";
         TString selection_tex = "";
         TString selection_tex_short = "";
+        bool is_particle_level = false;
     };
 
     TString variable;
@@ -44,6 +45,7 @@ public:
     std::vector<TString> selection_keys; 
     TString selection_tex;
     TString selection_tex_short;
+    bool is_particle_level; 
 
     inline explicit Binning(const Parameters& p) {
         if (p.variable.IsNull() || p.variable.IsWhitespace()) {
@@ -61,6 +63,7 @@ public:
         variable_tex = p.variable_tex.IsNull() ? p.variable : p.variable_tex;
         variable_tex_short = p.variable_tex_short;
         is_log = p.is_log;
+        is_particle_level = p.is_particle_level;
         
         if (!p.selection_keys.empty()) {
             selection_keys = p.selection_keys;

@@ -31,11 +31,12 @@ struct Variable {
     std::string axis_label;
     std::string axis_label_short;
     BinningDef binning;
+    bool is_particle_level = false;
 
     Variable() = default;
 
-    Variable(std::string be, std::string al, std::string als, BinningDef bd) :
-        branch_expression(std::move(be)), axis_label(std::move(al)), axis_label_short(std::move(als)), binning(std::move(bd)) {}
+    Variable(std::string be, std::string al, std::string als, BinningDef bd, bool is_particle = false) :
+        branch_expression(std::move(be)), axis_label(std::move(al)), axis_label_short(std::move(als)), binning(std::move(bd)), is_particle_level(is_particle) {}
 };
 
 
@@ -54,19 +55,19 @@ class AnalysisSpace {
 public:
     AnalysisSpace() = default;
 
-    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, int n_bins, double low, double high, bool is_log = false, const std::string& short_label = "") {
+    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, int n_bins, double low, double high, bool is_log = false, const std::string& short_label = "", bool is_particle_level = false) {
         if (variables_.count(name)) {
             throw std::runtime_error("Variable with name '" + name + "' already defined.");
         }
-        variables_.emplace(name, Variable(branch, label, short_label, UniformBinning{n_bins, low, high, is_log}));
+        variables_.emplace(name, Variable(branch, label, short_label, UniformBinning{n_bins, low, high, is_log}, is_particle_level));
         return *this;
     }
 
-    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, const std::vector<double>& edges, bool is_log = false, const std::string& short_label = "") {
+    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, const std::vector<double>& edges, bool is_log = false, const std::string& short_label = "", bool is_particle_level = false) {
         if (variables_.count(name)) {
             throw std::runtime_error("Variable with name '" + name + "' already defined.");
         }
-        variables_.emplace(name, Variable(branch, label, short_label, VariableBinning{edges, is_log}));
+        variables_.emplace(name, Variable(branch, label, short_label, VariableBinning{edges, is_log}, is_particle_level));
         return *this;
     }
 

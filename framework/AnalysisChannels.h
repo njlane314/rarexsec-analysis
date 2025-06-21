@@ -51,6 +51,14 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {61, R"(#nu_{#mu}CC Other Strange)"},
             {98, "Out FV"},
             {99, "Other"}
+        }},
+        {"particle_pdg_channels", { 
+            {13,   "Muon"},
+            {2212, "Proton"},
+            {211,  R"(#pi^{#pm})"},
+            {11,   "Electron"},
+            {22,   "Photon"},
+            {0,    "Other"}
         }}
     };
     return label_map;

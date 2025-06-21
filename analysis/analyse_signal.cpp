@@ -22,6 +22,7 @@ int main() {
         AnalysisFramework::AnalysisSpace analysis_space;
         analysis_space
             .defineVariable("nu_e", "nu_e", "True Neutrino Energy", 60, 0.0, 12.0)
+            .defineVariable("trk_len_v", "trk_len_v", "Track Length (cm)", 100, 0.0, 200.0, false, "", true)
             .defineRegion("ALL_EVENTS", "Empty Selection", {"ALL_EVENTS"})
             .defineRegion("SIGNAL", "Signal Filter", {"SIGNAL"});
 
@@ -31,14 +32,18 @@ int main() {
             .data_manager = data_manager,
             .analysis_space = analysis_space,
             .systematics_controller = systematics_controller,
-            .category_column = "inclusive_strange_channels"
+            .event_category_column = "inclusive_strange_channels",
+            .particle_category_column = "backtracked_pdg",     
+            .particle_category_scheme = "particle_pdg_channels"
         });
 
         AnalysisFramework::AnalysisRunner runner_exclusive({
             .data_manager = data_manager,
             .analysis_space = analysis_space,
             .systematics_controller = systematics_controller,
-            .category_column = "exclusive_strange_channels"
+            .event_category_column = "exclusive_strange_channels",
+            .particle_category_column = "backtracked_pdg",     
+            .particle_category_scheme = "particle_pdg_channels"
         });
 
         AnalysisFramework::AnalysisPhaseSpace analysis_inclusive_phase_space = runner_inclusive.run();
@@ -51,6 +56,8 @@ int main() {
        
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "nu_e", "SIGNAL", "inclusive_strange_channels", false); 
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "nu_e", "SIGNAL", "exclusive_strange_channels", false);
+
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "trk_len_v", "ALL_EVENTS", "particle_pdg_channels", false);
 
     } catch (const std::exception& e) {
         std::cerr << "An error occurred: " << e.what() << std::endl;

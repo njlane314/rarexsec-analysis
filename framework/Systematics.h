@@ -93,9 +93,9 @@ public:
     
     const std::string& getName() const { return name_; }
     virtual std::unique_ptr<Systematic> clone() const = 0;
-    virtual void book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap& det_var_nodes, const std::string& sample_key, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) = 0;
-    virtual TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) = 0;
-    virtual std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string& category_column) = 0;
+    virtual void book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap& det_var_nodes, const std::string& sample_key, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column, const std::string& category_scheme) = 0;
+    virtual TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_scheme) = 0;
+    virtual std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string& category_scheme) = 0;
 
 protected:
     std::string name_;
@@ -111,11 +111,23 @@ public:
         return std::make_unique<WeightSystematic>(name_, up_weight_col_, dn_weight_col_);
     }
 
-    void book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
-        auto df_filtered = df_nominal_for_sample.Filter(selection_query)
-                                          .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
-        futures_up_[category_id].push_back(hist_generator_.bookHistogram(df_filtered, binning, up_weight_col_));
-        futures_dn_[category_id].push_back(hist_generator_.bookHistogram(df_filtered, binning, dn_weight_col_));
+    void book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column, const std::string&) override {
+        auto df_filtered = df_nominal.Filter(selection_query);
+
+        if (binning.is_particle_level) {
+            const std::string& var_branch = binning.variable.Data();
+            auto selector = [category_id](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
+                return var_vec[pdg_vec == category_id];
+            };
+            std::string new_col_name = var_branch + "_" + std::to_string(category_id) + "_" + name_;
+            auto category_df = df_filtered.Define(new_col_name, selector, {var_branch, category_column});
+            futures_up_[category_id].push_back(hist_generator_.bookHistogram(category_df, binning, up_weight_col_, new_col_name));
+            futures_dn_[category_id].push_back(hist_generator_.bookHistogram(category_df, binning, dn_weight_col_, new_col_name));
+        } else {
+            auto category_df = df_filtered.Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
+            futures_up_[category_id].push_back(hist_generator_.bookHistogram(category_df, binning, up_weight_col_));
+            futures_dn_[category_id].push_back(hist_generator_.bookHistogram(category_df, binning, dn_weight_col_));
+        }
     }
 
     std::map<std::string, Histogram> getVariedHistograms(int category_id, const Binning& binning, const std::string&) override {
@@ -137,8 +149,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
-        auto varied_hists = getVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_scheme) override {
+        auto varied_hists = getVariedHistograms(category_id, binning, category_scheme);
         if (varied_hists.count("up") && varied_hists.count("dn")) {
             return calculateTwoPointVariationCovariance(nominal_hist, varied_hists.at("up"), varied_hists.at("dn"));
         }
@@ -161,19 +173,31 @@ public:
     }
 
     void book(
-        ROOT::RDF::RNode df_nominal,
+        ROOT::RDF::RNode,
         const DataManager::AssociatedVariationMap& det_var_nodes,
         const std::string& sample_key,
         int category_id,
         const Binning& binning,
         const std::string& selection_query,
-        const std::string& category_column) override {
+        const std::string& category_column, 
+        const std::string&) override {
+
         if (det_var_nodes.count(sample_key) && det_var_nodes.at(sample_key).count(name_)) {
             ROOT::RDF::RNode var_node = det_var_nodes.at(sample_key).at(name_);
-            auto var_df_selected_cat = var_node.Filter(selection_query)
-                                    .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
-            futures_[category_id].push_back(
-                hist_generator_.bookHistogram(var_df_selected_cat, binning, "central_value_weight"));
+            auto var_df_selected = var_node.Filter(selection_query);
+            
+            if (binning.is_particle_level) {
+                const std::string& var_branch = binning.variable.Data();
+                auto selector = [category_id](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
+                    return var_vec[pdg_vec == category_id];
+                };
+                std::string new_col_name = var_branch + "_" + std::to_string(category_id) + "_" + name_;
+                auto category_df = var_df_selected.Define(new_col_name, selector, {var_branch, category_column});
+                futures_[category_id].push_back(hist_generator_.bookHistogram(category_df, binning, "central_value_weight", new_col_name));
+            } else {
+                 auto var_df_selected_cat = var_df_selected.Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
+                 futures_[category_id].push_back(hist_generator_.bookHistogram(var_df_selected_cat, binning, "central_value_weight"));
+            }
         }
     }
 
@@ -189,8 +213,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
-        auto varied_hists = getVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_scheme) override {
+        auto varied_hists = getVariedHistograms(category_id, binning, category_scheme);
         if (varied_hists.count("var")) {
             return calculateOneSidedVariationCovariance(nominal_hist, varied_hists.at("var"));
         }
@@ -210,24 +234,35 @@ public:
         return std::make_unique<UniverseSystematic>(name_, weight_vector_name_, n_universes_);
     }
 
-    void book(ROOT::RDF::RNode df_nominal_for_sample, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column) override {
-        if (!df_nominal_for_sample.HasColumn(weight_vector_name_)) return;
+    void book(ROOT::RDF::RNode df_nominal, const DataManager::AssociatedVariationMap&, const std::string&, int category_id, const Binning& binning, const std::string& selection_query, const std::string& category_column, const std::string&) override {
+        if (!df_nominal.HasColumn(weight_vector_name_)) return;
 
         universe_futures_[category_id].resize(n_universes_);
 
-        auto weight_func = [this](unsigned int u, const ROOT::RVec<unsigned short>& weights, float cv_weight) {
-            if (u < weights.size()) {
-                return cv_weight * (static_cast<float>(weights[u]) / 1000.0f);
-            }
-            return cv_weight;
-        };
-
-        auto df_filtered = df_nominal_for_sample.Filter(selection_query)
-                                              .Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
+        auto df_filtered = df_nominal.Filter(selection_query);
 
         for (unsigned int u = 0; u < n_universes_; ++u) {
-            auto df_universe = df_filtered.Define("univ_weight_" + name_, weight_func, {std::to_string(u), weight_vector_name_, "central_value_weight"});
-            universe_futures_[category_id][u].push_back(hist_generator_.bookHistogram(df_universe, binning, "univ_weight_" + name_));
+            std::string univ_weight_col = "univ_weight_" + name_ + "_" + std::to_string(u);
+            auto weight_func = [this, u](const ROOT::RVec<unsigned short>& weights, float cv_weight) {
+                if (u < weights.size()) {
+                    return cv_weight * (static_cast<float>(weights[u]) / 1000.0f);
+                }
+                return cv_weight;
+            };
+            auto df_with_weight = df_filtered.Define(univ_weight_col, weight_func, {weight_vector_name_, "central_value_weight"});
+            
+            if (binning.is_particle_level) {
+                const std::string& var_branch = binning.variable.Data();
+                auto selector = [category_id](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
+                    return var_vec[pdg_vec == category_id];
+                };
+                std::string new_col_name = var_branch + "_" + std::to_string(category_id) + "_" + name_ + "_u" + std::to_string(u);
+                auto category_df = df_with_weight.Define(new_col_name, selector, {var_branch, category_column});
+                universe_futures_[category_id][u].push_back(hist_generator_.bookHistogram(category_df, binning, univ_weight_col, new_col_name));
+            } else {
+                 auto df_universe = df_with_weight.Filter(TString::Format("%s == %d", category_column.c_str(), category_id).Data());
+                 universe_futures_[category_id][u].push_back(hist_generator_.bookHistogram(df_universe, binning, univ_weight_col));
+            }
         }
     }
 
@@ -248,8 +283,8 @@ public:
         return varied_hists;
     }
 
-    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_column) override {
-        auto universe_hists_map = getVariedHistograms(category_id, binning, category_column);
+    TMatrixDSym computeCovariance(int category_id, const Histogram& nominal_hist, const Binning& binning, const std::string& category_scheme) override {
+        auto universe_hists_map = getVariedHistograms(category_id, binning, category_scheme);
         return calculateMultiUniverseCovariance(nominal_hist, universe_hists_map);
     }
 
@@ -264,7 +299,7 @@ public:
     NormalisationSystematic(const std::string& name, double fractional_uncertainty)
         : Systematic(name), uncertainty_(fractional_uncertainty) {}
 
-    void book(ROOT::RDF::RNode, const DataManager::AssociatedVariationMap&, const std::string&, int, const Binning&, const std::string&, const std::string&) override {}
+    void book(ROOT::RDF::RNode, const DataManager::AssociatedVariationMap&, const std::string&, int, const Binning&, const std::string&, const std::string&, const std::string&) override {}
 
     TMatrixDSym computeCovariance(int, const Histogram& nominal_hist, const Binning& binning, const std::string&) override {
         TMatrixDSym cov(binning.nBins());

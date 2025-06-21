@@ -56,57 +56,57 @@ public:
 
     void bookVariations(const std::string& task_id, const std::string& sample_key, ROOT::RDF::RNode df,
                         const DataManager::AssociatedVariationMap& det_var_nodes, const Binning& binning,
-                        const std::string& selection_query, const std::string& analysis_channel_column) {
-        auto analysis_channel_keys = getChannelKeys(analysis_channel_column);
+                        const std::string& selection_query, const std::string& category_column, const std::string& category_scheme) {
+        auto analysis_channel_keys = getChannelKeys(category_scheme);
         for (int channel_key : analysis_channel_keys) {
             for (const auto& syst : weight_systematics_) {
-                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, category_column, category_scheme);
             }
             for (const auto& syst : universe_systematics_) {
-                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, category_column, category_scheme);
             }
             for (const auto& syst : detector_systematics_) {
-                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, category_column, category_scheme);
             }
             for (const auto& syst : normalisation_systematics_) {
-                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, analysis_channel_column);
+                syst->book(df, det_var_nodes, sample_key, channel_key, binning, selection_query, category_column, category_scheme);
             }
         }
     }
 
     std::map<std::string, TMatrixDSym> computeAllCovariances(int channel_key, const Histogram& nominal_hist,
-                                                             const Binning& binning, const std::string& analysis_channel_column) {
+                                                             const Binning& binning, const std::string& category_scheme) {
         std::map<std::string, TMatrixDSym> breakdown;
         for (const auto& syst : weight_systematics_) {
-            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, category_scheme));
         }
         for (const auto& syst : universe_systematics_) {
-            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, category_scheme));
         }
         for (const auto& syst : detector_systematics_) {
-            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, category_scheme));
         }
         for (const auto& syst : normalisation_systematics_) {
-            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, analysis_channel_column));
+            breakdown.emplace(syst->getName(), syst->computeCovariance(channel_key, nominal_hist, binning, category_scheme));
         }
         return breakdown;
     }
 
     std::map<std::string, std::map<std::string, Histogram>> getAllVariedHistograms(int channel_key,
                                                                                    const Binning& binning,
-                                                                                   const std::string& analysis_channel_column) {
+                                                                                   const std::string& category_scheme) {
         std::map<std::string, std::map<std::string, Histogram>> all_varied_hists;
         for (const auto& syst : weight_systematics_) {
-            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, category_scheme);
         }
         for (const auto& syst : universe_systematics_) {
-            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, category_scheme);
         }
         for (const auto& syst : detector_systematics_) {
-            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, category_scheme);
         }
         for (const auto& syst : normalisation_systematics_) {
-            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, analysis_channel_column);
+            all_varied_hists[syst->getName()] = syst->getVariedHistograms(channel_key, binning, category_scheme);
         }
         return all_varied_hists;
     }

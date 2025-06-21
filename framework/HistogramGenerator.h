@@ -22,9 +22,10 @@ public:
         TString hist_title_override = "",
         int plot_color = kBlack,
         int plot_hatch = 0,
-        TString tex_str = ""
+        TString tex_str = "",
+        TString variable_to_plot_override = ""
     ) const {
-        const char* var_name_cstr = binning_def.variable.Data();
+        const char* var_name_cstr = variable_to_plot_override.IsNull() ? binning_def.variable.Data() : variable_to_plot_override.Data();
         const char* var_tex_cstr = binning_def.variable_tex.IsNull() ? var_name_cstr : binning_def.variable_tex.Data();
         const char* label_cstr = binning_def.label.IsNull() ? var_name_cstr : binning_def.label.Data();
 
@@ -71,9 +72,10 @@ public:
     ROOT::RDF::RResultPtr<TH1D> bookHistogram(
         ROOT::RDF::RNode df,
         const AnalysisFramework::Binning& binning_def,
-        const std::string& weight_column
+        const std::string& weight_column,
+        const TString& variable_to_plot_override = ""
     ) const {
-        const char* var_name_cstr = binning_def.variable.Data();
+        const char* var_name_cstr = variable_to_plot_override.IsNull() ? binning_def.variable.Data() : variable_to_plot_override.Data();
         const char* var_tex_cstr = binning_def.variable_tex.IsNull() ? var_name_cstr : binning_def.variable_tex.Data();
         const char* label_cstr = binning_def.label.IsNull() ? var_name_cstr : binning_def.label.Data();
 
