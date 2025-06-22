@@ -52,13 +52,17 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {98, "Out FV"},
             {99, "Other"}
         }},
-        {"particle_pdg_channels", { 
-            {13,   "Muon"},
-            {2212, "Proton"},
+        {"particle_pdg_channels", {
+            {13,   R"(#mu)"},
+            {2212, R"(p)"},
             {211,  R"(#pi^{#pm})"},
-            {11,   "Electron"},
-            {22,   "Photon"},
-            {0,    "Other"}
+            {11,   R"(e)"},
+            {22,   R"(#gamma)"},
+            {321,  R"(K^{#pm})"},
+            {3224, R"(#Sigma^{#pm})"},
+            {2112, R"(n)"},
+            {3122, R"(#Lambda)"},
+            {1,    "Other"}
         }}
     };
     return label_map;
@@ -102,6 +106,18 @@ inline const std::map<std::string, std::map<int, int>>& getChannelColourMap() {
             {61, kPink-9},
             {98, kGray + 1},
             {99, kGray+3}
+        }},
+        {"particle_pdg_channels", {
+            {13,   kAzure + 2},     // Muon
+            {2212, kOrange + 1},    // Proton
+            {211,  kTeal + 1},      // Pion
+            {321,  kPink + 1},      // Kaon
+            {3224, kSpring - 5},    // Sigma
+            {2112, kGray + 2},      // Neutron
+            {3122, kRed - 7},       // Lambda
+            {11,   kCyan - 7},      // Electron
+            {22,   kOrange - 9},    // Photon
+            {0,    kGray}           // Other
         }}
     };
     return colour_maps;
@@ -109,11 +125,20 @@ inline const std::map<std::string, std::map<int, int>>& getChannelColourMap() {
 
 inline const std::map<int, int>& getChannelFillStyle() {
     static const std::map<int, int> fill_style_map = {
-        {0,   0},
+        {0,   1001},
         {1,   3005},
         {2,   1001},
         {10,  1001},
         {11,  1001},
+        {13,  1001},
+        {2212,1001},
+        {211, 1001},
+        {11,  1001},
+        {22,  1001},
+        {321, 1001},
+        {3224,1001},
+        {2112,1001},
+        {3122,1001},
         {20,  1001},
         {21,  1001},
         {22,  1001},

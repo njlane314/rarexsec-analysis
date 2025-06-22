@@ -8,6 +8,7 @@
 #include <variant>
 #include <iostream>
 #include <future>
+#include <set>
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RResultPtr.hxx"
@@ -102,27 +103,56 @@ private:
                         const std::string& var_branch = task_binning.variable.Data();
                         const std::string& cat_branch = params_.particle_category_column;
 
+                        std::set<int> classified_pdgs;
+                        for (int key : particle_channel_keys) {
+                            if (key == 0) continue; 
+                            if (key == 3224) { 
+                                classified_pdgs.insert(3222);
+                                classified_pdgs.insert(3112);
+                            } else {
+                                classified_pdgs.insert(key);
+                            }
+                        }
+
                         for (const int pdg_code : particle_channel_keys) {
-                            if (pdg_code == 0) continue;
-                            int pdg_code_abs = std::abs(pdg_code);
-                           
-                            auto selector = [pdg_code_abs](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
-                                return var_vec[pdg_vec == pdg_code_abs];
+                            auto selector = [pdg_code, classified_pdgs](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
+                                if (var_vec.size() != pdg_vec.size()) {
+                                    return ROOT::RVec<float>{};
+                                }
+
+                                if (pdg_code == 0) {
+                                    thread_local std::set<int> printed_unclassified_pdgs;
+                                    ROOT::RVec<float> result;
+                                    for(size_t i = 0; i < pdg_vec.size(); ++i) {
+                                        int current_pdg = std::abs(pdg_vec[i]);
+                                        if (current_pdg != 0 && classified_pdgs.find(current_pdg) == classified_pdgs.end()) {
+                                            result.push_back(var_vec[i]);
+                                            std::cout << "Unclassified particle PDG: " << current_pdg << std::endl;
+                                            if (printed_unclassified_pdgs.find(current_pdg) == printed_unclassified_pdgs.end()) {
+                                                std::cout << "Unclassified particle PDG added to 'Other': " << current_pdg << std::endl;
+                                                printed_unclassified_pdgs.insert(current_pdg);
+                                            }
+                                        }
+                                    }
+                                    return result;
+                                }
+                                else if (pdg_code == 3224) { 
+                                    return var_vec[abs(pdg_vec) == 3222 || abs(pdg_vec) == 3112];
+                                }
+                                else {
+                                    return var_vec[abs(pdg_vec) == pdg_code]; 
+                                }
                             };
                             
-                            std::string new_col_name = var_branch + "_" + std::to_string(pdg_code_abs);
-                            
+                            std::string new_col_name = var_branch + "_" + std::to_string(pdg_code);
                             auto category_df = main_filtered_df.Define(new_col_name, selector, {var_branch, cat_branch});
-
-                            mc_category_futures_[task_key][sample_key][pdg_code_abs] = 
-                                category_df.Histo1D(model, new_col_name, "base_event_weight");
+                            mc_category_futures_[task_key][sample_key][pdg_code] = category_df.Histo1D(model, new_col_name, "central_value_weight");
                         }
                         
                         params_.systematics_controller.bookVariations(
                             task_key, sample_key, df, det_var_nodes, task_binning,
                             task_binning.selection_query.Data(), params_.particle_category_column, params_.particle_category_scheme);
                     }
-
                 } else {
                     if (sample_info.isMonteCarlo()) {
                         const auto analysis_channel_keys = getChannelKeys(params_.event_category_column);
@@ -130,7 +160,7 @@ private:
                             if (channel_key == 0) continue;
                             TString category_filter = TString::Format("%s == %d", params_.event_category_column.c_str(), channel_key);
                             auto category_df = main_filtered_df.Filter(category_filter.Data());
-                            mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "base_event_weight");
+                            mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "central_value_weight");
                         }
                         
                         params_.systematics_controller.bookVariations(
@@ -173,7 +203,7 @@ private:
             Histogram total_mc_nominal(task_binning, "total_mc", "Total MC");
 
             for (const int channel_key : analysis_channel_keys) {
-                if (!task_binning.is_particle_level && channel_key == 0) continue;
+                if (category_scheme != "particle_pdg_channels" && channel_key == 0) continue;
 
                 std::string category_label = getChannelLabel(category_scheme, channel_key);
                 int color = getChannelColourCode(category_scheme, channel_key);

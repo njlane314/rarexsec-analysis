@@ -256,7 +256,7 @@ private:
     ROOT::RDF::RNode defineTopologicalFeatures(ROOT::RDF::RNode df) const {
         auto d = df;
         
-        std::vector<std::string> essential_cols = {"trk_len_v", "pfp_generation_v", "shr_energy_y_v", "trk_distance_v", "trk_score_v", "trk_llr_pid_score_v"};
+        std::vector<std::string> essential_cols = {"trk_len_v", "pfp_generation_v", "shr_energy_y_v", "trk_distance_v", "trk_score_v", "trk_llr_pid_score_v", "trk_pfp_id_v", "shr_pfp_id_v"};
         for(const auto& col : essential_cols){
             if(!d.HasColumn(col)){
                 std::cerr << "Warning: Essential column '" << col << "' not found. Skipping topological feature definitions." << std::endl;
@@ -265,55 +265,93 @@ private:
         }
 
         d = d.Define("is_reco_fv", "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0");
-
-        d = d.Define("track_is_primary",
-            [](const ROOT::RVec<unsigned int>& gen, const ROOT::RVec<float>& dist) {
-                return ROOT::RVec<bool>((gen == 2) && (dist < 4.0));
-            }, {"pfp_generation_v", "trk_distance_v"}
-        );
-
-        d = d.Define("track_is_good_quality",
-            [](const ROOT::RVec<float>& len, const ROOT::RVec<float>& score) {
-                return ROOT::RVec<bool>((len > 10.0) && (score > 0.5));
-            }, {"trk_len_v", "trk_score_v"}
-        );
-
-        d = d.Define("shower_is_primary",
-            [](const ROOT::RVec<unsigned int>& gen) {
-                return ROOT::RVec<bool>(gen == 2);
-            }, {"pfp_generation_v"}
-        );
-
-        d = d.Define("shower_is_good_quality",
-            [](const ROOT::RVec<float>& score, const ROOT::RVec<float>& energy) {
-                return ROOT::RVec<bool>((score < 0.5) && (energy > 0.07));
-            }, {"trk_score_v", "shr_energy_y_v"}
-        );
-
-        d = d.Define("muon_candidate_mask",
-            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<float>& trk_score) {
-                return ROOT::RVec<bool>(is_primary && is_good && pid_score > 0.6 && trk_score > 0.9);
-            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "trk_score_v"}
-        );
-
-        d = d.Define("proton_candidate_mask",
-            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask) {
-                return ROOT::RVec<bool>(is_primary && is_good && pid_score < -0.4 && !muon_mask);
-            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask"}
-        );
-
-        d = d.Define("pion_candidate_mask",
-            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask, const ROOT::RVec<bool>& proton_mask) {
-                return ROOT::RVec<bool>(is_primary && is_good && pid_score > 0.4 && !muon_mask && !proton_mask);
-            }, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask", "proton_candidate_mask"}
-        );
-
-        d = d.Define("electron_candidate_mask",
-            [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& dedx, const ROOT::RVec<float>& moliere) {
-                return ROOT::RVec<bool>(is_primary && is_good && dedx > 0.5 && dedx < 5.5 && moliere < 9.0);
-            }, {"shower_is_primary", "shower_is_good_quality", "shr_tkfit_dedx_y_v", "shr_moliere_avg_v"}
-        );
         
+        auto get_track_is_primary = [](const ROOT::RVec<unsigned int>& pfp_gen, const ROOT::RVec<unsigned long>& trk_pfp_id, const ROOT::RVec<float>& dist) {
+            ROOT::RVec<bool> is_primary;
+            is_primary.reserve(trk_pfp_id.size());
+            for (size_t i = 0; i < trk_pfp_id.size(); ++i) {
+                unsigned long id = trk_pfp_id[i];
+                bool primary = false;
+                if (id < pfp_gen.size()) {
+                    primary = (pfp_gen[id] == 2);
+                }
+                is_primary.push_back(primary && (dist[i] < 4.0));
+            }
+            return is_primary;
+        };
+        d = d.Define("track_is_primary", get_track_is_primary, {"pfp_generation_v", "trk_pfp_id_v", "trk_distance_v"});
+
+        auto get_shower_is_primary = [](const ROOT::RVec<unsigned int>& pfp_gen, const ROOT::RVec<unsigned long>& shr_pfp_id) {
+            ROOT::RVec<bool> is_primary;
+            is_primary.reserve(shr_pfp_id.size());
+            for (unsigned long id : shr_pfp_id) {
+                if (id < pfp_gen.size()) {
+                    is_primary.push_back(pfp_gen[id] == 2);
+                } else {
+                    is_primary.push_back(false);
+                }
+            }
+            return is_primary;
+        };
+        d = d.Define("shower_is_primary", get_shower_is_primary, {"pfp_generation_v", "shr_pfp_id_v"});
+
+
+        auto track_good_quality_builder = [](const ROOT::RVec<float>& len, const ROOT::RVec<float>& score) {
+            if (len.size() != score.size()) return ROOT::RVec<bool>(len.size(), false);
+            ROOT::RVec<bool> mask(len.size());
+            for(size_t i = 0; i < len.size(); ++i) {
+                mask[i] = (len[i] > 10.0) && (score[i] > 0.5);
+            }
+            return mask;
+        };
+        d = d.Define("track_is_good_quality", track_good_quality_builder, {"trk_len_v", "trk_score_v"});
+        
+        d = d.Define("shower_is_good_quality", [](const ROOT::RVec<float>& energy) { return ROOT::RVec<bool>(energy > 0.07); }, {"shr_energy_y_v"});
+
+        auto muon_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<float>& trk_score) {
+            size_t n = is_primary.size();
+            if (is_good.size() != n || pid_score.size() != n || trk_score.size() != n) return ROOT::RVec<bool>(n, false);
+            ROOT::RVec<bool> mask(n);
+            for (size_t i = 0; i < n; ++i) {
+                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.6 && trk_score[i] > 0.9;
+            }
+            return mask;
+        };
+        d = d.Define("muon_candidate_mask", muon_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "trk_score_v"});
+
+        auto proton_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask) {
+            size_t n = is_primary.size();
+            if (is_good.size() != n || pid_score.size() != n || muon_mask.size() != n) return ROOT::RVec<bool>(n, false);
+            ROOT::RVec<bool> mask(n);
+            for (size_t i = 0; i < n; ++i) {
+                mask[i] = is_primary[i] && is_good[i] && pid_score[i] < -0.4 && !muon_mask[i];
+            }
+            return mask;
+        };
+        d = d.Define("proton_candidate_mask", proton_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask"});
+
+        auto pion_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask, const ROOT::RVec<bool>& proton_mask) {
+            size_t n = is_primary.size();
+            if (is_good.size() != n || pid_score.size() != n || muon_mask.size() != n || proton_mask.size() != n) return ROOT::RVec<bool>(n, false);
+            ROOT::RVec<bool> mask(n);
+            for (size_t i = 0; i < n; ++i) {
+                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.4 && !muon_mask[i] && !proton_mask[i];
+            }
+            return mask;
+        };
+        d = d.Define("pion_candidate_mask", pion_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask", "proton_candidate_mask"});
+
+        auto electron_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& dedx, const ROOT::RVec<float>& moliere) {
+            size_t n = is_primary.size();
+            if (is_good.size() != n || dedx.size() != n || moliere.size() != n) return ROOT::RVec<bool>(n, false);
+            ROOT::RVec<bool> mask(n);
+            for (size_t i = 0; i < n; ++i) {
+                mask[i] = is_primary[i] && is_good[i] && dedx[i] > 0.5 && dedx[i] < 5.5 && moliere[i] < 9.0;
+            }
+            return mask;
+        };
+        d = d.Define("electron_candidate_mask", electron_mask_builder, {"shower_is_primary", "shower_is_good_quality", "shr_tkfit_dedx_y_v", "shr_moliere_avg_v"});
+
         d = d.Define("leading_muon_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * muon_candidate_mask))");
         d = d.Define("leading_proton_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * proton_candidate_mask))");
         d = d.Define("leading_pion_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * pion_candidate_mask))");
@@ -407,6 +445,16 @@ private:
         d = d.Define("is_mulit_mu", "n_muons > 1 ");
         d = d.Define("is_nc_like", "n_muons == 0 && n_electrons == 0");
         d = d.Define("is_cc_nue_like", "n_electrons == 1 && n_muons == 0 && n_pfp_gen_2 > 1");
+
+        if (d.HasColumn("trk_nhits_u_v"))
+            d = d.Define("trk_nhits_u_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_u_v)");
+        if (d.HasColumn("trk_nhits_v_v"))
+            d = d.Define("trk_nhits_v_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_v_v)");
+        if (d.HasColumn("trk_nhits_y_v"))
+            d = d.Define("trk_nhits_y_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_y_v)");
+        if (d.HasColumn("trk_end_spacepoints_v"))
+            d = d.Define("trk_end_spacepoints_v_float", "static_cast<ROOT::RVec<float>>(trk_end_spacepoints_v)");
+
         return d;
     }
 };
