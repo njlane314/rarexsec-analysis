@@ -26,7 +26,7 @@ int main() {
             .defineVariable("trk_llr_pid_score_v", "trk_llr_pid_score_v", "Track LLR PID Score", 200, -1.0, 1.0, false, "", true)
             .defineVariable("trk_pida_v", "trk_pida_v", "Track PIDA", 200, 0.0, 30.0, false, "", true)
             .defineVariable("trk_score_v", "trk_score_v", "Track Score", 200, 0.0, 1.0, false, "", true)
-            .defineVariable("trk_nhits_u_v_float", "trk_nhits_u_v_float", "Track Hits U", 100, 0.0, 200.0, false, "", true)
+            .defineVariable("trk_nhits_u_v_float", "trk_nhits_u_v_float", "Track Hits U", 200, 0.0, 200.0, false, "", true)
             .defineVariable("trk_pid_chimu_v", "trk_pid_chimu_v", "Track PID ChiMu", 100, 0, 500.0, false, "", true)
             .defineVariable("trk_pid_chipr_v", "trk_pid_chipr_v", "Track PID ChiPr", 100, 0, 500.0, false, "", true)
             .defineVariable("trk_pid_chika_v", "trk_pid_chika_v", "Track PID ChiKa", 100, 0, 500.0, false, "", true)
@@ -39,6 +39,7 @@ int main() {
             .defineVariable("trk_avg_deflection_mean_v", "trk_avg_deflection_mean_v", "Track Avg Deflection Mean", 100, 0.0, 0.0, false, "", true)
             .defineVariable("trk_avg_deflection_separation_mean_v", "trk_avg_deflection_separation_mean_v", "Track Avg Deflection Separation Mean", 100, 0.0, 1.0, false, "", true)*/
             .defineVariable("n_muons", "n_muons", "Number of Muons", 5, 0, 5)
+            .defineVariable("n_pfps", "n_pfps", "Number of PFParticles", 10, 0, 10)
             .defineVariable("n_protons", "n_protons", "Number of Protons", 5, 0, 5)
             .defineVariable("n_pions", "n_pions", "Number of Pions", 5, 0, 5)
             .defineVariable("n_electrons", "n_electrons", "Number of Electrons", 5, 0, 5)
@@ -58,6 +59,12 @@ int main() {
             .defineVariable("1e1p", "is_1e1p", "1 Electron, 1 Proton", 2, 0, 1)
             .defineVariable("1eNp", "is_1eNp", "1 Electron, N Protons", 2, 0, 1)
             .defineVariable("is_mulit_mu", "is_mulit_mu", "Multi-Muon Event", 2, 0, 1)
+            .defineVariable("trk_bragg_p_v", "trk_bragg_p_v", "Track Bragg Peak (GeV)", 100, 0.0, 1.0, false, "", true)
+            .defineVariable("trk_bragg_mu_v", "trk_bragg_mu_v", "Track Bragg Peak (GeV)", 100, 0.0, 1.0, false, "", true)
+            .defineVariable("trk_bragg_pion_v", "trk_bragg_pion_v", "Track Bragg Peak (GeV)", 100, 0.0, 1.0, false, "", true)
+            .defineVariable("trk_calo_energy_u_v", "trk_calo_energy_u_v", "Track Calorimetry Energy U (GeV)", 100, 0.0, 1000.0, false, "", true)
+            .defineVariable("trk_calo_energy_v_v", "trk_calo_energy_v_v", "Track Calorimetry Energy V (GeV)", 100, 0.0, 1000.0, false, "", true)
+            .defineVariable("trk_calo_energy_y_v", "trk_calo_energy_y_v", "Track Calorimetry Energy Y (GeV)", 100, 0.0, 1000.0, false, "", true)
             .defineRegion("ALL_EVENTS", "Empty Selection", {"ALL_EVENTS"})
             .defineRegion("QUALITY", "Quality Slice Pres.", {"QUALITY"})
             .defineRegion("SIGNAL", "Signal Filter", {"SIGNAL"})
@@ -125,6 +132,34 @@ int main() {
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_pid_chimu_v", "QUALITY", "particle_pdg_channels", false);
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_pid_chimu_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
 
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_p_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_p_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_p_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_p_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_mu_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_mu_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_mu_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_mu_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_pion_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_pion_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_pion_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_bragg_pion_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_u_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_u_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_u_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_u_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_v_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_v_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_v_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_v_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_y_v", "ALL_EVENTS", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_y_v", "SIGNAL", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_y_v", "QUALITY", "particle_pdg_channels", false);
+        plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_calo_energy_y_v", "NUMU_CC_SEL", "particle_pdg_channels", false);
+
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_pid_chipr_v", "ALL_EVENTS", "particle_pdg_channels", false);
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_pid_chipr_v", "SIGNAL", "particle_pdg_channels", false);
         plot_manager.saveStackedPlot(analysis_exclusive_phase_space, "trk_pid_chipr_v", "QUALITY", "particle_pdg_channels", false);
@@ -179,6 +214,11 @@ int main() {
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_muons", "SIGNAL", "inclusive_strange_channels", true);
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_muons", "QUALITY", "inclusive_strange_channels", true);
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_muons", "NUMU_CC_SEL", "inclusive_strange_channels", true);
+
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_pfps", "ALL_EVENTS", "inclusive_strange_channels", true);
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_pfps", "SIGNAL", "inclusive_strange_channels", true);
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_pfps", "QUALITY", "inclusive_strange_channels", true);
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_pfps", "NUMU_CC_SEL", "inclusive_strange_channels", true);
 
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_protons", "ALL_EVENTS", "inclusive_strange_channels", true);
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_protons", "SIGNAL", "inclusive_strange_channels", true);

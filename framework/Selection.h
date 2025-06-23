@@ -37,8 +37,8 @@ public:
         selections.emplace("QUALITY", SelectionDetails(
             "nslice == 1 && selected == 1 &&"
             "is_reco_fv && "
-            "nu_slice_topo_score > 0.2 && _opfilter_pe_beam > 20.0 && "
-            "nhits_u > 0 && nhits_v > 0 && nhits_w > 0",
+            "nu_slice_topo_score > 0.7 && _opfilter_pe_beam > 20.0 && "
+            "n_pfps > 0",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         ));
         selections.emplace("NONE", SelectionDetails(
@@ -52,7 +52,7 @@ public:
         std::map<TString, SelectionDetails> selections;
         
         selections.emplace("NUMU_CC", SelectionDetails(
-            "n_muons > 0 && nu_slice_topo_score > 0.7 && n_pfp_gen_2 > 1",
+            "n_muons > 0 && n_pfp_gen_2 > 1",
             "NuMu CC sel.", "NuMu CC", "NUMU_CC"
         ));
 

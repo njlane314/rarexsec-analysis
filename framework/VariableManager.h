@@ -66,7 +66,9 @@ private:
         "backtracked_overlay_purity", "backtracked_px", "backtracked_py", "backtracked_pz",
         "backtracked_start_x", "backtracked_start_y", "backtracked_start_z", "backtracked_start_t",
         "backtracked_sce_start_x", "backtracked_sce_start_y", "backtracked_sce_start_z",
-        "backtracked_end_process", "backtracked_end_in_tpc"
+        "backtracked_end_process", "backtracked_end_in_tpc",
+        "trk_bragg_p_v", "trk_bragg_mu_v", "trk_bragg_pion_v",
+        "trk_calo_energy_u_v", "trk_calo_energy_v_v", "trk_calo_energy_y_v"
     };
 
     std::vector<std::string> reco_shower_vars_ = {

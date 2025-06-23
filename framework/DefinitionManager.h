@@ -275,7 +275,7 @@ private:
                 if (id < pfp_gen.size()) {
                     primary = (pfp_gen[id] == 2);
                 }
-                is_primary.push_back(primary && (dist[i] < 4.0));
+                is_primary.push_back(primary && (dist[i] < 5.0));
             }
             return is_primary;
         };
@@ -300,7 +300,7 @@ private:
             if (len.size() != score.size()) return ROOT::RVec<bool>(len.size(), false);
             ROOT::RVec<bool> mask(len.size());
             for(size_t i = 0; i < len.size(); ++i) {
-                mask[i] = (len[i] > 10.0) && (score[i] > 0.5);
+                mask[i] = (len[i] > 10.0) && (score[i] > 0.7);
             }
             return mask;
         };
@@ -313,7 +313,7 @@ private:
             if (is_good.size() != n || pid_score.size() != n || trk_score.size() != n) return ROOT::RVec<bool>(n, false);
             ROOT::RVec<bool> mask(n);
             for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.6 && trk_score[i] > 0.9;
+                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.6 && trk_score[i] > 0.7;
             }
             return mask;
         };
@@ -324,7 +324,7 @@ private:
             if (is_good.size() != n || pid_score.size() != n || muon_mask.size() != n) return ROOT::RVec<bool>(n, false);
             ROOT::RVec<bool> mask(n);
             for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && pid_score[i] < -0.4 && !muon_mask[i];
+                mask[i] = is_primary[i] && is_good[i] && pid_score[i] < 0.4 && !muon_mask[i];
             }
             return mask;
         };

@@ -60,9 +60,7 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {22,   R"(#gamma)"},
             {321,  R"(K^{#pm})"},
             {3224, R"(#Sigma^{#pm})"},
-            {2112, R"(n)"},
-            {3122, R"(#Lambda)"},
-            {1,    "Other"}
+            {0,    "Other"}
         }}
     };
     return label_map;
