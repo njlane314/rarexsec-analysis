@@ -37,9 +37,21 @@ public:
         selections.emplace("QUALITY", SelectionDetails(
             "nslice == 1 && selected == 1 &&"
             "is_reco_fv && "
-            "nu_slice_topo_score > 0.7 && _opfilter_pe_beam > 20.0 && "
-            "n_pfps > 0",
+            "nu_slice_topo_score >= 0.2 && nu_slice_topo_score <= 1.0 && _opfilter_pe_beam >= 20.0 &&"
+            "nhits_u > 0 && nhits_v > 0 && nhits_w > 0",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
+        ));
+        selections.emplace("LOW_TOPOSCORE", SelectionDetails(
+            "nslice == 1 && selected == 1 &&"
+            "is_reco_fv && "
+            "nu_slice_topo_score < 0.2",
+            "Low Topological Score Presel.", "Low Topo Presel", "LOWTOPOSCOREPRESEL"
+        ));
+        selections.emplace("HIGH_TOPOSCORE", SelectionDetails(
+            "nslice == 1 && selected == 1 &&"
+            "is_reco_fv && "
+            "nu_slice_topo_score > 0.98",
+            "High Topological Score Presel.", "High Topo Presel", "HIGHTOPOSCOREPRESEL"
         ));
         selections.emplace("NONE", SelectionDetails(
             "1 == 1",

@@ -85,10 +85,10 @@ int main() {
         
         AnalysisFramework::EventDisplay event_display(data_manager, 512, "plots");
         event_display.visualiseDetectorViews(
-            "ZERO_HITS_PLANE", 
+            "NUMU_CC", 
             "NONE",            
             "inclusive_strange_channels == 10 || inclusive_strange_channels == 11",                
-            5                  
+            10                 
         );
 
     } catch (const std::exception& e) {

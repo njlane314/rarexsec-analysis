@@ -44,6 +44,11 @@ private:
         "pfp_generation_v"
     };
 
+    std::vector<std::string> reco_blip_vars_ = {
+        "blip_ID", 
+        "blip_Energy"
+    };
+
     std::vector<std::string> reco_track_vars_ = {
         "trk_pfp_id_v", "trk_score_v", "trk_len_v", "trk_distance_v",
         "trk_start_x_v", "trk_start_y_v", "trk_start_z_v",
@@ -139,6 +144,7 @@ public:
      
         vars_set.insert(reco_event_vars_.begin(), reco_event_vars_.end());
         vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
+        vars_set.insert(reco_blip_vars_.begin(), reco_blip_vars_.end());
         if (options.load_showers) {
             vars_set.insert(reco_shower_vars_.begin(), reco_shower_vars_.end());
         }

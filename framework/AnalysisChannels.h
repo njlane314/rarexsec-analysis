@@ -20,7 +20,7 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {1,  "External"},
             {2,  "Dirt"},
             {10, R"(#nu_{#mu}CC 1s)"},
-            {11, R"(#nu_{#mu}CC Ns)"},
+            {11, R"(#nu_{#mu}CC Ms)"},
             {20, R"(#nu_{#mu}CC Np0#pi)"},
             {21, R"(#nu_{#mu}CC 0pN#pi)"},
             {22, R"(#nu_{#mu}CC NpN#pi)"},
@@ -53,14 +53,13 @@ inline const std::map<std::string, std::map<int, std::string>>& getChannelLabelM
             {99, "Other"}
         }},
         {"particle_pdg_channels", {
-            {13,   R"(#mu)"},
+            {13,   R"(#mu^{#pm})"},
             {2212, R"(p)"},
             {211,  R"(#pi^{#pm})"},
-            {11,   R"(e)"},
+            {11,   R"(e^{#pm})"},
             {22,   R"(#gamma)"},
             {321,  R"(K^{#pm})"},
-            {3224, R"(#Sigma^{#pm})"},
-            {0,    "Other"}
+            {3224, R"(#Sigma^{#pm})"}
         }}
     };
     return label_map;
@@ -124,7 +123,7 @@ inline const std::map<std::string, std::map<int, int>>& getChannelColourMap() {
 inline const std::map<int, int>& getChannelFillStyle() {
     static const std::map<int, int> fill_style_map = {
         {0,   1001},
-        {1,   3005},
+        {1,   3004},
         {2,   1001},
         {10,  1001},
         {11,  1001},

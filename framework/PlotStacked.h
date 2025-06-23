@@ -18,19 +18,38 @@
 #include "TLegend.h"
 #include "TGraphAsymmErrors.h"
 #include "TLatex.h"
+#include "TLine.h"
+#include "TArrow.h"
 
 namespace AnalysisFramework {
 
+enum class CutDirection {
+    GreaterThan,
+    LessThan
+};
+
+struct Cut {
+    double value;
+    CutDirection direction;
+};
+
 class PlotStacked : public PlotBase {
 public:
-    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& analysis_channel_column, const std::string& output_dir = "plots", bool draw_signal_overlay = true)
-        : PlotBase(name, output_dir), result_(result), analysis_channel_column_(analysis_channel_column), draw_signal_overlay_(draw_signal_overlay) {}
+    inline PlotStacked(const std::string& name, const AnalysisResult& result, const std::string& analysis_channel_column, const std::string& output_dir = "plots", bool draw_signal_overlay = true, const std::vector<Cut>& cuts = {}, bool show_legend_numbers = true)
+        : PlotBase(name, output_dir), result_(result), analysis_channel_column_(analysis_channel_column), draw_signal_overlay_(draw_signal_overlay), cuts_(cuts), show_legend_numbers_(show_legend_numbers) {}
 
     inline ~PlotStacked() {
         delete total_mc_hist_;
         delete mc_stack_;
         delete legend_;
         delete signal_hist_;
+        for (auto vis : cut_visuals_) {
+            delete vis;
+        }
+    }
+    
+    void addCut(const Cut& cut) {
+        cuts_.push_back(cut);
     }
 
 private: 
@@ -41,6 +60,9 @@ private:
     TLegend* legend_ = nullptr;
     bool draw_signal_overlay_ = false;
     TH1D* signal_hist_ = nullptr;
+    std::vector<Cut> cuts_;
+    std::vector<TObject*> cut_visuals_;
+    bool show_legend_numbers_;
 
 protected:
     inline void draw(TCanvas& canvas) override {
@@ -109,8 +131,9 @@ protected:
             total_mc_events += hist.sum();
         }
 
+        double scale_factor = 1.0;
         if (draw_signal_overlay_ && signal_overlay_hist_initialised && signal_hist.sum() > 0) {
-            double scale_factor = total_mc_events / signal_hist.sum();
+            scale_factor = total_mc_events / signal_hist.sum();
             signal_hist = signal_hist * scale_factor;
         }
 
@@ -142,7 +165,7 @@ protected:
                 h_leg->SetLineColor(kBlack);
                 h_leg->SetLineWidth(1.5);
                 std::string base_label = getChannelLabel(analysis_channel_column_, channel_key);
-                std::string legend_label = base_label + " : " + format_double(hist.sum(), 2);
+                std::string legend_label = show_legend_numbers_ ? base_label + " : " + format_double(hist.sum(), 2) : base_label;
                 legend_->AddEntry(h_leg, legend_label.c_str(), "f");
             }
         }
@@ -153,7 +176,10 @@ protected:
             signal_hist_->SetLineStyle(kDashed);
             signal_hist_->SetFillStyle(0); 
             signal_hist_->SetLineWidth(3);
-            legend_->AddEntry(signal_hist_, "Signal shape", "l");
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2) << scale_factor;
+            std::string legend_label = show_legend_numbers_ ? "#nu_{#mu}CC Ns (x" + ss.str() + ")" : "Signal Shape";
+            legend_->AddEntry(signal_hist_, legend_label.c_str(), "l");
         }
 
         if (!mc_hists.empty()) {
@@ -162,7 +188,7 @@ protected:
             h_unc->SetFillStyle(3004);
             h_unc->SetLineColor(kBlack);
             h_unc->SetLineWidth(1);
-            std::string total_label = "Stat. : " + format_double(total_mc_events, 2);
+            std::string total_label = show_legend_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
         }
         legend_->Draw();
@@ -209,6 +235,34 @@ protected:
             signal_hist_->Draw("HIST SAME");
         }
         
+        for (const auto& cut : cuts_) {
+            double y_arrow_pos = max_y * 0.85;
+            double x_range = mc_stack_->GetXaxis()->GetXmax() - mc_stack_->GetXaxis()->GetXmin();
+            double arrow_length = x_range * 0.04;
+
+            TLine* line = new TLine(cut.value, 0, cut.value, max_y * 1.3);
+            line->SetLineColor(kRed);
+            line->SetLineWidth(2);
+            line->SetLineStyle(kDashed);
+            line->Draw("same");
+            cut_visuals_.push_back(line);
+
+            double x_start, x_end;
+            if (cut.direction == CutDirection::GreaterThan) {
+                x_start = cut.value;
+                x_end = cut.value + arrow_length;
+            } else {
+                x_start = cut.value;
+                x_end = cut.value - arrow_length;
+            }
+            TArrow* arrow = new TArrow(x_start, y_arrow_pos, x_end, y_arrow_pos, 0.025, ">");
+            arrow->SetLineColor(kRed);
+            arrow->SetFillColor(kRed);
+            arrow->SetLineWidth(2);
+            arrow->Draw("same");
+            cut_visuals_.push_back(arrow);
+        }
+
         TH1* frame = mc_stack_->GetHistogram();
         frame->GetXaxis()->SetTitleSize(MAIN_X_TITLE_SIZE);
         frame->GetYaxis()->SetTitleSize(MAIN_Y_TITLE_SIZE);

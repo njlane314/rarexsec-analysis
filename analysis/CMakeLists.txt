@@ -1,5 +1,10 @@
 set(ANALYSIS_EXECUTABLES
     analyse_signal
+    analyse_vertex
+    analyse_selection
+    visualise_topo
+    analyse_numu_cc
+    analyse_blips
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

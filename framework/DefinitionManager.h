@@ -32,6 +32,7 @@ public:
         df = this->defineAnalysisChannels(df, sample_type);
         df = this->defineEventFeatures(df);
         df = this->defineTopologicalFeatures(df);
+        df = this->defineBlipFeatures(df);
 
         if (sample_type == SampleType::kMonteCarlo) {
             df = this->defineNominalWeight(df);
@@ -234,6 +235,8 @@ private:
     ROOT::RDF::RNode defineEventFeatures(ROOT::RDF::RNode df) const {
         auto d = df;
 
+        d = d.Define("is_reco_fv", "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0");
+
         d = d.Define("nu_slice_topo_score",
             [this](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
                 return this->getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
@@ -250,6 +253,19 @@ private:
                 return ROOT::VecOps::Sum(generations == 3);
             }, {"pfp_generation_v"});
         
+        d = d.Define("quality_selector", "is_reco_fv && nslice == 1 && selected == 1 && nu_slice_topo_score >= 0.2 && nu_slice_topo_score <= 1.0 && _opfilter_pe_beam >= 20.0 && nhits_u > 0 && nhits_v > 0 && nhits_w > 0");
+        
+        return d;
+    }
+
+    ROOT::RDF::RNode defineBlipFeatures(ROOT::RDF::RNode df) const {
+        auto d = df;
+        if (d.HasColumn("blip_ID")) {
+            d = d.Define("n_blips", "blip_ID.size()");
+        }
+        if (d.HasColumn("blip_Energy")) {
+            d = d.Define("total_blip_energy", "ROOT::VecOps::Sum(blip_Energy)");
+        }
         return d;
     }
 
@@ -264,187 +280,76 @@ private:
             }
         }
 
-        d = d.Define("is_reco_fv", "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0");
-        
-        auto get_track_is_primary = [](const ROOT::RVec<unsigned int>& pfp_gen, const ROOT::RVec<unsigned long>& trk_pfp_id, const ROOT::RVec<float>& dist) {
-            ROOT::RVec<bool> is_primary;
-            is_primary.reserve(trk_pfp_id.size());
-            for (size_t i = 0; i < trk_pfp_id.size(); ++i) {
-                unsigned long id = trk_pfp_id[i];
-                bool primary = false;
-                if (id < pfp_gen.size()) {
-                    primary = (pfp_gen[id] == 2);
-                }
-                is_primary.push_back(primary && (dist[i] < 5.0));
-            }
-            return is_primary;
-        };
-        d = d.Define("track_is_primary", get_track_is_primary, {"pfp_generation_v", "trk_pfp_id_v", "trk_distance_v"});
+        auto avg_dedx_calculator = [](
+            const ROOT::RVec<float>& u_dedx,
+            const ROOT::RVec<float>& v_dedx,
+            const ROOT::RVec<float>& y_dedx) {
 
-        auto get_shower_is_primary = [](const ROOT::RVec<unsigned int>& pfp_gen, const ROOT::RVec<unsigned long>& shr_pfp_id) {
-            ROOT::RVec<bool> is_primary;
-            is_primary.reserve(shr_pfp_id.size());
-            for (unsigned long id : shr_pfp_id) {
-                if (id < pfp_gen.size()) {
-                    is_primary.push_back(pfp_gen[id] == 2);
+            size_t n_tracks = u_dedx.size();
+            ROOT::RVec<float> avg_dedx(n_tracks);
+
+            for (size_t i = 0; i < n_tracks; ++i) {
+                float sum = 0.0;
+                int count = 0;
+                if (u_dedx[i] > 0) { sum += u_dedx[i]; count++; }
+                if (v_dedx[i] > 0) { sum += v_dedx[i]; count++; }
+                if (y_dedx[i] > 0) { sum += y_dedx[i]; count++; }
+
+                if (count > 0) {
+                    avg_dedx[i] = sum / count;
                 } else {
-                    is_primary.push_back(false);
+                    avg_dedx[i] = -1.0;
                 }
             }
-            return is_primary;
+            return avg_dedx;
         };
-        d = d.Define("shower_is_primary", get_shower_is_primary, {"pfp_generation_v", "shr_pfp_id_v"});
 
+        if (d.HasColumn("trk_trunk_rr_dEdx_u_v") && d.HasColumn("trk_trunk_rr_dEdx_v_v") && d.HasColumn("trk_trunk_rr_dEdx_y_v")) {
+             d = d.Define("trk_trunk_rr_dEdx_avg_v", avg_dedx_calculator, {"trk_trunk_rr_dEdx_u_v", "trk_trunk_rr_dEdx_v_v", "trk_trunk_rr_dEdx_y_v"});
+        }
 
-        auto track_good_quality_builder = [](const ROOT::RVec<float>& len, const ROOT::RVec<float>& score) {
-            if (len.size() != score.size()) return ROOT::RVec<bool>(len.size(), false);
-            ROOT::RVec<bool> mask(len.size());
-            for(size_t i = 0; i < len.size(); ++i) {
-                mask[i] = (len[i] > 10.0) && (score[i] > 0.7);
+        d = d.Define("muon_candidate_mask",
+            [this](const ROOT::RVec<float> ts, const ROOT::RVec<float> pid,
+                const ROOT::RVec<float> l, const ROOT::RVec<float> d,
+                const ROOT::RVec<unsigned int> generations, const ROOT::RVec<float> trunk_rr_dEdx_avg) {
+            ROOT::RVec<bool> mask(ts.size());
+            for (size_t i = 0; i < ts.size(); ++i) {
+                bool quality = (this->getElementFromVector(ts, i, 0.f) >= 0.3f && this->getElementFromVector(ts, i, 0.f) <= 1.0f &&
+                                this->getElementFromVector(pid, i, 0.f) >= -0.2f && this->getElementFromVector(pid, i, 0.f) <= 1.0f &&
+                                this->getElementFromVector(l, i, 0.f) >= 5.0f && this->getElementFromVector(trunk_rr_dEdx_avg, i, 0.f) <= 3.0f);
+                mask[i] = quality;
             }
             return mask;
-        };
-        d = d.Define("track_is_good_quality", track_good_quality_builder, {"trk_len_v", "trk_score_v"});
-        
-        d = d.Define("shower_is_good_quality", [](const ROOT::RVec<float>& energy) { return ROOT::RVec<bool>(energy > 0.07); }, {"shr_energy_y_v"});
+        }, {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v", "trk_trunk_rr_dEdx_avg_v"});
 
-        auto muon_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<float>& trk_score) {
-            size_t n = is_primary.size();
-            if (is_good.size() != n || pid_score.size() != n || trk_score.size() != n) return ROOT::RVec<bool>(n, false);
-            ROOT::RVec<bool> mask(n);
-            for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.6 && trk_score[i] > 0.7;
+       d = d.Define("proton_candidate_mask",
+            [this](const ROOT::RVec<float> ts, const ROOT::RVec<float> pid,
+                const ROOT::RVec<float> l, const ROOT::RVec<float> d,
+                const ROOT::RVec<unsigned int> generations, const ROOT::RVec<bool>& muon_mask) {
+            ROOT::RVec<bool> mask(ts.size());
+            for (size_t i = 0; i < ts.size(); ++i) {
+                bool quality = (this->getElementFromVector(ts, i, 0.f) > 0.7f &&
+                                this->getElementFromVector(pid, i, 0.f) < 0.4f &&
+                                this->getElementFromVector(l, i, 0.f) > 10.0f &&
+                                this->getElementFromVector(d, i, 0.f) < 2.0f &&
+                                this->getElementFromVector(generations, i, 0) == 2 &&
+                                !muon_mask[i]);
+                mask[i] = quality;
             }
             return mask;
-        };
-        d = d.Define("muon_candidate_mask", muon_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "trk_score_v"});
+        }, {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v", "muon_candidate_mask"});
 
-        auto proton_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask) {
-            size_t n = is_primary.size();
-            if (is_good.size() != n || pid_score.size() != n || muon_mask.size() != n) return ROOT::RVec<bool>(n, false);
-            ROOT::RVec<bool> mask(n);
-            for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && pid_score[i] < 0.4 && !muon_mask[i];
-            }
-            return mask;
-        };
-        d = d.Define("proton_candidate_mask", proton_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask"});
+        d = d.Define("n_muons", 
+            [](const ROOT::RVec<bool>& muon_mask) {
+            return ROOT::VecOps::Sum(muon_mask);
+        }, {"muon_candidate_mask"});
 
-        auto pion_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& pid_score, const ROOT::RVec<bool>& muon_mask, const ROOT::RVec<bool>& proton_mask) {
-            size_t n = is_primary.size();
-            if (is_good.size() != n || pid_score.size() != n || muon_mask.size() != n || proton_mask.size() != n) return ROOT::RVec<bool>(n, false);
-            ROOT::RVec<bool> mask(n);
-            for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && pid_score[i] > 0.4 && !muon_mask[i] && !proton_mask[i];
-            }
-            return mask;
-        };
-        d = d.Define("pion_candidate_mask", pion_mask_builder, {"track_is_primary", "track_is_good_quality", "trk_llr_pid_score_v", "muon_candidate_mask", "proton_candidate_mask"});
-
-        auto electron_mask_builder = [](const ROOT::RVec<bool>& is_primary, const ROOT::RVec<bool>& is_good, const ROOT::RVec<float>& dedx, const ROOT::RVec<float>& moliere) {
-            size_t n = is_primary.size();
-            if (is_good.size() != n || dedx.size() != n || moliere.size() != n) return ROOT::RVec<bool>(n, false);
-            ROOT::RVec<bool> mask(n);
-            for (size_t i = 0; i < n; ++i) {
-                mask[i] = is_primary[i] && is_good[i] && dedx[i] > 0.5 && dedx[i] < 5.5 && moliere[i] < 9.0;
-            }
-            return mask;
-        };
-        d = d.Define("electron_candidate_mask", electron_mask_builder, {"shower_is_primary", "shower_is_good_quality", "shr_tkfit_dedx_y_v", "shr_moliere_avg_v"});
-
-        d = d.Define("leading_muon_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * muon_candidate_mask))");
-        d = d.Define("leading_proton_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * proton_candidate_mask))");
-        d = d.Define("leading_pion_idx", "static_cast<int>(ROOT::VecOps::ArgMax(trk_len_v * pion_candidate_mask))");
-        d = d.Define("leading_electron_idx", "static_cast<int>(ROOT::VecOps::ArgMax(shr_energy_y_v * electron_candidate_mask))");
-
-        d = d.Define("n_muons", "static_cast<int>(ROOT::VecOps::Sum(muon_candidate_mask))");
-        d = d.Define("n_protons", "static_cast<int>(ROOT::VecOps::Sum(proton_candidate_mask))");
-        d = d.Define("n_pions", "static_cast<int>(ROOT::VecOps::Sum(pion_candidate_mask))");
-        d = d.Define("n_electrons", "static_cast<int>(ROOT::VecOps::Sum(electron_candidate_mask))");
+        d = d.Define("muon_candidate_selector", "n_muons > 0");
         
-        d = d.Define("muon_len", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "leading_muon_idx"})
-                .Define("muon_pid", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "leading_muon_idx"})
-                .Define("muon_pida", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pida_v", "leading_muon_idx"})
-                .Define("muon_chi2_muon", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chimu_v", "leading_muon_idx"})
-                .Define("muon_chi2_proton", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chipr_v", "leading_muon_idx"})
-                .Define("muon_mcs_mom", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_mcs_muon_mom_v", "leading_muon_idx"})
-                .Define("muon_deflection_std", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_avg_deflection_stdev_v", "leading_muon_idx"})
-                .Define("muon_end_sp", [this](const ROOT::RVec<int>& v, int i){ return static_cast<unsigned int>(this->getElementFromVector(v, i, 0u)); }, {"trk_end_spacepoints_v", "leading_muon_idx"});
-
-        d = d.Define("proton_len", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_len_v", "leading_proton_idx"})
-                .Define("proton_pid", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -999.f); }, {"trk_llr_pid_score_v", "leading_proton_idx"})
-                .Define("proton_pida", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pida_v", "leading_proton_idx"})
-                .Define("proton_chi2_proton", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_pid_chipr_v", "leading_proton_idx"})
-                .Define("proton_E", [this](const ROOT::RVec<float>& v, int i){ return this->getElementFromVector(v, i, -1.f); }, {"trk_energy_proton_v", "leading_proton_idx"});
-
-        auto p4_def = [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z, double mass) {
-            return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, mass);
-        };
-        
-        d = d.Define("muon_p4", 
-            [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z) {
-                const double muon_mass = 0.105658; 
-                return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, muon_mass);
-            }, 
-            {"leading_muon_idx", "trk_energy_muon_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
-
-        d = d.Define("proton_p4", 
-            [this](int idx, const ROOT::RVec<float>& energy, const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z) {
-                const double proton_mass = 0.938272; 
-                return this->getTrackLorentzVector(idx, energy, dir_x, dir_y, dir_z, proton_mass);
-            },
-            {"leading_proton_idx", "trk_energy_proton_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
-
-        auto buildHadronicSystem = [this](const ROOT::RVec<bool>& p_mask, const ROOT::RVec<bool>& pi_mask, const ROOT::RVec<float>& len, const ROOT::RVec<float>& E_p, const ROOT::RVec<float>& dx, const ROOT::RVec<float>& dy, const ROOT::RVec<float>& dz) {
-            TLorentzVector p4_hadronic(0,0,0,0);
-            for(size_t i=0; i<len.size(); ++i){
-                if(i < p_mask.size() && p_mask[i]) {
-                    p4_hadronic += this->getTrackLorentzVector(i, E_p, dx, dy, dz, 0.938272);
-                }
-                if(i < pi_mask.size() && pi_mask[i]) {
-                    double pi_mom = this->PionMomentum(this->getElementFromVector(len, i, 0.f));
-                    double E = sqrt(pi_mom*pi_mom + 0.13957*0.13957);
-                    TLorentzVector p_pi;
-                    if (E*E >= 0.13957*0.13957) {
-                        double momentum = sqrt(E*E - 0.13957*0.13957);
-                        p_pi.SetPxPyPzE(momentum * this->getElementFromVector(dx, i, 0.f),
-                                            momentum * this->getElementFromVector(dy, i, 0.f),
-                                            momentum * this->getElementFromVector(dz, i, 0.f),
-                                            E);
-                        p4_hadronic += p_pi;
-                    }
-                }
-            }
-            return p4_hadronic;
-        };
-        d = d.Define("hadronic_p4", buildHadronicSystem, {"proton_candidate_mask", "pion_candidate_mask", "trk_len_v", "trk_energy_proton_v", "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v"});
-        
-        d = d.Define("hadronic_E", "hadronic_p4.E()");
-        d = d.Define("hadronic_W", "hadronic_p4.M() > 0 ? hadronic_p4.M() : 0.0");
-        
-        d = d.Define("total_E_visible_numu", "muon_p4.E() + hadronic_E");
-        d = d.Define("missing_pT_numu", "(muon_p4 + hadronic_p4).Pt()");
-        d = d.Define("muon_E_fraction", "total_E_visible_numu > 0 ? muon_p4.E() / total_E_visible_numu : -1.0");
-        
-        auto angle_def = [this](const ROOT::RVec<float>& dir_x, const ROOT::RVec<float>& dir_y, const ROOT::RVec<float>& dir_z, int idx1, int idx2) {
-            return this->angleBetweenTracks(dir_x, dir_y, dir_z, idx1, idx2);
-        };
-        d = d.Define("muon_proton_angle", angle_def, {"trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v", "leading_muon_idx", "leading_proton_idx"});
-
-        d = d.Define("is_1mu0p0pi", "n_muons == 1 && n_protons == 0 && n_pions == 0 && n_pfp_gen_2 == 1");
-        d = d.Define("is_1mu1p0pi", "n_muons == 1 && n_protons == 1 && n_pions == 0 && n_pfp_gen_2 == 2");
-        d = d.Define("is_1muNp0pi", "n_muons == 1 && n_protons > 1 && n_pions == 0 && n_pfp_gen_2 > 2");
-        d = d.Define("is_1mu0p1pi", "n_muons == 1 && n_protons == 0 && n_pions == 1 && n_pfp_gen_2 == 2");
-        d = d.Define("is_1mu1p1pi", "n_muons == 1 && n_protons == 1 && n_pions == 1 && n_pfp_gen_2 == 3");
-        d = d.Define("is_1mu_other", "n_muons == 1 && !(is_1mu0p0pi || is_1mu1p0pi || is_1muNp0pi || is_1mu0p1pi || is_1mu1p1pi)");
-        
-        d = d.Define("is_1e0p", "n_electrons == 1 && n_protons == 0 && n_muons == 0 && n_pfp_gen_2 == 1");
-        d = d.Define("is_1e1p", "n_electrons == 1 && n_protons == 1 && n_muons == 0 && n_pfp_gen_2 == 2");
-        d = d.Define("is_1eNp", "n_electrons == 1 && n_protons > 0 && n_muons == 0 && n_pfp_gen_2 > 2");
-        
-        d = d.Define("is_mulit_mu", "n_muons > 1 ");
-        d = d.Define("is_nc_like", "n_muons == 0 && n_electrons == 0");
-        d = d.Define("is_cc_nue_like", "n_electrons == 1 && n_muons == 0 && n_pfp_gen_2 > 1");
+        d = d.Define("n_protons", 
+            [](const ROOT::RVec<bool>& proton_mask) {
+                return ROOT::VecOps::Sum(proton_mask);
+        }, {"proton_candidate_mask"});
 
         if (d.HasColumn("trk_nhits_u_v"))
             d = d.Define("trk_nhits_u_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_u_v)");

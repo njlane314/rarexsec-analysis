@@ -25,8 +25,10 @@ public:
         const std::string& variable_name,
         const std::string& region_name,
         const std::string& analysis_channel_column,
-        const bool draw_signal_overlay = true) const {
-        
+        const bool draw_signal_overlay = true,
+        const std::vector<Cut>& cuts = {},
+        const bool show_legend_numbers = true) const {
+
         const AnalysisResult& result = this->getAnalysisResult(results, variable_name, region_name);
 
         std::string sanitised_var_name = this->cleanFilename(variable_name);
@@ -35,7 +37,7 @@ public:
         
         std::string plot_filename = "stacked_" + sanitised_var_name + "_" + sanitised_region_name + "_" + sanitised_channel_name;
         
-        PlotStacked plot(plot_filename, result, analysis_channel_column, output_dir_, draw_signal_overlay);
+        PlotStacked plot(plot_filename, result, analysis_channel_column, output_dir_, draw_signal_overlay, cuts, show_legend_numbers);
         plot.drawAndSave();
     }
 

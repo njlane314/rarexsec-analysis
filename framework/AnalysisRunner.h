@@ -127,9 +127,7 @@ private:
                                         int current_pdg = std::abs(pdg_vec[i]);
                                         if (current_pdg != 0 && classified_pdgs.find(current_pdg) == classified_pdgs.end()) {
                                             result.push_back(var_vec[i]);
-                                            std::cout << "Unclassified particle PDG: " << current_pdg << std::endl;
                                             if (printed_unclassified_pdgs.find(current_pdg) == printed_unclassified_pdgs.end()) {
-                                                std::cout << "Unclassified particle PDG added to 'Other': " << current_pdg << std::endl;
                                                 printed_unclassified_pdgs.insert(current_pdg);
                                             }
                                         }
