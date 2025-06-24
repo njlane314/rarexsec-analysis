@@ -74,9 +74,10 @@ int main() {
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "trk_distance_v", "QUALITY", "particle_pdg_channels", false);
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_muons", "QUALITY", "inclusive_strange_channels", true);
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "n_pfps", "QUALITY", "inclusive_strange_channels", true);
-        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "trk_trunk_rr_dEdx_avg_v", "QUALITY", "particle_pdg_channels", false, {{3.0, AnalysisFramework::CutDirection::LessThan}});
+        plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "trk_trunk_rr_dEdx_avg_v", "QUALITY", "particle_pdg_channels", false, {{0.0, AnalysisFramework::CutDirection::GreaterThan}, {3.0, AnalysisFramework::CutDirection::LessThan}});
         
         plot_manager.saveStackedPlot(analysis_inclusive_phase_space, "muon_candidate_selector", "QUALITY", "inclusive_strange_channels", true, {{0.5, AnalysisFramework::CutDirection::GreaterThan}, {1.5, AnalysisFramework::CutDirection::LessThan}});
+    
     } catch (const std::exception& e) {
         std::cerr << "An error occurred: " << e.what() << std::endl;
         return 1;

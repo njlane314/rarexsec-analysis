@@ -42,12 +42,24 @@ int main() {
 
         // BDT feature columns
         std::vector<std::string> feature_column_names = {
-            "nhits_u", 
-            "nhits_v",
-            "nhits_w", 
-            "nclusters_u",
-            "nclusters_v",
-            "nclusters_w"
+            "n_pfps",
+            "n_tracks",
+            "n_showers",
+            "slice_topo_score_v",
+            "n_blips",
+            "total_blip_energy",
+            "blip_exp_moment_10cm",
+            "blip_exp_moment_12cm",
+            "blip_exp_moment_15cm",
+            "blip_exp_moment_18cm",
+            "blip_exp_moment_20cm",
+            "blip_exp_moment_22cm",
+            "blip_exp_moment_25cm",
+            "blip_exp_moment_30cm",
+            "blip_exp_moment_40cm",
+            "blip_exp_moment_50cm",
+            "blip_exp_moment_60cm",
+            "blip_exp_moment_75cm"
         };
 
         // Initialize BDT manager

@@ -11,6 +11,7 @@ namespace AnalysisFramework {
 
 struct VariableOptions {
     bool load_showers = false;
+    bool load_blips = false;
 };
 
 class VariableManager {
@@ -46,7 +47,32 @@ private:
 
     std::vector<std::string> reco_blip_vars_ = {
         "blip_ID", 
-        "blip_Energy"
+        "blip_isValid",
+        "blip_TPC",
+        "blip_NPlanes",
+        "blip_MaxWireSpan",
+        "blip_Energy",
+        "blip_EnergyESTAR",
+        "blip_Time",
+        "blip_ProxTrkDist",
+        "blip_ProxTrkID",
+        "blip_inCylinder",
+        "blip_X",
+        "blip_Y",
+        "blip_Z",
+        "blip_SigmaYZ",
+        "blip_dX",
+        "blip_dYZ",
+        "blip_Charge",
+        "blip_LeadG4ID",
+        "blip_pdg",
+        "blip_process",
+        "blip_vx",
+        "blip_vy",
+        "blip_vz",
+        "blip_E",
+        "blip_mass",
+        "blip_trkid"
     };
 
     std::vector<std::string> reco_track_vars_ = {
@@ -144,7 +170,9 @@ public:
      
         vars_set.insert(reco_event_vars_.begin(), reco_event_vars_.end());
         vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
-        vars_set.insert(reco_blip_vars_.begin(), reco_blip_vars_.end());
+        if (options.load_blips) {
+            vars_set.insert(reco_blip_vars_.begin(), reco_blip_vars_.end());
+        }
         if (options.load_showers) {
             vars_set.insert(reco_shower_vars_.begin(), reco_shower_vars_.end());
         }

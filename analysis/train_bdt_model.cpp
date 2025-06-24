@@ -18,7 +18,7 @@ int main() {
             .beam_key = "numi_fhc",
             .runs_to_load = {"run1"},
             .blinded = false,
-            .variable_options = {}
+            .variable_options = {.load_showers = true, .load_blips = true}
         });
 
         AnalysisFramework::SystematicsController systematics_controller(data_manager.getVariableManager());
@@ -27,12 +27,24 @@ int main() {
         AnalysisFramework::BDTManager bdt_manager;
 
         std::vector<std::string> bdt_features = {
-            "nhits_u", 
-            "nhits_v",
-            "nhits_w", 
-            "nclusters_u",
-            "nclusters_v",
-            "nclusters_w"
+            "n_pfps",
+            "n_tracks",
+            "n_showers",
+            "slice_topo_score_v",
+            "n_blips",
+            "total_blip_energy",
+            "blip_exp_moment_10cm",
+            "blip_exp_moment_12cm",
+            "blip_exp_moment_15cm",
+            "blip_exp_moment_18cm",
+            "blip_exp_moment_20cm",
+            "blip_exp_moment_22cm",
+            "blip_exp_moment_25cm",
+            "blip_exp_moment_30cm",
+            "blip_exp_moment_40cm",
+            "blip_exp_moment_50cm",
+            "blip_exp_moment_60cm",
+            "blip_exp_moment_75cm"
         };
 
         std::string signal_cut = "(mcf_strangeness > 0)";
