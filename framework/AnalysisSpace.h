@@ -4,78 +4,55 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <variant>
 #include <stdexcept>
-
 #include "TString.h"
-#include "Selection.h"
+#include "Logger.h"
+#include "Binning.h"
 
 namespace AnalysisFramework {
-
-struct UniformBinning {
-    int n_bins;
-    double low;
-    double high;
-    bool is_log;
-};
-
-struct VariableBinning {
-    std::vector<double> edges;
-    bool is_log;
-};
-
-using BinningDef = std::variant<UniformBinning, VariableBinning>;
 
 struct Variable {
     std::string branch_expression;
     std::string axis_label;
-    std::string axis_label_short;
-    BinningDef binning;
-    bool is_particle_level = false;
+    Binning binning;
+    bool is_particle_level;
 
-    Variable() = default;
-
-    Variable(std::string be, std::string al, std::string als, BinningDef bd, bool is_particle = false) :
-        branch_expression(std::move(be)), axis_label(std::move(al)), axis_label_short(std::move(als)), binning(std::move(bd)), is_particle_level(is_particle) {}
+    Variable(std::string be, std::string al, Binning b, bool is_particle) :
+        branch_expression(std::move(be)), axis_label(std::move(al)), 
+        binning(std::move(b)), is_particle_level(is_particle) {}
 };
-
 
 struct Region {
     std::string title;
-    std::string title_short;
     std::vector<TString> selection_keys;
 
-    Region() = default;
-
-    Region(std::string t, std::string ts, std::vector<TString> sk) :
-        title(std::move(t)), title_short(std::move(ts)), selection_keys(std::move(sk)) {}
+    Region(std::string t, std::vector<TString> sk) :
+        title(std::move(t)), selection_keys(std::move(sk)) {}
 };
 
 class AnalysisSpace {
 public:
-    AnalysisSpace() = default;
+    AnalysisSpace() {
+        log::info("AnalysisSpace", "Initialised.");
+    }
 
-    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, int n_bins, double low, double high, bool is_log = false, const std::string& short_label = "", bool is_particle_level = false) {
+    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, const Binning& binning, bool is_particle_level = false) {
         if (variables_.count(name)) {
-            throw std::runtime_error("Variable with name '" + name + "' already defined.");
+            log::error("AnalysisSpace", "Variable with name '", name, "' already defined.");
+            throw std::runtime_error("Duplicate variable definition.");
         }
-        variables_.emplace(name, Variable(branch, label, short_label, UniformBinning{n_bins, low, high, is_log}, is_particle_level));
+        log::info("AnalysisSpace", "Defining variable '", name, "'");
+        variables_.emplace(name, Variable(branch, label, binning, is_particle_level));
         return *this;
     }
 
-    AnalysisSpace& defineVariable(const std::string& name, const std::string& branch, const std::string& label, const std::vector<double>& edges, bool is_log = false, const std::string& short_label = "", bool is_particle_level = false) {
-        if (variables_.count(name)) {
-            throw std::runtime_error("Variable with name '" + name + "' already defined.");
-        }
-        variables_.emplace(name, Variable(branch, label, short_label, VariableBinning{edges, is_log}, is_particle_level));
-        return *this;
-    }
-
-    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, std::initializer_list<TString> keys, const std::string& short_title = "") {
+    AnalysisSpace& defineRegion(const std::string& name, const std::string& title, std::initializer_list<TString> keys) {
         if (regions_.count(name)) {
-            throw std::runtime_error("Region with name '" + name + "' already defined.");
+            log::error("AnalysisSpace", "Region with name '", name, "' already defined.");
+            throw std::runtime_error("Duplicate region definition.");
         }
-        regions_.emplace(name, Region(title, short_title, std::vector<TString>(keys)));
+        log::info("AnalysisSpace", "Defining region '", name, "'");
+        regions_.emplace(name, Region(title, std::vector<TString>(keys)));
         return *this;
     }
 

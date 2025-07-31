@@ -2,142 +2,63 @@
 #define BINNING_H
 
 #include <string>
-#include <string_view>
 #include <vector>
 #include <stdexcept>
 #include <cmath>
 #include <numeric>
 #include <algorithm>
-#include <utility>
-#include <iostream>
-
 #include "TString.h"
-#include "TAxis.h"
-#include "TMath.h"
-#include "Selection.h"
+#include "Logger.h"
 
 namespace AnalysisFramework {
 
 class Binning {
 public:
-    struct Parameters {
-        TString variable;
-        TString label = "";
-        TString variable_tex = "";
-        TString variable_tex_short = "";
-        int number_of_bins = 0;
-        std::pair<double, double> range = {0.0, 0.0};
-        std::vector<double> bin_edges;
-        bool is_log = false;
-        std::vector<TString> selection_keys;
-        TString selection_key = "";
-        TString selection_tex = "";
-        TString selection_tex_short = "";
-        bool is_particle_level = false;
-    };
+    const std::vector<double>& getBinEdges() const { return bin_edges_; }
+    bool isLog() const { return is_log_; }
+    int nBins() const noexcept {
+        return bin_edges_.empty() ? 0 : static_cast<int>(bin_edges_.size()) - 1;
+    }
 
-    TString variable;
-    std::vector<double> bin_edges;
-    TString label;
-    TString variable_tex;
-    TString variable_tex_short;
-    bool is_log;
-    TString selection_query;
-    std::vector<TString> selection_keys;
-    TString selection_tex;
-    TString selection_tex_short;
-    bool is_particle_level;
-
-    inline explicit Binning(const Parameters& p) {
-        if (p.variable.IsNull() || p.variable.IsWhitespace()) {
-            throw std::invalid_argument("[Binning::Binning] FATAL: 'variable' must be set.");
+    Binning(int n_bins, double low, double high, bool log = false) : is_log_(log) {
+        if (n_bins <= 0) {
+            log::error("Binning", "Number of bins must be positive.");
+            throw std::invalid_argument("Number of bins must be positive.");
         }
-        if (p.number_of_bins > 0 && !p.bin_edges.empty()) {
-            throw std::invalid_argument("[Binning::Binning] FATAL: Provide either 'number_of_bins'/'range' or 'bin_edges', not both.");
-        }
-        if (p.number_of_bins <= 0 && p.bin_edges.empty()) {
-            throw std::invalid_argument("[Binning::Binning] FATAL: Either 'number_of_bins' or 'bin_edges' must be specified.");
-        }
-
-        variable = p.variable;
-        label = p.label.IsNull() ? p.variable : p.label;
-        variable_tex = p.variable_tex.IsNull() ? p.variable : p.variable_tex;
-        variable_tex_short = p.variable_tex_short;
-        is_log = p.is_log;
-        is_particle_level = p.is_particle_level;
-        
-        if (!p.selection_keys.empty()) {
-            selection_keys = p.selection_keys;
-            selection_query = AnalysisFramework::Selection::getSelectionQuery(p.selection_keys);
-            selection_tex = p.selection_tex;
-            selection_tex_short = p.selection_tex_short;
-        }
-
-        if (p.number_of_bins > 0) {
-            const auto [minVal, maxVal] = p.range;
-            bin_edges.resize(p.number_of_bins + 1);
-            if (is_log) {
-                if (minVal <= 0) {
-                    throw std::invalid_argument("[Binning::Binning] FATAL: Logarithmic scale requires positive range limits.");
-                }
-                const double logMin = std::log10(minVal);
-                const double logMax = std::log10(maxVal);
-                const double step = (logMax - logMin) / p.number_of_bins;
-                for (int i = 0; i <= p.number_of_bins; ++i) {
-                    bin_edges[i] = std::pow(10, logMin + i * step);
-                }
-            } else {
-                const double step = (maxVal - minVal) / p.number_of_bins;
-                for (int i = 0; i <= p.number_of_bins; ++i) {
-                    bin_edges[i] = minVal + i * step;
-                }
+        bin_edges_.resize(n_bins + 1);
+        if (is_log_) {
+            if (low <= 0) {
+                log::error("Binning", "Log scale requires positive range.");
+                throw std::invalid_argument("Log scale requires positive range.");
+            }
+            const double log_min = std::log10(low);
+            const double step = (std::log10(high) - log_min) / n_bins;
+            for (int i = 0; i <= n_bins; ++i) {
+                bin_edges_[i] = std::pow(10, log_min + i * step);
             }
         } else {
-            bin_edges = p.bin_edges;
-            if (bin_edges.size() < 2) {
-                throw std::invalid_argument("[Binning::Binning] FATAL: 'bin_edges' must contain at least two values.");
-            }
-            if (!std::is_sorted(bin_edges.cbegin(), bin_edges.cend())) {
-                throw std::invalid_argument("[Binning::Binning] FATAL: 'bin_edges' must be sorted in ascending order.");
+            const double step = (high - low) / n_bins;
+            for (int i = 0; i <= n_bins; ++i) {
+                bin_edges_[i] = low + i * step;
             }
         }
-        
-        std::cout << "[Binning::Configuration] Initialized binning for variable '" << variable.Data() << "' with " << nBins() << " bins." << std::endl;
-        if (!selection_query.IsNull()) {
-            std::cout << "  |> Selection Query: " << selection_query.Data() << std::endl;
+    }
+
+    Binning(const std::vector<double>& edges, bool log = false) : bin_edges_(edges), is_log_(log) {
+        if (edges.size() < 2) {
+            log::error("Binning", "Edges must contain at least two values.");
+            throw std::invalid_argument("Edges must contain at least two values.");
+        }
+        if (!std::is_sorted(bin_edges_.cbegin(), bin_edges_.cend())) {
+            log::error("Binning", "Edges must be sorted.");
+            throw std::invalid_argument("Edges must be sorted.");
         }
     }
 
-    Binning() = default;
-
-    inline int nBins() const noexcept {
-        return bin_edges.empty() ? 0 : static_cast<int>(bin_edges.size()) - 1;
-    }
-
-    inline std::vector<double> binCenters() const {
-        if (nBins() == 0) return {};
-        std::vector<double> centers(nBins());
-        for (int i = 0; i < nBins(); ++i) {
-            if (is_log) {
-                centers[i] = std::sqrt(bin_edges[i] * bin_edges[i + 1]);
-            } else {
-                centers[i] = (bin_edges[i] + bin_edges[i + 1]) / 2.0;
-            }
-        }
-        return centers;
-    }
-
-    inline bool isCompatible(const Binning& other) const noexcept {
-        bool compatible = variable == other.variable &&
-                          bin_edges == other.bin_edges &&
-                          is_log == other.is_log;
-        if (!compatible) {
-            std::cerr << "[Binning::isCompatible] WARNING: Binning mismatch for variable '" << variable.Data() << "'." << std::endl;
-        }
-        return compatible;
-    }
+private:
+    std::vector<double> bin_edges_;
+    bool is_log_;
 };
 
 }
-
 #endif

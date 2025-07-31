@@ -10,6 +10,7 @@
 #include "TObject.h"
 #include "TMatrixDSym.h"
 #include "Histogram.h"
+#include "Binning.h"
 
 namespace AnalysisFramework {
 
@@ -19,11 +20,9 @@ public:
 
     void scale(double factor) {
         total_hist_ = total_hist_ * factor;
-
         for (auto& pair : mc_breakdown_) {
             pair.second = pair.second * factor;
         }
-
         for (auto& syst_pair : systematic_variations_) {
             for (auto& var_pair : syst_pair.second) {
                 var_pair.second = var_pair.second * factor;
@@ -40,6 +39,9 @@ public:
     bool isBlinded() const { return blinded_; }
     const std::string& getBeamKey() const { return beam_key_; }
     const std::vector<std::string>& getRuns() const { return runs_; }
+    const Binning& getBinning() const { return binning_; }
+    const std::string& getAxisLabel() const { return axis_label_; }
+    const std::string& getRegionTitle() const { return region_title_; }
 
     void setTotalHist(const Histogram& hist) { total_hist_ = hist; }
     void setDataHist(const Histogram& hist) { data_hist_ = hist; }
@@ -50,6 +52,9 @@ public:
     void setBlinded(bool blinded) { blinded_ = blinded; }
     void setBeamKey(const std::string& key) { beam_key_ = key; }
     void setRuns(const std::vector<std::string>& runs) { runs_ = runs; }
+    void setBinning(const Binning& binning) { binning_ = binning; }
+    void setAxisLabel(const std::string& label) { axis_label_ = label; }
+    void setRegionTitle(const std::string& title) { region_title_ = title; }
 
 private:
     Histogram total_hist_;
@@ -63,8 +68,12 @@ private:
     std::string beam_key_;
     std::vector<std::string> runs_;
 
+    Binning binning_;
+    std::string axis_label_;
+    std::string region_title_;
+
 public:
-    ClassDef(AnalysisResult, 2);
+    ClassDef(AnalysisResult, 3);
 };
 
 using AnalysisPhaseSpace = std::map<std::string, AnalysisFramework::AnalysisResult>;

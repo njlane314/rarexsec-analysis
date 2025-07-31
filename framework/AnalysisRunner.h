@@ -18,35 +18,46 @@
 #include "AnalysisSpace.h"
 #include "Binning.h"
 #include "SystematicsController.h"
-#include "AnalysisChannels.h"
 #include "AnalysisResult.h"
+#include "ChannelManager.h"
+#include "HistogramCategoriser.h"
+#include "EventChannelCategoriser.h"
+#include "ParticleTypeCategoriser.h"
 
 namespace AnalysisFramework {
 
 class AnalysisRunner {
 public:
-    struct Parameters {
-        DataManager& data_manager;
-        AnalysisSpace& analysis_space;
-        SystematicsController& systematics_controller;
-        double pot_scale_factor = 1.0;
-        std::string event_category_column;
-        std::string particle_category_column;
-        std::string particle_category_scheme;
-    };
-
-    explicit AnalysisRunner(Parameters params) : params_(params) {}
+    explicit AnalysisRunner(DataManager& dm,
+                              AnalysisSpace& as,
+                              SystematicsController& sc,
+                              ChannelManager& cm,
+                              double pot_scale,
+                              std::string event_cat_col,
+                              std::string particle_cat_col)
+        : data_manager_(dm),
+          analysis_space_(as),
+          systematics_controller_(sc),
+          channel_manager_(cm),
+          pot_scale_factor_(pot_scale),
+          event_category_column_(std::move(event_cat_col)),
+          particle_category_column_(std::move(particle_cat_col)) {}
 
     AnalysisPhaseSpace run() {
         this->generateTasks();
         this->bookHistograms();
-
-        auto analysis_phase_space = this->processResults();
-        return analysis_phase_space;
+        return this->processResults();
     }
 
 private:
-    Parameters params_;
+    DataManager& data_manager_;
+    AnalysisSpace& analysis_space_;
+    SystematicsController& systematics_controller_;
+    ChannelManager& channel_manager_;
+    double pot_scale_factor_;
+    std::string event_category_column_;
+    std::string particle_category_column_;
+
     std::vector<Binning> plot_tasks_;
     std::map<std::string, Binning> plot_task_map_;
     
@@ -54,18 +65,16 @@ private:
     std::map<std::string, std::map<std::string, std::map<int, ROOT::RDF::RResultPtr<TH1D>>>> mc_category_futures_;
 
     void generateTasks() {
-        const auto& variables = params_.analysis_space.getVariables();
-        const auto& regions = params_.analysis_space.getRegions();
+        const auto& variables = analysis_space_.getVariables();
+        const auto& regions = analysis_space_.getRegions();
 
         for (const auto& [var_name, var_props] : variables) {
             for (const auto& [reg_name, reg_props] : regions) {
                 Binning::Parameters p;
                 p.variable = var_props.branch_expression.c_str();
                 p.variable_tex = var_props.axis_label.c_str();
-                p.variable_tex_short = var_props.axis_label_short.c_str();
                 p.selection_keys = reg_props.selection_keys;
                 p.selection_tex = reg_props.title.c_str();
-                p.selection_tex_short = reg_props.title_short.c_str();
 
                 p.is_particle_level = var_props.is_particle_level;
                 std::visit([&p](auto&& arg) {
@@ -88,88 +97,30 @@ private:
     }
 
     void bookHistograms() {
-        const auto det_var_nodes = params_.data_manager.getAssociatedVariations();
+        const auto det_var_nodes = data_manager_.getAssociatedVariations();
 
         for (const auto& [task_key, task_binning] : plot_task_map_) {
             TH1D model(task_key.c_str(), task_key.c_str(), task_binning.nBins(), task_binning.bin_edges.data());
 
-            for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
+            for (const auto& [sample_key, sample_info] : data_manager_.getAllSamples()) {
                 ROOT::RDF::RNode df = sample_info.getDataFrame();
                 auto main_filtered_df = df.Filter(task_binning.selection_query.Data());
 
-                if (task_binning.is_particle_level) {
-                    if (sample_info.isMonteCarlo()) {
-                        const auto particle_channel_keys = getChannelKeys(params_.particle_category_scheme);
-                        const std::string& var_branch = task_binning.variable.Data();
-                        const std::string& cat_branch = params_.particle_category_column;
-
-                        std::set<int> classified_pdgs;
-                        for (int key : particle_channel_keys) {
-                            if (key == 0) continue; 
-                            if (key == 3224) { 
-                                classified_pdgs.insert(3222);
-                                classified_pdgs.insert(3112);
-                            } else {
-                                classified_pdgs.insert(key);
-                            }
-                        }
-
-                        for (const int pdg_code : particle_channel_keys) {
-                            auto selector = [pdg_code, classified_pdgs](const ROOT::RVec<float>& var_vec, const ROOT::RVec<int>& pdg_vec) {
-                                if (var_vec.size() != pdg_vec.size()) {
-                                    return ROOT::RVec<float>{};
-                                }
-
-                                if (pdg_code == 0) {
-                                    thread_local std::set<int> printed_unclassified_pdgs;
-                                    ROOT::RVec<float> result;
-                                    for(size_t i = 0; i < pdg_vec.size(); ++i) {
-                                        int current_pdg = std::abs(pdg_vec[i]);
-                                        if (current_pdg != 0 && classified_pdgs.find(current_pdg) == classified_pdgs.end()) {
-                                            result.push_back(var_vec[i]);
-                                            if (printed_unclassified_pdgs.find(current_pdg) == printed_unclassified_pdgs.end()) {
-                                                printed_unclassified_pdgs.insert(current_pdg);
-                                            }
-                                        }
-                                    }
-                                    return result;
-                                }
-                                else if (pdg_code == 3224) { 
-                                    return var_vec[abs(pdg_vec) == 3222 || abs(pdg_vec) == 3112];
-                                }
-                                else {
-                                    return var_vec[abs(pdg_vec) == pdg_code]; 
-                                }
-                            };
-                            
-                            std::string new_col_name = var_branch + "_" + std::to_string(pdg_code);
-                            auto category_df = main_filtered_df.Define(new_col_name, selector, {var_branch, cat_branch});
-                            mc_category_futures_[task_key][sample_key][pdg_code] = category_df.Histo1D(model, new_col_name, "central_value_weight");
-                        }
-                        
-                        params_.systematics_controller.bookVariations(
-                            task_key, sample_key, df, det_var_nodes, task_binning,
-                            task_binning.selection_query.Data(), params_.particle_category_column, params_.particle_category_scheme);
-                    }
-                } else {
-                    if (sample_info.isMonteCarlo()) {
-                        const auto analysis_channel_keys = getChannelKeys(params_.event_category_column);
-                        for (const int channel_key : analysis_channel_keys) {
-                            if (channel_key == 0) continue;
-                            TString category_filter = TString::Format("%s == %d", params_.event_category_column.c_str(), channel_key);
-                            auto category_df = main_filtered_df.Filter(category_filter.Data());
-                            mc_category_futures_[task_key][sample_key][channel_key] = category_df.Histo1D(model, task_binning.variable.Data(), "central_value_weight");
-                        }
-                        
-                        params_.systematics_controller.bookVariations(
-                            task_key, sample_key, df, det_var_nodes, task_binning,
-                            task_binning.selection_query.Data(), params_.event_category_column, params_.event_category_column);
-
+                if (sample_info.isMonteCarlo()) {
+                    std::unique_ptr<HistogramCategoriser> categoriser;
+                    if (task_binning.is_particle_level) {
+                        categoriser = std::make_unique<ParticleTypeCategoriser>(particle_category_column_, channel_manager_);
                     } else {
-                        if (!params_.data_manager.isBlinded()){
-                            data_futures_[task_key] = main_filtered_df.Histo1D(model, task_binning.variable.Data());
-                        }
+                        categoriser = std::make_unique<EventChannelCategoriser>(event_category_column_, channel_manager_);
                     }
+                    mc_category_futures_[task_key][sample_key] = categoriser->bookHistograms(main_filtered_df, task_binning, model);
+                    
+                    systematics_controller_.bookVariations(
+                        task_key, sample_key, df, det_var_nodes, task_binning,
+                        task_binning.selection_query.Data(), event_category_column_, event_category_column_);
+
+                } else if (!data_manager_.isBlinded()){
+                    data_futures_[task_key] = main_filtered_df.Histo1D(model, task_binning.variable.Data());
                 }
             }
         }
@@ -180,50 +131,41 @@ private:
 
         for (const auto& [task_key, task_binning] : plot_task_map_) {
             AnalysisResult result;
-            
-            result.setBlinded(params_.data_manager.isBlinded());
-            result.setPOT(params_.data_manager.getDataPOT());
-            result.setBeamKey(params_.data_manager.getBeamKey());
-            result.setRuns(params_.data_manager.getRunsToLoad());
+            result.setBlinded(data_manager_.isBlinded());
+            result.setPOT(data_manager_.getDataPOT());
+            result.setBeamKey(data_manager_.getBeamKey());
+            result.setRuns(data_manager_.getRunsToLoad());
 
             if (!result.isBlinded() && data_futures_.count(task_key)) {
                 result.setDataHist(Histogram(task_binning, *data_futures_.at(task_key).GetPtr(), "data_hist", "Data"));
             }
 
-            std::string category_scheme;
-            if (task_binning.is_particle_level) {
-                category_scheme = params_.particle_category_scheme;
-            } else {
-                category_scheme = params_.event_category_column;
-            }
-            const auto analysis_channel_keys = getChannelKeys(category_scheme);
+            std::map<std::string, Histogram> total_mc_by_channel;
+            for (const auto& [sample_key, sample_info] : data_manager_.getAllSamples()) {
+                if (sample_info.isMonteCarlo()) {
+                    std::unique_ptr<HistogramCategoriser> categoriser;
+                    if (task_binning.is_particle_level) {
+                        categoriser = std::make_unique<ParticleTypeCategoriser>(particle_category_column_, channel_manager_);
+                    } else {
+                        categoriser = std::make_unique<EventChannelCategoriser>(event_category_column_, channel_manager_);
+                    }
 
-            Histogram total_mc_nominal(task_binning, "total_mc", "Total MC");
-
-            for (const int channel_key : analysis_channel_keys) {
-                if (category_scheme != "particle_pdg_channels" && channel_key == 0) continue;
-
-                std::string category_label = getChannelLabel(category_scheme, channel_key);
-                int color = getChannelColourCode(category_scheme, channel_key);
-                int fill_style = getChannelFillStyle(category_scheme, channel_key);
-                Histogram category_hist(task_binning, category_label, category_label, color, fill_style);
-
-                for (const auto& [sample_key, sample_info] : params_.data_manager.getAllSamples()) {
-                    if (sample_info.isMonteCarlo()) {
-                        if (mc_category_futures_.count(task_key) &&
-                            mc_category_futures_.at(task_key).count(sample_key) &&
-                            mc_category_futures_.at(task_key).at(sample_key).count(channel_key)) {
-                            auto hist_ptr = mc_category_futures_.at(task_key).at(sample_key).at(channel_key).GetPtr();
-                            if (hist_ptr) {
-                                category_hist = category_hist + Histogram(task_binning, *hist_ptr);
-                            }
+                    auto processed_hists = categoriser->collectHistograms(mc_category_futures_.at(task_key).at(sample_key), task_binning);
+                    for(const auto& [name, hist] : processed_hists) {
+                        if (total_mc_by_channel.count(name)) {
+                            total_mc_by_channel[name] = total_mc_by_channel[name] + hist;
+                        } else {
+                            total_mc_by_channel[name] = hist;
                         }
                     }
                 }
+            }
 
-                if (category_hist.sum() > 1e-6) {
-                    result.addChannel(category_label, category_hist);
-                    total_mc_nominal = total_mc_nominal + category_hist;
+            Histogram total_mc_nominal(task_binning, "total_mc", "Total MC");
+            for(const auto& [name, hist] : total_mc_by_channel){
+                if (hist.sum() > 1e-6) {
+                    result.addChannel(name, hist);
+                    total_mc_nominal = total_mc_nominal + hist;
                 }
             }
             result.setTotalHist(total_mc_nominal);
@@ -231,9 +173,11 @@ private:
             if (!task_binning.is_particle_level) {
                 const auto nominal_hist_for_cov = result.getTotalHist();
                 std::map<std::string, TMatrixDSym> total_syst_breakdown;
-                for (const int channel_key : analysis_channel_keys) {
+                const auto channel_keys = channel_manager_.getChannelKeys(event_category_column_);
+
+                for (const int channel_key : channel_keys) {
                     if (channel_key == 0) continue;
-                    auto per_category_cov_map = params_.systematics_controller.computeAllCovariances(channel_key, nominal_hist_for_cov, task_binning, category_scheme);
+                    auto per_category_cov_map = systematics_controller_.computeAllCovariances(channel_key, nominal_hist_for_cov, task_binning, event_category_column_);
                     for (const auto& [syst_name, cov_matrix] : per_category_cov_map) {
                         if (total_syst_breakdown.find(syst_name) == total_syst_breakdown.end()) {
                             total_syst_breakdown[syst_name].ResizeTo(nominal_hist_for_cov.nBins(), nominal_hist_for_cov.nBins());
@@ -250,9 +194,9 @@ private:
                 }
                 result.setTotalHist(final_total_mc_hist);
 
-                for (const int channel_key : analysis_channel_keys) {
+                for (const int channel_key : channel_keys) {
                     if (channel_key == 0) continue;
-                    auto per_category_varied_hists = params_.systematics_controller.getAllVariedHistograms(channel_key, task_binning, category_scheme);
+                    auto per_category_varied_hists = systematics_controller_.getAllVariedHistograms(channel_key, task_binning, event_category_column_);
                     for(const auto& [syst_name, varied_hists] : per_category_varied_hists){
                         for(const auto& [var_name, hist] : varied_hists){
                             const auto& current_variations = result.getSystematicVariations();
@@ -266,10 +210,9 @@ private:
                 }
             }
 
-            if (params_.pot_scale_factor != 1.0) {
-                result.scale(params_.pot_scale_factor);
+            if (pot_scale_factor_ != 1.0) {
+                result.scale(pot_scale_factor_);
             }
-
             analysis_phase_space[task_key] = result;
         }
         return analysis_phase_space;

@@ -82,7 +82,7 @@ public:
           beam_key_(params.beam_key),
           runs_to_load_(params.runs_to_load),
           variable_options_(params.variable_options) {
-        std::cout << "[DataManager] Initializing..." << std::endl;
+        std::cout << "[DataManager] Initialising..." << std::endl;
         this->loadRuns(beam_key_, runs_to_load_, params.variable_options);
     }
 
