@@ -32,7 +32,9 @@ public:
         df = this->defineAnalysisChannels(df, sample_type);
         df = this->defineEventFeatures(df);
         df = this->defineTopologicalFeatures(df);
-        df = this->defineBlipFeatures(df);
+        if (variable_options.load_blips) {
+            df = this->defineBlipFeatures(df);
+        }
 
         if (sample_type == SampleType::kMonteCarlo) {
             df = this->defineNominalWeight(df);
@@ -158,18 +160,11 @@ private:
         ROOT::RDF::RNode df_with_defs = df;
         bool is_mc = (sample_type == SampleType::kMonteCarlo);
 
-        std::vector<std::string> truth_cols = {"mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-                                               "true_nu_vtx_x", "nu_pdg", "ccnc", "interaction", "mcf_npp", "mcf_npm", "mcf_np0", "mcf_npr"};
-        bool has_all_truth_cols = is_mc;
         if (is_mc) {
-            for(const auto& col : truth_cols){ if(!df.HasColumn(col)){ has_all_truth_cols = false; break; } }
-        }
-
-        if (is_mc && has_all_truth_cols) {
-            df_with_defs = df_with_defs.Define("in_fv", "(true_nu_vtx_x > 5.0 && true_nu_vtx_x < 251.0 && true_nu_vtx_y > -110.0 && true_nu_vtx_y < 110.0 && true_nu_vtx_z > 20.0 && true_nu_vtx_z < 986.0)");
-            df_with_defs = df_with_defs.Define("mcf_strangeness", "mcf_nkp + mcf_nkm + mcf_nk0 + mcf_nlambda + mcf_nsigma_p + mcf_nsigma_0 + mcf_nsigma_m");
-            df_with_defs = df_with_defs.Define("mc_n_pions", "mcf_npp + mcf_npm + mcf_np0");
-            df_with_defs = df_with_defs.Define("mc_n_protons", "mcf_npr");
+            df_with_defs = df_with_defs.Define("in_fv", "(neutrino_vertex_x > 5.0 && neutrino_vertex_x < 251.0 && neutrino_vertex_y > -110.0 && neutrino_vertex_y < 110.0 && neutrino_vertex_z > 20.0 && neutrino_vertex_z < 986.0)");
+            df_with_defs = df_with_defs.Define("mc_n_strangeness", "count_kaon_plus + count_kaon_minus + count_kaon_zero + count_lambda + count_sigma_plus + count_sigma_zero + count_sigma_minus");
+            df_with_defs = df_with_defs.Define("mc_n_pions", "count_pi_plus + count_pi_minus");
+            df_with_defs = df_with_defs.Define("mc_n_protons", "count_proton");
 
             df_with_defs = df_with_defs.Define("inclusive_strange_channels",
                 [](bool is_fid, int nu, int cc, int strange, int n_pi, int n_p) {
@@ -188,7 +183,7 @@ private:
                         return 23; 
                     }
                     return 99;
-                }, {"in_fv", "nu_pdg", "ccnc", "mcf_strangeness", "mc_n_pions", "mc_n_protons"});
+                }, {"in_fv", "neutrino_pdg", "interaction_ccnc", "mc_n_strangeness", "mc_n_pions", "mc_n_protons"});
 
             df_with_defs = df_with_defs.Define("exclusive_strange_channels", 
                 [](bool is_fid, int nu, int cc, int strange, int n_kp, int n_km, int n_k0, int n_lambda, int n_sigma_p, int n_sigma_0, int n_sigma_m) {
@@ -214,7 +209,7 @@ private:
                         return 61;
                     }
                     return 99;
-                }, {"in_fv", "nu_pdg", "ccnc", "mcf_strangeness", "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m"});
+                }, {"in_fv", "neutrino_pdg", "interaction_ccnc", "mc_n_strangeness", "count_kaon_plus", "count_kaon_minus", "count_kaon_zero", "count_lambda", "count_sigma_plus", "count_sigma_zero", "count_sigma_minus"});
         } else {
             df_with_defs = df_with_defs.Define("inclusive_strange_channels", [sample_type](){
                 if (sample_type == SampleType::kData) return 0;
@@ -235,25 +230,25 @@ private:
     ROOT::RDF::RNode defineEventFeatures(ROOT::RDF::RNode df) const {
         auto d = df;
 
-        d = d.Define("is_reco_fv", "reco_nu_vtx_sce_x > 5.0 && reco_nu_vtx_sce_x < 251.0 && reco_nu_vtx_sce_y > -110.0 && reco_nu_vtx_sce_y < 110.0 && reco_nu_vtx_sce_z > 20.0 && reco_nu_vtx_sce_z < 986.0");
+        d = d.Define("is_reco_fv", "reco_neutrino_vertex_sce_x > 5.0 && reco_neutrino_vertex_sce_x < 251.0 && reco_neutrino_vertex_sce_y > -110.0 && reco_neutrino_vertex_sce_y < 110.0 && reco_neutrino_vertex_sce_z > 20.0 && reco_neutrino_vertex_sce_z < 986.0");
 
         d = d.Define("nu_slice_topo_score",
             [this](const ROOT::RVec<float>& all_slice_scores, unsigned int neutrino_slice_id) {
                 return this->getElementFromVector(all_slice_scores, static_cast<int>(neutrino_slice_id), -999.f);
-            }, {"slice_topo_score_v", "slice_id"}
+            }, {"slice_topological_scores", "slice_id"}
         );
 
         d = d.Define("n_pfp_gen_2",
             [](const ROOT::RVec<unsigned int>& generations) {
                 return ROOT::VecOps::Sum(generations == 2);
-            }, {"pfp_generation_v"});
+            }, {"pfp_generations"});
 
         d = d.Define("n_pfp_gen_3",
             [](const ROOT::RVec<unsigned int>& generations) {
                 return ROOT::VecOps::Sum(generations == 3);
-            }, {"pfp_generation_v"});
+            }, {"pfp_generations"});
         
-        d = d.Define("quality_selector", "is_reco_fv && nslice == 1 && selected == 1 && nu_slice_topo_score >= 0.2 && nu_slice_topo_score <= 1.0 && _opfilter_pe_beam >= 20.0 && nhits_u > 0 && nhits_v > 0 && nhits_w > 0");
+        d = d.Define("quality_selector", "is_reco_fv && num_slices == 1 && selection_pass == 1 && optical_filter_pe_beam >= 20.0 && total_hits_U > 0 && total_hits_V > 0 && total_hits_Y > 0");
         
         return d;
     }
@@ -261,7 +256,6 @@ private:
     ROOT::RDF::RNode defineBlipFeatures(ROOT::RDF::RNode df) const {
         auto d = df;
 
-        // --- Original blip variables ---
         if (d.HasColumn("blip_ID")) {
             d = d.Define("n_blips", [](const ROOT::RVec<int>& v){ return (int)v.size(); }, {"blip_ID"});
         }
@@ -269,25 +263,19 @@ private:
             d = d.Define("total_blip_energy", [](const ROOT::RVec<float>& v) { return ROOT::VecOps::Sum(v); }, {"blip_Energy"});
         }
 
-        // --- New creative blip variables ---
-
-        // Number of blips passing the 'isValid' flag
         if (d.HasColumn("blip_isValid")) {
             d = d.Define("n_valid_blips", [](const ROOT::RVec<bool>& v){ return (int)ROOT::VecOps::Sum(v); }, {"blip_isValid"});
         }
 
-        // Energy of the most energetic blip in the event
         if (d.HasColumn("blip_Energy")) {
             d = d.Define("max_blip_energy", [](const ROOT::RVec<float>& v){ return v.empty() ? 0.f : ROOT::VecOps::Max(v); }, {"blip_Energy"});
         }
 
-        // Average energy of blips in the event
         if (d.HasColumn("n_blips") && d.HasColumn("total_blip_energy")) {
             d = d.Define("avg_blip_energy", [](int n, float total_e){ return n > 0 ? total_e / (float)n : 0.f; }, {"n_blips", "total_blip_energy"});
         }
 
-        // A vector containing the 3D distance of each blip from the reconstructed neutrino vertex
-        if (d.HasColumn("blip_X") && d.HasColumn("reco_nu_vtx_sce_x")) {
+        if (d.HasColumn("blip_X") && d.HasColumn("reco_neutrino_vertex_sce_x")) {
             auto blip_vtx_dist_lambda = [](const ROOT::RVec<float>& bx, const ROOT::RVec<float>& by, const ROOT::RVec<float>& bz, float vx, float vy, float vz) {
                 ROOT::RVec<float> dists;
                 dists.reserve(bx.size());
@@ -300,127 +288,9 @@ private:
                 return dists;
             };
             d = d.Define("blip_dist_from_vtx", blip_vtx_dist_lambda,
-                {"blip_X", "blip_Y", "blip_Z", "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z"});
+                {"blip_X", "blip_Y", "blip_Z", "reco_neutrino_vertex_sce_x", "reco_neutrino_vertex_sce_y", "reco_neutrino_vertex_sce_z"});
         }
 
-         d = d.Define("mean_blip_dist_from_vtx", [](const ROOT::RVec<float>& dists){
-            return dists.empty() ? -1.f : ROOT::VecOps::Mean(dists);
-        }, {"blip_dist_from_vtx"});
-
-        if (d.HasColumn("blip_dist_from_vtx") && d.HasColumn("blip_Energy")) {
-
-            // --- Exponentially-Weighted Energy Moments for Multiple Length Scales ---
-            auto exp_moments_lambda = [](const ROOT::RVec<float>& dists, const ROOT::RVec<float>& energies) -> std::vector<float> {
-                const std::vector<float> mean_free_paths = {10.0f, 12.0f, 15.0f, 20.0f, 30.0f, 40.0f, 50.0f, 100.0f, 18.0f, 22.0f, 25.0f, 60.0f, 75.0f};
-                std::vector<float> moments;
-                moments.reserve(mean_free_paths.size());
-
-                for (const float mfp : mean_free_paths) {
-                    float moment = 0.f;
-                    for (size_t i = 0; i < dists.size(); ++i) {
-                        moment += energies[i] * exp(-dists[i] / mfp);
-                    }
-                    moments.push_back(moment);
-                }
-                return moments;
-            };
-            d = d.Define("blip_exp_energy_moments", exp_moments_lambda, {"blip_dist_from_vtx", "blip_Energy"});
-
-            d = d.Define("blip_exp_moment_10cm", [](const std::vector<float>& v){ return v[0]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_12cm", [](const std::vector<float>& v){ return v[1]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_15cm", [](const std::vector<float>& v){ return v[2]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_20cm", [](const std::vector<float>& v){ return v[3]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_30cm", [](const std::vector<float>& v){ return v[4]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_40cm", [](const std::vector<float>& v){ return v[5]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_50cm", [](const std::vector<float>& v){ return v[6]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_100cm", [](const std::vector<float>& v){ return v[7]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_18cm", [](const std::vector<float>& v){ return v[8]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_22cm", [](const std::vector<float>& v){ return v[9]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_25cm", [](const std::vector<float>& v){ return v[10]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_60cm", [](const std::vector<float>& v){ return v[11]; }, {"blip_exp_energy_moments"});
-            d = d.Define("blip_exp_moment_75cm", [](const std::vector<float>& v){ return v[12]; }, {"blip_exp_energy_moments"});
-        }
-
-        // The standard deviation of the blip distances. A smaller value might indicate
-        // that blips are more tightly clustered near the vertex, as seen in your signal.
-        d = d.Define("std_dev_blip_dist_from_vtx", [](const ROOT::RVec<float>& dists){
-            if (dists.size() < 2) return 0.f;
-            return (float)ROOT::VecOps::StdDev(dists);
-        }, {"blip_dist_from_vtx"});
-
-        d = d.Define("n_blips_halo_30_50cm", [](const ROOT::RVec<float>& dists){
-            const float inner_radius = 0.0f;
-            const float outer_radius = 150.0f;
-            int count = 0;
-            for (float d_val : dists) {
-                if (d_val >= inner_radius && d_val < outer_radius) {
-                    count++;
-                }
-            }
-            return count;
-        }, {"blip_dist_from_vtx"});
-
-        // Directly test your observation at 50cm. This variable calculates the
-        // fraction of an event's blips that fall within that 50cm radius.
-        // This should be a powerful discriminator.
-        d = d.Define("fraction_blips_under_50cm", [](const ROOT::RVec<float>& dists){
-            if (dists.empty()) return 0.f;
-            int near_count = 0;
-            for (float d_val : dists) {
-                if (d_val < 50.0f) {
-                    near_count++;
-                }
-            }
-            return (float)near_count / dists.size();
-        }, {"blip_dist_from_vtx"});
-
-        if (d.HasColumn("blip_dist_from_vtx")) {
-            const float proximity_radius_cm = 100.0f;
-
-            // Count how many blips are inside the defined radius
-            d = d.Define("n_blips_near_vtx", [proximity_radius_cm](const ROOT::RVec<float>& dists){
-                int count = 0;
-                for (float d : dists) {
-                    if (d < proximity_radius_cm) {
-                        count++;
-                    }
-                }
-                return count;
-            }, {"blip_dist_from_vtx"});
-
-            // Also, calculate the fraction of the total blip energy that comes
-            // from these "near-vertex" blips. This might be more robust than just a count.
-            if (d.HasColumn("blip_Energy") && d.HasColumn("total_blip_energy")) {
-                auto nearby_energy_lambda = [proximity_radius_cm](const ROOT::RVec<float>& dists, const ROOT::RVec<float>& energies, float total_blip_E) -> float {
-                    if (total_blip_E < 1e-6) return 0.f;
-                    float nearby_energy = 0.f;
-                    for (size_t i=0; i < dists.size(); ++i) {
-                        if (dists[i] < proximity_radius_cm) {
-                            nearby_energy += energies[i];
-                        }
-                    }
-                    return nearby_energy / total_blip_E;
-                };
-                d = d.Define("nearby_blip_energy_fraction", nearby_energy_lambda, {"blip_dist_from_vtx", "blip_Energy", "total_blip_energy"});
-            }
-        }
-        
-        // Number of blips that are very close to a reconstructed track (< 5 cm)
-        if (d.HasColumn("blip_ProxTrkDist")) {
-            d = d.Define("n_blips_prox_track", [](const ROOT::RVec<float>& dists){
-                int count = 0;
-                for (float dist : dists) {
-                    if (dist < 5.0 && dist >= 0) {
-                        count++;
-                    }
-                }
-                return count;
-            }, {"blip_ProxTrkDist"});
-        }
-        
-        // --- Truth-level variables (for MC studies) ---
-        
-        // Number of blips whose leading particle was a neutron
         if (d.HasColumn("blip_pdg")) {
             d = d.Define("n_neutron_blips_truth", [](const ROOT::RVec<int>& pdgs){
                 int count = 0;
@@ -439,14 +309,6 @@ private:
     ROOT::RDF::RNode defineTopologicalFeatures(ROOT::RDF::RNode df) const {
         auto d = df;
         
-        std::vector<std::string> essential_cols = {"trk_len_v", "pfp_generation_v", "shr_energy_y_v", "trk_distance_v", "trk_score_v", "trk_llr_pid_score_v", "trk_pfp_id_v", "shr_pfp_id_v"};
-        for(const auto& col : essential_cols){
-            if(!d.HasColumn(col)){
-                std::cerr << "Warning: Essential column '" << col << "' not found. Skipping topological feature definitions." << std::endl;
-                return d;
-            }
-        }
-
         auto avg_dedx_calculator = [](
             const ROOT::RVec<float>& u_dedx,
             const ROOT::RVec<float>& v_dedx,
@@ -471,31 +333,29 @@ private:
             return avg_dedx;
         };
 
-        if (d.HasColumn("trk_trunk_rr_dEdx_u_v") && d.HasColumn("trk_trunk_rr_dEdx_v_v") && d.HasColumn("trk_trunk_rr_dEdx_y_v")) {
-             d = d.Define("trk_trunk_rr_dEdx_avg_v", avg_dedx_calculator, {"trk_trunk_rr_dEdx_u_v", "trk_trunk_rr_dEdx_v_v", "trk_trunk_rr_dEdx_y_v"});
+        if (d.HasColumn("track_trunk_rr_dedx_u") && d.HasColumn("track_trunk_rr_dedx_v") && d.HasColumn("track_trunk_rr_dedx_y")) {
+             d = d.Define("trk_trunk_rr_dEdx_avg_v", avg_dedx_calculator, {"track_trunk_rr_dedx_u", "track_trunk_rr_dedx_v", "track_trunk_rr_dedx_y"});
         
             d = d.Define("muon_candidate_mask",
-                [this](const ROOT::RVec<float> ts, const ROOT::RVec<float> pid,
+                [this](const ROOT::RVec<float> ts,
                     const ROOT::RVec<float> l, const ROOT::RVec<float> d,
                     const ROOT::RVec<unsigned int> generations, const ROOT::RVec<float> trunk_rr_dEdx_avg) {
                 ROOT::RVec<bool> mask(ts.size());
                 for (size_t i = 0; i < ts.size(); ++i) {
                     bool quality = (this->getElementFromVector(ts, i, 0.f) >= 0.3f && this->getElementFromVector(ts, i, 0.f) <= 1.0f &&
-                                    this->getElementFromVector(pid, i, 0.f) >= -0.2f && this->getElementFromVector(pid, i, 0.f) <= 1.0f &&
                                     this->getElementFromVector(l, i, 0.f) >= 5.0f && this->getElementFromVector(trunk_rr_dEdx_avg, i, 0.f) <= 3.0f);
                     mask[i] = quality;
                 }
                 return mask;
-            }, {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v", "trk_trunk_rr_dEdx_avg_v"});
+            }, {"track_shower_scores", "track_length", "track_distance_to_vertex", "pfp_generations", "trk_trunk_rr_dEdx_avg_v"});
 
            d = d.Define("proton_candidate_mask",
-                [this](const ROOT::RVec<float> ts, const ROOT::RVec<float> pid,
+                [this](const ROOT::RVec<float> ts,
                     const ROOT::RVec<float> l, const ROOT::RVec<float> d,
                     const ROOT::RVec<unsigned int> generations, const ROOT::RVec<bool>& muon_mask) {
                 ROOT::RVec<bool> mask(ts.size());
                 for (size_t i = 0; i < ts.size(); ++i) {
                     bool quality = (this->getElementFromVector(ts, i, 0.f) > 0.7f &&
-                                    this->getElementFromVector(pid, i, 0.f) < 0.4f &&
                                     this->getElementFromVector(l, i, 0.f) > 10.0f &&
                                     this->getElementFromVector(d, i, 0.f) < 2.0f &&
                                     this->getElementFromVector(generations, i, 0) == 2 &&
@@ -503,7 +363,7 @@ private:
                     mask[i] = quality;
                 }
                 return mask;
-            }, {"trk_score_v", "trk_llr_pid_score_v", "trk_len_v", "trk_distance_v", "pfp_generation_v", "muon_candidate_mask"});
+            }, {"track_shower_scores", "track_length", "track_distance_to_vertex", "pfp_generations", "muon_candidate_mask"});
 
             d = d.Define("n_muons", 
                 [](const ROOT::RVec<bool>& muon_mask) {
@@ -518,15 +378,17 @@ private:
             }, {"proton_candidate_mask"});
         }
 
-        if (d.HasColumn("trk_nhits_u_v"))
-            d = d.Define("trk_nhits_u_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_u_v)");
-        if (d.HasColumn("trk_nhits_v_v"))
-            d = d.Define("trk_nhits_v_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_v_v)");
-        if (d.HasColumn("trk_nhits_y_v"))
-            d = d.Define("trk_nhits_y_v_float", "static_cast<ROOT::RVec<float>>(trk_nhits_y_v)");
-        if (d.HasColumn("trk_end_spacepoints_v"))
-            d = d.Define("trk_end_spacepoints_v_float", "static_cast<ROOT::RVec<float>>(trk_end_spacepoints_v)");
+        if (d.HasColumn("track_nhits_u"))
+            d = d.Define("trk_nhits_u_v_float", "static_cast<ROOT::RVec<float>>(track_nhits_u)");
+        if (d.HasColumn("track_nhits_v"))
+            d = d.Define("trk_nhits_v_v_float", "static_cast<ROOT::RVec<float>>(track_nhits_v)");
+        if (d.HasColumn("track_nhits_y"))
+            d = d.Define("trk_nhits_y_v_float", "static_cast<ROOT::RVec<float>>(track_nhits_y)");
+        if (d.HasColumn("track_end_spacepoints"))
+            d = d.Define("trk_end_spacepoints_v_float", "static_cast<ROOT::RVec<float>>(track_end_spacepoints)");
 
+        if (d.HasColumn("total_hits_Y"))
+            d = d.Define("evt_nhits_w_float", "static_cast<float>(total_hits_Y)");
         return d;
     }
 };

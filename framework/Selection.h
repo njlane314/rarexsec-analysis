@@ -37,7 +37,7 @@ public:
         selections.emplace("QUALITY", SelectionDetails(
             "nslice == 1 && selected == 1 &&"
             "is_reco_fv && "
-            "nu_slice_topo_score >= 0.2 && nu_slice_topo_score <= 1.0 && _opfilter_pe_beam >= 20.0 &&"
+            "_opfilter_pe_beam >= 20.0 &&"
             "nhits_u > 0 && nhits_v > 0 && nhits_w > 0",
             "Quality Slice Presel.", "Quality Presel", "QUALITYPRESEL"
         ));

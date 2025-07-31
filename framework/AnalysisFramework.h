@@ -5,7 +5,6 @@
 #include "AnalysisResult.h"
 #include "AnalysisRunner.h"
 #include "AnalysisSpace.h"
-#include "BDTManager.h"
 #include "Binning.h"
 #include "ConfigurationManager.h"
 #include "DataManager.h"
@@ -19,7 +18,7 @@
 #include "PlotStacked.h"
 #include "Selection.h"
 #include "Systematics.h"
-#include "SystematicsController.h"
+#include "SystematicsManager.h"
 #include "VariableManager.h"
 
-#endif // ANALYSIS_FRAMEWORK_H
+#endif 

@@ -56,7 +56,7 @@ public:
 
         ROOT::RDF::RNode getDataFrame() const {
             if (!nominal_df_) {
-                throw std::runtime_error("Attempt to access null RNode in SampleInfo");
+                throw std::runtime_error("[SampleInfo::getDataFrame] FATAL: Attempt to access null RNode in SampleInfo");
             }
             return *nominal_df_;
         }
@@ -82,6 +82,7 @@ public:
           beam_key_(params.beam_key),
           runs_to_load_(params.runs_to_load),
           variable_options_(params.variable_options) {
+        std::cout << "[DataManager] Initializing..." << std::endl;
         this->loadRuns(beam_key_, runs_to_load_, params.variable_options);
     }
 
@@ -108,6 +109,7 @@ public:
                     const std::string& output_file,
                     const std::vector<std::string>& columns_to_save) const {
         std::string query = Selection::getSelectionQuery(TString(selection_key.c_str()), TString(preselection_key.c_str())).Data();
+        std::cout << "[DataManager::snapshotDataFrames] INFO: Beginning snapshot to file '" << output_file << "' with selection '" << query << "'" << std::endl;
 
         bool first_tree = true;
         ROOT::RDF::RSnapshotOptions opts; 
@@ -139,6 +141,7 @@ public:
 
             opts.fMode = first_tree ? "RECREATE" : "UPDATE";
             std::string tree_name = sample_key_str; 
+            std::cout << "  |> Snapshotting tree '" << tree_name << "'..." << std::endl;
 
             if (!final_columns_to_snapshot.empty()) { 
                 filtered_df_node.Snapshot(tree_name, output_file, final_columns_to_snapshot, opts);
@@ -185,7 +188,9 @@ private:
         LoadedData loaded_data;
         loaded_data.data_pot = 0.0;
         loaded_data.data_triggers = 0L;
+        std::cout << "[DataManager::loadRuns] INFO: Loading runs for beam key '" << beam_key_val << "'..." << std::endl;
         for (const auto& run_key : runs_to_load_val) {
+            std::cout << "  |> Loading run: " << run_key << std::endl;
             const auto& run_config = config_manager_.getRunConfig(beam_key_val, run_key);
             double current_run_nominal_pot = run_config.nominal_pot;
             long current_run_nominal_triggers = run_config.nominal_triggers;
@@ -205,7 +210,7 @@ private:
             loaded_data.data_pot += current_run_nominal_pot;
             loaded_data.data_triggers += current_run_nominal_triggers;
         }
-        std::cout << "-- Total Data POT: " << loaded_data.data_pot << std::endl;
+        std::cout << "[DataManager::loadRuns] INFO: Total Data POT loaded: " << loaded_data.data_pot << std::endl;
 
         samples_.clear();
         for (const auto& [sample_key, rnode_pair] : loaded_data.nominal_samples) {
@@ -303,7 +308,7 @@ private:
 
     ROOT::RDF::RNode loadDataSample(const std::string& file_path, 
                                     const VariableOptions& variable_options) const {
-        std::cout << "-- Loading data: " << file_path << std::endl;
+        std::cout << "[DataManager::loadDataSample] INFO: Loading data sample from '" << file_path << "'" << std::endl;
         ROOT::RDF::RNode df = this->createDataFrame(SampleType::kData, file_path, variable_options);
         df = definition_manager_.processNode(df, SampleType::kData, variable_options, false);
         return df.Define("base_event_weight", [](){ return 1.0; }); 
@@ -313,13 +318,14 @@ private:
                                         int sample_triggers, 
                                         int current_run_triggers, 
                                         const VariableOptions& variable_options) const {
-        std::cout << "-- Loading external: " << file_path << std::endl;
+        std::cout << "[DataManager::loadExternalSample] INFO: Loading external sample from '" << file_path << "'" << std::endl;
         ROOT::RDF::RNode df = this->createDataFrame(SampleType::kExternal, file_path, variable_options);
         df = definition_manager_.processNode(df, SampleType::kExternal, variable_options, false);
         double calculated_event_weight = 1.0;
         if (sample_triggers > 0 && current_run_triggers > 0) { 
             calculated_event_weight = static_cast<double>(current_run_triggers) / sample_triggers;
         }
+        std::cout << "  |> Event weight calculated: " << calculated_event_weight << std::endl;
         return df.Define("base_event_weight", [calculated_event_weight](){ return calculated_event_weight; });
     }
 
@@ -332,23 +338,26 @@ private:
                                             const VariableOptions& variable_options,
                                             bool is_variation,
                                             const std::string& sample_key_for_log) const { 
-        std::cout << "-- Loading " << (is_variation ? "variation" : "MC") << ": " << sample_key_for_log << " from " << file_path << std::endl;
+        std::cout << "[DataManager::loadMonteCarloSample] INFO: Loading " << (is_variation ? "variation '" : "MC sample '") << sample_key_for_log << "' from '" << file_path << "'" << std::endl;
         ROOT::RDF::RNode df = this->createDataFrame(SampleType::kMonteCarlo, file_path, variable_options);
         
         double calculated_event_weight = 1.0;
         if (sample_pot > 0 && current_run_pot > 0) { 
             calculated_event_weight = current_run_pot / sample_pot;
         }
+        std::cout << "  |> Event weight calculated: " << calculated_event_weight << std::endl;
         df = df.Define("base_event_weight", [calculated_event_weight](){ return calculated_event_weight; });
         
         df = definition_manager_.processNode(df, SampleType::kMonteCarlo, variable_options, is_variation);
         
         if (!truth_filter.empty()) {
+            std::cout << "  |> Applying truth filter: " << truth_filter << std::endl;
             df = df.Filter(truth_filter, ("Truth Filter: " + truth_filter).c_str());
         }
         if (!exclusion_truth_filters.empty()) {
             std::string exclusion_filter_str = buildExclusionFilter(exclusion_truth_filters, all_samples);
             if (exclusion_filter_str != "true" && !exclusion_filter_str.empty()) { 
+                std::cout << "  |> Applying exclusion filter: " << exclusion_filter_str << std::endl;
                 df = df.Filter(exclusion_filter_str, "Exclusion Filter");
             }
         }

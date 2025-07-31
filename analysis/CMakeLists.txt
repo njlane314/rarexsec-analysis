@@ -4,9 +4,7 @@ set(ANALYSIS_EXECUTABLES
     analyse_selection
     visualise_topo
     analyse_numu_cc
-    analyse_blips
-    train_bdt_model
-    analyse_bdt_model
+    snapshot_numu_cc
 )
 
 foreach(EXE_NAME ${ANALYSIS_EXECUTABLES})

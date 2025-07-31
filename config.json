@@ -14,17 +14,17 @@
                             "mc_strangeness_run1_fhc"
                         ],
                         "relative_path": "mc_inclusive_run1_fhc.root",
-                        "pot": 1.9761565762795717e+21,
-                        "triggers": 845024
+                        "pot": 1.8820753949013836e+21,
+                        "triggers": 570553
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",
                         "sample_type": "mc",
                         "active": true,
-                        "truth_filter": "(mcf_strangeness > 0)",
+                        "truth_filter": "(mc_n_strangeness > 0)",
                         "relative_path": "mc_strangeness_run1_fhc.root",
-                        "pot": 1.042672034648929e+23,
-                        "triggers": 220254
+                        "pot": 1.0093508017259402e+23,
+                        "triggers": 116808
                     }
                 ]
             }

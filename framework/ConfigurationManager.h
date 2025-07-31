@@ -6,6 +6,7 @@
 #include <map>
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "DataTypes.h"
@@ -43,6 +44,7 @@ struct RunConfiguration {
 class ConfigurationManager {
 public:
     ConfigurationManager(const std::string& config_file_path) {
+        std::cout << "[ConfigurationManager] Initializing with configuration file: " << config_file_path << std::endl;
         this->loadConfigurations(config_file_path);
     }
 
@@ -53,11 +55,11 @@ public:
     const RunConfiguration& getRunConfig(const std::string& beam_key, const std::string& run_key) const {
         auto beam_it = run_configs_.find(beam_key);
         if (beam_it == run_configs_.end()) {
-            throw std::runtime_error("ConfigurationManager: Beam mode not found: " + beam_key);
+            throw std::runtime_error("[ConfigurationManager::getRunConfig] FATAL: Beam mode not found: " + beam_key);
         }
         auto run_it = beam_it->second.find(run_key);
         if (run_it == beam_it->second.end()) {
-            throw std::runtime_error("ConfigurationManager: RunConfiguration not found for beam: " + beam_key + ", run: " + run_key);
+            throw std::runtime_error("[ConfigurationManager::getRunConfig] FATAL: RunConfiguration not found for beam: " + beam_key + ", run: " + run_key);
         }
         return run_it->second;
     }
@@ -84,17 +86,18 @@ private:
         if (s == "wiremodyz") return DetVarType::kDetVarWireModYZ;
         if (s == "wiremodanglexz") return DetVarType::kDetVarWireModAngleXZ;
         if (s == "wiremodangleyz") return DetVarType::kDetVarWireModAngleYZ;
-        throw std::invalid_argument("Unknown detector variation type: " + s);
+        throw std::invalid_argument("[ConfigurationManager::stringToDetVarType] FATAL: Unknown detector variation type: " + s);
     }
 
     void loadConfigurations(const std::string& config_file_path) {
         std::ifstream f(config_file_path);
         if (!f) {
-            throw std::runtime_error("ConfigurationManager: Cannot open config file " + config_file_path);
+            throw std::runtime_error("[ConfigurationManager::loadConfigurations] FATAL: Cannot open config file " + config_file_path);
         }
         json data = json::parse(f);
 
         ntuple_base_directory_ = data.at("ntuple_base_directory").get<std::string>();
+        std::cout << "[ConfigurationManager::loadConfigurations] INFO: NTuple base directory set to '" << ntuple_base_directory_ << "'" << std::endl;
 
         for (auto& beam_it : data.at("run_configurations").items()) {
             for (auto& run_it : beam_it.value().items()) {
@@ -104,6 +107,8 @@ private:
                 new_config.nominal_pot = run_it.value().value("nominal_pot", 0.0);
                 new_config.nominal_triggers = run_it.value().value("nominal_triggers", 0L);
                 
+                std::cout << "[ConfigurationManager::loadConfigurations] INFO: Loading configuration for beam '" << new_config.beam_key << "', run '" << new_config.run_key << "'" << std::endl;
+
                 for (const auto& sample_json : run_it.value().at("samples")) {
                     NominalSampleProperties props;
                     props.sample_key = sample_json.at("sample_key").get<std::string>();
@@ -134,32 +139,33 @@ private:
     void addRunConfig(const RunConfiguration& config) {
         this->validateRunConfiguration(config);
         run_configs_[config.beam_key][config.run_key] = config;
+        std::cout << "[ConfigurationManager::addRunConfig] INFO: Successfully added and validated configuration for beam '" << config.beam_key << "', run '" << config.run_key << "'" << std::endl;
     }
 
     void validateRunConfiguration(const RunConfiguration& config) const {
-        if (config.beam_key.empty()) throw std::invalid_argument("Beam key is empty");
-        if (config.run_key.empty()) throw std::invalid_argument("Run key is empty");
-        if (config.sample_props.empty()) throw std::invalid_argument("Sample properties are empty for " + config.beam_key + "/" + config.run_key);
+        if (config.beam_key.empty()) throw std::invalid_argument("[ConfigurationManager::validateRunConfiguration] FATAL: Beam key is empty.");
+        if (config.run_key.empty()) throw std::invalid_argument("[ConfigurationManager::validateRunConfiguration] FATAL: Run key is empty.");
+        if (config.sample_props.empty()) throw std::invalid_argument("[ConfigurationManager::validateRunConfiguration] FATAL: Sample properties are empty for " + config.beam_key + "/" + config.run_key);
         for (const auto& [key, props] : config.sample_props) {
-            if (key != props.sample_key) throw std::invalid_argument("Sample key mismatch: " + key + " vs " + props.sample_key);
+            if (key != props.sample_key) throw std::invalid_argument("[ConfigurationManager::validateRunConfiguration] FATAL: Sample key mismatch: " + key + " vs " + props.sample_key);
             this->validateNominalSample(props);
         }
     }
 
     void validateNominalSample(const NominalSampleProperties& props) const {
-        if (props.sample_key.empty()) throw std::invalid_argument("Nominal sample key is empty");
-        if (props.sample_type == SampleType::kUnknown) throw std::invalid_argument("Nominal sample sample_type is kUnknown for " + props.sample_key);
+        if (props.sample_key.empty()) throw std::invalid_argument("[ConfigurationManager::validateNominalSample] FATAL: Nominal sample key is empty.");
+        if (props.sample_type == SampleType::kUnknown) throw std::invalid_argument("[ConfigurationManager::validateNominalSample] FATAL: Nominal sample_type is kUnknown for " + props.sample_key);
         if (props.sample_type == SampleType::kMonteCarlo && props.pot <= 0) {
-            throw std::invalid_argument("POT must be positive for MonteCarlo sample " + props.sample_key);
+            throw std::invalid_argument("[ConfigurationManager::validateNominalSample] FATAL: POT must be positive for MonteCarlo sample " + props.sample_key);
         }
         if (props.sample_type == SampleType::kData && props.triggers <= 0) {
-            throw std::invalid_argument("Triggers must be positive for Data sample " + props.sample_key);
+            throw std::invalid_argument("[ConfigurationManager::validateNominalSample] FATAL: Triggers must be positive for Data sample " + props.sample_key);
         }
         if (props.sample_type != SampleType::kData && props.relative_path.empty()) {
-            throw std::invalid_argument("Relative path is empty for non-Data sample " + props.sample_key);
+            throw std::invalid_argument("[ConfigurationManager::validateNominalSample] FATAL: Relative path is empty for non-Data sample " + props.sample_key);
         }
         if (!props.relative_path.empty() && !std::ifstream(ntuple_base_directory_ + "/" + props.relative_path)) {
-            throw std::runtime_error("File does not exist: " + ntuple_base_directory_ + "/" + props.relative_path);
+            throw std::runtime_error("[ConfigurationManager::validateNominalSample] FATAL: File does not exist: " + ntuple_base_directory_ + "/" + props.relative_path);
         }
         for (const auto& detvar_props : props.detector_variations) {
             this->validateDetVarSample(detvar_props, props.sample_key);
@@ -167,12 +173,12 @@ private:
     }
 
     void validateDetVarSample(const DetectorVariationProperties& props, const std::string& nominal_key) const {
-        if (props.sample_key.empty()) throw std::invalid_argument("DetVar sample key is empty for nominal " + nominal_key);
-        if (props.variation_type == DetVarType::kUnknown) throw std::invalid_argument("DetVar variation_type is kUnknown for " + props.sample_key);
-        if (props.relative_path.empty()) throw std::invalid_argument("Path is empty for DetVar sample " + props.sample_key);
-        if (props.pot <= 0) throw std::invalid_argument("POT must be positive for DetVar sample " + props.sample_key);
+        if (props.sample_key.empty()) throw std::invalid_argument("[ConfigurationManager::validateDetVarSample] FATAL: DetVar sample key is empty for nominal " + nominal_key);
+        if (props.variation_type == DetVarType::kUnknown) throw std::invalid_argument("[ConfigurationManager::validateDetVarSample] FATAL: DetVar variation_type is kUnknown for " + props.sample_key);
+        if (props.relative_path.empty()) throw std::invalid_argument("[ConfigurationManager::validateDetVarSample] FATAL: Path is empty for DetVar sample " + props.sample_key);
+        if (props.pot <= 0) throw std::invalid_argument("[ConfigurationManager::validateDetVarSample] FATAL: POT must be positive for DetVar sample " + props.sample_key);
         if (!std::ifstream(ntuple_base_directory_ + "/" + props.relative_path)) {
-            throw std::runtime_error("File does not exist: " + ntuple_base_directory_ + "/" + props.relative_path);
+            throw std::runtime_error("[ConfigurationManager::validateDetVarSample] FATAL: File does not exist: " + ntuple_base_directory_ + "/" + props.relative_path);
         }
     }
 };

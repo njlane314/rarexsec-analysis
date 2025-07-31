@@ -10,7 +10,6 @@
 namespace AnalysisFramework {
 
 struct VariableOptions {
-    bool load_showers = false;
     bool load_blips = false;
 };
 
@@ -21,32 +20,30 @@ private:
     };
 
     std::vector<std::string> truth_event_vars_ = {
-        "nu_pdg", "ccnc", "interaction", "nu_e", "lep_e",
-        "mcf_nmm", "mcf_nmp", "mcf_nem", "mcf_nep", "mcf_np0", "mcf_npp", "mcf_npm", "mcf_npr", "mcf_nne",
-        "mcf_nkp", "mcf_nkm", "mcf_nk0", "mcf_nlambda", "mcf_nsigma_p", "mcf_nsigma_0", "mcf_nsigma_m",
-        "semantic_image_u", "semantic_image_v", "semantic_image_w", 
-        "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z",
-        "true_nu_vtx_t", "true_nu_vtx_sce_x", "true_nu_vtx_sce_y", "true_nu_vtx_sce_z"
+        "neutrino_pdg", "interaction_ccnc", "interaction_mode", "interaction_type", "neutrino_energy", "lepton_energy",
+        "count_mu_minus", "count_mu_plus", "count_e_minus", "count_e_plus", "count_pi_zero", "count_pi_plus", "count_pi_minus", "count_proton", "count_neutron",
+        "count_kaon_plus", "count_kaon_minus", "count_kaon_zero", "count_lambda", "count_sigma_plus", "count_sigma_zero", "count_sigma_minus",
+        "semantic_image_u", "semantic_image_v", "semantic_image_w",
+        "neutrino_vertex_x", "neutrino_vertex_y", "neutrino_vertex_z",
+        "neutrino_vertex_time", "neutrino_sce_vertex_x", "neutrino_sce_vertex_y", "neutrino_sce_vertex_z",
+        "neutrino_completeness_from_pfp", "neutrino_purity_from_pfp",
+        "target_nucleus_pdg", "hit_nucleon_pdg", "kinematic_W", "kinematic_X", "kinematic_Y", "kinematic_Q_squared"
     };
 
     std::vector<std::string> reco_event_vars_ = {
-        "reco_nu_vtx_x", "reco_nu_vtx_y", "reco_nu_vtx_z",
-        "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z",
-        "nslice", "slnhits", "selected", "slice_id", "slice_topo_score_v",
-        "_opfilter_pe_beam", "_opfilter_pe_veto",
-        "n_pfps", "n_tracks", "n_showers", "pfnhits",
+        "reco_neutrino_vertex_x", "reco_neutrino_vertex_y", "reco_neutrino_vertex_z",
+        "reco_neutrino_vertex_sce_x", "reco_neutrino_vertex_sce_y", "reco_neutrino_vertex_sce_z",
+        "num_slices", "slice_num_hits", "selection_pass", "slice_id", "slice_topological_scores",
+        "optical_filter_pe_beam", "optical_filter_pe_veto",
+        "num_pfps", "num_tracks", "num_showers", "pfp_num_hits",
         "detector_image_u", "detector_image_v", "detector_image_w",
-        "evnhits", "slclustfrac",
-        "nhits_u", "charge_u", "wirerange_u", "timerange_u",
-        "nhits_v", "charge_v", "wirerange_v", "timerange_v",
-        "nhits_w", "charge_w", "wirerange_w", "timerange_w",
-        "semantic_salience",
-        "nclusters_u", "nclusters_v", "nclusters_w",
-        "pfp_generation_v"
+        "event_total_hits", "slice_cluster_fraction",
+        "total_hits_U", "total_hits_V", "total_hits_Y",
+        "pfp_generations", "crt_veto", "crt_hit_pe", "software_trigger"
     };
 
     std::vector<std::string> reco_blip_vars_ = {
-        "blip_ID", 
+        "blip_ID",
         "blip_isValid",
         "blip_TPC",
         "blip_NPlanes",
@@ -76,37 +73,25 @@ private:
     };
 
     std::vector<std::string> reco_track_vars_ = {
-        "trk_pfp_id_v", "trk_score_v", "trk_len_v", "trk_distance_v",
-        "trk_start_x_v", "trk_start_y_v", "trk_start_z_v",
-        "trk_end_x_v", "trk_end_y_v", "trk_end_z_v",
-        "trk_sce_start_x_v", "trk_sce_start_y_v", "trk_sce_start_z_v",
-        "trk_sce_end_x_v", "trk_sce_end_y_v", "trk_sce_end_z_v",
-        "trk_theta_v", "trk_phi_v",
-        "trk_dir_x_v", "trk_dir_y_v", "trk_dir_z_v",
-        "generation_v", "trk_daughters_v", "shr_daughters_v", "longest_v",
-        "trk_nhits_u_v", "trk_nhits_v_v", "trk_nhits_y_v",
-        "trk_llr_pid_score_v",
-        "trk_pida_v",
-        "trk_pid_chimu_v", "trk_pid_chipr_v", "trk_pid_chika_v", "trk_pid_chipi_v",
-        "trk_trunk_dEdx_y_v", "trk_trunk_rr_dEdx_y_v",
-        "trk_range_muon_mom_v", "trk_mcs_muon_mom_v",
-        "trk_energy_muon_v", "trk_energy_proton_v",
-        "trk_avg_deflection_stdev_v", "trk_avg_deflection_mean_v", "trk_avg_deflection_separation_mean_v",
-        "trk_end_spacepoints_v",
-        "backtracked_pdg", "backtracked_e", "backtracked_purity", "backtracked_completeness",
-        "backtracked_overlay_purity", "backtracked_px", "backtracked_py", "backtracked_pz",
-        "backtracked_start_x", "backtracked_start_y", "backtracked_start_z", "backtracked_start_t",
+        "track_pfp_ids", "track_shower_scores", "track_length", "track_distance_to_vertex",
+        "track_start_x", "track_start_y", "track_start_z",
+        "track_end_x", "track_end_y", "track_end_z",
+        "track_sce_start_x", "track_sce_start_y", "track_sce_start_z",
+        "track_sce_end_x", "track_sce_end_y", "track_sce_end_z",
+        "track_theta", "track_phi",
+        "track_direction_x", "track_direction_y", "track_direction_z",
+        "pfp_generations", "pfp_track_daughters", "pfp_shower_daughters",
+        "track_nhits_u", "track_nhits_v", "track_nhits_y",
+        "track_avg_deflection_stdev", "track_avg_deflection_mean", "track_avg_deflection_separation_mean",
+        "track_end_spacepoints",
+        "backtracked_pdg_codes", "backtracked_energies", "backtracked_purities", "backtracked_completenesses",
+        "backtracked_overlay_purities", "backtracked_momentum_x", "backtracked_momentum_y", "backtracked_momentum_z",
+        "backtracked_start_x", "backtracked_start_y", "backtracked_start_z", "backtracked_start_time",
         "backtracked_sce_start_x", "backtracked_sce_start_y", "backtracked_sce_start_z",
-        "backtracked_end_process", "backtracked_end_in_tpc",
-        "trk_bragg_p_v", "trk_bragg_mu_v", "trk_bragg_pion_v",
-        "trk_calo_energy_u_v", "trk_calo_energy_v_v", "trk_calo_energy_y_v"
-    };
-
-    std::vector<std::string> reco_shower_vars_ = {
-        "shr_dedx_u_v", "shr_dedx_v_v", "shr_dedx_y_v",
-        "shr_energy_u_v", "shr_energy_v_v", "shr_energy_y_v",
-        "shr_pfp_id_v",
-        "shr_tkfit_dedx_y_v", "shr_moliere_avg_v", "shr_openangle_v"
+        "mc_particle_final_state",
+        "track_calo_energy_u", "track_calo_energy_v", "track_calo_energy_y",
+        "track_trunk_dedx_u", "track_trunk_dedx_v", "track_trunk_dedx_y",
+        "track_trunk_rr_dedx_u", "track_trunk_rr_dedx_v", "track_trunk_rr_dedx_y"
     };
 
     std::vector<std::string> nominal_mc_weights_ = {
@@ -136,7 +121,7 @@ private:
     };
 
     std::string single_variation_variable_ = "RootinoFix";
-    
+
     std::vector<std::string> multi_universe_weights_ = {"weightsGenie", "weightsFlux", "weightsReint", "weightsPPFX"};
 
 public:
@@ -167,16 +152,13 @@ public:
             vars_set.insert(systematic_knob_weights_.begin(), systematic_knob_weights_.end());
             vars_set.insert(multi_universe_weights_.begin(), multi_universe_weights_.end());
         }
-     
+
         vars_set.insert(reco_event_vars_.begin(), reco_event_vars_.end());
         vars_set.insert(reco_track_vars_.begin(), reco_track_vars_.end());
         if (options.load_blips) {
             vars_set.insert(reco_blip_vars_.begin(), reco_blip_vars_.end());
         }
-        if (options.load_showers) {
-            vars_set.insert(reco_shower_vars_.begin(), reco_shower_vars_.end());
-        }
-    
+
         return std::vector<std::string>(vars_set.begin(), vars_set.end());
     }
 };

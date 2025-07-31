@@ -27,7 +27,7 @@ public:
     std::vector<double> bin_counts;
     TMatrixDSym covariance_matrix;
 
-    Color_t plot_color_code = kBlack;  
+    Color_t plot_color_code = kBlack;
     int plot_hatch_idx = 0;
     TString tex_string = "";
 
@@ -81,7 +81,7 @@ private:
             fRootHist->SetBinError(i + 1, error);
         }
 
-        Color_t color_to_set = plot_color_code; 
+        Color_t color_to_set = plot_color_code;
 
         fRootHist->SetLineColor(color_to_set);
         fRootHist->SetMarkerColor(color_to_set);
@@ -100,22 +100,22 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const std::vector<double>& uncertainties,
               TString name = "hist", TString title = "Histogram",
-              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):
         TNamed(name, title), binning_def(binDef), bin_counts(counts),
         plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
         if (binDef.nBins() <= 0) {
-             throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
+             throw std::runtime_error("[Histogram::Histogram] FATAL: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
         }
         if (binDef.nBins() != static_cast<int>(counts.size()) || binDef.nBins() != static_cast<int>(uncertainties.size())) {
-            TString errMsg = TString::Format("Histogram '%s': Binning (%d), counts (%zu), and uncertainties (%zu) dimensions mismatch.",
-                                             name.Data(), binDef.nBins(), counts.size(), uncertainties.size());
+            TString errMsg = TString::Format("[Histogram::Histogram] FATAL: Binning (%d), counts (%zu), and uncertainties (%zu) dimensions mismatch for histogram '%s'.",
+                                             binDef.nBins(), counts.size(), uncertainties.size(), name.Data());
             throw std::runtime_error(errMsg.Data());
         }
         covariance_matrix.ResizeTo(binDef.nBins(), binDef.nBins());
         covariance_matrix.Zero();
         for (int i = 0; i < binDef.nBins(); ++i) {
-            if (uncertainties[i] < 0) throw std::runtime_error("Uncertainties cannot be negative for histogram '" + std::string(name.Data()) + "'.");
+            if (uncertainties[i] < 0) throw std::runtime_error("[Histogram::Histogram] FATAL: Uncertainties cannot be negative for histogram '" + std::string(name.Data()) + "'.");
             covariance_matrix(i, i) = uncertainties[i] * uncertainties[i];
         }
         if (this->tex_string.IsNull() || this->tex_string.IsWhitespace()) this->tex_string = name;
@@ -124,15 +124,15 @@ public:
 
     Histogram(const AnalysisFramework::Binning& binDef, const std::vector<double>& counts, const TMatrixDSym& covMatrix,
               TString name = "hist", TString title = "Histogram",
-              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):  
+              Color_t plotColor = kBlack, int plotHatch = 0, TString texStr = ""):
         TNamed(name, title), binning_def(binDef), bin_counts(counts), covariance_matrix(covMatrix),
         plot_color_code(plotColor), plot_hatch_idx(plotHatch), tex_string(texStr), fRootHist(nullptr)
     {
         if (binDef.nBins() <= 0) {
-             throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
+             throw std::runtime_error("[Histogram::Histogram] FATAL: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
         }
         if (binDef.nBins() != static_cast<int>(counts.size()) || binDef.nBins() != covMatrix.GetNrows()) {
-             TString errMsg = TString::Format("Histogram '%s': Binning (%d), counts (%zu), and covariance matrix (%d) dimensions mismatch.",
+             TString errMsg = TString::Format("[Histogram::Histogram] FATAL: Binning (%d), counts (%zu), and covariance matrix (%d) dimensions mismatch for histogram '%s'.",
                                              name.Data(), binDef.nBins(), counts.size(), covMatrix.GetNrows());
             throw std::runtime_error(errMsg.Data());
         }
@@ -145,7 +145,7 @@ public:
         binning_def(other.binning_def),
         bin_counts(other.bin_counts),
         covariance_matrix(other.covariance_matrix),
-        plot_color_code(other.plot_color_code),  
+        plot_color_code(other.plot_color_code),
         plot_hatch_idx(other.plot_hatch_idx),
         tex_string(other.tex_string),
         fRootHist(nullptr)
@@ -164,7 +164,7 @@ public:
     {
         int nBins = binDef.nBins();
         if (nBins != rootHist.GetNbinsX()) {
-            throw std::runtime_error("Histogram: Binning and TH1D have different number of bins for '" + std::string(name.Data()) + "'.");
+            throw std::runtime_error("[Histogram::Histogram] FATAL: Binning and TH1D have different number of bins for '" + std::string(name.Data()) + "'.");
         }
         bin_counts.resize(nBins);
         for (int i = 0; i < nBins; ++i) {
@@ -189,7 +189,7 @@ public:
     {
         int nBins = binDef.nBins();
         if (nBins <= 0) {
-            throw std::runtime_error("Histogram: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
+            throw std::runtime_error("[Histogram::Histogram] FATAL: Binning definition has zero or negative bins for '" + std::string(name.Data()) + "'.");
         }
         bin_counts.assign(nBins, 0.0);
         covariance_matrix.ResizeTo(nBins, nBins);
@@ -207,7 +207,7 @@ public:
              covariance_matrix.ResizeTo(other.covariance_matrix.GetNrows(), other.covariance_matrix.GetNcols());
         }
         covariance_matrix = other.covariance_matrix;
-        plot_color_code = other.plot_color_code;  
+        plot_color_code = other.plot_color_code;
         plot_hatch_idx = other.plot_hatch_idx;
         tex_string = other.tex_string;
 
@@ -230,7 +230,7 @@ public:
     const std::vector<double>& getBinCounts() const { return bin_counts; }
 
     double getBinContent(int i) const {
-        if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::getBinContent: Bin index out of range.");
+        if (i < 0 || i >= nBins()) throw std::out_of_range("[Histogram::getBinContent] FATAL: Bin index out of range.");
         return bin_counts[i];
     }
     const TMatrixDSym& getCovarianceMatrix() const { return covariance_matrix; }
@@ -245,9 +245,9 @@ public:
     }
 
     double getBinError(int i) const {
-        if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::getBinError: Bin index out of range.");
+        if (i < 0 || i >= nBins()) throw std::out_of_range("[Histogram::getBinError] FATAL: Bin index out of range.");
         if (covariance_matrix.GetNrows() <=i || covariance_matrix.GetNcols() <=i) {
-             throw std::out_of_range("Histogram::getBinError: Covariance matrix index out of range.");
+             throw std::out_of_range("[Histogram::getBinError] FATAL: Covariance matrix index out of range.");
         }
         return (covariance_matrix(i,i) < 0) ? 0.0 : std::sqrt(covariance_matrix(i,i));
     }
@@ -290,14 +290,14 @@ public:
     }
 
     void setBinContent(int i, double content) {
-        if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::setBinContent: Bin index out of range.");
+        if (i < 0 || i >= nBins()) throw std::out_of_range("[Histogram::setBinContent] FATAL: Bin index out of range.");
         bin_counts[i] = content;
         if (fRootHist) fRootHist->SetBinContent(i + 1, content);
     }
 
     void setBinError(int i, double error) {
-        if (i < 0 || i >= nBins()) throw std::out_of_range("Histogram::setBinError: Bin index out of range.");
-        if (error < 0) throw std::runtime_error("Error cannot be negative for histogram '" + std::string(GetName()) + "'.");
+        if (i < 0 || i >= nBins()) throw std::out_of_range("[Histogram::setBinError] FATAL: Bin index out of range.");
+        if (error < 0) throw std::runtime_error("[Histogram::setBinError] FATAL: Error cannot be negative for histogram '" + std::string(GetName()) + "'.");
         if (covariance_matrix.GetNrows() <=i || covariance_matrix.GetNcols() <=i) {
              covariance_matrix.ResizeTo(nBins(), nBins());
         }
@@ -306,7 +306,7 @@ public:
     }
 
     void setCovarianceMatrix(const TMatrixDSym& cov) {
-        if (cov.GetNrows() != nBins()) throw std::runtime_error("Histogram::setCovarianceMatrix: Covariance matrix dimensions mismatch for histogram '" + std::string(GetName()) + "'.");
+        if (cov.GetNrows() != nBins()) throw std::runtime_error("[Histogram::setCovarianceMatrix] FATAL: Covariance matrix dimensions mismatch for histogram '" + std::string(GetName()) + "'.");
         covariance_matrix = cov;
         if (fRootHist) {
             for (int i = 0; i < nBins(); ++i) {
@@ -317,7 +317,7 @@ public:
 
     void setBinning(const Binning& newBinningDef) {
         if (newBinningDef.nBins() <= 0) {
-            throw std::runtime_error("New binning definition has zero or negative bins for histogram '" + std::string(GetName()) + "'.");
+            throw std::runtime_error("[Histogram::setBinning] FATAL: New binning definition has zero or negative bins for histogram '" + std::string(GetName()) + "'.");
         }
         binning_def = newBinningDef;
         bin_counts.assign(newBinningDef.nBins(), 0.0);
@@ -351,7 +351,7 @@ public:
 
     void addCovariance(const TMatrixDSym& cov_mat_to_add, bool fractional = false) {
         if (cov_mat_to_add.GetNrows() != nBins() || cov_mat_to_add.GetNcols() != nBins()) {
-            throw std::runtime_error("Covariance matrix to add has incompatible dimensions for histogram '" + std::string(GetName()) + "'.");
+            throw std::runtime_error("[Histogram::addCovariance] FATAL: Covariance matrix to add has incompatible dimensions for histogram '" + std::string(GetName()) + "'.");
         }
         if (fractional) {
             TMatrixDSym abs_cov_mat(nBins());
@@ -407,7 +407,7 @@ public:
     }
 
     Histogram operator/(double scalar) const {
-        if (std::abs(scalar) < 1e-9) throw std::runtime_error("Division by zero or very small scalar for histogram '" + std::string(GetName()) + "'.");
+        if (std::abs(scalar) < 1e-9) throw std::runtime_error("[Histogram::operator/] FATAL: Division by zero or very small scalar for histogram '" + std::string(GetName()) + "'.");
         Histogram result = *this;
         result.SetName(TString::Format("%s_div_scalar", GetName()));
         double inv_scalar_sq = 1.0 / (scalar * scalar);
@@ -421,7 +421,7 @@ public:
 
     Histogram operator+(const Histogram& other) const {
         if (!binning_def.isCompatible(other.binning_def)) {
-            throw std::runtime_error("Histograms have incompatible binnings for addition: '" + std::string(GetName()) + "' and '" + std::string(other.GetName()) + "'.");
+            throw std::runtime_error("[Histogram::operator+] FATAL: Histograms have incompatible binnings for addition: '" + std::string(GetName()) + "' and '" + std::string(other.GetName()) + "'.");
         }
         Histogram result = *this;
         result.SetName(TString::Format("%s_plus_%s", GetName(), other.GetName()));
@@ -435,7 +435,7 @@ public:
 
     Histogram operator-(const Histogram& other) const {
         if (!binning_def.isCompatible(other.binning_def)) {
-            throw std::runtime_error("Histograms have incompatible binnings for subtraction: '" + std::string(GetName()) + "' and '" + std::string(other.GetName()) + "'.");
+            throw std::runtime_error("[Histogram::operator-] FATAL: Histograms have incompatible binnings for subtraction: '" + std::string(GetName()) + "' and '" + std::string(other.GetName()) + "'.");
         }
         Histogram result = *this;
         result.SetName(TString::Format("%s_minus_%s", GetName(), other.GetName()));

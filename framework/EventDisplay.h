@@ -81,9 +81,9 @@ public:
                 int sub = single_event_df.Take<int>("sub").GetValue()[0];
                 int evt = single_event_df.Take<int>("evt").GetValue()[0];
 
-                auto u_data = single_event_df.Take<std::vector<float>>("detector_image_u").GetValue().at(0);
-                auto v_data = single_event_df.Take<std::vector<float>>("detector_image_v").GetValue().at(0);
-                auto w_data = single_event_df.Take<std::vector<float>>("detector_image_w").GetValue().at(0);
+                auto u_data = single_event_df.Take<std::vector<float>>("event_detector_image_u").GetValue().at(0);
+                auto v_data = single_event_df.Take<std::vector<float>>("event_detector_image_v").GetValue().at(0);
+                auto w_data = single_event_df.Take<std::vector<float>>("event_detector_image_w").GetValue().at(0);
 
                 std::vector<std::string> planes = {"U", "V", "W"};
                 for (const std::string& plane : planes) {
@@ -266,8 +266,9 @@ private:
         hist->SetMinimum(1.0);
         hist->SetMaximum(1000.0);
         
-        hist->GetXaxis()->SetTitle("Local Drift Time");
-        hist->GetYaxis()->SetTitle("Local Wire Coordinate");
+        hist->GetXaxis()->SetTitle("Local Wire Coordinate");
+        hist->GetYaxis()->SetTitle("Local Drift Time");
+    
         hist->GetXaxis()->SetTitleOffset(1.1f);
         hist->GetYaxis()->SetTitleOffset(1.1f);
         hist->GetXaxis()->SetLabelColor(kBlack);
