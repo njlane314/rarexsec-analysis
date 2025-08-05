@@ -1,0 +1,45 @@
+#ifndef BIN_DEFINITION_H
+#define BIN_DEFINITION_H
+
+#include <vector>
+#include <string>
+#include <algorithm>
+#include "TString.h"
+#include "Logger.h"
+
+namespace analysis {
+
+class BinDefinition {
+public:
+    const std::vector<double>  edges_;
+    const TString              branch_;
+    const TString              name_;
+    const TString              tex_;
+    const std::vector<TString> keys_;
+
+    BinDefinition(std::vector<double> ed,
+                  const std::string&  br,
+                  const std::string&  tx,
+                  std::vector<TString> ks,
+                  const std::string&  nm)
+      : edges_(std::move(ed))
+      , branch_(br.c_str())
+      , name_(nm.c_str())
+      , tex_(tx.c_str())
+      , keys_(std::move(ks))
+    {
+        if (edges_.size() < 2)
+            log::fatal("BinDefinition", "Edges must contain at least two values.");
+
+        if (!std::is_sorted(edges_.begin(), edges_.end()))
+            log::fatal("BinDefinition", "Edges must be sorted.");
+    }
+
+    constexpr std::size_t nBins() const noexcept {
+        return edges_.size() > 1 ? edges_.size() - 1 : 0;
+    }
+};
+
+} 
+
+#endif // BIN_DEFINITION_H
