@@ -13,11 +13,11 @@
 namespace analysis {
 
 struct StratumProperties {
-    int         internal_key;
-    std::string plain_name;
-    std::string tex_label;
-    Color_t     fill_colour;
-    int         fill_style;
+    int             internal_key;
+    std::string     plain_name;
+    std::string     tex_label;
+    Color_t         fill_colour;
+    int             fill_style;
 };
 
 class StratificationRegistry {
