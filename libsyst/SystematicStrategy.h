@@ -7,9 +7,10 @@
 #include <vector>
 #include <TMatrixDSym.h>
 #include "BinDefinition.h"
-#include "BinnedHistogram.h"
 
 namespace analysis {
+
+class BinnedHistogram;
 
 using BookHistFn = std::function<BinnedHistogram(int, const std::string&)>;
 
@@ -50,6 +51,10 @@ public:
     ) = 0;
 };
 
-} 
+}
 
-#endif // SYSTEMATIC_STRATEGY_H
+#endif
+
+
+
+

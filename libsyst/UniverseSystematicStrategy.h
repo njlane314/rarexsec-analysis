@@ -5,6 +5,7 @@
 #include <string>
 #include <TMatrixDSym.h>
 #include "SystematicStrategy.h"
+#include "BinnedHistogram.h"
 
 namespace analysis {
 
@@ -26,20 +27,20 @@ public:
 
     void bookVariations(
         const std::vector<int>& keys,
-        BookHistFn              /*book_fn*/
+        BookHistFn              book_fn
     ) override {
         for (auto key : keys) {
             auto& univ_map = hist_universes_[key];
             for (unsigned u = 0; u < n_universes_; ++u) {
                 std::string col = vector_name_ + "[" + std::to_string(u) + "]";
-                univ_map.emplace(u, book_fn_(key, col));
+                univ_map.emplace(u, book_fn(key, col));
             }
         }
     }
 
     TMatrixDSym computeCovariance(
         int              key,
-        const Histogram& nominal_hist
+        const BinnedHistogram& nominal_hist
     ) override {
         auto& univ_map = hist_universes_.at(key);
         int         n  = nominal_hist.nBins();
@@ -62,10 +63,10 @@ public:
         return cov;
     }
 
-    std::map<std::string, Histogram> getVariedHistograms(
+    std::map<std::string, BinnedHistogram> getVariedHistograms(
         int key
     ) override {
-        std::map<std::string, Histogram> out;
+        std::map<std::string, BinnedHistogram> out;
         for (auto& [u, hist] : hist_universes_.at(key)) {
             out["u" + std::to_string(u)] = hist;
         }
@@ -77,9 +78,9 @@ private:
     std::string                                     vector_name_;
     unsigned                                        n_universes_;
     BookHistFn                                      book_fn_;
-    std::map<int, std::map<unsigned, Histogram>>    hist_universes_;
+    std::map<int, std::map<unsigned, BinnedHistogram>>    hist_universes_;
 };
 
 }
 
-#endif // UNIVERSE_SYSTEMATIC_STRATEGY_H
+#endif

@@ -7,15 +7,11 @@
 
 namespace analysis {
 
-template<
-  typename Storage  = TH1DStorage,
-  typename Renderer = TH1DRenderer
->
-class BinnedHistogram : public TNamed, private Storage, private Renderer {
+class BinnedHistogram : public TNamed, public TH1DStorage, private TH1DRenderer {
 public:
     BinnedHistogram() = default;
 
-    void init(const Binning&        bn,
+    BinnedHistogram(const BinDefinition&        bn,
               const std::vector<double>& ct,
               const TMatrixDSym&    cv,
               TString               nm  = "hist",
@@ -25,27 +21,27 @@ public:
               TString               tx  = "")
       : TNamed(nm, ti)
     {
-        Storage::init(bn, ct, cv);
-        Renderer::style(cl, ht, tx);
+        TH1DStorage::init(bn, ct, cv);
+        TH1DRenderer::style(cl, ht, tx);
     }
 
-    int    nBins()   const { return Storage::size(); }
-    double count_(int i) const { return Storage::count(i); }
-    double err_(int i)   const { return Storage::err(i); }
-    double sum_()       const { return Storage::sum(); }
-    double sumErr_()    const { return Storage::sumErr(); }
-    TMatrixDSym corrMat_() const { return Storage::corrMat(); }
+    int    nBins()   const { return TH1DStorage::size(); }
+    double getBinContent(int i) const { return TH1DStorage::count(i); }
+    double err_(int i)   const { return TH1DStorage::err(i); }
+    double sum_()       const { return TH1DStorage::sum(); }
+    double sumErr_()    const { return TH1DStorage::sumErr(); }
+    TMatrixDSym corrMat_() const { return TH1DStorage::corrMat(); }
 
     BinnedHistogram operator+(double s) const {
         auto tmp = *this;
-        for (auto& v : tmp.counts_) v += s;
+        for (auto& v : tmp.counts) v += s;
         return tmp;
     }
 
     BinnedHistogram operator*(double s) const {
         auto tmp = *this;
-        for (auto& v : tmp.counts_) v *= s;
-        tmp.cov_ *= s * s;
+        for (auto& v : tmp.counts) v *= s;
+        tmp.cov *= s * s;
         return tmp;
     }
 
@@ -56,17 +52,17 @@ public:
     BinnedHistogram operator+(const BinnedHistogram& o) const {
         auto tmp = *this;
         for (int i = 0; i < nBins(); ++i) {
-            tmp.counts_[i] += o.counts_[i];
+            tmp.counts[i] += o.counts[i];
         }
-        tmp.cov_ += o.cov_;
+        tmp.cov += o.cov;
         return tmp;
     }
 
-    const TH1D* get() { return Renderer::get(); }
+    const TH1D* get() { return TH1DRenderer::get(*this); }
 };
 
-using BinnedHistogramD = BinnedHistogram<>;
+using BinnedHistogramD = BinnedHistogram;
 
 }
 
-#endif // BINNED_HISTOGRAM_H
+#endif

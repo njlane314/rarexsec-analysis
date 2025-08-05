@@ -7,7 +7,7 @@
 #include <memory>
 #include "ROOT/RDataFrame.hxx"
 #include "IEventProcessor.h"
-#include "SampleDefinition.h"                   
+#include "SampleDefinition.h"
 #include "RunConfigRegistry.h"
 #include "EventVariableRegistry.h"
 #include "Selection.h"
@@ -47,7 +47,7 @@ public:
         bool first = true;
         ROOT::RDF::RSnapshotOptions opts;
         for (auto& [key, sample] : frames_) {
-            auto df = sample.nominalNode;
+            auto df = sample.nominal_node_;
             if (!filter_expr.empty()) {
                 df = df.Filter(filter_expr);
             }
@@ -79,16 +79,15 @@ private:
     void loadAll() {
         for (auto& period : periods_) {
             const auto& rc   = run_registry_.get(beam_, period);
-            total_pot_      += rc.nominalPot;
-            total_triggers_ += rc.nominalTriggers;
+            total_pot_      += rc.nominal_pot;
+            total_triggers_ += rc.nominal_triggers;
 
-            for (auto& sample_json : rc.samplesJson) {
+            for (auto& sample_json : rc.samples) {
                 SampleDefinition sample{ sample_json,
-                                    rc.baseDir,
+                                    config::ntuple_base_directory,
                                     var_registry_,
-                                    *evt_processor_,
-                                    blind_ };
-                frames_.emplace(sample.key, std::move(sample));
+                                    *evt_processor_};
+                frames_.emplace(sample.internal_key_, std::move(sample));
             }
         }
     }
@@ -96,4 +95,4 @@ private:
 
 }
 
-#endif // ANALYSIS_DATA_LOADER_H
+#endif

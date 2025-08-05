@@ -1,4 +1,3 @@
-// RUN_CONFIG_H
 #ifndef RUN_CONFIG_H
 #define RUN_CONFIG_H
 
@@ -18,45 +17,35 @@ struct RunConfig {
     std::string                   run_period;
     double                        nominal_pot{0.0};
     long                          nominal_triggers{0};
-    std::vector<SampleDefinition> samples;
+    json                          samples;
 
     RunConfig(const json& j, std::string bm, std::string pr)
       : beam_mode(std::move(bm))
       , run_period(std::move(pr))
       , nominal_pot(j.value("nominal_pot", 0.0))
       , nominal_triggers(j.value("nominal_triggers", 0L))
-    {
-        for (auto& sj : j.at("samples")) {
-            // now matching your SampleDefinition ctor signature:
-            samples.emplace_back(
-              sj,
-              /* base_dir */    j.value("base_dir", std::string{}),
-              /* var_reg */     *reinterpret_cast<const EventVariableRegistry*>(nullptr),
-              /* processor */   *reinterpret_cast<IEventProcessor*>(nullptr),
-              /* blind */       false
-            );
-        }
-    }
+      , samples(j.at("samples"))
+    {}
 
     std::string label() const {
         return beam_mode + ":" + run_period;
     }
 
-    void validate(const std::string& baseDir) const {
+    void validate() const {
         if (beam_mode.empty())     log::fatal("RunConfig", "empty beam_mode");
         if (run_period.empty())    log::fatal("RunConfig", "empty run_period");
         if (samples.empty())       log::fatal("RunConfig", "no samples for", beam_mode + "/" + run_period);
 
         std::set<std::string> keys;
         for (auto& s : samples) {
-            s.validateFiles(baseDir);
-            if (!keys.insert(s.internal_key_).second) {
-                log::fatal("RunConfig", "duplicate sample key:", s.internal_key_);
+            std::string key = s.at("sample_key").get<std::string>();
+            if (!keys.insert(key).second) {
+                log::fatal("RunConfig", "duplicate sample key:", key);
             }
         }
     }
 };
 
-} // namespace analysis
+} 
 
 #endif // RUN_CONFIG_H

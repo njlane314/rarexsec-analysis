@@ -5,14 +5,9 @@
 #include <string>
 #include <TMatrixDSym.h>
 #include "SystematicStrategy.h"
+#include "BinnedHistogram.h"
 
 namespace analysis {
-
-struct KnobDef {
-    std::string name_;
-    std::string up_column_;
-    std::string dn_column_;
-};
 
 class WeightSystematicStrategy : public SystematicStrategy {
 public:
@@ -32,17 +27,17 @@ public:
 
     void bookVariations(
         const std::vector<int>& keys,
-        BookHistFn              /*book_fn*/
+        BookHistFn              book_fn
     ) override {
         for (auto key : keys) {
-            hist_up_[key] = book_fn_(key, up_column_);
-            hist_dn_[key] = book_fn_(key, dn_column_);
+            hist_up_[key] = book_fn(key, up_column_);
+            hist_dn_[key] = book_fn(key, dn_column_);
         }
     }
 
     TMatrixDSym computeCovariance(
         int              key,
-        const Histogram& nominal_hist
+        const BinnedHistogram& nominal_hist
     ) override {
         const auto& hu = hist_up_.at(key);
         const auto& hd = hist_dn_.at(key);
@@ -57,7 +52,7 @@ public:
         return cov;
     }
 
-    std::map<std::string, Histogram> getVariedHistograms(
+    std::map<std::string, BinnedHistogram> getVariedHistograms(
         int key
     ) override {
         return {
@@ -71,10 +66,10 @@ private:
     std::string                   up_column_;
     std::string                   dn_column_;
     BookHistFn                    book_fn_;
-    std::map<int, Histogram>      hist_up_;
-    std::map<int, Histogram>      hist_dn_;
+    std::map<int, BinnedHistogram>      hist_up_;
+    std::map<int, BinnedHistogram>      hist_dn_;
 };
 
-} 
+}
 
-#endif // WEIGHT_SYSTEMATIC_STRATEGY_H
+#endif

@@ -9,7 +9,7 @@ int main() {
 
     // minimal exercise of one component
     analysis::EventVariableRegistry evr;
-    auto vars = evr.getEventVariables(analysis::SampleType::kMonteCarlo);
+    auto vars = evr.eventVariables(analysis::SampleType::kMonteCarlo);
     std::cout << "MonteCarlo event vars count: " << vars.size() << "\n";
 
     return 0;

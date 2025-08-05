@@ -4,19 +4,57 @@
 #include "TObject.h"
 #include "BinDefinition.h"
 #include "BinnedHistogram.h"
-#include "HistogramPolicy.h"
 #include "Logger.h"
 
 namespace analysis {
 
-struct TObjectRenderer {}; 
+struct ResultantStorage {
+    BinnedHistogram                                                   total;
+    BinnedHistogram                                                   data;
+    std::map<std::string, BinnedHistogram>                            channels;
+    std::map<std::string, TMatrixDSym>                                syst_cov;
+    std::map<std::string, std::map<std::string, BinnedHistogram>>     syst_var;
+    double                                                            pot    = 0.0;
+    bool                                                              blinded = true;
+    std::string                                                       beam;
+    std::vector<std::string>                                          runs;
+    BinDefinition                                                     bin;
+    std::string                                                       axis_label;
+    std::string                                                       region;
+
+    void init(const BinnedHistogram& tot,
+              const BinnedHistogram& dat,
+              BinDefinition          b,
+              std::string            axis,
+              std::string            reg)
+    {
+        total       = tot;
+        data        = dat;
+        bin         = std::move(b);
+        axis_label  = std::move(axis);
+        region      = std::move(reg);
+    }
+
+    void scaleAll(double f) {
+        total = total * f;
+        data  = data * f;
+        for (auto& [k, h] : channels) h = h * f;
+        for (auto& [k, m] : syst_cov)   m *= (f * f);
+        for (auto& [s, hmap] : syst_var) {
+            for (auto& [v, h] : hmap) h = h * f;
+        }
+        pot *= f;
+    }
+};
+
+struct TObjectRenderer {};
 
 template<
     typename Storage = ResultantStorage,
     typename Renderer = TObjectRenderer
 >
 
-class HistogramResult : public TObject, private Storage, private Renderer {
+class HistogramResultBase : public TObject, private Storage, private Renderer {
 public:
     inline void init(const BinnedHistogram& tot,
                      const BinnedHistogram& dat,
@@ -41,11 +79,11 @@ public:
     using Storage::axis_label;
     using Storage::region;
 
-    ClassDef(HistogramResult, 1);
+    ClassDef(HistogramResultBase, 1);
 };
 
-using HistogramResult = HistogramResult<>;
+using HistogramResult = HistogramResultBase<>;
 
 } 
 
-#endif // HISTOGRAM_RESULT_H
+#endif

@@ -8,6 +8,9 @@
 #include <TMatrixDSym.h>
 #include "SystematicStrategy.h"
 #include "BinnedHistogram.h"
+#include "WeightSystematicStrategy.h"
+#include "UniverseSystematicStrategy.h"
+#include "NormalisationSystematicStrategy.h"
 
 namespace analysis {
 
@@ -44,7 +47,7 @@ public:
     }
 
     std::map<std::string, TMatrixDSym> computeAllCovariances(
-        const libhist/BinnedHistogram& nominal_hist
+        const BinnedHistogram& nominal_hist
     ) const {
         std::map<std::string, TMatrixDSym> out;
         for (auto& strat : strategies_) {
@@ -55,9 +58,9 @@ public:
         return out;
     }
 
-    std::map<std::string, std::map<std::string, libhist/BinnedHistogram>>
+    std::map<std::string, std::map<std::string, BinnedHistogram>>
     getAllVariedHistograms() const {
-        std::map<std::string, std::map<std::string, libhist/BinnedHistogram>> out;
+        std::map<std::string, std::map<std::string, BinnedHistogram>> out;
         for (auto& strat : strategies_) {
             for (auto key : channel_keys_) {
                 out[strat->getName()] = strat->getVariedHistograms(key);
@@ -74,4 +77,4 @@ private:
 
 }
 
-#endif // SYSTEMATICS_PROCESSOR_H
+#endif

@@ -11,11 +11,11 @@ namespace analysis {
 
 class BinDefinition {
 public:
-    const std::vector<double>  edges_;
-    const TString              branch_;
-    const TString              name_;
-    const TString              tex_;
-    const std::vector<TString> keys_;
+    std::vector<double>  edges_;
+    TString              branch_;
+    TString              name_;
+    TString              tex_;
+    std::vector<TString> keys_;
 
     BinDefinition(std::vector<double> ed,
                   const std::string&  br,
@@ -35,11 +35,13 @@ public:
             log::fatal("BinDefinition", "Edges must be sorted.");
     }
 
-    constexpr std::size_t nBins() const noexcept {
+    BinDefinition() = default;
+
+    std::size_t nBins() const noexcept {
         return edges_.size() > 1 ? edges_.size() - 1 : 0;
     }
 };
 
 } 
 
-#endif // BIN_DEFINITION_H
+#endif
