@@ -1,0 +1,7 @@
+// RegionsPlugin.cpp
+#include "RegionsPlugin.h"
+#include <nlohmann/json.hpp>
+
+extern "C" analysis::IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {
+    return new analysis::RegionsPlugin(cfg);
+}

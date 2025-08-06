@@ -51,8 +51,13 @@ protected:
         mc_stack_ = new THStack("mc_stack", "");
         legend_   = new TLegend(0.1, 0.7, 0.9, 0.9);
 
-        for (auto& [key, hist] : result_.channels()) {
-            TH1D* copy = hist.getRootHistCopy();
+        for (auto const& [key, hist] : result_.channels) {
+            // BinnedHistogram::get() is non-const, so we cast away const here
+            auto& h_mut = const_cast<BinnedHistogram&>(hist);
+            const TH1D* base = h_mut.get();
+            TH1D* copy      = static_cast<TH1D*>(base->Clone());
+            copy->SetDirectory(nullptr);
+
             mc_stack_->Add(copy);
             legend_->AddEntry(copy, copy->GetTitle(), "f");
         }
@@ -62,16 +67,16 @@ protected:
     }
 
 private:
-    const HistogramResult& result_;
-    std::string            category_column_;
-    bool                   overlay_signal_;
-    std::vector<Cut>       cut_list_;
-    bool                   annotate_numbers_;
+    const HistogramResult&          result_;
+    std::string                     category_column_;
+    bool                            overlay_signal_;
+    std::vector<Cut>                cut_list_;
+    bool                            annotate_numbers_;
 
-    THStack*               mc_stack_     = nullptr;
-    TLegend*               legend_       = nullptr;
+    THStack* mc_stack_  = nullptr;
+    TLegend* legend_    = nullptr;
 };
 
-}
+} // namespace analysis
 
 #endif // STACKED_HISTOGRAM_PLOT_H

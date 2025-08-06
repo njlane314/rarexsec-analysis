@@ -30,6 +30,7 @@ public:
         const std::string& keycfg,
         StratificationRegistry& registry)
     {
+        log::info("StratifierFactory", "Requested stratifier keycfg:", keycfg);
         auto [key, cfg] = splitOnce(keycfg, ':');
         auto it = creators_map_.find(key);
         if (it == creators_map_.end())

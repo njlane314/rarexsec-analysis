@@ -1,5 +1,6 @@
-#ifndef STACKED_HISTOGRAM_PLUGIN_H
-#define STACKED_HISTOGRAM_PLUGIN_H
+// StackedHistogramPlugin.h
+#ifndef STACKEDHISTOGRAMPLUGIN_H
+#define STACKEDHISTOGRAMPLUGIN_H
 
 #include "IAnalysisPlugin.h"
 #include "StackedHistogramPlot.h"
@@ -46,7 +47,7 @@ public:
         }
     }
 
-    void onInitialisation(const AnalysisDefinition&, const SelectionRegistry&) override {}
+    void onInitialisation(AnalysisDefinition&, const SelectionRegistry&) override {}
     void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
     void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
 
@@ -71,10 +72,6 @@ private:
     std::vector<PlotConfig> plots_;
 };
 
-extern "C" IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {
-    return new StackedHistogramPlugin(cfg);
-}
+} // namespace analysis
 
-}
-
-#endif
+#endif // STACKEDHISTOGRAMPLUGIN_H

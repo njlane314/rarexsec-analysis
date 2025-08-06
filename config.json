@@ -21,7 +21,7 @@
                         "sample_key": "mc_strangeness_run1_fhc",
                         "sample_type": "mc",
                         "active": true,
-                        "truth_filter": "(mc_n_strangeness > 0)",
+                        "truth_filter": "(mc_n_strange > 0)",
                         "relative_path": "mc_strangeness_run1_fhc.root",
                         "pot": 1.0093508017259402e+23,
                         "triggers": 116808

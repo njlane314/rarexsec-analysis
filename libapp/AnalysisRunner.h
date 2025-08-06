@@ -33,20 +33,24 @@ public:
     }
 
     HistogramResult run() {
+        log::info("AnalysisRunner", "Setup complete, starting regions loop");
         dispatcher_.broadcastAnalysisSetup(ana_definition_, sel_registry_);
 
         HistogramResult all_results;
 
         for (const auto& [region_key, region] : ana_definition_.getRegions()) {
-            auto query = sel_registry_.getRegionFilterQuery(region);
+            log::info("AnalysisRunner", "BEGIN REGION:", region_key);
+            auto query = region.filter;
             IHistogramBuilder::SampleDataFrameMap dataframes;
 
             for (auto& [sample_key, sample] : data_loader_.getSampleFrames()) {
+                log::info("AnalysisRunner", "  Pre-sample processing for:", sample_key);
                 dispatcher_.broadcastBeforeSampleProcessing(region_key, region, sample_key);
                 dataframes.emplace(sample_key, std::make_pair(sample.sample_type_, sample.nominal_node_.Filter(query.str())));
             }
 
             for (const auto& [var_key, var_cfg] : ana_definition_.getVariables()) {
+                log::info("AnalysisRunner", "   Building hist for var:", var_key);
                 auto hist = hist_builder_->build(var_cfg.bin_def, dataframes);
                 std::string result_key = var_key + "@" + region_key;
                 log::info("AnalysisRunner", "Storing final histogram with key:", result_key);
@@ -54,8 +58,10 @@ public:
             }
             
             for (auto& [sample_key, sample] : data_loader_.getSampleFrames()){
-                 dispatcher_.broadcastAfterSampleProcessing(region_key, sample_key, all_results);
+                log::info("AnalysisRunner", "  Post-sample processing for:", sample_key);
+                dispatcher_.broadcastAfterSampleProcessing(region_key, sample_key, all_results);
             }
+            log::info("AnalysisRunner", "END   REGION:", region_key);
         }
 
         dispatcher_.broadcastAnalysisCompletion(all_results);

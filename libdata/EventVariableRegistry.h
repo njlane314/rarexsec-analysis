@@ -95,7 +95,8 @@ private:
             "neutrino_vertex_time",
             "neutrino_completeness_from_pfp", "neutrino_purity_from_pfp",
             "target_nucleus_pdg", "hit_nucleon_pdg",
-            "kinematic_W", "kinematic_X", "kinematic_Y", "kinematic_Q_squared"
+            "kinematic_W", "kinematic_X", "kinematic_Y", "kinematic_Q_squared",
+            "backtracked_pdg_codes"
         };
         return v;
     }

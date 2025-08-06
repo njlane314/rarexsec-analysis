@@ -1,5 +1,5 @@
-#ifndef HISTOGRAM_BUILDER_BASE_H
-#define HISTOGRAM_BUILDER_BASE_H
+#ifndef HISTOGRAM_DIRECTOR_H
+#define HISTOGRAM_DIRECTOR_H
 
 #include "BinDefinition.h"
 #include "IHistogramBuilder.h"
@@ -15,15 +15,15 @@ class HistogramDirector : public IHistogramBuilder {
 public:
     HistogramResult build(const BinDefinition& bin,
                           const SampleDataFrameMap& dfs) final {
+        log::info("HistogramDirector", "ENTER build for variable:", bin.getVariable().Data());
         this->prepareStratification(bin, dfs);
         auto model = this->createModel(bin, dfs);
-
         ROOT::RDF::RResultPtr<TH1D> dataFuture;
         this->bookNominals(bin, dfs, model, dataFuture);
         this->bookVariations(bin, dfs);
-
         HistogramResult result;
         if (dataFuture.IsReady()) {
+            log::info("HistogramDirector", "Setting data histogram");
             result.setDataHist(
                 BinnedHistogram(bin,
                           *dataFuture.GetPtr(),
@@ -31,10 +31,10 @@ public:
                           "Data")
             );
         }
-
         this->mergeStrata(bin, dfs, result);
         this->applySystematicCovariances(bin, result);
         this->finaliseResults(bin, result);
+        log::info("HistogramDirector", "EXIT build for variable:", bin.getVariable().Data());
         return result;
     }
 
@@ -42,24 +42,29 @@ protected:
     static BinDefinition resolveBinning(const BinDefinition& spec,
                                         const SampleDataFrameMap& dfs,
                                         IBranchAccessor& accessor) {
+        log::info("HistogramDirector", "ENTER resolveBinning for:", spec.getVariable().Data());
+        log::info("HistogramDirector", "Number of samples:", dfs.size());
         std::vector<double> values;
         for (auto const& [key, pr] : dfs) {
+            log::info("HistogramDirector", "  extracting values from sample:", key);
             auto v = accessor.extractValues(
                 pr.second,
                 spec.getVariable().Data());
+            log::info("HistogramDirector", "    extracted", v.size(), "values");
             values.insert(values.end(), v.begin(), v.end());
         }
-
         if (values.empty())
             log::fatal("HistogramDirector", "Empty data for binning");
-
+        log::info("HistogramDirector", "Total values for binning:", values.size());
         std::vector<double> edges = spec.edges_;
-        return BinDefinition(
+        BinDefinition out(
             edges,
             spec.getVariable().Data(),
             spec.getTexLabel().Data(),
             spec.getSelectionKeys(),
             spec.getName().Data());
+        log::info("HistogramDirector", "EXIT resolveBinning, bins:", out.nBins());
+        return out;
     }
 
     virtual void prepareStratification(const BinDefinition& /*bin*/,
@@ -89,4 +94,4 @@ protected:
 
 }
 
-#endif // HISTOGRAM_BUILDER_BASE_H
+#endif // HISTOGRAM_DIRECTOR_H

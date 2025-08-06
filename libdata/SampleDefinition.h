@@ -27,16 +27,17 @@ public:
     std::map<DetVarType, ROOT::RDF::RNode> variation_nodes_;
 
     SampleDefinition(const nlohmann::json& j,
+                     const nlohmann::json& all_samples_json,
                      const std::string& base_dir,
                      const EventVariableRegistry& var_reg,
                      IEventProcessor& processor)
-      : nominal_node_(makeDataFrame(base_dir, var_reg, processor, parseMetadata(j)))
+      : nominal_node_(makeDataFrame(base_dir, var_reg, processor, parseMetadata(j), all_samples_json))
     {
         if (sample_type_ == SampleType::kMonteCarlo) {
             for (auto& [dv, path] : var_paths_) {
                 variation_nodes_.emplace(
                     dv,
-                    makeDataFrame(base_dir, var_reg, processor, path)
+                    makeDataFrame(base_dir, var_reg, processor, path, all_samples_json)
                 );
             }
         }
@@ -104,14 +105,33 @@ private:
     ROOT::RDF::RNode makeDataFrame(const std::string&           base_dir,
                                    const EventVariableRegistry&,
                                    IEventProcessor&             processor,
-                                   const std::string&           relPath)
+                                   const std::string&           relPath,
+                                   const nlohmann::json&        all_samples_json)
     {
         auto path = base_dir + "/" + relPath;
-        ROOT::RDataFrame df("nuselection/EventSelectionFilter",
-                                     path);
+        ROOT::RDataFrame df("nuselection/EventSelectionFilter", path);
         auto processed_df = processor.process(df, sample_type_);
-        if (!truth_filter_.empty())        processed_df = processed_df.Filter(truth_filter_);
-        for (auto& ex : truth_exclusions_) processed_df = processed_df.Filter("!(" + ex + ")");
+
+        if (!truth_filter_.empty()) {
+            processed_df = processed_df.Filter(truth_filter_);
+        }
+
+        for (const auto& exclusion_key : truth_exclusions_) {
+            bool found_key = false;
+            for (const auto& sample_json : all_samples_json) {
+                if (sample_json.at("sample_key").get<std::string>() == exclusion_key) {
+                    if (sample_json.contains("truth_filter")) {
+                        auto filter_str = sample_json.at("truth_filter").get<std::string>();
+                        processed_df = processed_df.Filter("!(" + filter_str + ")");
+                        found_key = true;
+                        break;
+                    }
+                }
+            }
+            if (!found_key) {
+                log::warn("SampleDefinition", "Exclusion key not found or missing truth_filter:", exclusion_key);
+            }
+        }
         return processed_df;
     }
 };

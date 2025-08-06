@@ -124,7 +124,7 @@ private:
     inline static const std::vector<
         std::pair<std::string, std::vector<StratumProperties>>>
     vector_schemes_ = {
-        {"pdg_vec",{
+        {"backtracked_pdg_codes",{
             {13, "muon", R"(#mu^{#pm})", kAzure+2, 1001},
             {2212, "proton", "p", kOrange+1, 1001},
             {211, "pion", R"(#pi^{#pm})", kTeal+1, 1001},

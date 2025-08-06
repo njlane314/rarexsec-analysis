@@ -1,48 +1,47 @@
+// RegionsPlugin.h
+#ifndef REGIONSPLUGIN_H
+#define REGIONSPLUGIN_H
+
 #include "IAnalysisPlugin.h"
 #include "AnalysisDefinition.h"
 #include "Logger.h"
 #include <nlohmann/json.hpp>
 
-using namespace analysis;
+namespace analysis {
 
 class RegionsPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
-
 public:
     explicit RegionsPlugin(const nlohmann::json& cfg)
       : config_(cfg) {}
-
-    void onInitialisation(const AnalysisDefinition& def,
-                          const SelectionRegistry&) override
-    {
+    void onInitialisation(AnalysisDefinition& def,
+                          const SelectionRegistry&) override {
         log::info("RegionsPlugin", "Defining regions...");
         if (!config_.contains("regions")) return;
-
         for (auto const& region_cfg : config_.at("regions")) {
-            auto region_key    = region_cfg.at("region_key").get<std::string>();
-            auto label = region_cfg.at("label").get<std::string>();
-
+            auto region_key = region_cfg.at("region_key").get<std::string>();
+            auto label      = region_cfg.at("label").get<std::string>();
             if (region_cfg.contains("selection_rule")) {
                 auto rule_key = region_cfg.at("selection_rule").get<std::string>();
                 def.addRegion(region_key, label, rule_key);
-            }
-            else if (region_cfg.contains("expression")) {
+            } else if (region_cfg.contains("expression")) {
                 auto expr = region_cfg.at("expression").get<std::string>();
                 def.addRegionExpr(region_key, label, expr);
-            }
-            else {
+            } else {
                 log::fatal("RegionsPlugin",
-                           "region entry must have either "
-                           "`selection_rule` or `expression`");
+                           "each region must have either selection_rule or expression");
             }
         }
     }
-
-    void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
-    void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
+    void onPreSampleProcessing(const std::string&,
+                               const RegionConfig&,
+                               const std::string&) override {}
+    void onPostSampleProcessing(const std::string&,
+                                const std::string&,
+                                const HistogramResult&) override {}
     void onFinalisation(const HistogramResult&) override {}
 };
 
-extern "C" analysis::IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {
-    return new RegionsPlugin(cfg);
-}
+} // namespace analysis
+
+#endif // REGIONSPLUGIN_H

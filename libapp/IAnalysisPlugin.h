@@ -13,7 +13,7 @@ class IAnalysisPlugin {
 public:
     virtual ~IAnalysisPlugin() = default;
 
-    virtual void onInitialisation(const AnalysisDefinition& def,
+    virtual void onInitialisation(AnalysisDefinition& def,
                               const SelectionRegistry& sel_reg) = 0;
 
     virtual void onPreSampleProcessing(const std::string& region_key,
@@ -27,5 +27,5 @@ public:
     virtual void onFinalisation(const HistogramResult& all_results) = 0;
 };
 
-} 
+}
 #endif // IANALYSIS_PLUGIN_H

@@ -22,7 +22,7 @@ add_subdirectory(libsyst)
 add_subdirectory(libapp)
 
 set(ANALYSIS_EXECUTABLES
-    analyse_test
+    analyse
 )
 
 include_directories(

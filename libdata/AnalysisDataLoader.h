@@ -7,10 +7,15 @@
 #include <memory>
 #include "ROOT/RDataFrame.hxx"
 #include "IEventProcessor.h"
+#include "WeightProcessor.h"
+#include "TruthChannelProcessor.h"
+#include "MuonSelectionProcessor.h"
+#include "ReconstructionProcessor.h"
 #include "SampleDefinition.h"
 #include "RunConfigRegistry.h"
 #include "EventVariableRegistry.h"
 #include "Selection.h"
+#include "Logger.h"
 
 namespace analysis {
 
@@ -20,14 +25,12 @@ public:
 
     AnalysisDataLoader(const RunConfigRegistry& rnreg,
                        EventVariableRegistry varreg,
-                       std::unique_ptr<IEventProcessor> prc,
                        const std::string& bm,
                        std::vector<std::string> prds,
                        const std::string& ntuple_base_dir,
                        bool bld = true)
       : run_registry_(rnreg)
       , var_registry_(std::move(varreg))
-      , evt_processor_(std::move(prc))
       , ntuple_base_directory_(ntuple_base_dir)
       , beam_(bm)
       , periods_(std::move(prds))
@@ -35,12 +38,12 @@ public:
       , total_pot_(0.0)
       , total_triggers_(0)
     {
-        this->loadAll();
+        loadAll();
     }
 
-    SampleFrameMap&         getSampleFrames() noexcept { return frames_; }
-    double                  getTotalPot() const noexcept { return total_pot_; }
-    long                    getTotalTriggers() const noexcept { return total_triggers_; }
+    SampleFrameMap& getSampleFrames() noexcept { return frames_; }
+    double getTotalPot() const noexcept { return total_pot_; }
+    long getTotalTriggers() const noexcept { return total_triggers_; }
 
     void snapshot(const std::string& filter_expr,
                   const std::string& output_file,
@@ -63,39 +66,67 @@ public:
                   const std::string& output_file,
                   const std::vector<std::string>& columns = {}) const
     {
-        this->snapshot(query.str(), output_file, columns);
+        snapshot(query.str(), output_file, columns);
     }
 
 private:
     const RunConfigRegistry&               run_registry_;
     EventVariableRegistry                  var_registry_;
-    std::unique_ptr<IEventProcessor>       evt_processor_;
     std::string                            ntuple_base_directory_;
-
     SampleFrameMap                         frames_;
     std::string                            beam_;
     std::vector<std::string>               periods_;
     bool                                   blind_;
     double                                 total_pot_;
     long                                   total_triggers_;
+    std::vector<std::unique_ptr<IEventProcessor>> processors_;
+
+    template<typename Head, typename... Tail>
+    std::unique_ptr<IEventProcessor> chainEventProcessors(std::unique_ptr<Head> head,
+                                                          std::unique_ptr<Tail>... tail)
+    {
+        if constexpr (sizeof...(tail) == 0) {
+            return head;
+        } else {
+            auto next = chainEventProcessors(std::move(tail)...);
+            head->chainNextProcessor(std::move(next));
+            return head;
+        }
+    }
 
     void loadAll() {
         for (auto& period : periods_) {
-            const auto& rc   = run_registry_.get(beam_, period);
+            const auto& rc = run_registry_.get(beam_, period);
             total_pot_      += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
-
             for (auto& sample_json : rc.samples) {
-                SampleDefinition sample{ sample_json,
-                                    ntuple_base_directory_,
-                                    var_registry_,
-                                    *evt_processor_};
+                if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
+                    log::info("AnalysisDataLoader",
+                              "Skipping inactive sample: ",
+                              sample_json.at("sample_key").get<std::string>());
+                    continue;
+                }
+                auto pipeline = chainEventProcessors(
+                    std::make_unique<WeightProcessor>(sample_json, total_pot_),
+                    std::make_unique<TruthChannelProcessor>(),
+                    std::make_unique<MuonSelectionProcessor>(),
+                    std::make_unique<ReconstructionProcessor>()
+                );
+                processors_.push_back(std::move(pipeline));
+                auto& proc = *processors_.back();
+                SampleDefinition sample{
+                    sample_json,
+                    rc.samples,
+                    ntuple_base_directory_,
+                    var_registry_,
+                    proc
+                };
                 frames_.emplace(sample.internal_key_, std::move(sample));
             }
         }
     }
 };
 
-}
+} // namespace analysis
 
-#endif
+#endif // ANALYSIS_DATA_LOADER_H

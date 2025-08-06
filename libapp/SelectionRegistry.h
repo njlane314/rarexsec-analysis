@@ -6,8 +6,10 @@
 #include <unordered_map>
 #include <sstream>
 #include <stdexcept>
+#include <numeric>
 
 #include "Selection.h"
+#include "AnalysisDefinition.h"
 
 namespace analysis {
 
@@ -15,9 +17,6 @@ struct SelectionRule {
     std::string display_name;
     std::vector<std::string> clauses;
 };
-
-class AnalysisDefinition;
-struct RegionConfig;
 
 class SelectionRegistry {
 public:
@@ -44,11 +43,9 @@ public:
         return it->second;
     }
 
-    Selection getRegionFilterQuery(const RegionConfig& region) const;
-
 private:
     Selection makeSelection(const SelectionRule& r) const {
-        if (r.clauses.empty()) return Selection{};  
+        if (r.clauses.empty()) return Selection{};
             return std::accumulate(std::next(r.clauses.begin()), r.clauses.end(),
                                     Selection(r.clauses.front()),
                                     [](Selection a, const std::string& b){ return a && Selection(b); }
@@ -57,11 +54,11 @@ private:
 
     void registerDefaults() {
         rules_.emplace("QUALITY", SelectionRule{
-            "Quality Preselection", {"quality_selector"}
+            "Quality Preselection", {"quality_event"}
         });
         rules_.emplace("NUMU_CC", SelectionRule{
             "NuMu CC Selection",
-            {"muon_candidate_selector", "n_pfp_gen_2 > 1"}
+            {"has_muon", "n_pfps_gen2 > 1"}
         });
         rules_.emplace("ALL_EVENTS", SelectionRule{
             "All Events", {}
