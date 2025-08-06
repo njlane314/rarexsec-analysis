@@ -38,7 +38,7 @@ public:
         this->loadAll();
     }
 
-    const SampleFrameMap&   getSampleFrames() const noexcept { return frames_; }
+    SampleFrameMap&         getSampleFrames() noexcept { return frames_; }
     double                  getTotalPot() const noexcept { return total_pot_; }
     long                    getTotalTriggers() const noexcept { return total_triggers_; }
 

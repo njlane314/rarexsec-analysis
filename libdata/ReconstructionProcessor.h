@@ -19,7 +19,7 @@ public:
         auto gen2_df = fid_df.Define(
             "n_pfps_gen2",
             [](const ROOT::RVec<unsigned>& gens) {
-                return ROOT::VecOps::Sum(gens == 2);
+                return ROOT::VecOps::Sum(gens == 2u);
             },
             {"pfp_generations"}
         );
@@ -27,7 +27,7 @@ public:
         auto gen3_df = gen2_df.Define(
             "n_pfps_gen3",
             [](const ROOT::RVec<unsigned>& gens) {
-                return ROOT::VecOps::Sum(gens == 3);
+                return ROOT::VecOps::Sum(gens == 3u);
             },
             {"pfp_generations"}
         );
@@ -41,6 +41,6 @@ public:
     }
 };
 
-} 
+}
 
 #endif // RECONSTRUCTION_PROCESSOR_H

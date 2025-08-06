@@ -39,7 +39,7 @@ public:
 
         for (const auto& [region_key, region] : ana_definition_.getRegions()) {
             auto query = sel_registry_.getRegionFilterQuery(region);
-            std::map<std::string, ROOT::RDF::RNode> dataframes;
+            IHistogramBuilder::SampleDataFrameMap dataframes;
 
             for (auto& [sample_key, sample] : data_loader_.getSampleFrames()) {
                 dispatcher_.broadcastBeforeSampleProcessing(region_key, region, sample_key);

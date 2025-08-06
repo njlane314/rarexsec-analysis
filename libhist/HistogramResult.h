@@ -66,6 +66,13 @@ public:
 
     inline void scale(double f) { Storage::scaleAll(f); }
 
+    void addChannel(const std::string& name, const BinnedHistogram& hist) { this->channels[name] = hist; }
+    void setDataHist(const BinnedHistogram& hist) { this->data = hist; }
+    void setTotalHist(const BinnedHistogram& hist) { this->total = hist; }
+    const BinnedHistogram& getTotalHist() const { return this->total; }
+    void addSystematic(const std::string& name, const TMatrixDSym& cov) { this->syst_cov[name] += cov; }
+    void addSystematicVariation(const std::string& sys, const std::string& var, const BinnedHistogram& hist) { this->syst_var[sys][var] = hist; }
+
     using Storage::total;
     using Storage::data;
     using Storage::channels;

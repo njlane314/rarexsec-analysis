@@ -4,7 +4,7 @@
 #include "BinDefinition.h"
 #include "BinnedHistogram.h"
 #include "StratificationRegistry.h"
-#include "ROOT/RDF/RResultPtr.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 
 namespace analysis {

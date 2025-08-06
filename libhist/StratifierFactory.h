@@ -6,7 +6,6 @@
 #include "ScalarStratifier.h"
 #include "VectorStratifier.h"
 #include "Logger.h"
-#include "Utils.h"
 #include <memory>
 #include <string>
 #include <unordered_map>

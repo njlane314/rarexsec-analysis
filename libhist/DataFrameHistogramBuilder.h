@@ -6,8 +6,7 @@
 #include "BranchAccessorFactory.h"
 #include "StratificationRegistry.h"
 #include "SystematicsProcessor.h"
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/RResultPtr.hxx>
+#include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 #include <TMatrixDSym.h>
 #include <map>
@@ -23,21 +22,21 @@ public:
     {}
 
 protected:
-    void prepareStratification(const HistogramBinning& bin,
+    void prepareStratification(const BinDefinition& bin,
                                const SampleDataFrameMap& dfs) override
     {
         stratifier_ = StratifierFactory::create(bin.getStratificationKey(), stratifier_registry_);
         branch_accessor_   = BranchAccessorFactory::create(stratifier_->getRequiredBranchType());
     }
 
-    TH1D createModel(const HistogramBinning& bin,
+    TH1D createModel(const BinDefinition& bin,
                      const SampleDataFrameMap& dfs) override
     {
         auto rb = resolveBinning(bin, dfs, stratifier_->getRequiredBranchType());
         return TH1D(rb.getName().Data(), rb.getName().Data(), rb.numBins(), rb.edges().data());
     }
 
-    void bookNominals(const HistogramBinning& bin,
+    void bookNominals(const BinDefinition& bin,
                       const SampleDataFrameMap& dfs,
                       const TH1D& model,
                       ROOT::RDF::RResultPtr<TH1D>& data_future) override
@@ -53,7 +52,7 @@ protected:
         }
     }
 
-    void bookVariations(const HistogramBinning& bin,
+    void bookVariations(const BinDefinition& bin,
                         const SampleDataFrameMap& dfs) override
     {
         auto vars = systematics_processor_.getAssociatedVariations();
@@ -64,7 +63,7 @@ protected:
                 bin,
                 [&](int idx,
                     ROOT::RDF::RNode df,
-                    const HistogramBinning& tb,
+                    const BinDefinition& tb,
                     const std::string& hname,
                     const std::string& catcol,
                     const std::string& param)
@@ -84,7 +83,7 @@ protected:
         }
     }
 
-    void mergeStrata(const HistogramBinning& bin,
+    void mergeStrata(const BinDefinition& bin,
                      const SampleDataFrameMap& /*dfs*/,
                      HistogramResult& out) override
     {
@@ -98,7 +97,7 @@ protected:
         out.setTotalHist(total_nominal_histogram_);
     }
 
-    void applySystematicCovariances(const HistogramBinning& bin,
+    void applySystematicCovariances(const BinDefinition& bin,
                                     HistogramResult& out) override
     {
         stratifier_->applySystematics(out, bin, systematics_processor_);

@@ -18,7 +18,7 @@ public:
         next_ = std::move(next);
     }
 
-private:
+protected:
     std::unique_ptr<IEventProcessor> next_;
 };
 

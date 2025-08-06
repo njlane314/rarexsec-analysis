@@ -8,11 +8,12 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 #include "BinDefinition.h"
+#include "BinnedHistogram.h"
 #include "HistogramResult.h"
-#include "HistogramFactory.h"
+#include "HistogramBuilderFactory.h"
 #include "StratificationRegistry.h"
 #include "SystematicsProcessor.h"
-#include "libutils/Logger.h"
+#include "Logger.h"
 
 namespace analysis {
 
@@ -66,14 +67,14 @@ public:
         }
     }
 
-    std::map<std::string, Histogram>
+    std::map<std::string, BinnedHistogram>
     collectHistograms(const FutureMap& futs,
                       const BinDefinition& bin) const
     {
-        std::map<std::string, Histogram> hmap;
+        std::map<std::string, BinnedHistogram> hmap;
         for (auto& [key, fut] : futs) {
             auto const& prop = this->getRegistry().getStratum(this->getRegistryKey(), key);
-            hmap[prop.plain_name] = HistogramFactory::create(fut, bin, prop, key);
+            hmap[prop.plain_name] = HistogramBuilderFactory::create(fut, bin, prop, key);
         }
         return hmap;
     }
@@ -134,7 +135,7 @@ protected:
 
 private:
     static std::map<std::string, TMatrixDSym>
-    aggregateCovariances(const Histogram&         nom,
+    aggregateCovariances(const BinnedHistogram&         nom,
                          const BinDefinition&     bin,
                          SystematicsProcessor&    proc,
                          const std::vector<int>&  keys,

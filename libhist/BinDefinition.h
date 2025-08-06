@@ -40,8 +40,14 @@ public:
     std::size_t nBins() const noexcept {
         return edges_.size() > 1 ? edges_.size() - 1 : 0;
     }
+
+    const TString& getVariable() const { return branch_; }
+    const TString& getName() const { return name_; }
+    const TString& getTexLabel() const { return tex_; }
+    const std::vector<TString>& getSelectionKeys() const { return keys_; }
+    void setVariable(TString var) { branch_ = var; }
 };
 
-} 
+}
 
 #endif

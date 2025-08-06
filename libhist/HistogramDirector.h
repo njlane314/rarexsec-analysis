@@ -4,7 +4,8 @@
 #include "BinDefinition.h"
 #include "IHistogramBuilder.h"
 #include "HistogramResult.h"
-#include <ROOT/RDF/RResultPtr.hxx>
+#include "IBranchAccessor.h"
+#include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 
 namespace analysis {
@@ -21,9 +22,9 @@ public:
         this->bookVariations(bin, dfs);
 
         HistogramResult result;
-        if (dataFuture.IsValid()) {
+        if (dataFuture.IsReady()) {
             result.setDataHist(
-                Histogram(bin,
+                BinnedHistogram(bin,
                           *dataFuture.GetPtr(),
                           "data_hist",
                           "Data")
@@ -51,7 +52,7 @@ protected:
         if (values.empty())
             log::fatal("HistogramDirector", "Empty data for binning");
 
-        auto edges = BinningOptimiser::makeEdges(spec, values);
+        //auto edges = BinningOptimiser::makeEdges(spec, values);
         return BinDefinition(
             edges,
             spec.getVariable().Data(),

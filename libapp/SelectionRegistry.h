@@ -8,7 +8,6 @@
 #include <stdexcept>
 
 #include "Selection.h"
-#include "AnalysisDefinition.h"
 
 namespace analysis {
 
@@ -17,6 +16,9 @@ struct SelectionRule {
     std::string short_key;
     std::vector<std::string> clauses;
 };
+
+class AnalysisDefinition;
+struct RegionConfig;
 
 class SelectionRegistry {
 public:
@@ -43,19 +45,12 @@ public:
         return it->second;
     }
 
-    Selection getRegionFilterQuery(const RegionConfig& region) const {
-        Selection query;
-        for (const auto& key : region.selection_keys) {
-            const auto& rule = getRule(key);
-            query = query && Selection(makeExpression(rule));
-        }
-        return query;
-    }
+    Selection getRegionFilterQuery(const RegionConfig& region) const;
 
 private:
     std::string makeExpression(const SelectionRule& rule) const {
         if (rule.clauses.empty()) {
-            return "1";  
+            return "1";
         }
         std::ostringstream oss;
         for (size_t i = 0; i < rule.clauses.size(); ++i) {
@@ -84,6 +79,6 @@ private:
     std::unordered_map<std::string, SelectionRule> rules_;
 };
 
-} 
+}
 
 #endif // SELECTION_REGISTRY_H
