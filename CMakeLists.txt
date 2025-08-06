@@ -36,9 +36,9 @@ include_directories(
 )
 
 ROOT_GENERATE_DICTIONARY(G__Hist
-    "libhist/HistogramResult.h"
-    "libhist/BinnedHistogram.h"
-    "libhist/BinDefinition.h"
+    "HistogramResult.h"
+    "BinnedHistogram.h"
+    "BinDefinition.h"
     LINKDEF "libhist/LinkDef.h"
 )
 
