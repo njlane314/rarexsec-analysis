@@ -1,4 +1,5 @@
 #include <iostream>
+#include "AnalysisRunner.h"
 #include "SampleDefinition.h"
 #include "RunConfigRegistry.h"
 #include "EventVariableRegistry.h"

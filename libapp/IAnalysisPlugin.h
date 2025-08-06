@@ -13,18 +13,18 @@ class IAnalysisPlugin {
 public:
     virtual ~IAnalysisPlugin() = default;
 
-    virtual void onInitialise(const AnalysisDefinition& def,
-                              const SelectionRegistry& selReg) = 0;
+    virtual void onInitialisation(const AnalysisDefinition& def,
+                              const SelectionRegistry& sel_reg) = 0;
 
-    virtual void onPreRegion(const std::string& regionKey,
-                             const RegionConfig& region,
-                             const std::string& sampleKey) = 0;
+    virtual void onPreSampleProcessing(const std::string& region_key,
+                                        const RegionConfig& region,
+                                        const std::string& sample_key) = 0;
 
-    virtual void onPostRegion(const std::string& regionKey,
-                              const std::string& sampleKey,
-                              const HistogramResult& results) = 0;
+    virtual void onPostSampleProcessing(const std::string& region_key,
+                                        const std::string& sample_key,
+                                        const HistogramResult& results) = 0;
 
-    virtual void onFinalise(const HistogramResult& allResults) = 0;
+    virtual void onFinalisation(const HistogramResult& all_results) = 0;
 };
 
 } 

@@ -29,7 +29,7 @@ struct RegionConfig {
 class AnalysisDefinition {
 public:
     AnalysisDefinition(const SelectionRegistry& sel_reg,
-                       const VariableRegistry& var_reg)
+                       const EventVariableRegistry& var_reg)
       : sel_reg_(sel_reg), var_reg_(var_reg) 
     {
         log::info("AnalysisDefinition", "initialised");
@@ -44,7 +44,7 @@ public:
         if (variables_.count(key)) {
             log::fatal("AnalysisDefinition", "duplicate variable:", key);
         }
-        auto valid = VariableRegistry::getEventVariables(SampleType::kMonteCarlo);
+        auto valid = EventVariableRegistry::eventVariables(SampleType::kMonteCarlo);
         if (std::find(valid.begin(), valid.end(), expr) == valid.end()) {
             log::fatal("AnalysisDefinition", "unknown expression:", expr);
         }
@@ -80,7 +80,7 @@ public:
 
 private:
     const SelectionRegistry& sel_reg_;          
-    const VariableRegistry& var_reg_;          
+    const EventVariableRegistry& var_reg_;          
 
     std::map<std::string, VariableConfig> variables_;   
     std::map<std::string, RegionConfig> regions_;       

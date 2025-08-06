@@ -24,7 +24,7 @@ public:
         this->registerDefaults();
     }
 
-    SeletctionRegistry& addRule(const std::string& key, SelectionRule rule) {
+    SelectionRegistry& addRule(const std::string& key, SelectionRule rule) {
         if (!rules_.count(key)) {
             rules_.emplace(key, std::move(rule));
         }

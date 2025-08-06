@@ -6,12 +6,14 @@
 
 using namespace analysis;
 
-class VariablesPlugin : public IAnalysisPlugin {
+class VariablesPlugin : public IAnalysisPlugin 
+{
     nlohmann::json config_;
+
 public:
     explicit VariablesPlugin(const nlohmann::json& cfg) : config_(cfg) {}
 
-    void onInitialise(const AnalysisDefinition& def,
+    void onInitialisation(const AnalysisDefinition& def,
                       const SelectionRegistry&) override {
         log::info("VariablesPlugin", "Defining variables...");
         if (!config_.contains("variables")) return;
@@ -37,9 +39,11 @@ public:
         }
     }
 
-    void onPreRegion(const std::string&, const RegionConfig&, const std::string&) override {}
-    void onPostRegion(const std::string&, const std::string&, const HistogramResult&) override {}
-    void onFinalize(const HistogramResult&) override {}
+    void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
+
+    void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
+
+    void onFinalisation(const HistogramResult&) override {}
 };
 
 extern "C" analysis::IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {

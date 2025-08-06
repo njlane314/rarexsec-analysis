@@ -32,23 +32,23 @@ public:
 
     void broadcastAnalysisSetup(const AnalysisDefinition& def,
                                 const SelectionRegistry& selReg) {
-        for (auto& pl : plugins_) pl->onInitialize(def, selReg);
+        for (auto& pl : plugins_) pl->onInitialisation(def, selReg);
     }
 
-    void broadcastBeforeRegionProcessing(const std::string& rkey,
+    void broadcastBeforeSampleProcessing(const std::string& rkey,
                                          const RegionConfig& region,
                                          const std::string& skey) {
-        for (auto& pl : plugins_) pl->onPreRegion(rkey, region, skey);
+        for (auto& pl : plugins_) pl->onPreSampleProcessing(rkey, region, skey);
     }
 
-    void broadcastAfterRegionProcessing(const std::string& rkey,
+    void broadcastAfterSampleProcessing(const std::string& rkey,
                                         const std::string& skey,
                                         const HistogramResult& res) {
-        for (auto& pl : plugins_) pl->onPostRegion(rkey, skey, res);
+        for (auto& pl : plugins_) pl->onPostSampleProcessing(rkey, skey, res);
     }
 
     void broadcastAnalysisCompletion(const HistogramResult& allRes) {
-        for (auto& pl : plugins_) pl->onFinalize(allRes);
+        for (auto& pl : plugins_) pl->onFinalisation(allRes);
     }
 
     ~AnalysisCallbackDispatcher() {

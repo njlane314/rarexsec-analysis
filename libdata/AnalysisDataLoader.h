@@ -23,10 +23,12 @@ public:
                        std::unique_ptr<IEventProcessor> prc,
                        const std::string& bm,
                        std::vector<std::string> prds,
+                       const std::string& ntuple_base_dir,
                        bool bld = true)
       : run_registry_(rnreg)
       , var_registry_(std::move(varreg))
       , evt_processor_(std::move(prc))
+      , ntuple_base_directory_(ntuple_base_dir)
       , beam_(bm)
       , periods_(std::move(prds))
       , blind_(bld)
@@ -68,6 +70,7 @@ private:
     const RunConfigRegistry&               run_registry_;
     EventVariableRegistry                  var_registry_;
     std::unique_ptr<IEventProcessor>       evt_processor_;
+    std::string                            ntuple_base_directory_;
 
     SampleFrameMap                         frames_;
     std::string                            beam_;
@@ -84,7 +87,7 @@ private:
 
             for (auto& sample_json : rc.samples) {
                 SampleDefinition sample{ sample_json,
-                                    config::ntuple_base_directory,
+                                    ntuple_base_directory_,
                                     var_registry_,
                                     *evt_processor_};
                 frames_.emplace(sample.internal_key_, std::move(sample));

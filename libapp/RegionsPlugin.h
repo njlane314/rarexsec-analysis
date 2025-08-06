@@ -1,4 +1,3 @@
-// RegionsPlugin.cpp
 #include "IAnalysisPlugin.h"
 #include "AnalysisDefinition.h"
 #include "Logger.h"
@@ -6,13 +5,15 @@
 
 using namespace analysis;
 
-class RegionsPlugin : public IAnalysisPlugin {
+class RegionsPlugin : public IAnalysisPlugin 
+{
     nlohmann::json config_;
+
 public:
     explicit RegionsPlugin(const nlohmann::json& cfg) : config_(cfg) {}
 
-    void onInitialize(const AnalysisDefinition& def,
-                      const SelectionRegistry&) override {
+    void onInitialisation(const AnalysisDefinition& def,
+                          const SelectionRegistry&) override {
         log::info("RegionsPlugin", "Defining regions...");
         if (!config_.contains("regions")) return;
 
@@ -24,9 +25,11 @@ public:
         }
     }
 
-    void onPreRegion(const std::string&, const RegionConfig&, const std::string&) override {}
-    void onPostRegion(const std::string&, const std::string&, const HistogramResult&) override {}
-    void onFinalize(const HistogramResult&) override {}
+    void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
+
+    void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
+
+    void onFinalisation(const HistogramResult&) override {}
 };
 
 extern "C" analysis::IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {

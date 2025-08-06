@@ -4,29 +4,33 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <nlohmann/json.hpp>
 
 #include "AnalysisDataLoader.h"
 #include "IHistogramBuilder.h"
 #include "HistogramResult.h"
 #include "AnalysisDefinition.h"
 #include "SelectionRegistry.h"
+#include "EventVariableRegistry.h"
 #include "AnalysisCallbackDispatcher.h"
+#include "Logger.h"
 
 namespace analysis {
 
 class AnalysisRunner {
 public:
-    AnalysisRunner(const AnalysisDefinition& adef,
-                   AnalysisDataLoader& ldr,
+    AnalysisRunner(AnalysisDataLoader& ldr,
                    const SelectionRegistry& sreg,
+                   const EventVariableRegistry& var_reg,
                    std::unique_ptr<IHistogramBuilder> bldr,
-                   AnalysisCallbackDispatcher& dispatcher)
-      : ana_definition_(adef)
+                   const nlohmann::json& plugin_config)
+      : ana_definition_(sreg, var_reg)
       , data_loader_(ldr)
       , sel_registry_(sreg)
       , hist_builder_(std::move(bldr))
-      , dispatcher_(dispatcher)
-    {}
+    {
+        dispatcher_.loadPlugins(plugin_config);
+    }
 
     HistogramResult run() {
         dispatcher_.broadcastAnalysisSetup(ana_definition_, sel_registry_);
@@ -38,17 +42,19 @@ public:
             std::map<std::string, ROOT::RDF::RNode> dataframes;
 
             for (auto& [sample_key, sample] : data_loader_.getSampleFrames()) {
-                dispatcher_.broadcastBeforeRegionProcessing(region_key, region, sample_key);
-                dataframes[sample_key] = sample.nominal_node_.Filter(query.str());
+                dispatcher_.broadcastBeforeSampleProcessing(region_key, region, sample_key);
+                dataframes.emplace(sample_key, std::make_pair(sample.sample_type_, sample.nominal_node_.Filter(query.str())));
             }
 
             for (const auto& [var_key, var_cfg] : ana_definition_.getVariables()) {
                 auto hist = hist_builder_->build(var_cfg.bin_def, dataframes);
-                all_results.addChannel(var_key + "@" + region_key, hist.getTotalHist());
+                std::string result_key = var_key + "@" + region_key;
+                log::info("AnalysisRunner", "Storing final histogram with key:", result_key);
+                all_results.channels[result_key] = hist.total;
             }
             
             for (auto& [sample_key, sample] : data_loader_.getSampleFrames()){
-                 dispatcher_.broadcastAfterRegionProcessing(region_key, sample_key, all_results);
+                 dispatcher_.broadcastAfterSampleProcessing(region_key, sample_key, all_results);
             }
         }
 
@@ -57,11 +63,12 @@ public:
     }
 
 private:
-    const AnalysisDefinition& ana_definition_;
+    AnalysisDefinition ana_definition_;
+    AnalysisCallbackDispatcher dispatcher_;
+
     AnalysisDataLoader& data_loader_;
     const SelectionRegistry& sel_registry_;
     std::unique_ptr<IHistogramBuilder> hist_builder_;
-    AnalysisCallbackDispatcher& dispatcher_;
 };
 
 }
