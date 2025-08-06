@@ -10,6 +10,9 @@
 #include <TH1D.h>
 #include <TMatrixDSym.h>
 #include <map>
+#include <string>
+#include <vector>
+#include "IBranchAccessor.h"
 
 namespace analysis {
 
@@ -23,17 +26,17 @@ public:
 
 protected:
     void prepareStratification(const BinDefinition& bin,
-                               const SampleDataFrameMap& dfs) override
+                               const SampleDataFrameMap& /*dfs*/) override
     {
-        stratifier_ = StratifierFactory::create(bin.getStratificationKey(), stratifier_registry_);
+        stratifier_ = StratifierFactory::create(bin.stratification_key, stratifier_registry_);
         branch_accessor_   = BranchAccessorFactory::create(stratifier_->getRequiredBranchType());
     }
 
     TH1D createModel(const BinDefinition& bin,
                      const SampleDataFrameMap& dfs) override
     {
-        auto rb = resolveBinning(bin, dfs, stratifier_->getRequiredBranchType());
-        return TH1D(rb.getName().Data(), rb.getName().Data(), rb.numBins(), rb.edges().data());
+        auto rb = resolveBinning(bin, dfs, *branch_accessor_);
+        return TH1D(rb.getName().Data(), rb.getName().Data(), rb.nBins(), rb.edges_.data());
     }
 
     void bookNominals(const BinDefinition& bin,
@@ -55,28 +58,20 @@ protected:
     void bookVariations(const BinDefinition& bin,
                         const SampleDataFrameMap& dfs) override
     {
-        auto vars = systematics_processor_.getAssociatedVariations();
         for (auto const& [key, pr] : dfs) {
             if (pr.first == SampleType::kData) continue;
             stratifier_->bookSystematicsHistograms(
                 pr.second,
                 bin,
                 [&](int idx,
-                    ROOT::RDF::RNode df,
-                    const BinDefinition& tb,
-                    const std::string& hname,
-                    const std::string& catcol,
-                    const std::string& param)
+                    ROOT::RDF::RNode /*df*/,
+                    const BinDefinition& /*tb*/,
+                    const std::string& /*hname*/,
+                    const std::string& /*catcol*/,
+                    const std::string& /*param*/)
                 {
                     systematics_processor_.bookVariations(
-                        hname,
-                        key,
-                        df,
-                        vars,
-                        tb,
-                        bin.getSelectionQuery().Data(),
-                        catcol,
-                        param
+                        idx
                     );
                 }
             );
@@ -87,7 +82,7 @@ protected:
                      const SampleDataFrameMap& /*dfs*/,
                      HistogramResult& out) override
     {
-        for (auto const& [name, futs] : histogram_futures_) {
+        for (auto& [name, futs] : histogram_futures_) {
             auto hist_map = stratifier_->collectHistograms(futs, bin);
             for (auto const& [sname, h] : hist_map) {
                 out.addChannel(sname, h);
@@ -104,11 +99,11 @@ protected:
     }
 
 private:
-    using TH1DFutures = std::map<int, ROOT::RDF::RResultPtr<TH1D>>; 
+    using TH1DFutures = std::map<int, ROOT::RDF::RResultPtr<TH1D>>;
 
     SystematicsProcessor&                                       systematics_processor_;
     StratificationRegistry&                                     stratifier_registry_;
-    std::unique_ptr<IHistogramStratificationStrategy>           stratifier_;
+    std::unique_ptr<IHistogramStratifier>                       stratifier_;
     std::unique_ptr<IBranchAccessor>                            branch_accessor_;
     std::map<std::string, TH1DFutures>                          histogram_futures_;
     BinnedHistogram                                             total_nominal_histogram_;

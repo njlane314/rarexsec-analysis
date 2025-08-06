@@ -4,6 +4,9 @@
 #include "TNamed.h"
 #include "HistogramPolicy.h"
 #include "Logger.h"
+#include "TH1D.h"
+#include "TMatrixDSym.h"
+#include <vector>
 
 namespace analysis {
 
@@ -25,12 +28,36 @@ public:
         TH1DRenderer::style(cl, ht, tx);
     }
 
+    BinnedHistogram(const BinDefinition& bn,
+                    const TH1D& hist,
+                    TString nm = "hist",
+                    TString ti = "",
+                    Color_t cl = kBlack,
+                    int ht = 0,
+                    TString tx = "")
+        : TNamed(nm, ti)
+    {
+        std::vector<double> counts;
+        TMatrixDSym cov(hist.GetNbinsX());
+        for (int i = 1; i <= hist.GetNbinsX(); ++i) {
+            counts.push_back(hist.GetBinContent(i));
+            cov(i - 1, i - 1) = hist.GetBinError(i) * hist.GetBinError(i);
+        }
+        TH1DStorage::init(bn, counts, cov);
+        TH1DRenderer::style(cl, ht, tx);
+    }
+
+
     int    nBins()   const { return TH1DStorage::size(); }
     double getBinContent(int i) const { return TH1DStorage::count(i); }
     double err_(int i)   const { return TH1DStorage::err(i); }
     double sum_()       const { return TH1DStorage::sum(); }
     double sumErr_()    const { return TH1DStorage::sumErr(); }
     TMatrixDSym corrMat_() const { return TH1DStorage::corrMat(); }
+
+    void addCovariance(const TMatrixDSym& cov_to_add) {
+        this->cov += cov_to_add;
+    }
 
     BinnedHistogram operator+(double s) const {
         auto tmp = *this;

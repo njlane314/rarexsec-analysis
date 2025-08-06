@@ -7,6 +7,7 @@
 #include "IBranchAccessor.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
+#include <vector>
 
 namespace analysis {
 
@@ -52,17 +53,17 @@ protected:
         if (values.empty())
             log::fatal("HistogramDirector", "Empty data for binning");
 
-        //auto edges = BinningOptimiser::makeEdges(spec, values);
+        std::vector<double> edges = spec.edges_;
         return BinDefinition(
             edges,
             spec.getVariable().Data(),
-            spec.getTexLabel(),
+            spec.getTexLabel().Data(),
             spec.getSelectionKeys(),
-            spec.getName());
+            spec.getName().Data());
     }
 
-    virtual void prepareStratification(const BinDefinition& bin,
-                                       const SampleDataFrameMap& dfs) {}
+    virtual void prepareStratification(const BinDefinition& /*bin*/,
+                                       const SampleDataFrameMap& /*dfs*/) {}
 
     virtual TH1D createModel(const BinDefinition& bin,
                              const SampleDataFrameMap& dfs) = 0;
@@ -82,8 +83,8 @@ protected:
     virtual void applySystematicCovariances(const BinDefinition& bin,
                                             HistogramResult& out) = 0;
 
-    virtual void finaliseResults(const BinDefinition& bin,
-                                 HistogramResult& out) {}
+    virtual void finaliseResults(const BinDefinition& /*bin*/,
+                                 HistogramResult& /*out*/) {}
 };
 
 }

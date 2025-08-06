@@ -16,7 +16,7 @@ public:
         const std::string& expr) const override
     {
         auto fut = df.Take<ROOT::RVec<float>>(expr);
-        const auto& vecs = *fut.GetResult();
+        const auto& vecs = *fut;
         std::vector<double> all;
         for (auto const& v : vecs)
             all.insert(all.end(), v.begin(), v.end());
@@ -24,6 +24,6 @@ public:
     }
 };
 
-} 
+}
 
 #endif // VECTOR_BRANCH_ACCESSOR_H

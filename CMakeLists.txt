@@ -25,8 +25,26 @@ set(ANALYSIS_EXECUTABLES
     analyse_test
 )
 
+# Add all lib directories to the include path for rootcling
+include_directories(
+    "${CMAKE_CURRENT_SOURCE_DIR}/libapp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libdata"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libhist"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libplot"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
+)
+
+ROOT_GENERATE_DICTIONARY(G__Hist
+    "libhist/HistogramResult.h"
+    "libhist/BinnedHistogram.h"
+    "libhist/BinDefinition.h"
+    LINKDEF "libhist/LinkDef.h"
+)
+
+
 foreach(exe ${ANALYSIS_EXECUTABLES})
-    add_executable(${exe} ${exe}.cpp)
+    add_executable(${exe} ${exe}.cpp ${CMAKE_BINARY_DIR}/G__Hist.cxx)
     target_link_libraries(${exe}
         PRIVATE
             libapp
@@ -38,5 +56,6 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
             ${ROOT_LIBRARIES}
             TBB::tbb
             TMVA
+            dl
     )
 endforeach()

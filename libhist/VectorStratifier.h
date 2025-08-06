@@ -33,7 +33,7 @@ protected:
         std::string col = variable_ + "_" + std::to_string(key);
         auto selector = [key](const ROOT::RVec<float>& vals,
                               const ROOT::RVec<int>& ids) {
-            return vals[ROOT::VecOps::Abs(ids) == key];
+            return vals[ROOT::VecOps::abs(ids) == key];
         };
         return df.Define(col, selector, { variable_, variable_ });
     }

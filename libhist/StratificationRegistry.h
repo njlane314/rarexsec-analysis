@@ -31,7 +31,7 @@ public:
                 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61
             }}
         };
-        log::props("StratificationRegistry", "Registry initialised successfully.");
+        log::info("StratificationRegistry", "Registry initialised successfully.");
     }
 
     const StratumProperties& getStratum(

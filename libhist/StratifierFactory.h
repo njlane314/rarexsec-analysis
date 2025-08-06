@@ -13,6 +13,14 @@
 
 namespace analysis {
 
+inline std::pair<std::string, std::string> splitOnce(const std::string& s, char delimiter) {
+    auto pos = s.find(delimiter);
+    if (pos == std::string::npos) {
+        return {s, ""};
+    }
+    return {s.substr(0, pos), s.substr(pos + 1)};
+}
+
 class StratifierFactory {
     using StratifierCreator = std::function<std::unique_ptr<IHistogramStratifier>(const std::string& cfg, StratificationRegistry&)>;
     static const std::unordered_map<std::string, StratifierCreator> creators_map_;

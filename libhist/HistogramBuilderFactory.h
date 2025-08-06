@@ -11,11 +11,11 @@ namespace analysis {
 
 class HistogramBuilderFactory {
 public:
-    static BinnedHistogram create(const ROOT::RDF::RResultPtr<TH1D>& future,
-                                   const BinDefinition&                bin,
-                                   const StratumProperties&            props)
+    static BinnedHistogram create(ROOT::RDF::RResultPtr<TH1D>& future,
+                                   const BinDefinition&      bin,
+                                   const StratumProperties&  props)
     {
-        TH1D hist = *future;
+        TH1D hist = *future.GetPtr();
         hist.Sumw2();
         return BinnedHistogram(
             bin,
@@ -27,12 +27,12 @@ public:
         );
     }
 
-    static BinnedHistogram create(const ROOT::RDF::RResultPtr<TH1D>& future,
-                                   const BinDefinition&                bin,
-                                   const StratumProperties&            props,
-                                   int                                 stratum_key)
+    static BinnedHistogram create(ROOT::RDF::RResultPtr<TH1D>& future,
+                                   const BinDefinition&      bin,
+                                   const StratumProperties&  props,
+                                   int                       stratum_key)
     {
-        TH1D hist = *future;
+        TH1D hist = *future.GetPtr();
         hist.Sumw2();
 
         BinDefinition bd = bin;
@@ -54,4 +54,3 @@ public:
 }
 
 #endif // HISTOGRAM_FACTORY_H
-

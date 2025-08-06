@@ -16,7 +16,7 @@ public:
     ) const override
     {
         auto resultPtr = df.Take<double>(expr);
-        const auto& vals = *resultPtr.GetResult();
+        const auto& vals = *resultPtr;
         return std::vector<double>(vals.begin(), vals.end());
     }
 };

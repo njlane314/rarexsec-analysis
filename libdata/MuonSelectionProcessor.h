@@ -38,7 +38,7 @@ public:
             "muon_mask",
             [](const ROOT::RVec<float>& scores,
                const ROOT::RVec<float>& lengths,
-               const ROOT::RVec<float>& dists,
+               const ROOT::RVec<float>& /*dists*/,
                const ROOT::RVec<float>& avg) {
                 ROOT::RVec<bool> mask(scores.size());
                 for (size_t i = 0; i < scores.size(); ++i) {

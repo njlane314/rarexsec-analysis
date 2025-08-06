@@ -24,13 +24,15 @@ public:
     )
       : channel_keys_(std::move(channel_keys))
       , book_fn_(std::move(book_fn))
+      , knob_defs_(std::move(knob_defs))
+      , universe_defs_(std::move(universe_defs))
     {
-        for (auto& kd : knob_defs) {
+        for (auto& kd : knob_defs_) {
             strategies_.emplace_back(
                 std::make_unique<WeightSystematicStrategy>(kd, book_fn_)
             );
         }
-        for (auto& ud : universe_defs) {
+        for (auto& ud : universe_defs_) {
             strategies_.emplace_back(
                 std::make_unique<UniverseSystematicStrategy>(ud, book_fn_)
             );
@@ -69,10 +71,21 @@ public:
         return out;
     }
 
+    const std::vector<KnobDef>& getKnobDefs() const { return knob_defs_; }
+    const std::vector<UniverseDef>& getUniverseDefs() const { return universe_defs_; }
+    void bookVariations(int channel_key) {
+        for (auto& strat : strategies_) {
+            strat->bookVariations({channel_key}, book_fn_);
+        }
+    }
+
+
 private:
     std::vector<int>                                        channel_keys_;
     BookHistFn                                              book_fn_;
     std::vector<std::unique_ptr<SystematicStrategy>>        strategies_;
+    std::vector<KnobDef>                                    knob_defs_;
+    std::vector<UniverseDef>                                universe_defs_;
 };
 
 }

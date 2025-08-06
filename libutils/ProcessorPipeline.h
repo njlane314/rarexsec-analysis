@@ -29,10 +29,10 @@ makeDefaultProcessorPipeline()
     return chainEventProcessors(
         std::make_unique<TruthChannelProcessor>(),
         std::make_unique<MuonSelectionProcessor>(),
-        std::make_unique<ReconstructionProcessor>(),
+        std::make_unique<ReconstructionProcessor>()
     );
 }
 
-} 
+}
 
 #endif // PROCESSOR_PIPELINE_H

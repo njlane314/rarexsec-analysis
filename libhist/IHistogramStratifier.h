@@ -68,7 +68,7 @@ public:
     }
 
     std::map<std::string, BinnedHistogram>
-    collectHistograms(const FutureMap& futs,
+    collectHistograms(FutureMap& futs,
                       const BinDefinition& bin) const
     {
         std::map<std::string, BinnedHistogram> hmap;
@@ -110,21 +110,21 @@ protected:
     virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
                                         int key) const = 0;
 
-    virtual std::string getTempVariable(int key) const {
+    virtual std::string getTempVariable(int /*key*/) const {
         return this->getVariable();
     }
 
     virtual std::string getHistogramName(const BinDefinition& bin,
                                          int key) const
     {
-        return bin.getName() + "_stratum_" + std::to_string(key);
+        return std::string(bin.getName().Data()) + "_stratum_" + std::to_string(key);
     }
 
-    virtual std::string getStratifierBranch() const {  
+    virtual std::string getStratifierBranch() const {
         return this->getVariable();
     }
 
-    virtual std::string getAdditionalParam(int key) const {
+    virtual std::string getAdditionalParam(int /*key*/) const {
         return getStratifierBranch();
     }
 
@@ -136,15 +136,15 @@ protected:
 private:
     static std::map<std::string, TMatrixDSym>
     aggregateCovariances(const BinnedHistogram&         nom,
-                         const BinDefinition&     bin,
+                         const BinDefinition&     /*bin*/,
                          SystematicsProcessor&    proc,
                          const std::vector<int>&  keys,
-                         const std::string&       categoryBranch)
+                         const std::string&       /*categoryBranch*/)
     {
         std::map<std::string, TMatrixDSym> out;
         for (auto k : keys) {
             if (k == 0) continue;
-            auto byChan = proc.computeAllCovariances(k, nom, bin, categoryBranch);
+            auto byChan = proc.computeAllCovariances(nom);
             for (auto& [name, mat] : byChan) {
                 out[name] += mat;
             }
@@ -154,14 +154,14 @@ private:
 
     static void
     aggregateVariations(HistogramResult&            out,
-                        const BinDefinition&        bin,
+                        const BinDefinition&        /*bin*/,
                         SystematicsProcessor&       proc,
                         const std::vector<int>&     keys,
-                        const std::string&          categoryBranch)
+                        const std::string&          /*categoryBranch*/)
     {
         for (auto k : keys) {
             if (k == 0) continue;
-            auto vh = proc.getAllVariedHistograms(k, bin, categoryBranch);
+            auto vh = proc.getAllVariedHistograms();
             for (auto& [sys, maps] : vh) {
                 for (auto& [var, hist] : maps) {
                     out.addSystematicVariation(sys, var, hist);
@@ -171,6 +171,6 @@ private:
     }
 };
 
-} 
+}
 
 #endif // IHISTOGRAM_STRATIFIER_H
