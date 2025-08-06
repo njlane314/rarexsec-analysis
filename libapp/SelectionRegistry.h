@@ -13,7 +13,6 @@ namespace analysis {
 
 struct SelectionRule {
     std::string display_name;
-    std::string short_key;
     std::vector<std::string> clauses;
 };
 
@@ -26,15 +25,15 @@ public:
         this->registerDefaults();
     }
 
-    SelectionRegistry& addRule(const std::string& key, SelectionRule rule) {
-        if (!rules_.count(key)) {
-            rules_.emplace(key, std::move(rule));
-        }
-        return *this;
+    void addRule(std::string key, SelectionRule rule) {
+        rules_.emplace(std::move(key), std::move(rule));
     }
 
-    bool containsRule(const std::string& key) const noexcept {
-        return rules_.count(key) > 0;
+    Selection get(const std::string& key) const {
+        auto it = rules_.find(key);
+        if (it == rules_.end())
+            throw std::out_of_range("Unknown selection key: " + key);
+        return makeSelection(it->second);
     }
 
     const SelectionRule& getRule(const std::string& key) const {
@@ -48,16 +47,12 @@ public:
     Selection getRegionFilterQuery(const RegionConfig& region) const;
 
 private:
-    std::string makeExpression(const SelectionRule& rule) const {
-        if (rule.clauses.empty()) {
-            return "1";
-        }
-        std::ostringstream oss;
-        for (size_t i = 0; i < rule.clauses.size(); ++i) {
-            if (i) oss << " && ";
-            oss << rule.clauses[i];
-        }
-        return oss.str();
+    Selection makeSelection(const SelectionRule& r) const {
+        if (r.clauses.empty()) return Selection{};  
+            return std::accumulate(std::next(r.clauses.begin()), r.clauses.end(),
+                                    Selection(r.clauses.front()),
+                                    [](Selection a, const std::string& b){ return a && Selection(b); }
+        );
     }
 
     void registerDefaults() {

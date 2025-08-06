@@ -10,6 +10,7 @@
 #include "Logger.h"
 #include "BinDefinition.h"
 #include "EventVariableRegistry.h"
+#include "Selection.h"
 #include "SelectionRegistry.h"
 
 namespace analysis {
@@ -23,7 +24,7 @@ struct VariableConfig {
 
 struct RegionConfig {
     std::string region_name;
-    std::vector<std::string> selection_keys;
+    Selection filter;
 };
 
 class AnalysisDefinition {
@@ -55,18 +56,30 @@ public:
 
     AnalysisDefinition& addRegion(const std::string& key,
                                   const std::string& region_name,
-                                  std::initializer_list<std::string> selection_keys)
+                                  std::strong sel_rule_key)
     {
         if (regions_.count(key)) {
             log::fatal("AnalysisDefinition", "duplicate region:", key);
         }
-        for (const auto& sel_key : selection_keys) {
-            if (!sel_reg_.containsRule(sel_key)) {
-                log::fatal("AnalysisDefinition", "unknown selection key:", sel_key);
-            }
-        }
-        log::info("AnalysisDefinition", "adding region:", key);
-        regions_.emplace(key, RegionConfig{region_name, std::vector<std::string>(selection_keys)});
+        Selection sel = sel_reg_.get(sel_rule_key);
+        regions_.emplace(
+            key,
+            RegionConfig{region_name, std::move(sel)}
+        );
+        return *this;
+    }
+
+    AnalysisDefinition& addRegionExpr(
+        std::string key,
+        std::string label,
+        std::string rawExpr
+    ) {
+        if (regions_.count(key))
+            throw std::runtime_error("duplicate region: "+key);
+        regions_.emplace(
+            key,
+            RegionConfig{label, Selection(std::move(rawExpr))}
+        );
         return *this;
     }
 

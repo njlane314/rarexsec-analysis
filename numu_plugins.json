@@ -1,0 +1,79 @@
+{
+  "plugins": [
+    {
+      "path": "libRegionsPlugin.so",
+      "regions": [
+        {
+          "id": "NUMU_CC",
+          "label": "Muon Neutrino CC Selection",
+          "cuts": [
+            "nu_pdg == 14",
+            "interaction_type == 1",
+            "muon_candidate_selector"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "libVariablesPlugin.so",
+      "variables": [
+        {
+          "name": "muon_energy",
+          "branch": "muon_energy",
+          "label": "Muon Energy (GeV)",
+          "stratum": "NUMU_CC",
+          "bins": {
+            "n": 50,
+            "min": 0.0,
+            "max": 10.0
+          }
+        },
+        {
+          "name": "muon_angle",
+          "branch": "muon_theta",
+          "label": "Muon Angle (rad)",
+          "stratum": "NUMU_CC",
+          "bins": [
+            0.0,
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.4,
+            1.6
+          ]
+        }
+      ]
+    },
+    {
+      "path": "libStackedHistogramPlugin.so",
+      "plots": [
+        {
+          "variable": "muon_energy",
+          "region": "NUMU_CC",
+          "category_column": "sample",
+          "output_directory": "plots/muon_energy",
+          "overlay_signal": true,
+          "cuts": [
+            {
+              "threshold": 0.5,
+              "direction": "GreaterThan"
+            }
+          ],
+          "annotate_numbers": true
+        },
+        {
+          "variable": "muon_angle",
+          "region": "NUMU_CC",
+          "category_column": "sample",
+          "output_directory": "plots/muon_angle",
+          "overlay_signal": true,
+          "cuts": [],
+          "annotate_numbers": false
+        }
+      ]
+    }
+  ]
+}

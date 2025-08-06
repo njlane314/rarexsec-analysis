@@ -5,30 +5,41 @@
 
 using namespace analysis;
 
-class RegionsPlugin : public IAnalysisPlugin 
-{
+class RegionsPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 
 public:
-    explicit RegionsPlugin(const nlohmann::json& cfg) : config_(cfg) {}
+    explicit RegionsPlugin(const nlohmann::json& cfg)
+      : config_(cfg) {}
 
     void onInitialisation(const AnalysisDefinition& def,
-                          const SelectionRegistry&) override {
+                          const SelectionRegistry&) override
+    {
         log::info("RegionsPlugin", "Defining regions...");
         if (!config_.contains("regions")) return;
 
         for (auto const& region_cfg : config_.at("regions")) {
             auto id    = region_cfg.at("id").get<std::string>();
             auto label = region_cfg.at("label").get<std::string>();
-            auto cuts  = region_cfg.at("cuts").get<std::vector<std::string>>();
-            def.addRegion(id, label, {cuts.begin(), cuts.end()});
+
+            if (region_cfg.contains("selection_rule")) {
+                auto rule_key = region_cfg.at("selection_rule").get<std::string>();
+                def.addRegion(id, label, rule_key);
+            }
+            else if (region_cfg.contains("expression")) {
+                auto expr = region_cfg.at("expression").get<std::string>();
+                def.addRegionExpr(id, label, expr);
+            }
+            else {
+                log::fatal("RegionsPlugin",
+                           "region entry must have either "
+                           "`selection_rule` or `expression`");
+            }
         }
     }
 
     void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
-
     void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
-
     void onFinalisation(const HistogramResult&) override {}
 };
 

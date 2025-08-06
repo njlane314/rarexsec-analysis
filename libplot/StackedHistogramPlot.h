@@ -51,7 +51,7 @@ protected:
         mc_stack_ = new THStack("mc_stack", "");
         legend_   = new TLegend(0.1, 0.7, 0.9, 0.9);
 
-        for (auto& [key, hist] : result_.getHistBreakdown()) {
+        for (auto& [key, hist] : result_.channels()) {
             TH1D* copy = hist.getRootHistCopy();
             mc_stack_->Add(copy);
             legend_->AddEntry(copy, copy->GetTitle(), "f");
