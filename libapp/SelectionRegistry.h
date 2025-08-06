@@ -57,17 +57,17 @@ private:
 
     void registerDefaults() {
         rules_.emplace("QUALITY", SelectionRule{
-            "Quality Preselection", "QUALITY", {"quality_selector"}
+            "Quality Preselection", {"quality_selector"}
         });
         rules_.emplace("NUMU_CC", SelectionRule{
-            "NuMu CC Selection", "NUMU_CC",
+            "NuMu CC Selection",
             {"muon_candidate_selector", "n_pfp_gen_2 > 1"}
         });
         rules_.emplace("ALL_EVENTS", SelectionRule{
-            "All Events", "ALL_EVENTS", {}
+            "All Events", {}
         });
         rules_.emplace("NONE", SelectionRule{
-            "No Preselection", "NONE", {}
+            "No Preselection", {}
         });
     }
 

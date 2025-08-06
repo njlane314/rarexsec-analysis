@@ -56,7 +56,7 @@ public:
 
     AnalysisDefinition& addRegion(const std::string& key,
                                   const std::string& region_name,
-                                  std::strong sel_rule_key)
+                                  std::string sel_rule_key)
     {
         if (regions_.count(key)) {
             log::fatal("AnalysisDefinition", "duplicate region:", key);

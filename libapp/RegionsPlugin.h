@@ -19,16 +19,16 @@ public:
         if (!config_.contains("regions")) return;
 
         for (auto const& region_cfg : config_.at("regions")) {
-            auto id    = region_cfg.at("id").get<std::string>();
+            auto region_key    = region_cfg.at("region_key").get<std::string>();
             auto label = region_cfg.at("label").get<std::string>();
 
             if (region_cfg.contains("selection_rule")) {
                 auto rule_key = region_cfg.at("selection_rule").get<std::string>();
-                def.addRegion(id, label, rule_key);
+                def.addRegion(region_key, label, rule_key);
             }
             else if (region_cfg.contains("expression")) {
                 auto expr = region_cfg.at("expression").get<std::string>();
-                def.addRegionExpr(id, label, expr);
+                def.addRegionExpr(region_key, label, expr);
             }
             else {
                 log::fatal("RegionsPlugin",
