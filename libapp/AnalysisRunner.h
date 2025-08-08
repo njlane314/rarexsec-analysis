@@ -54,6 +54,12 @@ public:
                 log::info("AnalysisRunner", "   Building hist for var:", var_key);
                 
                 auto hist = hist_builder_->build(var_cfg.bin_def, dataframes);
+                hist.pot = data_loader_.getTotalPot();
+                hist.beam = data_loader_.getBeam();
+                hist.runs = data_loader_.getPeriods();
+                hist.region = region.region_name;
+                hist.axis_label = var_cfg.axis_label;
+                
                 std::string result_key = var_key + "@" + region_key;
                 log::info("AnalysisRunner", "Storing final histogram with key:", result_key);
 
@@ -70,6 +76,7 @@ public:
         dispatcher_.broadcastAnalysisCompletion(all_results);
         return all_results;
     }
+
 
 private:
     AnalysisDefinition ana_definition_;

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <unordered_map>
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 #include "BinDefinition.h"
@@ -12,14 +13,14 @@
 #include "HistogramResult.h"
 #include "HistogramBuilderFactory.h"
 #include "StratificationRegistry.h"
-#include "SystematicsProcessor.h"
 #include "Logger.h"
+#include "SystematicsProcessor.h"
 
 namespace analysis {
 
 class IHistogramStratifier {
 public:
-    using FutureMap = std::map<int, ROOT::RDF::RResultPtr<TH1D>>;
+    using FutureMap = std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>>;
     using BookFunc  = std::function<
         void(int,
              ROOT::RDF::RNode,
@@ -37,11 +38,10 @@ public:
 
     FutureMap bookHistograms(ROOT::RDF::RNode df,
                              const BinDefinition& bin,
-                             const TH1D& model) const
+                             const ROOT::RDF::TH1DModel& model) const
     {
         FutureMap out;
         for (auto key : this->getRegistryKeys()) {
-            if (key == 0) continue;
             auto slice = this->filterNode(df, bin, key);
             out[key] = slice.Histo1D(
                 model,
@@ -57,7 +57,6 @@ public:
                                    const BookFunc& book) const
     {
         for (auto key : this->getRegistryKeys()) {
-            if (key == 0) continue;
             auto slice = this->filterNode(df, bin, key);
             auto tb    = bin;
             tb.setVariable(this->getTempVariable(key));
@@ -86,37 +85,56 @@ public:
 
     void applySystematics(HistogramResult& out,
                           const BinDefinition& bin,
-                          SystematicsProcessor& proc) const
+                          SystematicsProcessor& proc,
+                          SystematicFutures& futures)
     {
         auto keys = this->getRegistryKeys();
-        auto covs = this->aggregateCovariances(
-            out.getTotalHist(),
-            bin,
-            proc,
-            keys,
-            this->getStratifierBranch()
-        );
+        auto nominal_hist = out.getTotalHist();
+        
+        // Aggregate Covariances
+        std::map<std::string, TMatrixDSym> total_covs;
+        for (auto k : keys) {
+            auto byChan = proc.computeCovariances(k, nominal_hist, futures);
+            for (auto& [name, mat] : byChan) {
+                if (total_covs.find(name) == total_covs.end()) {
+                    total_covs[name] = mat;
+                } else {
+                    total_covs[name] += mat;
+                }
+            }
+        }
+
         auto updated = out.getTotalHist();
-        for (auto& [name, mat] : covs) {
+        for (auto& [name, mat] : total_covs) {
             updated.addCovariance(mat);
             out.addSystematic(name, mat);
         }
         out.setTotalHist(updated);
-        this->aggregateVariations(out, bin, proc, keys, this->getStratifierBranch());
+
+        // Aggregate Variations
+        for (auto k : keys) {
+            auto vh = proc.getVariedHistograms(k, bin, futures);
+            for (auto& [sys, maps] : vh) {
+                for (auto& [var, hist] : maps) {
+                    out.addSystematicVariation(sys, var, hist);
+                }
+            }
+        }
     }
 
-protected:
-    virtual std::vector<int> getRegistryKeys() const {
-        return this->getRegistry().getStratumKeys(this->getRegistryKey());
-    }
-
-    virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                        const BinDefinition& bin,
-                                        int key) const = 0;
 
     virtual std::string getTempVariable(int /*key*/) const {
         return this->getVariable();
     }
+    
+    virtual std::vector<int> getRegistryKeys() const {
+        return this->getRegistry().getStratumKeys(this->getRegistryKey());
+    }
+
+protected:
+    virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
+                                        const BinDefinition& bin,
+                                        int key) const = 0;
 
     virtual std::string getHistogramName(const BinDefinition& bin,
                                          int key) const
@@ -136,43 +154,6 @@ protected:
     virtual const std::string& getVariable()    const = 0;
     virtual const StratificationRegistry&
             getRegistry()                       const = 0;
-
-private:
-    static std::map<std::string, TMatrixDSym>
-    aggregateCovariances(const BinnedHistogram&         nom,
-                         const BinDefinition&     /*bin*/,
-                         SystematicsProcessor&    proc,
-                         const std::vector<int>&  keys,
-                         const std::string&       /*categoryBranch*/)
-    {
-        std::map<std::string, TMatrixDSym> out;
-        for (auto k : keys) {
-            if (k == 0) continue;
-            auto byChan = proc.computeAllCovariances(nom);
-            for (auto& [name, mat] : byChan) {
-                out[name] += mat;
-            }
-        }
-        return out;
-    }
-
-    static void
-    aggregateVariations(HistogramResult&            out,
-                        const BinDefinition&        /*bin*/,
-                        SystematicsProcessor&       proc,
-                        const std::vector<int>&     keys,
-                        const std::string&          /*categoryBranch*/)
-    {
-        for (auto k : keys) {
-            if (k == 0) continue;
-            auto vh = proc.getAllVariedHistograms();
-            for (auto& [sys, maps] : vh) {
-                for (auto& [var, hist] : maps) {
-                    out.addSystematicVariation(sys, var, hist);
-                }
-            }
-        }
-    }
 };
 
 }

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <tuple>
+#include <map>
 
 #include "HistogramPlotterBase.h"
 #include "HistogramResult.h"
@@ -18,7 +19,6 @@
 #include "TLatex.h"
 #include "TLine.h"
 #include "TArrow.h"
-
 
 namespace analysis {
 
@@ -38,14 +38,18 @@ public:
         std::string            output_directory = "plots",
         bool                   overlay_signal    = true,
         std::vector<Cut>       cut_list          = {},
-        bool                   annotate_numbers  = true
+        bool                   annotate_numbers  = true,
+        bool                   use_log_y         = false,
+        std::string            y_axis_label      = "Events"
     )
       : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
         result_(data),
         category_column_(std::move(category_column)),
         overlay_signal_(overlay_signal),
         cuts_(cut_list),
-        annotate_numbers_(annotate_numbers)
+        annotate_numbers_(annotate_numbers),
+        use_log_y_(use_log_y),
+        y_axis_label_(std::move(y_axis_label))
     {}
 
     ~StackedHistogramPlot() override {
@@ -76,18 +80,31 @@ private:
             pot_str.replace(e_pos, 1, " #times 10^{");
             pot_str += "}";
         }
-        std::string line2 = result_.beam + " (" + pot_str + " POT)";
+        
+        std::map<std::string, std::string> beam_map = {
+            {"numi_fhc", "NuMI FHC"},
+            {"numi_rhc", "NuMI RHC"}
+        };
+
+        std::string beam_name = result_.beam;
+        if (beam_map.count(beam_name)) {
+            beam_name = beam_map.at(beam_name);
+        }
+
+        std::string line2 = beam_name + " (" + pot_str + " POT)";
+        std::string line3 = "Analysis Region: " + result_.region;
+
 
         TLatex watermark;
         watermark.SetNDC();
-        watermark.SetTextAlign(11);
+        watermark.SetTextAlign(33);
         watermark.SetTextFont(62);
         watermark.SetTextSize(0.05);
-        watermark.DrawLatex(pad->GetLeftMargin(), 1 - pad->GetTopMargin() - 0.05, line1.c_str());
-        watermark.SetTextAlign(31);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, line1.c_str());
         watermark.SetTextFont(42);
-        watermark.SetTextSize(0.04);
-        watermark.DrawLatex(1 - pad->GetRightMargin(), 1 - pad->GetTopMargin() - 0.05, line2.c_str());
+        watermark.SetTextSize(0.05 * 0.8);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, line2.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, line3.c_str());
     }
 
 protected:
@@ -100,6 +117,7 @@ protected:
         p_main->SetBottomMargin(0.12);
         p_main->SetLeftMargin(0.12);
         p_main->SetRightMargin(0.05);
+        if(use_log_y_) p_main->SetLogy();
         p_legend->SetTopMargin(0.05);
         p_legend->SetBottomMargin(0.01);
         p_legend->Draw();
@@ -118,7 +136,7 @@ protected:
         std::reverse(mc_hists.begin(), mc_hists.end());
 
         p_legend->cd();
-        legend_ = new TLegend(0.1, 0.0, 0.9, 1.0);
+        legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
@@ -151,7 +169,7 @@ protected:
             h_unc->SetLineWidth(1);
             double total_mc_events = 0.0;
             for(const auto& hist : mc_hists) {
-                total_mc_events += hist.sum();
+                total_mc_events += hist.sum_();
             }
             std::string total_label = annotate_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
@@ -177,8 +195,8 @@ protected:
 
         double max_y = total_mc_hist_ ? total_mc_hist_->GetMaximum() + total_mc_hist_->GetBinError(total_mc_hist_->GetMaximumBin()) : 1.0;
         mc_stack_->Draw("HIST");
-        mc_stack_->SetMaximum(max_y * 1.3);
-        mc_stack_->SetMinimum(0.0);
+        mc_stack_->SetMaximum(max_y * (use_log_y_ ? 100 : 1.3));
+        mc_stack_->SetMinimum(use_log_y_ ? 0.1 : 0.0);
         
         if (total_mc_hist_) {
             total_mc_hist_->SetFillColor(kBlack);
@@ -217,7 +235,9 @@ protected:
 
         TH1* frame = mc_stack_->GetHistogram();
         frame->GetXaxis()->SetTitle(result_.axis_label.c_str());
-        frame->GetYaxis()->SetTitle("Events");
+        frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
+        frame->GetXaxis()->SetTitleOffset(1.0);
+        frame->GetYaxis()->SetTitleOffset(1.0);
 
         drawWatermark(p_main);
 
@@ -231,6 +251,8 @@ private:
     bool                            overlay_signal_;
     std::vector<Cut>                cuts_;
     bool                            annotate_numbers_;
+    bool                            use_log_y_;
+    std::string                     y_axis_label_;
     TH1D* total_mc_hist_ = nullptr;
     THStack* mc_stack_ = nullptr;
     TLegend* legend_ = nullptr;

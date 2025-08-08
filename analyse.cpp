@@ -57,12 +57,19 @@ int main(int argc, char* argv[]) {
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;
-            analysis::StratificationRegistry stratreg;
+            analysis::StratificationRegistry strat_reg;
 
-            auto dummy_book_fn = [](int, const std::string&) -> analysis::BinnedHistogram {
-                return analysis::BinnedHistogram();
-            };
-            analysis::SystematicsProcessor sys_proc({}, {}, {}, dummy_book_fn);
+            std::vector<analysis::KnobDef> knob_defs;
+            for(const auto& [name, columns] : ev_reg.knobVariations()){
+                knob_defs.push_back({name, columns.first, columns.second});
+            }
+
+            std::vector<analysis::UniverseDef> universe_defs;
+            for(const auto& [name, n_universes] : ev_reg.multiUniverseVariations()){
+                universe_defs.push_back({name, name, n_universes});
+            }
+
+            analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
 
             analysis::AnalysisDataLoader data_loader(
                 rc_reg,
@@ -73,11 +80,13 @@ int main(int argc, char* argv[]) {
                 true
             );
 
+            data_loader.printAllBranches();
+
             analysis::AnalysisRunner runner(
                 data_loader,
                 sel_reg,
                 ev_reg,
-                std::make_unique<analysis::DataFrameHistogramBuilder>(sys_proc, stratreg),
+                std::make_unique<analysis::DataFrameHistogramBuilder>(sys_proc, strat_reg),
                 plugins_config
             );
 

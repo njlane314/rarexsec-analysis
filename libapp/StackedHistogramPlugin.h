@@ -22,6 +22,8 @@ public:
         bool overlay_signal = true;
         std::vector<Cut> cut_list;
         bool annotate_numbers = true;
+        bool use_log_y = false;
+        std::string y_axis_label = "Events";
     };
 
     explicit StackedHistogramPlugin(const nlohmann::json& cfg) {
@@ -35,6 +37,8 @@ public:
             pc.output_directory = p.value("output_directory", std::string("plots"));
             pc.overlay_signal   = p.value("overlay_signal", true);
             pc.annotate_numbers = p.value("annotate_numbers", true);
+            pc.use_log_y        = p.value("log_y", false);
+            pc.y_axis_label     = p.value("y_axis_label", "Events");
             if (p.contains("cuts")) {
                 for (auto const& c : p.at("cuts")) {
                     auto dir = c.at("direction").get<std::string>() == "GreaterThan"
@@ -69,7 +73,9 @@ public:
                 pc.output_directory,
                 pc.overlay_signal,
                 pc.cut_list,
-                pc.annotate_numbers
+                pc.annotate_numbers,
+                pc.use_log_y,
+                pc.y_axis_label
             );
             plot.drawAndSave();
         }

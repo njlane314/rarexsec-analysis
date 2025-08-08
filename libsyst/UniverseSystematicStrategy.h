@@ -12,13 +12,11 @@ namespace analysis {
 class UniverseSystematicStrategy : public SystematicStrategy {
 public:
     UniverseSystematicStrategy(
-        UniverseDef   universe_def,
-        BookHistFn    book_fn
+        UniverseDef   universe_def
     )
       : identifier_(std::move(universe_def.name_))
       , vector_name_(std::move(universe_def.vector_name_))
       , n_universes_(universe_def.n_universes_)
-      , book_fn_(std::move(book_fn))
     {}
 
     const std::string& getName() const override {
@@ -27,35 +25,41 @@ public:
 
     void bookVariations(
         const std::vector<int>& keys,
-        BookHistFn              book_fn
+        BookHistFn              book_fn,
+        SystematicFutures&      futures
     ) override {
         for (auto key : keys) {
-            auto& univ_map = hist_universes_[key];
             for (unsigned u = 0; u < n_universes_; ++u) {
                 std::string col = vector_name_ + "[" + std::to_string(u) + "]";
-                univ_map.emplace(u, book_fn(key, col));
+                futures.variations["universe"][identifier_ + "_u" + std::to_string(u)][key] = book_fn(key, col);
             }
         }
     }
 
     TMatrixDSym computeCovariance(
-        int              key,
-        const BinnedHistogram& nominal_hist
+        int                    key,
+        const BinnedHistogram& nominal_hist,
+        SystematicFutures&     futures
     ) override {
-        auto& univ_map = hist_universes_.at(key);
-        int         n  = nominal_hist.nBins();
+        int n = nominal_hist.nBins();
         TMatrixDSym cov(n);
         cov.Zero();
+
+        std::vector<BinnedHistogram> varied_hists;
+        for (unsigned u = 0; u < n_universes_; ++u) {
+            auto& future = futures.variations["universe"][identifier_ + "_u" + std::to_string(u)].at(key);
+            varied_hists.push_back(BinnedHistogram::createFromTH1D(nominal_hist.bins, *future.GetPtr()));
+        }
 
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j <= i; ++j) {
                 double sum = 0;
-                for (auto& [u, hist] : univ_map) {
+                for (const auto& hist : varied_hists) {
                     double di = hist.getBinContent(i) - nominal_hist.getBinContent(i);
                     double dj = hist.getBinContent(j) - nominal_hist.getBinContent(j);
                     sum += di * dj;
                 }
-                double val = sum / univ_map.size();
+                double val = varied_hists.empty() ? 0 : sum / varied_hists.size();
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
@@ -64,11 +68,14 @@ public:
     }
 
     std::map<std::string, BinnedHistogram> getVariedHistograms(
-        int key
+        int key,
+        const BinDefinition& bin,
+        SystematicFutures& futures
     ) override {
         std::map<std::string, BinnedHistogram> out;
-        for (auto& [u, hist] : hist_universes_.at(key)) {
-            out["u" + std::to_string(u)] = hist;
+        for (unsigned u = 0; u < n_universes_; ++u) {
+            auto& future = futures.variations["universe"][identifier_ + "_u" + std::to_string(u)].at(key);
+            out["u" + std::to_string(u)] = BinnedHistogram::createFromTH1D(bin, *future.GetPtr());
         }
         return out;
     }
@@ -77,8 +84,6 @@ private:
     std::string                                     identifier_;
     std::string                                     vector_name_;
     unsigned                                        n_universes_;
-    BookHistFn                                      book_fn_;
-    std::map<int, std::map<unsigned, BinnedHistogram>>    hist_universes_;
 };
 
 }

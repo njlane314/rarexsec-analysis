@@ -44,6 +44,8 @@ public:
     SampleFrameMap& getSampleFrames() noexcept { return frames_; }
     double getTotalPot() const noexcept { return total_pot_; }
     long getTotalTriggers() const noexcept { return total_triggers_; }
+    const std::string& getBeam() const noexcept { return beam_; }
+    const std::vector<std::string>& getPeriods() const noexcept { return periods_; }
 
     void snapshot(const std::string& filter_expr,
                   const std::string& output_file,
@@ -51,7 +53,7 @@ public:
     {
         bool first = true;
         ROOT::RDF::RSnapshotOptions opts;
-        for (auto& [key, sample] : frames_) {
+        for (auto const& [key, sample] : frames_) {
             auto df = sample.nominal_node_;
             if (!filter_expr.empty()) {
                 df = df.Filter(filter_expr);
@@ -67,6 +69,17 @@ public:
                   const std::vector<std::string>& columns = {}) const
     {
         snapshot(query.str(), output_file, columns);
+    }
+
+    void printAllBranches() {
+        log::debug("AnalysisDataLoader", "Available branches in loaded samples:");
+        for (auto& [sample_key, sample_def] : frames_) { // <-- The const is removed here
+            log::debug("AnalysisDataLoader", "--- Sample:", sample_key, "---");
+            auto branches = sample_def.nominal_node_.GetColumnNames();
+            for (const auto& branch : branches) {
+                log::debug("AnalysisDataLoader", "  - ", branch);
+            }
+        }
     }
 
 private:

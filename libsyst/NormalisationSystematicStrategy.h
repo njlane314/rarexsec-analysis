@@ -24,15 +24,17 @@ public:
     }
 
     void bookVariations(
-        const std::vector<int>& /*keys*/,
-        BookHistFn              /*book_fn*/
+        const std::vector<int>&,
+        BookHistFn,
+        SystematicFutures&
     ) override {}
 
     TMatrixDSym computeCovariance(
-        int              /*key*/,
-        const BinnedHistogram& nominal_hist
+        int,
+        const BinnedHistogram& nominal_hist,
+        SystematicFutures&
     ) override {
-        int        n   = nominal_hist.nBins();
+        int n = nominal_hist.nBins();
         TMatrixDSym cov(n);
         cov.Zero();
         for (int i = 0; i < n; ++i) {
@@ -46,7 +48,9 @@ public:
     }
 
     std::map<std::string, BinnedHistogram> getVariedHistograms(
-        int /*key*/
+        int,
+        const BinDefinition&,
+        SystematicFutures&
     ) override {
         return {};
     }
@@ -56,6 +60,6 @@ private:
     double      fraction_;
 };
 
-} 
+}
 
-#endif // NORMALISATION_SYSTEMATIC_STRATEGY_H
+#endif

@@ -12,13 +12,11 @@ namespace analysis {
 class WeightSystematicStrategy : public SystematicStrategy {
 public:
     WeightSystematicStrategy(
-        KnobDef     knob_def,
-        BookHistFn  book_fn
+        KnobDef     knob_def
     )
       : identifier_(std::move(knob_def.name_))
       , up_column_(std::move(knob_def.up_column_))
       , dn_column_(std::move(knob_def.dn_column_))
-      , book_fn_(std::move(book_fn))
     {}
 
     const std::string& getName() const override {
@@ -27,21 +25,27 @@ public:
 
     void bookVariations(
         const std::vector<int>& keys,
-        BookHistFn              book_fn
+        BookHistFn              book_fn,
+        SystematicFutures&      futures
     ) override {
         for (auto key : keys) {
-            hist_up_[key] = book_fn(key, up_column_);
-            hist_dn_[key] = book_fn(key, dn_column_);
+            futures.variations["weight"][identifier_ + "_up"][key] = book_fn(key, up_column_);
+            futures.variations["weight"][identifier_ + "_dn"][key] = book_fn(key, dn_column_);
         }
     }
 
     TMatrixDSym computeCovariance(
-        int              key,
-        const BinnedHistogram& nominal_hist
+        int                    key,
+        const BinnedHistogram& nominal_hist,
+        SystematicFutures&     futures
     ) override {
-        const auto& hu = hist_up_.at(key);
-        const auto& hd = hist_dn_.at(key);
-        int         n  = nominal_hist.nBins();
+        auto& hu_future = futures.variations["weight"][identifier_ + "_up"].at(key);
+        auto& hd_future = futures.variations["weight"][identifier_ + "_dn"].at(key);
+
+        BinnedHistogram hu = BinnedHistogram::createFromTH1D(nominal_hist.bins, *hu_future.GetPtr());
+        BinnedHistogram hd = BinnedHistogram::createFromTH1D(nominal_hist.bins, *hd_future.GetPtr());
+
+        int n = nominal_hist.nBins();
         TMatrixDSym cov(n);
         cov.Zero();
 
@@ -53,21 +57,20 @@ public:
     }
 
     std::map<std::string, BinnedHistogram> getVariedHistograms(
-        int key
+        int key,
+        const BinDefinition& bin,
+        SystematicFutures& futures
     ) override {
-        return {
-            {"up", hist_up_.at(key)},
-            {"dn", hist_dn_.at(key)}
-        };
+        std::map<std::string, BinnedHistogram> out;
+        out["up"] = BinnedHistogram::createFromTH1D(bin, *futures.variations["weight"][identifier_ + "_up"].at(key).GetPtr());
+        out["dn"] = BinnedHistogram::createFromTH1D(bin, *futures.variations["weight"][identifier_ + "_dn"].at(key).GetPtr());
+        return out;
     }
 
 private:
     std::string                   identifier_;
     std::string                   up_column_;
     std::string                   dn_column_;
-    BookHistFn                    book_fn_;
-    std::map<int, BinnedHistogram>      hist_up_;
-    std::map<int, BinnedHistogram>      hist_dn_;
 };
 
 }

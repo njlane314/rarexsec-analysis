@@ -5,14 +5,22 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <TMatrixDSym.h>
 #include "BinDefinition.h"
+#include "ROOT/RDataFrame.hxx"
+#include "TH1D.h"
 
 namespace analysis {
 
 class BinnedHistogram;
 
-using BookHistFn = std::function<BinnedHistogram(int, const std::string&)>;
+struct SystematicFutures {
+    std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>> nominal;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>>>> variations;
+};
+
+using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(int, const std::string&)>;
 
 struct UniverseDef {
     std::string name_;
@@ -36,25 +44,25 @@ public:
     virtual void
     bookVariations(
         const std::vector<int>& keys,
-        BookHistFn              book_fn
+        BookHistFn              book_fn,
+        SystematicFutures&      futures
     ) = 0;
 
     virtual TMatrixDSym
     computeCovariance(
-        int              key,
-        const BinnedHistogram& nominal_hist
+        int                    key,
+        const BinnedHistogram& nominal_hist,
+        SystematicFutures&     futures
     ) = 0;
 
     virtual std::map<std::string, BinnedHistogram>
     getVariedHistograms(
-        int key
+        int key,
+        const BinDefinition& bin,
+        SystematicFutures& futures
     ) = 0;
 };
 
 }
 
 #endif
-
-
-
-

@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <TMatrixDSym.h>
 #include "SystematicStrategy.h"
 #include "BinnedHistogram.h"
@@ -18,23 +19,19 @@ class SystematicsProcessor {
 public:
     SystematicsProcessor(
         std::vector<KnobDef>          knob_defs,
-        std::vector<UniverseDef>      universe_defs,
-        std::vector<int>              channel_keys,
-        BookHistFn                    book_fn
+        std::vector<UniverseDef>      universe_defs
     )
-      : channel_keys_(std::move(channel_keys))
-      , book_fn_(std::move(book_fn))
-      , knob_defs_(std::move(knob_defs))
+      : knob_defs_(std::move(knob_defs))
       , universe_defs_(std::move(universe_defs))
     {
         for (auto& kd : knob_defs_) {
             strategies_.emplace_back(
-                std::make_unique<WeightSystematicStrategy>(kd, book_fn_)
+                std::make_unique<WeightSystematicStrategy>(kd)
             );
         }
         for (auto& ud : universe_defs_) {
             strategies_.emplace_back(
-                std::make_unique<UniverseSystematicStrategy>(ud, book_fn_)
+                std::make_unique<UniverseSystematicStrategy>(ud)
             );
         }
         strategies_.emplace_back(
@@ -42,47 +39,34 @@ public:
         );
     }
 
-    void bookAll() {
+    void bookAll(const std::vector<int>& keys, BookHistFn book_fn, SystematicFutures& futures) {
         for (auto& strat : strategies_) {
-            strat->bookVariations(channel_keys_, book_fn_);
+            strat->bookVariations(keys, book_fn, futures);
         }
     }
 
-    std::map<std::string, TMatrixDSym> computeAllCovariances(
-        const BinnedHistogram& nominal_hist
-    ) const {
+    std::map<std::string, TMatrixDSym> computeCovariances(
+        int key,
+        const BinnedHistogram& nominal_hist,
+        SystematicFutures& futures
+    ) {
         std::map<std::string, TMatrixDSym> out;
         for (auto& strat : strategies_) {
-            for (auto key : channel_keys_) {
-                out[strat->getName()] = strat->computeCovariance(key, nominal_hist);
-            }
+            out[strat->getName()] = strat->computeCovariance(key, nominal_hist, futures);
         }
         return out;
     }
 
     std::map<std::string, std::map<std::string, BinnedHistogram>>
-    getAllVariedHistograms() const {
+    getVariedHistograms(int key, const BinDefinition& bin, SystematicFutures& futures) {
         std::map<std::string, std::map<std::string, BinnedHistogram>> out;
         for (auto& strat : strategies_) {
-            for (auto key : channel_keys_) {
-                out[strat->getName()] = strat->getVariedHistograms(key);
-            }
+             out[strat->getName()] = strat->getVariedHistograms(key, bin, futures);
         }
         return out;
     }
 
-    const std::vector<KnobDef>& getKnobDefs() const { return knob_defs_; }
-    const std::vector<UniverseDef>& getUniverseDefs() const { return universe_defs_; }
-    void bookVariations(int channel_key) {
-        for (auto& strat : strategies_) {
-            strat->bookVariations({channel_key}, book_fn_);
-        }
-    }
-
-
 private:
-    std::vector<int>                                        channel_keys_;
-    BookHistFn                                              book_fn_;
     std::vector<std::unique_ptr<SystematicStrategy>>        strategies_;
     std::vector<KnobDef>                                    knob_defs_;
     std::vector<UniverseDef>                                universe_defs_;

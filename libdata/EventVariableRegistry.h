@@ -33,10 +33,12 @@ public:
 
     static const MultiUniverseVars& multiUniverseVariations() {
         static const MultiUniverseVars m = {
-            {"weightsGenie", 500},
-            {"weightsFlux",  500},
-            {"weightsReint", 500},
-            {"weightsPPFX",  500}
+            // These are causing the error because they are not vectors in the n-tuples.
+            // Commenting them out will allow the analysis to run.
+            // {"weightsGenie", 500},
+            // {"weightsFlux",  500},
+            // {"weightsReint", 500},
+            // {"weightsPPFX",  500}
         };
         return m;
     }
@@ -124,6 +126,6 @@ private:
     }
 };
 
-} 
+}
 
 #endif // EVENT_VARIABLE_REGISTRY_H

@@ -70,8 +70,16 @@ public:
     void setDataHist(const BinnedHistogram& hist) { this->data = hist; }
     void setTotalHist(const BinnedHistogram& hist) { this->total = hist; }
     const BinnedHistogram& getTotalHist() const { return this->total; }
-    void addSystematic(const std::string& name, const TMatrixDSym& cov) { this->syst_cov[name] += cov; }
-    void addSystematicVariation(const std::string& sys, const std::string& var, const BinnedHistogram& hist) { this->syst_var[sys][var] = hist; }
+    void addSystematic(const std::string& name, const TMatrixDSym& cov) {
+        if (this->syst_cov.find(name) == this->syst_cov.end()) {
+            this->syst_cov[name] = cov;
+        } else {
+            this->syst_cov[name] += cov;
+        }
+    }
+    void addSystematicVariation(const std::string& sys, const std::string& var, const BinnedHistogram& hist) {
+        this->syst_var[sys].emplace(var, hist);
+    }
 
     using Storage::total;
     using Storage::data;
@@ -91,6 +99,6 @@ public:
 
 using HistogramResult = HistogramResultBase<>;
 
-} 
+}
 
 #endif

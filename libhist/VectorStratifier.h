@@ -23,7 +23,6 @@ public:
                                                  const BinDefinition& bin) const override {
         auto modified_df = df;
         for (auto key : this->getRegistryKeys()) {
-            if (key == 0) continue;
             auto selector = [key](const ROOT::RVec<float>& vals,
                                   const ROOT::RVec<int>& ids) {
                 return vals[ROOT::VecOps::abs(ids) == key];
