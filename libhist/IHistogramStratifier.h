@@ -1,3 +1,4 @@
+// libhist/IHistogramStratifier.h
 #ifndef IHISTOGRAM_STRATIFIER_H
 #define IHISTOGRAM_STRATIFIER_H
 
@@ -37,7 +38,7 @@ public:
         FutureMap out;
         for (auto key : this->getRegistryKeys()) {
             if (key == 0) continue;
-            auto slice = this->filterNode(df, key);
+            auto slice = this->filterNode(df, bin, key);
             out[key] = slice.Histo1D(
                 model,
                 bin.getVariable().Data(),
@@ -53,7 +54,7 @@ public:
     {
         for (auto key : this->getRegistryKeys()) {
             if (key == 0) continue;
-            auto slice = this->filterNode(df, key);
+            auto slice = this->filterNode(df, bin, key);
             auto tb    = bin;
             tb.setVariable(this->getTempVariable(key));
             book(
@@ -100,14 +101,13 @@ public:
         this->aggregateVariations(out, bin, proc, keys, this->getStratifierBranch());
     }
 
-    virtual BranchType getRequiredBranchType() const = 0;
-
 protected:
     virtual std::vector<int> getRegistryKeys() const {
         return this->getRegistry().getStratumKeys(this->getRegistryKey());
     }
 
     virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
+                                        const BinDefinition& bin,
                                         int key) const = 0;
 
     virtual std::string getTempVariable(int /*key*/) const {

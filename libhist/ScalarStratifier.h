@@ -1,3 +1,4 @@
+// libhist/ScalarStratifier.h
 #ifndef SCALAR_STRATIFIER_H
 #define SCALAR_STRATIFIER_H
 
@@ -18,16 +19,13 @@ public:
       , registry_(registry)
     {}
 
-    BranchType getRequiredBranchType() const override {
-        return BranchType::Scalar;
-    }
-
 protected:
     std::vector<int> getRegistryKeys() const override {
         return registry_.getStratumKeys(registry_key_);
     }
 
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
+                                const BinDefinition& /*bin*/,
                                 int key) const override {
         return df.Filter(
             variable_ + " == " + std::to_string(key)

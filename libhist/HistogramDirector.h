@@ -4,10 +4,10 @@
 #include "BinDefinition.h"
 #include "IHistogramBuilder.h"
 #include "HistogramResult.h"
-#include "IBranchAccessor.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 #include <vector>
+#include <iterator>
 
 namespace analysis {
 
@@ -15,81 +15,71 @@ class HistogramDirector : public IHistogramBuilder {
 public:
     HistogramResult build(const BinDefinition& bin,
                           const SampleDataFrameMap& dfs) final {
-        log::info("HistogramDirector", "ENTER build for variable:", bin.getVariable().Data());
         this->prepareStratification(bin, dfs);
-        auto model = this->createModel(bin, dfs);
+        auto model = createModel(bin, dfs);
         ROOT::RDF::RResultPtr<TH1D> dataFuture;
         this->bookNominals(bin, dfs, model, dataFuture);
         this->bookVariations(bin, dfs);
         HistogramResult result;
         if (dataFuture.IsReady()) {
-            log::info("HistogramDirector", "Setting data histogram");
             result.setDataHist(
                 BinnedHistogram(bin,
-                          *dataFuture.GetPtr(),
-                          "data_hist",
-                          "Data")
+                                *dataFuture.GetPtr(),
+                                "data_hist",
+                                "Data")
             );
         }
         this->mergeStrata(bin, dfs, result);
         this->applySystematicCovariances(bin, result);
         this->finaliseResults(bin, result);
-        log::info("HistogramDirector", "EXIT build for variable:", bin.getVariable().Data());
         return result;
     }
 
 protected:
-    static BinDefinition resolveBinning(const BinDefinition& spec,
-                                        const SampleDataFrameMap& dfs,
-                                        IBranchAccessor& accessor) {
-        log::info("HistogramDirector", "ENTER resolveBinning for:", spec.getVariable().Data());
-        log::info("HistogramDirector", "Number of samples:", dfs.size());
-        std::vector<double> values;
-        for (auto const& [key, pr] : dfs) {
-            log::info("HistogramDirector", "  extracting values from sample:", key);
-            auto v = accessor.extractValues(
-                pr.second,
-                spec.getVariable().Data());
-            log::info("HistogramDirector", "    extracted", v.size(), "values");
-            values.insert(values.end(), v.begin(), v.end());
+    static ROOT::RDF::TH1DModel makeModel(const BinDefinition& bin,
+                                           const SampleDataFrameMap& dfs) {
+        auto df0 = std::next(dfs.begin())->second;
+        auto loFut = df0.Min(bin.getVariable().Data());
+        auto hiFut = df0.Max(bin.getVariable().Data());
+        double lo = *loFut;
+        double hi = *hiFut;
+        int N = bin.nBins();
+        std::vector<double> edges(N+1);
+        for (int i = 0; i <= N; ++i) {
+            edges[i] = lo + (hi - lo) * i / N;
         }
-        if (values.empty())
-            log::fatal("HistogramDirector", "Empty data for binning");
-        log::info("HistogramDirector", "Total values for binning:", values.size());
-        std::vector<double> edges = spec.edges_;
-        BinDefinition out(
-            edges,
-            spec.getVariable().Data(),
-            spec.getTexLabel().Data(),
-            spec.getSelectionKeys(),
-            spec.getName().Data());
-        log::info("HistogramDirector", "EXIT resolveBinning, bins:", out.nBins());
-        return out;
+        return ROOT::RDF::TH1DModel{
+            bin.getName().Data(),
+            bin.getName().Data(),
+            std::move(edges)
+        };
     }
 
-    virtual void prepareStratification(const BinDefinition& /*bin*/,
-                                       const SampleDataFrameMap& /*dfs*/) {}
+    TH1D createModel(const BinDefinition& bin,
+                     const SampleDataFrameMap& dfs) override {
+        return TH1D{ makeModel(bin, dfs) };
+    }
 
-    virtual TH1D createModel(const BinDefinition& bin,
-                             const SampleDataFrameMap& dfs) = 0;
+    virtual void prepareStratification(const BinDefinition&,
+                                       const SampleDataFrameMap&) {}
 
-    virtual void bookNominals(const BinDefinition& bin,
-                              const SampleDataFrameMap& dfs,
-                              const TH1D& model,
-                              ROOT::RDF::RResultPtr<TH1D>& dataFuture) = 0;
+    virtual void bookNominals(const BinDefinition&,
+                              const SampleDataFrameMap&,
+                              const TH1D&,
+                              ROOT::RDF::RResultPtr<TH1D>&) = 0;
 
-    virtual void bookVariations(const BinDefinition& bin,
-                                const SampleDataFrameMap& dfs) = 0;
+    virtual void bookVariations(const BinDefinition&,
+                                const SampleDataFrameMap&) = 0;
 
-    virtual void mergeStrata(const BinDefinition& bin,
-                              const SampleDataFrameMap& dfs,
-                              HistogramResult& out) = 0;
+    virtual void mergeStrata(const BinDefinition&,
+                             const SampleDataFrameMap&,
+                             HistogramResult&) = 0;
 
-    virtual void applySystematicCovariances(const BinDefinition& bin,
-                                            HistogramResult& out) = 0;
-
-    virtual void finaliseResults(const BinDefinition& /*bin*/,
-                                 HistogramResult& /*out*/) {}
+    virtual void applySystematicCovariances(const BinDefinition&,
+                                            HistogramResult&) = 0;
+                                            
+    virtual void finaliseResults(const BinDefinition&,
+                                 HistogramResult&) {}
 };
 
 }

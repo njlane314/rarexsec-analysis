@@ -1,3 +1,4 @@
+// libhist/VectorStratifier.h
 #ifndef VECTOR_STRATIFIER_H
 #define VECTOR_STRATIFIER_H
 
@@ -19,23 +20,20 @@ public:
       , registry_(registry)
     {}
 
-    BranchType getRequiredBranchType() const override {
-        return BranchType::Vector;
-    }
-
 protected:
     std::vector<int> getRegistryKeys() const override {
         return registry_.getStratumKeys(registry_key_);
     }
 
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                  int key) const override {
-        std::string col = variable_ + "_" + std::to_string(key);
+                                const BinDefinition& bin,
+                                int key) const override {
+        std::string col = std::string(bin.getVariable().Data()) + "_" + std::to_string(key);
         auto selector = [key](const ROOT::RVec<float>& vals,
                               const ROOT::RVec<int>& ids) {
             return vals[ROOT::VecOps::abs(ids) == key];
         };
-        return df.Define(col, selector, { variable_, variable_ });
+        return df.Define(col, selector, {bin.getVariable().Data(), variable_});
     }
 
     std::string getTempVariable(int key) const override {
