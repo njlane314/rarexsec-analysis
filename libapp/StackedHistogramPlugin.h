@@ -1,4 +1,3 @@
-// StackedHistogramPlugin.h
 #ifndef STACKEDHISTOGRAMPLUGIN_H
 #define STACKEDHISTOGRAMPLUGIN_H
 
@@ -9,6 +8,7 @@
 #include <string>
 #include <stdexcept>
 #include <TSystem.h>
+#include "Logger.h"
 
 namespace analysis {
 
@@ -49,15 +49,22 @@ public:
 
     void onInitialisation(AnalysisDefinition&, const SelectionRegistry&) override {}
     void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
-    void onPostSampleProcessing(const std::string&, const std::string&, const HistogramResult&) override {}
+    void onPostSampleProcessing(const std::string&, const std::string&, const AnalysisResultMap&) override {}
 
-    void onFinalisation(const HistogramResult& results) override {
+    void onFinalisation(const AnalysisResultMap& results) override {
         gSystem->mkdir("plots", true);
         for (auto const& pc : plots_) {
-            std::string name = "stack_" + pc.variable + "_" + pc.region;
+            std::string result_key = pc.variable + "@" + pc.region;
+            auto it = results.find(result_key);
+
+            if (it == results.end()) {
+                log::error("StackedHistogramPlugin", "Could not find analysis result for key:", result_key);
+                continue;
+            }
+            
             StackedHistogramPlot plot(
-                name,
-                results,
+                "stack_" + pc.variable + "_" + pc.region,
+                it->second,
                 pc.category_column,
                 pc.output_directory,
                 pc.overlay_signal,
@@ -72,6 +79,6 @@ private:
     std::vector<PlotConfig> plots_;
 };
 
-} // namespace analysis
+}
 
-#endif // STACKEDHISTOGRAMPLUGIN_H
+#endif

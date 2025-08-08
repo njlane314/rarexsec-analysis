@@ -8,11 +8,14 @@
 #include <memory>
 #include <dlfcn.h>
 #include <stdexcept>
+#include "Logger.h"
 
 namespace analysis {
 
 class AnalysisCallbackDispatcher {
 public:
+    using AnalysisResultMap = std::map<std::string, HistogramResult>;
+
     void loadPlugins(const nlohmann::json& jobj) {
         if (!jobj.contains("plugins")) return;
         for (auto const& p : jobj.at("plugins")) {
@@ -44,11 +47,11 @@ public:
 
     void broadcastAfterSampleProcessing(const std::string& rkey,
                                         const std::string& skey,
-                                        const HistogramResult& res) {
+                                        const AnalysisResultMap& res) {
         for (auto& pl : plugins_) pl->onPostSampleProcessing(rkey, skey, res);
     }
 
-    void broadcastAnalysisCompletion(const HistogramResult& allRes) {
+    void broadcastAnalysisCompletion(const AnalysisResultMap& allRes) {
         for (auto& pl : plugins_) pl->onFinalisation(allRes);
     }
 
@@ -62,4 +65,4 @@ private:
 };
 
 }
-#endif // ANALYSIS_CALLBACK_DISPATCHER_H
+#endif

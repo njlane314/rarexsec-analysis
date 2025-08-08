@@ -1,4 +1,3 @@
-// libhist/IHistogramStratifier.h
 #ifndef IHISTOGRAM_STRATIFIER_H
 #define IHISTOGRAM_STRATIFIER_H
 
@@ -25,11 +24,16 @@ public:
         void(int,
              ROOT::RDF::RNode,
              const BinDefinition&,
-             const std::string&,   // histogram name
-             const std::string&,   // category branch
-             const std::string&)>; // additional param
+             const std::string&,
+             const std::string&,
+             const std::string&)>;
 
     virtual ~IHistogramStratifier() = default;
+
+    virtual ROOT::RDF::RNode defineStratificationColumns(ROOT::RDF::RNode df,
+                                                         [[maybe_unused]] const BinDefinition& bin) const {
+        return df;
+    }
 
     FutureMap bookHistograms(ROOT::RDF::RNode df,
                              const BinDefinition& bin,
@@ -41,7 +45,7 @@ public:
             auto slice = this->filterNode(df, bin, key);
             out[key] = slice.Histo1D(
                 model,
-                bin.getVariable().Data(),
+                this->getTempVariable(key).c_str(),
                 "central_value_weight"
             );
         }
@@ -173,4 +177,4 @@ private:
 
 }
 
-#endif // IHISTOGRAM_STRATIFIER_H
+#endif

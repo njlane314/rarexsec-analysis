@@ -24,6 +24,7 @@ public:
               TString               tx  = "")
       : TNamed(nm, ti)
     {
+        log::debug("BinnedHistogram::ctor(vector)", "Creating histogram", std::string(nm.Data()), "with", bn.nBins(), "bins.");
         TH1DStorage::init(bn, ct, cv);
         TH1DRenderer::style(cl, ht, tx);
     }
@@ -37,6 +38,7 @@ public:
                     TString tx = "")
         : TNamed(nm, ti)
     {
+        log::debug("BinnedHistogram::ctor(TH1D)", "Creating histogram", std::string(nm.Data()), "from TH1D with", hist.GetNbinsX(), "bins.");
         std::vector<double> counts;
         TMatrixDSym cov(hist.GetNbinsX());
         for (int i = 1; i <= hist.GetNbinsX(); ++i) {
@@ -77,6 +79,14 @@ public:
     }
 
     BinnedHistogram operator+(const BinnedHistogram& o) const {
+        log::debug("BinnedHistogram::operator+", "Adding", std::string(o.GetName()), "(", o.nBins(), "bins) to", std::string(this->GetName()), "(", this->nBins(), "bins)");
+        if (this->nBins() == 0) return o;
+        if (o.nBins() == 0) return *this;
+
+        if (this->nBins() != o.nBins()) {
+            log::fatal("BinnedHistogram::operator+", "Attempting to add histograms with different numbers of bins:", this->nBins(), "vs", o.nBins());
+        }
+
         auto tmp = *this;
         for (int i = 0; i < nBins(); ++i) {
             tmp.counts[i] += o.counts[i];

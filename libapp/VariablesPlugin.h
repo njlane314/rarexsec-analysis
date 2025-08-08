@@ -1,4 +1,3 @@
-// VariablesPlugin.h
 #ifndef VARIABLESPLUGIN_H
 #define VARIABLESPLUGIN_H
 
@@ -44,10 +43,10 @@ public:
                                const std::string&) override {}
     void onPostSampleProcessing(const std::string&,
                                 const std::string&,
-                                const HistogramResult&) override {}
-    void onFinalisation(const HistogramResult&) override {}
+                                const AnalysisResultMap&) override {}
+    void onFinalisation(const AnalysisResultMap&) override {}
 };
 
-} // namespace analysis
+} 
 
-#endif // VARIABLESPLUGIN_H
+#endif

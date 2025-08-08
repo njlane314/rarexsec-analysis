@@ -93,7 +93,7 @@ private:
         return "UNKNOWN";
     }
 
-    LogLevel        level_ = LogLevel::INFO;
+    LogLevel        level_ = LogLevel::DEBUG;
     mutable std::mutex mutex_;
 };
 

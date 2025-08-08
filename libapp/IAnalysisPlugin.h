@@ -11,6 +11,7 @@ namespace analysis {
 
 class IAnalysisPlugin {
 public:
+    using AnalysisResultMap = std::map<std::string, HistogramResult>;
     virtual ~IAnalysisPlugin() = default;
 
     virtual void onInitialisation(AnalysisDefinition& def,
@@ -22,9 +23,9 @@ public:
 
     virtual void onPostSampleProcessing(const std::string& region_key,
                                         const std::string& sample_key,
-                                        const HistogramResult& results) = 0;
+                                        const AnalysisResultMap& results) = 0;
 
-    virtual void onFinalisation(const HistogramResult& all_results) = 0;
+    virtual void onFinalisation(const AnalysisResultMap& all_results) = 0;
 };
 
 }

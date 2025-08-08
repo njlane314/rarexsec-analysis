@@ -23,28 +23,6 @@
             "min": 0.0,
             "max": 500.0
           }
-        },
-        {
-          "name": "muon_theta",
-          "branch": "track_theta",
-          "label": "Muon Track Theta (rad)",
-          "stratum": "vector:backtracked_pdg_codes",
-          "bins": {
-            "n": 32,
-            "min": 0.0,
-            "max": 3.2
-          }
-        },
-        {
-            "name": "muon_phi",
-            "branch": "track_phi",
-            "label": "Muon Track Phi (rad)",
-            "stratum": "vector:backtracked_pdg_codes",
-            "bins": {
-                "n": 32,
-                "min": -3.2,
-                "max": 3.2
-            }
         }
       ]
     },
@@ -53,22 +31,6 @@
       "plots": [
         {
           "variable": "muon_length",
-          "region": "NUMU_CC_SEL",
-          "category_column": "backtracked_pdg_codes",
-          "output_directory": "plots",
-          "overlay_signal": true,
-          "annotate_numbers": false
-        },
-        {
-          "variable": "muon_theta",
-          "region": "NUMU_CC_SEL",
-          "category_column": "backtracked_pdg_codes",
-          "output_directory": "plots",
-          "overlay_signal": true,
-          "annotate_numbers": false
-        },
-        {
-          "variable": "muon_phi",
           "region": "NUMU_CC_SEL",
           "category_column": "backtracked_pdg_codes",
           "output_directory": "plots",

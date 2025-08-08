@@ -1,4 +1,3 @@
-// libhist/VectorStratifier.h
 #ifndef VECTOR_STRATIFIER_H
 #define VECTOR_STRATIFIER_H
 
@@ -20,20 +19,29 @@ public:
       , registry_(registry)
     {}
 
+    ROOT::RDF::RNode defineStratificationColumns(ROOT::RDF::RNode df,
+                                                 const BinDefinition& bin) const override {
+        auto modified_df = df;
+        for (auto key : this->getRegistryKeys()) {
+            if (key == 0) continue;
+            auto selector = [key](const ROOT::RVec<float>& vals,
+                                  const ROOT::RVec<int>& ids) {
+                return vals[ROOT::VecOps::abs(ids) == key];
+            };
+            modified_df = modified_df.Define(getTempVariable(key), selector, {bin.getVariable().Data(), variable_});
+        }
+        return modified_df;
+    }
+
 protected:
     std::vector<int> getRegistryKeys() const override {
         return registry_.getStratumKeys(registry_key_);
     }
 
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                const BinDefinition& bin,
-                                int key) const override {
-        std::string col = std::string(bin.getVariable().Data()) + "_" + std::to_string(key);
-        auto selector = [key](const ROOT::RVec<float>& vals,
-                              const ROOT::RVec<int>& ids) {
-            return vals[ROOT::VecOps::abs(ids) == key];
-        };
-        return df.Define(col, selector, {bin.getVariable().Data(), variable_});
+                                const BinDefinition&,
+                                int) const override {
+        return df;
     }
 
     std::string getTempVariable(int key) const override {
@@ -58,6 +66,6 @@ private:
     StratificationRegistry&    registry_;
 };
 
-} 
+}
 
 #endif // VECTOR_STRATIFIER_H
