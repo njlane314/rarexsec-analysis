@@ -24,10 +24,10 @@ public:
         auto modified_df = df;
         for (auto key : this->getRegistryKeys()) {
             auto selector = [key](const ROOT::RVec<float>& vals,
-                                  const ROOT::RVec<int>& ids) {
-                return vals[ROOT::VecOps::abs(ids) == key];
-            };
-            modified_df = modified_df.Define(getTempVariable(key), selector, {bin.getVariable().Data(), variable_});
+                        const ROOT::RVec<int>& ids) {
+                            return vals[ROOT::VecOps::abs(ids) == key];
+                        };
+                        modified_df = modified_df.Define(getTempVariable(key), selector, {bin.getVariable().Data(), variable_});
         }
         return modified_df;
     }

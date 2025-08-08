@@ -77,7 +77,8 @@ protected:
         bool first = true;
 
         log::info("DataFrameHistogramBuilder::mergeStrata", "Starting merge for variable:", std::string(bin.getName().Data()));
-        
+        log::info("DataFrameHistogramBuilder::mergeStrata", "Variable from bin definition:", std::string(bin.getVariable().Data()));
+
         for (auto& [sample_name, sample_futures] : systematics_futures_) {
             log::info("DataFrameHistogramBuilder::mergeStrata", "Processing sample:", sample_name);
 

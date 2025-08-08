@@ -62,6 +62,8 @@ public:
                 
                 std::string result_key = var_key + "@" + region_key;
                 log::info("AnalysisRunner", "Storing final histogram with key:", result_key);
+                log::info("AnalysisRunner", "Histogram name being stored:", hist.GetName());
+                log::info("AnalysisRunner", "Axis label being stored:", hist.axis_label);
 
                 all_results[result_key] = hist;
             }

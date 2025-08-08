@@ -39,17 +39,20 @@ public:
     }
 
     FutureMap bookHistograms(ROOT::RDF::RNode df,
-                             const BinDefinition& bin,
-                             const ROOT::RDF::TH1DModel& model) const
+                            const BinDefinition& bin,
+                            const ROOT::RDF::TH1DModel& model) const
     {
         FutureMap out;
         for (auto key : this->getRegistryKeys()) {
             auto slice = this->filterNode(df, bin, key);
+            // --- The Fix ---
+            // Ensure the temporary variable is used for the histogram
             out[key] = slice.Histo1D(
                 model,
                 this->getTempVariable(key).c_str(),
                 "central_value_weight"
             );
+            // --- End Fix ---
         }
         return out;
     }

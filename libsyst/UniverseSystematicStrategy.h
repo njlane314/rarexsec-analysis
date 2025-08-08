@@ -34,8 +34,6 @@ public:
         log::debug("UniverseSystematicStrategy::bookVariations", "Booking variations for ", identifier_);
         for (auto key : keys) {
             for (unsigned u = 0; u < n_universes_; ++u) {
-                // The following line is the fix. We can't directly access vector elements as columns.
-                // Instead, we have to rely on the book_fn to correctly define the column.
                 std::string col_name = vector_name_ + "[" + std::to_string(u) + "]";
                 log::debug("UniverseSystematicStrategy::bookVariations", "Booking universe ", u, " with column expression: ", col_name);
                 futures.variations["universe"][identifier_ + "_u" + std::to_string(u)][key] = book_fn(key, col_name);

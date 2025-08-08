@@ -111,6 +111,8 @@ private:
 
 protected:
     void draw(TCanvas& canvas) override {
+        log::info("StackedHistogramPlot::draw", "Plotting histogram with name:", result_.GetName()); // Added
+        log::info("StackedHistogramPlot::draw", "X-axis label from result:", result_.axis_label.c_str());
         const double PLOT_LEGEND_SPLIT = 0.85;
         canvas.cd();
         TPad* p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);

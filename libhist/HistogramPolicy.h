@@ -84,6 +84,8 @@ struct TH1DStorage {
     }
 };
 
+// In libhist/HistogramPolicy.h
+
 struct TH1DRenderer {
     mutable TH1D* hist = nullptr;
     Color_t                     color = kBlack;
