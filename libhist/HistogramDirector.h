@@ -22,7 +22,8 @@ public:
         this->bookVariations(bin, dfs);
         HistogramResult result;
         if (dataFuture && dataFuture.IsReady()) {
-            result.setDataHist(BinnedHistogram(bin, *dataFuture.GetPtr(), "data_hist", "Data"));
+            // Use the static factory function here
+            result.setDataHist(BinnedHistogram::createFromTH1D(bin, *dataFuture.GetPtr(), "data_hist", "Data"));
         }
         this->mergeStrata(bin, dfs, result);
         this->applySystematicCovariances(bin, result);

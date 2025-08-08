@@ -22,31 +22,45 @@ public:
               Color_t               cl  = kBlack,
               int                   ht  = 0,
               TString               tx  = "")
-      : TNamed(nm, ti)
+      : TNamed(nm, ti), TH1DStorage(bn, ct, cv)
     {
-        log::debug("BinnedHistogram::ctor(vector)", "Creating histogram", std::string(nm.Data()), "with", bn.nBins(), "bins.");
-        TH1DStorage::init(bn, ct, cv);
         TH1DRenderer::style(cl, ht, tx);
     }
 
-    BinnedHistogram(const BinDefinition& bn,
-                    const TH1D& hist,
-                    TString nm = "hist",
-                    TString ti = "",
-                    Color_t cl = kBlack,
-                    int ht = 0,
-                    TString tx = "")
-        : TNamed(nm, ti)
+    static BinnedHistogram createFromTH1D(const BinDefinition& bn,
+                                          const TH1D& hist,
+                                          TString nm = "hist",
+                                          TString ti = "",
+                                          Color_t cl = kBlack,
+                                          int ht = 0,
+                                          TString tx = "")
     {
-        log::debug("BinnedHistogram::ctor(TH1D)", "Creating histogram", std::string(nm.Data()), "from TH1D with", hist.GetNbinsX(), "bins.");
+        log::debug("BinnedHistogram::createFromTH1D", "Creating from TH1D named", std::string(hist.GetName()));
         std::vector<double> counts;
         TMatrixDSym cov(hist.GetNbinsX());
         for (int i = 1; i <= hist.GetNbinsX(); ++i) {
             counts.push_back(hist.GetBinContent(i));
             cov(i - 1, i - 1) = hist.GetBinError(i) * hist.GetBinError(i);
         }
-        TH1DStorage::init(bn, counts, cov);
-        TH1DRenderer::style(cl, ht, tx);
+        return BinnedHistogram(bn, counts, cov, nm, ti, cl, ht, tx);
+    }
+
+    BinnedHistogram(const BinnedHistogram& other)
+      : TNamed(other), TH1DStorage(other), TH1DRenderer(other)
+    {
+    }
+
+    // Definitive copy assignment operator
+    BinnedHistogram& operator=(const BinnedHistogram& other)
+    {
+        if (this != &other) {
+            TNamed::operator=(other);
+            // Explicitly call the now-robust base class assignment operator
+            TH1DStorage::operator=(other);
+            // Renderer is simple, direct assignment is fine
+            TH1DRenderer::operator=(other);
+        }
+        return *this;
     }
 
 

@@ -20,19 +20,33 @@ struct TH1DStorage {
     std::vector<double>         counts;
     TMatrixDSym                 cov;
 
-    void init(const BinDefinition&         b,
-              const std::vector<double>&   c,
-              const TMatrixDSym&           m)
+    TH1DStorage() = default;
+
+    // Explicit Copy Constructor to satisfy the "Rule of Three"
+    TH1DStorage(const TH1DStorage& other) = default;
+
+
+    TH1DStorage(const BinDefinition& b, const std::vector<double>& c, const TMatrixDSym& m)
+        : bins(b), counts(c), cov(m)
     {
         if (b.nBins() == 0)
             log::fatal("TH1DStorage", "Zero bins");
 
         if (c.size() != b.nBins() || (unsigned)m.GetNrows() != b.nBins())
             log::fatal("TH1DStorage", "Dimension mismatch");
+    }
 
-        bins   = b;
-        counts = c;
-        cov    = m;
+    // Explicit copy assignment operator for robustness
+    TH1DStorage& operator=(const TH1DStorage& other) {
+        if (this != &other) {
+            bins   = other.bins;
+            counts = other.counts;
+
+            // Ensure ROOT matrix dimensions match before assignment
+            cov.ResizeTo(other.cov.GetNrows(), other.cov.GetNcols());
+            cov = other.cov;
+        }
+        return *this;
     }
 
     std::size_t size() const { return bins.nBins(); }

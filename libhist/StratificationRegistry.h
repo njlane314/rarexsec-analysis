@@ -47,6 +47,19 @@ public:
         return it->second;
     }
 
+    int getStratumKey(const std::string& scheme, const std::string& name) const {
+        auto sit = stratification_schemes_.find(scheme);
+        if (sit != stratification_schemes_.end()) {
+            for (const auto& [key, props] : sit->second) {
+                if (props.plain_name == name) {
+                    return key;
+                }
+            }
+        }
+        return -1;
+    }
+
+
     const std::vector<int>& getSignalKeys(
         const std::string& scheme) const
     {
@@ -140,6 +153,6 @@ private:
     std::map<std::string,std::vector<int>>                 signal_definitions_;
 };
 
-} 
+}
 
-#endif // STRATIFICATION_REGISTRY_H
+#endif

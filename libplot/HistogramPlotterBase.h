@@ -28,34 +28,38 @@ public:
 
     void renderAndSave(const std::string& format = "png") {
         applyGlobalStyle();
-        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
+        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 800);
         render(canvas);
         canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
     }
 
 protected:
     virtual void applyGlobalStyle() const {
-        TStyle* style = new TStyle("PlotterStyle", "");
+        TStyle* style = new TStyle("PlotterStyle", "Shared Style for Plots");
         style->SetOptStat(0);
         style->SetPadTickX(1);
         style->SetPadTickY(1);
-        style->SetCanvasColor(0);
+        style->SetFrameBorderMode(0);
+        style->SetCanvasBorderMode(0);
+        style->SetPadBorderMode(0);
         style->SetPadColor(0);
+        style->SetCanvasColor(0);
+        style->SetTitleFillColor(0);
+        style->SetTitleFont(42, "XYZ");
+        style->SetTitleColor(1, "XYZ");
+        style->SetTitleSize(0.05, "XYZ");
+        style->SetTitleOffset(1.4, "Y");
+        style->SetLabelFont(42, "XYZ");
+        style->SetLabelColor(1, "XYZ");
+        style->SetLabelSize(0.04, "XYZ");
         gROOT->SetStyle("PlotterStyle");
         gROOT->ForceStyle();
     }
 
     std::string plot_name_;
     std::string output_directory_;
-
-public:
-    static const int default_line_colors_[13];
 };
 
-const int HistogramPlotterBase::default_line_colors_[13] = {
-    1, 2, 8, 4, 6, 38, 46, 43, 30, 9, 7, 14, 3
-};
+}
 
-} 
-
-#endif // HISTOGRAM_PLOTTER_BASE_H
+#endif
