@@ -109,7 +109,7 @@ public:
         return tmp;
     }
 
-    const TH1D* get() { return TH1DRenderer::get(*this); }
+    const TH1D* get() const { return TH1DRenderer::get(*this); }
 };
 
 using BinnedHistogramD = BinnedHistogram;

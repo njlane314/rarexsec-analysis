@@ -24,34 +24,50 @@ public:
 
     virtual ~HistogramPlotterBase() = default;
 
-    virtual void render(TCanvas& canvas) = 0;
+    virtual void draw(TCanvas& canvas) = 0;
 
-    void renderAndSave(const std::string& format = "png") {
-        applyGlobalStyle();
-        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 800);
-        render(canvas);
+    void drawAndSave(const std::string& format = "png") {
+        this->setGlobalStyle();
+        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
+        this->draw(canvas);
         canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
     }
 
 protected:
-    virtual void applyGlobalStyle() const {
-        TStyle* style = new TStyle("PlotterStyle", "Shared Style for Plots");
+    virtual void setGlobalStyle() const {
+        const int font_style = 42;
+        TStyle* style = new TStyle("PlotterStyle", "Plotter Style");
+        style->SetTitleFont(font_style, "X");
+        style->SetTitleFont(font_style, "Y");
+        style->SetTitleFont(font_style, "Z");
+        style->SetTitleSize(0.05, "X");
+        style->SetTitleSize(0.05, "Y");
+        style->SetTitleSize(0.04, "Z");
+        style->SetLabelFont(font_style, "X");
+        style->SetLabelFont(font_style, "Y");
+        style->SetLabelFont(font_style, "Z");
+        style->SetLabelSize(0.045, "X");
+        style->SetLabelSize(0.045, "Y");
+        style->SetLabelSize(0.045, "Z");
+        style->SetTitleOffset(0.93, "X");
+        style->SetTitleOffset(1.06, "Y");
         style->SetOptStat(0);
         style->SetPadTickX(1);
         style->SetPadTickY(1);
-        style->SetFrameBorderMode(0);
+        style->SetPadLeftMargin(0.15);
+        style->SetPadRightMargin(0.05);
+        style->SetPadTopMargin(0.07);
+        style->SetPadBottomMargin(0.12);
+        style->SetMarkerSize(1.0);
+        style->SetCanvasColor(0);
+        style->SetPadColor(0);
+        style->SetFrameFillColor(0);
         style->SetCanvasBorderMode(0);
         style->SetPadBorderMode(0);
-        style->SetPadColor(0);
-        style->SetCanvasColor(0);
+        style->SetStatColor(0);
+        style->SetFrameBorderMode(0);
         style->SetTitleFillColor(0);
-        style->SetTitleFont(42, "XYZ");
-        style->SetTitleColor(1, "XYZ");
-        style->SetTitleSize(0.05, "XYZ");
-        style->SetTitleOffset(1.4, "Y");
-        style->SetLabelFont(42, "XYZ");
-        style->SetLabelColor(1, "XYZ");
-        style->SetLabelSize(0.04, "XYZ");
+        style->SetTitleBorderSize(0);
         gROOT->SetStyle("PlotterStyle");
         gROOT->ForceStyle();
     }

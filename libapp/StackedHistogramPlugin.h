@@ -71,7 +71,7 @@ public:
                 pc.cut_list,
                 pc.annotate_numbers
             );
-            plot.renderAndSave();
+            plot.drawAndSave();
         }
     }
 

@@ -83,7 +83,7 @@ struct TH1DStorage {
 };
 
 struct TH1DRenderer {
-    TH1D* hist = nullptr;
+    mutable TH1D* hist = nullptr;
     Color_t                     color = kBlack;
     int                         hatch = 0;
     TString                     tex;
@@ -94,7 +94,7 @@ struct TH1DRenderer {
         tex   = t;
     }
 
-    void sync(const TH1DStorage& s) {
+    void sync(const TH1DStorage& s) const {
         if (!hist) {
             hist = new TH1D(
                 "_h_",
@@ -114,7 +114,7 @@ struct TH1DRenderer {
         if (hatch) hist->SetFillColor(color);
     }
 
-    const TH1D* get(const TH1DStorage& s) {
+    const TH1D* get(const TH1DStorage& s) const {
         sync(s);
         return hist;
     }

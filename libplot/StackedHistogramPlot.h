@@ -16,6 +16,9 @@
 #include "TLegend.h"
 #include "TPad.h"
 #include "TLatex.h"
+#include "TLine.h"
+#include "TArrow.h"
+
 
 namespace analysis {
 
@@ -41,11 +44,23 @@ public:
         result_(data),
         category_column_(std::move(category_column)),
         overlay_signal_(overlay_signal),
-        cut_list_(std::move(cut_list)),
+        cuts_(cut_list),
         annotate_numbers_(annotate_numbers)
     {}
 
-    ~StackedHistogramPlot() override {}
+    ~StackedHistogramPlot() override {
+        delete total_mc_hist_;
+        delete mc_stack_;
+        delete legend_;
+        for (auto vis : cut_visuals_) {
+            delete vis;
+        }
+    }
+
+    void addCut(const Cut& cut) {
+        cuts_.push_back(cut);
+    }
+
 
 private:
     void drawWatermark(TPad* pad) const {
@@ -65,33 +80,30 @@ private:
 
         TLatex watermark;
         watermark.SetNDC();
+        watermark.SetTextAlign(11);
+        watermark.SetTextFont(62);
+        watermark.SetTextSize(0.05);
+        watermark.DrawLatex(pad->GetLeftMargin(), 1 - pad->GetTopMargin() - 0.05, line1.c_str());
         watermark.SetTextAlign(31);
         watermark.SetTextFont(42);
-        
-        double x_pos = 1.0 - pad->GetRightMargin() - 0.03;
-        double y_pos = 1.0 - pad->GetTopMargin() - 0.03;
-
-        watermark.SetTextSize(0.05);
-        watermark.DrawLatex(x_pos, y_pos, line1.c_str());
         watermark.SetTextSize(0.04);
-        watermark.DrawLatex(x_pos, y_pos - 0.06, line2.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin(), 1 - pad->GetTopMargin() - 0.05, line2.c_str());
     }
 
 protected:
-    void render(TCanvas& canvas) override {
+    void draw(TCanvas& canvas) override {
+        const double PLOT_LEGEND_SPLIT = 0.85;
         canvas.cd();
-
-        const double legend_split = 0.75;
-        TPad* main_pad = new TPad("main_pad", "", 0.0, 0.0, 1.0, legend_split);
-        TPad* legend_pad = new TPad("legend_pad", "", 0.0, legend_split, 1.0, 1.0);
-        main_pad->SetTopMargin(0.05);
-        main_pad->SetBottomMargin(0.15);
-        main_pad->SetLeftMargin(0.15);
-        main_pad->SetRightMargin(0.05);
-        legend_pad->SetTopMargin(0.05);
-        legend_pad->SetBottomMargin(0.01);
-        legend_pad->Draw();
-        main_pad->Draw();
+        TPad* p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
+        TPad* p_legend = new TPad("legend_pad", "legend_pad", 0.0, PLOT_LEGEND_SPLIT, 1.0, 1.0);
+        p_main->SetTopMargin(0.01);
+        p_main->SetBottomMargin(0.12);
+        p_main->SetLeftMargin(0.12);
+        p_main->SetRightMargin(0.05);
+        p_legend->SetTopMargin(0.05);
+        p_legend->SetBottomMargin(0.01);
+        p_legend->Draw();
+        p_main->Draw();
 
         mc_stack_ = new THStack("mc_stack", "");
         StratificationRegistry registry;
@@ -103,37 +115,58 @@ protected:
         std::sort(mc_hists.begin(), mc_hists.end(), [](const BinnedHistogram& a, const BinnedHistogram& b) {
             return a.sum_() < b.sum_();
         });
+        std::reverse(mc_hists.begin(), mc_hists.end());
 
-        legend_pad->cd();
-        int n_cols = (mc_hists.size() + 1 > 3) ? 3 : (int)mc_hists.size() + 1;
-        if (n_cols == 0) n_cols = 1;
-        legend_ = new TLegend(0.05, 0.0, 0.95, 0.95);
-        legend_->SetNColumns(n_cols);
+        p_legend->cd();
+        legend_ = new TLegend(0.1, 0.0, 0.9, 1.0);
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
+        const int n_entries = mc_hists.size() + 1;
+        int n_cols = (n_entries > 4) ? 3 : 2;
+        legend_->SetNColumns(n_cols);
 
-        main_pad->cd();
-        for (auto& hist : mc_hists) {
-            TH1D* h = static_cast<TH1D*>(hist.get()->Clone(hist.GetName()));
-            h->SetDirectory(nullptr);
-            
+        auto format_double = [](double val, int precision) {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(precision) << val;
+            return stream.str();
+        };
+
+        for (const auto& hist : mc_hists) {
+            TH1D* h_leg = new TH1D();
+            const auto& stratum = registry.getStratum(category_column_, registry.getStratumKey(category_column_, hist.GetName()));
+            h_leg->SetFillColor(stratum.fill_colour);
+            h_leg->SetFillStyle(stratum.fill_style);
+            h_leg->SetLineColor(kBlack);
+            h_leg->SetLineWidth(1.5);
+            std::string legend_label = annotate_numbers_ ? std::string(stratum.tex_label) + " : " + format_double(hist.sum_(), 2) : stratum.tex_label;
+            legend_->AddEntry(h_leg, legend_label.c_str(), "f");
+        }
+        
+        if (!mc_hists.empty()) {
+            TH1D* h_unc = new TH1D();
+            h_unc->SetFillColor(kBlack);
+            h_unc->SetFillStyle(3004);
+            h_unc->SetLineColor(kBlack);
+            h_unc->SetLineWidth(1);
+            double total_mc_events = 0.0;
+            for(const auto& hist : mc_hists) {
+                total_mc_events += hist.sum();
+            }
+            std::string total_label = annotate_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
+            legend_->AddEntry(h_unc, total_label.c_str(), "f");
+        }
+        legend_->Draw();
+        
+        p_main->cd();
+        for (const auto& hist : mc_hists) {
+            TH1D* h = static_cast<TH1D*>(hist.get()->Clone());
             const auto& stratum = registry.getStratum(category_column_, registry.getStratumKey(category_column_, hist.GetName()));
             h->SetFillColor(stratum.fill_colour);
             h->SetFillStyle(stratum.fill_style);
             h->SetLineColor(kBlack);
             h->SetLineWidth(1);
-            
             mc_stack_->Add(h, "HIST");
-
-            std::string legend_label = stratum.tex_label;
-            if (annotate_numbers_) {
-                std::stringstream ss;
-                ss << std::fixed << std::setprecision(1) << hist.sum_();
-                legend_label += " (" + ss.str() + ")";
-            }
-            legend_->AddEntry(h, legend_label.c_str(), "f");
-            
             if (!total_mc_hist_) {
                 total_mc_hist_ = (TH1D*)h->Clone("total_mc_hist");
                 total_mc_hist_->SetDirectory(0);
@@ -141,28 +174,54 @@ protected:
                 total_mc_hist_->Add(h);
             }
         }
-        
+
+        double max_y = total_mc_hist_ ? total_mc_hist_->GetMaximum() + total_mc_hist_->GetBinError(total_mc_hist_->GetMaximumBin()) : 1.0;
         mc_stack_->Draw("HIST");
+        mc_stack_->SetMaximum(max_y * 1.3);
+        mc_stack_->SetMinimum(0.0);
         
+        if (total_mc_hist_) {
+            total_mc_hist_->SetFillColor(kBlack);
+            total_mc_hist_->SetFillStyle(3004);
+            total_mc_hist_->SetMarkerSize(0);
+            total_mc_hist_->Draw("E2 SAME");
+        }
+        
+        for (const auto& cut : cuts_) {
+            double y_arrow_pos = max_y * 0.85;
+            double x_range = mc_stack_->GetXaxis()->GetXmax() - mc_stack_->GetXaxis()->GetXmin();
+            double arrow_length = x_range * 0.04;
+
+            TLine* line = new TLine(cut.threshold, 0, cut.threshold, max_y * 1.3);
+            line->SetLineColor(kRed);
+            line->SetLineWidth(2);
+            line->SetLineStyle(kDashed);
+            line->Draw("same");
+            cut_visuals_.push_back(line);
+
+            double x_start, x_end;
+            if (cut.direction == CutDirection::GreaterThan) {
+                x_start = cut.threshold;
+                x_end = cut.threshold + arrow_length;
+            } else {
+                x_start = cut.threshold;
+                x_end = cut.threshold - arrow_length;
+            }
+            TArrow* arrow = new TArrow(x_start, y_arrow_pos, x_end, y_arrow_pos, 0.025, ">");
+            arrow->SetLineColor(kRed);
+            arrow->SetFillColor(kRed);
+            arrow->SetLineWidth(2);
+            arrow->Draw("same");
+            cut_visuals_.push_back(arrow);
+        }
+
         TH1* frame = mc_stack_->GetHistogram();
         frame->GetXaxis()->SetTitle(result_.axis_label.c_str());
         frame->GetYaxis()->SetTitle("Events");
-        
-        if (total_mc_hist_) {
-            mc_stack_->SetMaximum(total_mc_hist_->GetMaximum() * 1.5);
-            total_mc_hist_->SetFillColorAlpha(kBlack, 0.35);
-            total_mc_hist_->SetFillStyle(1001);
-            total_mc_hist_->SetMarkerSize(0);
-            total_mc_hist_->Draw("E2 SAME");
-            legend_->AddEntry(total_mc_hist_, "Stat. Unc.", "f");
-        }
 
-        drawWatermark(main_pad);
+        drawWatermark(p_main);
 
-        main_pad->RedrawAxis();
-        legend_pad->cd();
-        legend_->Draw();
-        
+        p_main->RedrawAxis();
         canvas.Update();
     }
 
@@ -170,12 +229,12 @@ private:
     const HistogramResult&          result_;
     std::string                     category_column_;
     bool                            overlay_signal_;
-    std::vector<Cut>                cut_list_;
+    std::vector<Cut>                cuts_;
     bool                            annotate_numbers_;
-
-    TH1D* total_mc_hist_  = nullptr;
-    THStack* mc_stack_       = nullptr;
-    TLegend* legend_         = nullptr;
+    TH1D* total_mc_hist_ = nullptr;
+    THStack* mc_stack_ = nullptr;
+    TLegend* legend_ = nullptr;
+    std::vector<TObject*>           cut_visuals_;
 };
 
 }
