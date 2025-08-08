@@ -9,6 +9,7 @@
 #include <TH1D.h>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace analysis {
 
@@ -29,15 +30,24 @@ protected:
 
     void bookNominals(const BinDefinition& bin,
                       const SampleDataFrameMap& dfs,
-                      const TH1D& model,
+                      const ROOT::RDF::TH1DModel& model,
                       ROOT::RDF::RResultPtr<TH1D>& dataFuture) override {
         for (auto const& [key, pr] : dfs) {
-            auto& df = pr.second;
+            auto df = pr.second;
             if (pr.first == SampleType::kData) {
                 dataFuture = df.Histo1D(model, bin.getVariable().Data());
             } else {
-                histogram_futures_[key] =
-                    stratifier_->bookHistograms(df, bin, model);
+                std::vector<double> edges;
+                edges.reserve(bin.nBins() + 1);
+                const int N = static_cast<int>(bin.nBins());
+                if (!bin.edges_.empty()) {
+                    edges = bin.edges_;
+                } else {
+                    edges.resize(N + 1);
+                    for (int i = 0; i <= N; ++i) edges[i] = i;
+                }
+                TH1D thModel(bin.getName().Data(), bin.getName().Data(), static_cast<int>(edges.size() - 1), edges.data());
+                histogram_futures_[key] = stratifier_->bookHistograms(df, bin, thModel);
             }
         }
     }
@@ -89,4 +99,5 @@ private:
 
 }
 
-#endif // DATAFRAME_HISTOGRAM_BUILDER_H
+#endif
+

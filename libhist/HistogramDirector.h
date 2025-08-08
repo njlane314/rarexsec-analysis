@@ -21,13 +21,8 @@ public:
         this->bookNominals(bin, dfs, model, dataFuture);
         this->bookVariations(bin, dfs);
         HistogramResult result;
-        if (dataFuture.IsReady()) {
-            result.setDataHist(
-                BinnedHistogram(bin,
-                                *dataFuture.GetPtr(),
-                                "data_hist",
-                                "Data")
-            );
+        if (dataFuture && dataFuture.IsReady()) {
+            result.setDataHist(BinnedHistogram(bin, *dataFuture.GetPtr(), "data_hist", "Data"));
         }
         this->mergeStrata(bin, dfs, result);
         this->applySystematicCovariances(bin, result);
@@ -37,27 +32,26 @@ public:
 
 protected:
     static ROOT::RDF::TH1DModel makeModel(const BinDefinition& bin,
-                                           const SampleDataFrameMap& dfs) {
-        auto df0 = std::next(dfs.begin())->second;
+                                          const SampleDataFrameMap& dfs) {
+        auto df0 = dfs.begin()->second.second;
         auto loFut = df0.Min(bin.getVariable().Data());
         auto hiFut = df0.Max(bin.getVariable().Data());
         double lo = *loFut;
         double hi = *hiFut;
-        int N = bin.nBins();
-        std::vector<double> edges(N+1);
-        for (int i = 0; i <= N; ++i) {
-            edges[i] = lo + (hi - lo) * i / N;
-        }
-        return ROOT::RDF::TH1DModel{
+        int N = static_cast<int>(bin.nBins());
+        std::vector<double> edges(N + 1);
+        for (int i = 0; i <= N; ++i) edges[i] = lo + (hi - lo) * i / N;
+        return ROOT::RDF::TH1DModel(
             bin.getName().Data(),
             bin.getName().Data(),
-            std::move(edges)
-        };
+            static_cast<int>(edges.size() - 1),
+            edges.data()
+        );
     }
 
-    TH1D createModel(const BinDefinition& bin,
-                     const SampleDataFrameMap& dfs) override {
-        return TH1D{ makeModel(bin, dfs) };
+    ROOT::RDF::TH1DModel createModel(const BinDefinition& bin,
+                                     const SampleDataFrameMap& dfs) {
+        return makeModel(bin, dfs);
     }
 
     virtual void prepareStratification(const BinDefinition&,
@@ -65,7 +59,7 @@ protected:
 
     virtual void bookNominals(const BinDefinition&,
                               const SampleDataFrameMap&,
-                              const TH1D&,
+                              const ROOT::RDF::TH1DModel&,
                               ROOT::RDF::RResultPtr<TH1D>&) = 0;
 
     virtual void bookVariations(const BinDefinition&,
@@ -77,11 +71,11 @@ protected:
 
     virtual void applySystematicCovariances(const BinDefinition&,
                                             HistogramResult&) = 0;
-                                            
+
     virtual void finaliseResults(const BinDefinition&,
                                  HistogramResult&) {}
 };
 
 }
 
-#endif // HISTOGRAM_DIRECTOR_H
+#endif
