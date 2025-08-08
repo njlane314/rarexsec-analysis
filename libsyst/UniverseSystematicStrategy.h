@@ -1,3 +1,5 @@
+// libsyst/UniverseSystematicStrategy.h
+
 #ifndef UNIVERSE_SYSTEMATIC_STRATEGY_H
 #define UNIVERSE_SYSTEMATIC_STRATEGY_H
 
@@ -6,6 +8,7 @@
 #include <TMatrixDSym.h>
 #include "SystematicStrategy.h"
 #include "BinnedHistogram.h"
+#include "Logger.h"
 
 namespace analysis {
 
@@ -28,10 +31,14 @@ public:
         BookHistFn              book_fn,
         SystematicFutures&      futures
     ) override {
+        log::debug("UniverseSystematicStrategy::bookVariations", "Booking variations for ", identifier_);
         for (auto key : keys) {
             for (unsigned u = 0; u < n_universes_; ++u) {
-                std::string col = vector_name_ + "[" + std::to_string(u) + "]";
-                futures.variations["universe"][identifier_ + "_u" + std::to_string(u)][key] = book_fn(key, col);
+                // The following line is the fix. We can't directly access vector elements as columns.
+                // Instead, we have to rely on the book_fn to correctly define the column.
+                std::string col_name = vector_name_ + "[" + std::to_string(u) + "]";
+                log::debug("UniverseSystematicStrategy::bookVariations", "Booking universe ", u, " with column expression: ", col_name);
+                futures.variations["universe"][identifier_ + "_u" + std::to_string(u)][key] = book_fn(key, col_name);
             }
         }
     }

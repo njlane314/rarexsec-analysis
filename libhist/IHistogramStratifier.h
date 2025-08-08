@@ -1,3 +1,5 @@
+// libhist/IHistogramStratifier.h
+
 #ifndef IHISTOGRAM_STRATIFIER_H
 #define IHISTOGRAM_STRATIFIER_H
 
@@ -89,11 +91,16 @@ public:
                           SystematicFutures& futures)
     {
         auto keys = this->getRegistryKeys();
-        auto nominal_hist = out.getTotalHist();
         
         // Aggregate Covariances
         std::map<std::string, TMatrixDSym> total_covs;
         for (auto k : keys) {
+            auto it = futures.nominal.find(k);
+            if (it == futures.nominal.end()) {
+                log::warn("IHistogramStratifier", "Nominal future not found for key", k);
+                continue;
+            }
+            auto nominal_hist = BinnedHistogram::createFromTH1D(bin, *it->second.GetPtr());
             auto byChan = proc.computeCovariances(k, nominal_hist, futures);
             for (auto& [name, mat] : byChan) {
                 if (total_covs.find(name) == total_covs.end()) {

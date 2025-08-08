@@ -1,3 +1,5 @@
+// libhist/HistogramPolicy.h
+
 #ifndef HISTOGRAM_POLICY_H
 #define HISTOGRAM_POLICY_H
 
@@ -22,8 +24,10 @@ struct TH1DStorage {
 
     TH1DStorage() = default;
 
-    // Explicit Copy Constructor to satisfy the "Rule of Three"
-    TH1DStorage(const TH1DStorage& other) = default;
+    TH1DStorage(const TH1DStorage& other)
+      : bins(other.bins), counts(other.counts), cov(other.cov)
+    {
+    }
 
 
     TH1DStorage(const BinDefinition& b, const std::vector<double>& c, const TMatrixDSym& m)
@@ -36,13 +40,11 @@ struct TH1DStorage {
             log::fatal("TH1DStorage", "Dimension mismatch");
     }
 
-    // Explicit copy assignment operator for robustness
     TH1DStorage& operator=(const TH1DStorage& other) {
         if (this != &other) {
             bins   = other.bins;
             counts = other.counts;
 
-            // Ensure ROOT matrix dimensions match before assignment
             cov.ResizeTo(other.cov.GetNrows(), other.cov.GetNcols());
             cov = other.cov;
         }
@@ -96,8 +98,14 @@ struct TH1DRenderer {
 
     void sync(const TH1DStorage& s) const {
         if (!hist) {
+            // --- The Fix ---
+            // Create a unique name for the histogram to avoid ROOT warnings
+            static int hist_counter = 0;
+            TString unique_name = TString::Format("_h_%d", hist_counter++);
+            // --- End Fix ---
+
             hist = new TH1D(
-                "_h_",
+                unique_name,
                 ";" + s.bins.tex_ + ";Events",
                 s.bins.nBins(),
                 s.bins.edges_.data()

@@ -1,3 +1,5 @@
+// libhist/DataFrameHistogramBuilder.h
+
 #ifndef DATAFRAME_HISTOGRAM_BUILDER_H
 #define DATAFRAME_HISTOGRAM_BUILDER_H
 
@@ -12,6 +14,7 @@
 #include <vector>
 #include <unordered_map>
 #include "Logger.h"
+#include <regex>
 
 namespace analysis {
 
@@ -46,7 +49,17 @@ protected:
                 sample_futures.nominal = stratifier_->bookHistograms(stratified_df, bin, model);
                 
                 auto book_fn = [&](int stratum_key, const std::string& weight_col) {
-                    return stratified_df.Histo1D(model, stratifier_->getTempVariable(stratum_key).c_str(), weight_col.c_str());
+                    std::regex vec_regex("([a-zA-Z0-9_]+)\\[([0-9]+)\\]");
+                    std::smatch match;
+                    if (std::regex_match(weight_col, match, vec_regex)) {
+                        std::string branch_name = match[1];
+                        int index = std::stoi(match[2]);
+                        std::string temp_col_name = branch_name + "_" + std::to_string(index) + "_temp";
+                        auto temp_df = stratified_df.Define(temp_col_name, [index](const ROOT::RVec<unsigned short>& vec) { return static_cast<double>(vec[index]) / 1000.0; }, {branch_name});
+                        return temp_df.Histo1D(model, stratifier_->getTempVariable(stratum_key).c_str(), temp_col_name.c_str());
+                    } else {
+                        return stratified_df.Histo1D(model, stratifier_->getTempVariable(stratum_key).c_str(), weight_col.c_str());
+                    }
                 };
                 auto keys = stratifier_->getRegistryKeys();
                 systematics_processor_.bookAll(keys, book_fn, sample_futures);
@@ -73,6 +86,7 @@ protected:
             log::info("DataFrameHistogramBuilder::mergeStrata", "Collected", hist_map.size(), "stratified histograms for sample:", sample_name);
 
             for (auto const& [stratum_name, h] : hist_map) {
+                log::debug("DataFrameHistogramBuilder::mergeStrata", "Adding channel '", stratum_name, "' from sample '", sample_name, "'");
                 out.addChannel(stratum_name, h);
                 if (first) {
                     total = h;
@@ -90,7 +104,9 @@ protected:
 
     void applySystematicCovariances(const BinDefinition& bin,
                                     HistogramResult& out) override {
+        log::info("DataFrameHistogramBuilder::applySystematicCovariances", "Applying systematics for variable:", std::string(bin.getName().Data()));
         for(auto& [sample_name, sample_futures] : systematics_futures_) {
+             log::debug("DataFrameHistogramBuilder::applySystematicCovariances", "Applying systematics for sample:", sample_name);
              stratifier_->applySystematics(out, bin, systematics_processor_, sample_futures);
         }
     }

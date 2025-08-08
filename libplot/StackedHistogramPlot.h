@@ -1,3 +1,5 @@
+// libplot/StackedHistogramPlot.h
+
 #ifndef STACKED_HISTOGRAM_PLOT_H
 #define STACKED_HISTOGRAM_PLOT_H
 
@@ -199,6 +201,21 @@ protected:
         mc_stack_->SetMinimum(use_log_y_ ? 0.1 : 0.0);
         
         if (total_mc_hist_) {
+            TMatrixDSym total_syst_cov(total_mc_hist_->GetNbinsX());
+            total_syst_cov.Zero();
+            for (const auto& [name, cov] : result_.syst_cov) {
+                if (cov.GetNrows() == total_syst_cov.GetNrows()) {
+                    total_syst_cov += cov;
+                }
+            }
+
+            for (int i = 1; i <= total_mc_hist_->GetNbinsX(); ++i) {
+                double stat_err = total_mc_hist_->GetBinError(i);
+                double syst_err = (i-1 < total_syst_cov.GetNrows()) ? std::sqrt(total_syst_cov(i-1, i-1)) : 0.0;
+                double total_err = std::sqrt(stat_err * stat_err + syst_err * syst_err);
+                total_mc_hist_->SetBinError(i, total_err);
+            }
+
             total_mc_hist_->SetFillColor(kBlack);
             total_mc_hist_->SetFillStyle(3004);
             total_mc_hist_->SetMarkerSize(0);

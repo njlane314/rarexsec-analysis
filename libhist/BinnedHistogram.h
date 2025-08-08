@@ -1,3 +1,5 @@
+// libhist/BinnedHistogram.h
+
 #ifndef BINNED_HISTOGRAM_H
 #define BINNED_HISTOGRAM_H
 
@@ -25,6 +27,7 @@ public:
       : TNamed(nm, ti), TH1DStorage(bn, ct, cv)
     {
         TH1DRenderer::style(cl, ht, tx);
+        log::debug("BinnedHistogram::Ctor", "Created histogram '", this->GetName(), "' with cov matrix (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
     }
 
     static BinnedHistogram createFromTH1D(const BinDefinition& bn,
@@ -48,17 +51,16 @@ public:
     BinnedHistogram(const BinnedHistogram& other)
       : TNamed(other), TH1DStorage(other), TH1DRenderer(other)
     {
+        log::debug("BinnedHistogram::CopyCtor", "Copied histogram '", other.GetName(), "' to '", this->GetName(), "'. Cov dims: (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
     }
 
-    // Definitive copy assignment operator
     BinnedHistogram& operator=(const BinnedHistogram& other)
     {
         if (this != &other) {
             TNamed::operator=(other);
-            // Explicitly call the now-robust base class assignment operator
             TH1DStorage::operator=(other);
-            // Renderer is simple, direct assignment is fine
             TH1DRenderer::operator=(other);
+            log::debug("BinnedHistogram::Assign", "Assigned '", other.GetName(), "' to '", this->GetName(), "'. Cov dims: (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
         }
         return *this;
     }
@@ -72,6 +74,7 @@ public:
     TMatrixDSym corrMat_() const { return TH1DStorage::corrMat(); }
 
     void addCovariance(const TMatrixDSym& cov_to_add) {
+        log::debug("BinnedHistogram::addCovariance", "Adding cov matrix (", cov_to_add.GetNrows(), "x", cov_to_add.GetNcols(), ") to '", this->GetName(), "' (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
         this->cov += cov_to_add;
     }
 
@@ -93,7 +96,8 @@ public:
     }
 
     BinnedHistogram operator+(const BinnedHistogram& o) const {
-        log::debug("BinnedHistogram::operator+", "Adding", std::string(o.GetName()), "(", o.nBins(), "bins) to", std::string(this->GetName()), "(", this->nBins(), "bins)");
+        log::debug("BinnedHistogram::operator+", "Adding '", o.GetName(), "' (", o.nBins(), " bins, cov ", o.cov.GetNrows(), "x", o.cov.GetNcols(), ") to '", this->GetName(), "' (", this->nBins(), " bins, cov ", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
+
         if (this->nBins() == 0) return o;
         if (o.nBins() == 0) return *this;
 
