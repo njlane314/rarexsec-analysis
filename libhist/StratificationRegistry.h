@@ -23,8 +23,8 @@ struct StratumProperties {
 class StratificationRegistry {
 public:
     StratificationRegistry() {
-        this->registerSchemes(scalar_schemes_);
-        this->registerSchemes(vector_schemes_);
+        this->registerStratificationSchemes(scalar_schemes_);
+        this->registerStratificationSchemes(vector_schemes_);
         signal_definitions_ = {
             {"inclusive_strange_channels", {10, 11}},
             {"exclusive_strange_channels", {
@@ -60,13 +60,14 @@ public:
     }
 
 
-    const std::vector<int>& getSignalKeys(
-        const std::string& scheme) const
+    const std::vector<int>& getSignalStratumKeys(
+        const std::string& signal_scheme) const
     {
-        auto it = signal_definitions_.find(scheme);
-        if (it == signal_definitions_.end())
-            log::fatal("StratificationRegistry", "Signal scheme not found: "+scheme);
-        return it->second;
+        const auto signal_iterator = signal_definitions_.find(signal_scheme);
+        if (signal_iterator == signal_definitions_.end()) {
+            log::fatal("StratificationRegistry", "Signal scheme not found: " + signal_scheme);
+        }
+        return signal_iterator->second;
     }
 
     std::vector<int> getStratumKeys(

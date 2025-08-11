@@ -1,5 +1,3 @@
-// libhist/HistogramPolicy.h
-
 #ifndef HISTOGRAM_POLICY_H
 #define HISTOGRAM_POLICY_H
 
@@ -84,8 +82,6 @@ struct TH1DStorage {
     }
 };
 
-// In libhist/HistogramPolicy.h
-
 struct TH1DRenderer {
     mutable TH1D* hist = nullptr;
     Color_t                     color = kBlack;
@@ -100,11 +96,8 @@ struct TH1DRenderer {
 
     void sync(const TH1DStorage& s) const {
         if (!hist) {
-            // --- The Fix ---
-            // Create a unique name for the histogram to avoid ROOT warnings
             static int hist_counter = 0;
             TString unique_name = TString::Format("_h_%d", hist_counter++);
-            // --- End Fix ---
 
             hist = new TH1D(
                 unique_name,

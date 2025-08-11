@@ -18,58 +18,66 @@ namespace analysis {
 class SystematicsProcessor {
 public:
     SystematicsProcessor(
-        std::vector<KnobDef>          knob_defs,
-        std::vector<UniverseDef>      universe_defs
+        std::vector<KnobDef> knob_definitions,
+        std::vector<UniverseDef> universe_definitions
     )
-      : knob_defs_(std::move(knob_defs))
-      , universe_defs_(std::move(universe_defs))
+      : knob_definitions_(std::move(knob_definitions))
+      , universe_definitions_(std::move(universe_definitions))
     {
-        for (auto& kd : knob_defs_) {
-            strategies_.emplace_back(
-                std::make_unique<WeightSystematicStrategy>(kd)
+        for (const auto& knob : knob_definitions_) {
+            systematic_strategies_.emplace_back(
+                std::make_unique<WeightSystematicStrategy>(knob)
             );
         }
-        for (auto& ud : universe_defs_) {
-            strategies_.emplace_back(
-                std::make_unique<UniverseSystematicStrategy>(ud)
+        for (const auto& universe : universe_definitions_) {
+            systematic_strategies_.emplace_back(
+                std::make_unique<UniverseSystematicStrategy>(universe)
             );
         }
-        strategies_.emplace_back(
-            std::make_unique<NormalisationSystematicStrategy>("norm", 0.03)
+        systematic_strategies_.emplace_back(
+            std::make_unique<NormalisationSystematicStrategy>("normalisation", 0.03)
         );
     }
 
-    void bookAll(const std::vector<int>& keys, BookHistFn book_fn, SystematicFutures& futures) {
-        for (auto& strat : strategies_) {
-            strat->bookVariations(keys, book_fn, futures);
+    void bookAllSystematics(const std::vector<int>& stratification_keys,
+                            const BookHistFn& histogram_booking_function,
+                            SystematicFutures& systematic_futures) {
+        for (const auto& strategy : systematic_strategies_) {
+            strategy->bookVariations(stratification_keys, histogram_booking_function, systematic_futures);
         }
     }
 
-    std::map<std::string, TMatrixDSym> computeCovariances(
-        int key,
-        const BinnedHistogram& nominal_hist,
-        SystematicFutures& futures
+    std::map<std::string, TMatrixDSym> computeCovarianceMatrices(
+        int stratification_key,
+        const BinnedHistogram& nominal_histogram,
+        SystematicFutures& systematic_futures
     ) {
-        std::map<std::string, TMatrixDSym> out;
-        for (auto& strat : strategies_) {
-            out[strat->getName()] = strat->computeCovariance(key, nominal_hist, futures);
+        std::map<std::string, TMatrixDSym> covariance_matrices;
+        for (const auto& strategy : systematic_strategies_) {
+            covariance_matrices[strategy->getName()] = strategy->computeCovariance(
+                stratification_key, nominal_histogram, systematic_futures
+            );
         }
-        return out;
+        return covariance_matrices;
     }
 
     std::map<std::string, std::map<std::string, BinnedHistogram>>
-    getVariedHistograms(int key, const BinDefinition& bin, SystematicFutures& futures) {
-        std::map<std::string, std::map<std::string, BinnedHistogram>> out;
-        for (auto& strat : strategies_) {
-             out[strat->getName()] = strat->getVariedHistograms(key, bin, futures);
+    extractVariationHistograms(int stratification_key,
+                               const BinDefinition& binning,
+                               SystematicFutures& systematic_futures) {
+        std::map<std::string, std::map<std::string, BinnedHistogram>> variation_histograms;
+        for (const auto& strategy : systematic_strategies_) {
+            variation_histograms[strategy->getName()] = strategy->getVariedHistograms(
+                stratification_key, binning, systematic_futures
+            );
         }
-        return out;
+        return variation_histograms;
     }
 
 private:
-    std::vector<std::unique_ptr<SystematicStrategy>>        strategies_;
-    std::vector<KnobDef>                                    knob_defs_;
-    std::vector<UniverseDef>                                universe_defs_;
+    std::vector<std::unique_ptr<SystematicStrategy>> systematic_strategies_;
+    std::vector<KnobDef> knob_definitions_;
+    std::vector<UniverseDef> universe_definitions_;
 };
 
 }

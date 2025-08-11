@@ -41,17 +41,19 @@ public:
 
 const std::unordered_map<std::string, StratifierFactory::StratifierCreator>
 StratifierFactory::creators_map_ = {
-    { "scalar", [](auto& cfg, auto& reg){
-        const auto& keys = reg.getStratumKeys(cfg);
-        if (keys.empty())
-            log::fatal("StratifierFactory", "No strata for " + cfg);
-        return std::make_unique<ScalarStratifier>(cfg, cfg, reg);
+    { "scalar", [](const auto& configuration, auto& registry){
+        const auto& stratum_keys = registry.getAllStratumKeys(configuration);
+        if (stratum_keys.empty()) {
+            log::fatal("StratifierFactory", "No strata found for scheme: " + configuration);
+        }
+        return std::make_unique<ScalarStratifier>(configuration, configuration, registry);
     }},
-    { "vector", [](auto& cfg, auto& reg){
-        const auto& keys = reg.getStratumKeys(cfg);
-        if (keys.empty())
-            log::fatal("StratifierFactory", "No strata for " + cfg);
-        return std::make_unique<VectorStratifier>(cfg, cfg, reg);
+    { "vector", [](const auto& configuration, auto& registry){
+        const auto& stratum_keys = registry.getAllStratumKeys(configuration);
+        if (stratum_keys.empty()) {
+            log::fatal("StratifierFactory", "No strata found for scheme: " + configuration);
+        }
+        return std::make_unique<VectorStratifier>(configuration, configuration, registry);
     }}
 };
 

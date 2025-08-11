@@ -4,33 +4,32 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include "TString.h"
 #include "Logger.h"
+#include "TypeKey.h"
 
 namespace analysis {
 
+using BranchExpression = std::string;
+using TexAxisLabel = std::string;
+
 class BinDefinition {
 public:
-    std::vector<double>  edges_;
-    TString              branch_;
-    TString              name_;
-    TString              tex_;
-    std::vector<TString> keys_;
-    std::string          stratification_key;
-
+    std::vector<double>         edges_;
+    BranchExpression            branch_;
+    TexAxisLabel                tex_;
+    std::vector<SelectionKey>   selec_keys_;
+    StratifierKey               strat_key_;
 
     BinDefinition(std::vector<double> ed,
-                  const std::string&  br,
-                  const std::string&  tx,
-                  std::vector<TString> ks,
-                  const std::string&  nm,
+                  const std::string& br,
+                  const std::string& tx,
+                  std::vector<std::string> ks,
                   const std::string& sk = "")
       : edges_(std::move(ed))
-      , branch_(br.c_str())
-      , name_(nm.c_str())
-      , tex_(tx.c_str())
-      , keys_(std::move(ks))
-      , stratification_key(sk)
+      , branch_(br) 
+      , tex_(tx)
+      , selec_keys_(std::move(ks))
+      , strat_key_(StratifierKey{sk})
     {
         if (edges_.size() < 2)
             log::fatal("BinDefinition", "Edges must contain at least two values.");
@@ -41,15 +40,13 @@ public:
 
     BinDefinition() = default;
 
-    std::size_t nBins() const noexcept {
-        return edges_.size() > 1 ? edges_.size() - 1 : 0;
-    }
+    const BranchExpression& getVariable() const { return branch_; }
+    const TexAxisLabel& getTexLabel() const { return tex_; }
+    const std::vector<SelectionKey>& getSelectionKeys() const { return selec_keys_; }
+    const StratifierKey& getStratifierKey() const { return strat_key_; }
 
-    const TString& getVariable() const { return branch_; }
-    const TString& getName() const { return name_; }
-    const TString& getTexLabel() const { return tex_; }
-    const std::vector<TString>& getSelectionKeys() const { return keys_; }
-    void setVariable(TString var) { branch_ = var; }
+    void setVariable(BranchExpression var) { branch_ = std::move(var); }
+    void setStratifierKey(StratifierKey sk) { strat_key_ = std::move(sk); }
 };
 
 }

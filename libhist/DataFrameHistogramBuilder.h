@@ -1,5 +1,3 @@
-// libhist/DataFrameHistogramBuilder.h
-
 #ifndef DATAFRAME_HISTOGRAM_BUILDER_H
 #define DATAFRAME_HISTOGRAM_BUILDER_H
 
@@ -7,6 +5,7 @@
 #include "StratifierFactory.h"
 #include "StratificationRegistry.h"
 #include "SystematicsProcessor.h"
+#include "RegionAnalysis.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 #include <map>
@@ -15,109 +14,118 @@
 #include <unordered_map>
 #include "Logger.h"
 #include <regex>
+#include "TypeKey.h"
+#include "DeferredBinnedHistogram.h"
 
 namespace analysis {
 
 class DataFrameHistogramBuilder : public HistogramDirector {
 public:
-    DataFrameHistogramBuilder(SystematicsProcessor& sys,
-                              StratificationRegistry& strReg)
-      : systematics_processor_(sys)
-      , stratifier_registry_(strReg)
+    DataFrameHistogramBuilder(SystematicsProcessor& syst_proc,
+                              StratificationRegistry& strat_reg)
+      : systematic_processor_(syst_proc)
+      , stratification_registry_(strat_reg)
     {}
 
 protected:
-    void prepareStratification(const BinDefinition& bin,
-                               const SampleDataFrameMap&) override {
-        stratifier_ = StratifierFactory::create(bin.stratification_key,
-                                                stratifier_registry_);
-    }
-
-    void bookNominals(const BinDefinition& bin,
-                      const SampleDataFrameMap& dfs,
-                      const ROOT::RDF::TH1DModel& model,
-                      ROOT::RDF::RResultPtr<TH1D>& dataFuture) override {
-        systematics_futures_.clear();
-        for (auto const& [key, pr] : dfs) {
-            auto df = pr.second;
-            if (pr.first == SampleType::kData) {
-                dataFuture = df.Histo1D(model, bin.getVariable().Data());
-            } else {
-                auto stratified_df = stratifier_->defineStratificationColumns(df, bin);
-                auto& sample_futures = systematics_futures_[key];
-
-                sample_futures.nominal = stratifier_->bookHistograms(stratified_df, bin, model);
-                
-                auto book_fn = [&](int stratum_key, const std::string& weight_col) {
-                    std::regex vec_regex("([a-zA-Z0-9_]+)\\[([0-9]+)\\]");
-                    std::smatch match;
-                    if (std::regex_match(weight_col, match, vec_regex)) {
-                        std::string branch_name = match[1];
-                        int index = std::stoi(match[2]);
-                        std::string temp_col_name = branch_name + "_" + std::to_string(index) + "_temp";
-                        auto temp_df = stratified_df.Define(temp_col_name, [index](const ROOT::RVec<unsigned short>& vec) { return static_cast<double>(vec[index]) / 1000.0; }, {branch_name});
-                        return temp_df.Histo1D(model, stratifier_->getTempVariable(stratum_key).c_str(), temp_col_name.c_str());
-                    } else {
-                        return stratified_df.Histo1D(model, stratifier_->getTempVariable(stratum_key).c_str(), weight_col.c_str());
-                    }
-                };
-                auto keys = stratifier_->getRegistryKeys();
-                systematics_processor_.bookAll(keys, book_fn, sample_futures);
+    void buildDataHistograms(const BinDefinition& variable_binning,
+                             const SampleDataFrameMap& samples,
+                             const ROOT::RDF::TH1DModel& histogram_model,
+                             VariableHistogramFutures& variable_futures) override {
+        std::vector<ROOT::RDF::RResultPtr<TH1D>> data_histogram_futures;
+        
+        for (const auto& [sample_identifier, sample_data] : samples) {
+            if (sample_data.first == SampleType::kData) {
+                data_histogram_futures.emplace_back(
+                    sample_data.second.Histo1D(histogram_model, variable_binning.getVariable().Data())
+                );
             }
+        }
+        
+        if (!data_histogram_futures.empty()) {
+            variable_futures.data_future = combineHistogramFutures(data_histogram_futures);
         }
     }
 
-    void bookVariations(const BinDefinition&, const SampleDataFrameMap&) override {}
-
-
-    void mergeStrata(const BinDefinition& bin,
-                     const SampleDataFrameMap&,
-                     HistogramResult& out) override {
-        BinnedHistogram total;
-        bool first = true;
-
-        log::info("DataFrameHistogramBuilder::mergeStrata", "Starting merge for variable:", std::string(bin.getName().Data()));
-        log::info("DataFrameHistogramBuilder::mergeStrata", "Variable from bin definition:", std::string(bin.getVariable().Data()));
-
-        for (auto& [sample_name, sample_futures] : systematics_futures_) {
-            log::info("DataFrameHistogramBuilder::mergeStrata", "Processing sample:", sample_name);
-
-            auto hist_map = stratifier_->collectHistograms(sample_futures.nominal, bin);
-            
-            log::info("DataFrameHistogramBuilder::mergeStrata", "Collected", hist_map.size(), "stratified histograms for sample:", sample_name);
-
-            for (auto const& [stratum_name, h] : hist_map) {
-                log::debug("DataFrameHistogramBuilder::mergeStrata", "Adding channel '", stratum_name, "' from sample '", sample_name, "'");
-                out.addChannel(stratum_name, h);
-                if (first) {
-                    total = h;
-                    first = false;
-                } else {
-                    total = total + h;
+    void buildNominalHistograms(const BinDefinition& variable_binning,
+                                const SampleDataFrameMap& samples,
+                                const ROOT::RDF::TH1DModel& histogram_model,
+                                VariableHistogramFutures& variable_futures) override {
+        const auto histogram_stratifier = createStratifier(variable_binning);
+        std::vector<ROOT::RDF::RResultPtr<TH1D>> monte_carlo_histogram_futures;
+        
+        for (const auto& [sample_identifier, sample_data] : samples) {
+            if (sample_data.first != SampleType::kData) {
+                const auto channel_histogram_futures = histogram_stratifier->bookNominalHistograms(
+                    sample_data.second, variable_binning, histogram_model
+                );
+                
+                for (const auto& [channel_identifier, histogram_future] : channel_histogram_futures) {
+                    const ChannelKey channel_key{channel_identifier};
+                    variable_futures.channel_futures[channel_key] = histogram_future;
+                    monte_carlo_histogram_futures.emplace_back(histogram_future);
                 }
             }
         }
-        if (first) {
-            log::warn("DataFrameHistogramBuilder::mergeStrata", "No histograms were merged. The 'total' histogram is uninitialized.");
-        }
-        out.setTotalHist(total);
-    }
-
-    void applySystematicCovariances(const BinDefinition& bin,
-                                    HistogramResult& out) override {
-        log::info("DataFrameHistogramBuilder::applySystematicCovariances", "Applying systematics for variable:", std::string(bin.getName().Data()));
-        for(auto& [sample_name, sample_futures] : systematics_futures_) {
-             log::debug("DataFrameHistogramBuilder::applySystematicCovariances", "Applying systematics for sample:", sample_name);
-             stratifier_->applySystematics(out, bin, systematics_processor_, sample_futures);
+        
+        if (!monte_carlo_histogram_futures.empty()) {
+            variable_futures.total_monte_carlo_future = combineHistogramFutures(monte_carlo_histogram_futures);
         }
     }
 
+    void buildSystematicVariations(const BinDefinition& variable_binning,
+                                   const SampleDataFrameMap& samples,
+                                   const ROOT::RDF::TH1DModel& histogram_model,
+                                   VariableHistogramFutures& variable_futures) override {
+        const auto histogram_stratifier = createStratifier(variable_binning);
+        
+        for (const auto& [sample_identifier, sample_data] : samples) {
+            if (sample_data.first != SampleType::kData) {
+                const auto sample_systematic_variations = histogram_stratifier->bookVariationHistograms(
+                    sample_data.second, variable_binning, histogram_model
+                );
+                
+                mergeSampleSystematics(variable_futures.systematic_variations, sample_systematic_variations);
+            }
+        }
+    }
 private:
-    SystematicsProcessor& systematics_processor_;
-    StratificationRegistry& stratifier_registry_;
-    std::unique_ptr<IHistogramStratifier> stratifier_;
+    std::unique_ptr<IHistogramStratifier> createStratifier(const BinDefinition& variable_binning) const {
+        return StratifierFactory::create(
+            variable_binning.stratification_key.str(),
+            stratification_registry_
+        );
+    }
     
-    std::unordered_map<std::string, SystematicFutures> systematics_futures_;
+    static ROOT::RDF::RResultPtr<TH1D> combineHistogramFutures(
+        const std::vector<ROOT::RDF::RResultPtr<TH1D>>& histogram_futures
+    ) {
+        if (histogram_futures.empty()) return {};
+        
+        auto combined_result = histogram_futures[0];
+        for (size_t i = 1; i < histogram_futures.size(); ++i) {
+            combined_result = combined_result + histogram_futures[i];
+        }
+        return combined_result;
+    }
+    
+    static void mergeSampleSystematics(SystematicFutures& accumulated_systematics,
+                                       const SystematicFutures& sample_systematics) {
+        for (const auto& [stratum_key, histogram_future] : sample_systematics.nominal) {
+            accumulated_systematics.nominal[stratum_key] = histogram_future;
+        }
+        
+        for (const auto& [systematic_name, systematic_variations] : sample_systematics.variations) {
+            for (const auto& [variation_name, variation_histograms] : systematic_variations) {
+                for (const auto& [stratum_key, histogram_future] : variation_histograms) {
+                    accumulated_systematics.variations[systematic_name][variation_name][stratum_key] = histogram_future;
+                }
+            }
+        }
+    }
+    
+    SystematicsProcessor& systematic_processor_;
+    StratificationRegistry& stratification_registry_;
 };
 
 }

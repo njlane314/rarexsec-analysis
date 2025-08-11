@@ -1,5 +1,3 @@
-// libplot/StackedHistogramPlot.h
-
 #ifndef STACKED_HISTOGRAM_PLOT_H
 #define STACKED_HISTOGRAM_PLOT_H
 
@@ -130,21 +128,24 @@ protected:
         mc_stack_ = new THStack("mc_stack", "");
         StratificationRegistry registry;
 
-        std::vector<BinnedHistogram> mc_hists;
+        // Work with DeferredBinnedHistogram directly instead of materializing early
+        std::vector<std::pair<ChannelKey, const DeferredBinnedHistogram*>> mc_hist_refs;
         for (auto const& [key, hist] : result_.channels) {
-            mc_hists.push_back(hist);
+            mc_hist_refs.emplace_back(key, &hist);
         }
-        std::sort(mc_hists.begin(), mc_hists.end(), [](const BinnedHistogram& a, const BinnedHistogram& b) {
-            return a.sum_() < b.sum_();
-        });
-        std::reverse(mc_hists.begin(), mc_hists.end());
+        // Sort by sum without materializing histograms
+        std::sort(mc_hist_refs.begin(), mc_hist_refs.end(), 
+                  [](const auto& a, const auto& b) {
+                      return a.second->sum() < b.second->sum();
+                  });
+        std::reverse(mc_hist_refs.begin(), mc_hist_refs.end());
 
         p_legend->cd();
         legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
-        const int n_entries = mc_hists.size() + 1;
+        const int n_entries = mc_hist_refs.size() + 1;
         int n_cols = (n_entries > 4) ? 3 : 2;
         legend_->SetNColumns(n_cols);
 
@@ -154,26 +155,26 @@ protected:
             return stream.str();
         };
 
-        for (const auto& hist : mc_hists) {
+        for (const auto& [key, hist_ptr] : mc_hist_refs) {
             TH1D* h_leg = new TH1D();
-            const auto& stratum = registry.getStratum(category_column_, registry.getStratumKey(category_column_, hist.GetName()));
+            const auto& stratum = registry.getStratum(category_column_, key.str());
             h_leg->SetFillColor(stratum.fill_colour);
             h_leg->SetFillStyle(stratum.fill_style);
             h_leg->SetLineColor(kBlack);
             h_leg->SetLineWidth(1.5);
-            std::string legend_label = annotate_numbers_ ? std::string(stratum.tex_label) + " : " + format_double(hist.sum_(), 2) : stratum.tex_label;
+            std::string legend_label = annotate_numbers_ ? std::string(stratum.tex_label) + " : " + format_double(hist_ptr->sum(), 2) : stratum.tex_label;
             legend_->AddEntry(h_leg, legend_label.c_str(), "f");
         }
         
-        if (!mc_hists.empty()) {
+        if (!mc_hist_refs.empty()) {
             TH1D* h_unc = new TH1D();
             h_unc->SetFillColor(kBlack);
             h_unc->SetFillStyle(3004);
             h_unc->SetLineColor(kBlack);
             h_unc->SetLineWidth(1);
             double total_mc_events = 0.0;
-            for(const auto& hist : mc_hists) {
-                total_mc_events += hist.sum_();
+            for(const auto& [key, hist_ptr] : mc_hist_refs) {
+                total_mc_events += hist_ptr->sum();
             }
             std::string total_label = annotate_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
@@ -181,9 +182,10 @@ protected:
         legend_->Draw();
         
         p_main->cd();
-        for (const auto& hist : mc_hists) {
-            TH1D* h = static_cast<TH1D*>(hist.get()->Clone());
-            const auto& stratum = registry.getStratum(category_column_, registry.getStratumKey(category_column_, hist.GetName()));
+        // Only now do we materialize histograms for actual plotting
+        for (const auto& [key, hist_ptr] : mc_hist_refs) {
+            TH1D* h = static_cast<TH1D*>(hist_ptr->asTH1D()->Clone());
+            const auto& stratum = registry.getStratum(category_column_, key.str());
             h->SetFillColor(stratum.fill_colour);
             h->SetFillStyle(stratum.fill_style);
             h->SetLineColor(kBlack);

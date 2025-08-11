@@ -1,5 +1,3 @@
-// libsyst/UniverseSystematicStrategy.h
-
 #ifndef UNIVERSE_SYSTEMATIC_STRATEGY_H
 #define UNIVERSE_SYSTEMATIC_STRATEGY_H
 

@@ -19,19 +19,6 @@ public:
       , registry_(registry)
     {}
 
-    ROOT::RDF::RNode defineStratificationColumns(ROOT::RDF::RNode df,
-                                                 const BinDefinition& bin) const override {
-        auto modified_df = df;
-        for (auto key : this->getRegistryKeys()) {
-            auto selector = [key](const ROOT::RVec<float>& vals,
-                        const ROOT::RVec<int>& ids) {
-                            return vals[ROOT::VecOps::abs(ids) == key];
-                        };
-                        modified_df = modified_df.Define(getTempVariable(key), selector, {bin.getVariable().Data(), variable_});
-        }
-        return modified_df;
-    }
-
 protected:
     std::vector<int> getRegistryKeys() const override {
         return registry_.getStratumKeys(registry_key_);
@@ -39,12 +26,16 @@ protected:
 
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
                                 const BinDefinition&,
-                                int) const override {
-        return df;
+                                int key) const override {
+            [key](const ROOT::RVec<int>& ids) {
+                return ROOT::VecOps::Sum(ROOT::VecOps::abs(ids) == key) > 0;
+            },
+            {variable_}
+        );
     }
 
-    std::string getTempVariable(int key) const override {
-        return variable_ + "_" + std::to_string(key);
+    std::string getTempVariable(int) const override {
+        return variable_; 
     }
 
     const std::string& getRegistryKey() const override {

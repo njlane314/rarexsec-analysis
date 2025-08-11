@@ -1,5 +1,3 @@
-// libhist/IHistogramStratifier.h
-
 #ifndef IHISTOGRAM_STRATIFIER_H
 #define IHISTOGRAM_STRATIFIER_H
 
@@ -45,14 +43,14 @@ public:
         FutureMap out;
         for (auto key : this->getRegistryKeys()) {
             auto slice = this->filterNode(df, bin, key);
-            // --- The Fix ---
-            // Ensure the temporary variable is used for the histogram
+
+            std::string var_to_plot = bin.getVariable().Data();
+
             out[key] = slice.Histo1D(
                 model,
-                this->getTempVariable(key).c_str(),
+                var_to_plot.c_str(),
                 "central_value_weight"
             );
-            // --- End Fix ---
         }
         return out;
     }
@@ -95,7 +93,6 @@ public:
     {
         auto keys = this->getRegistryKeys();
         
-        // Aggregate Covariances
         std::map<std::string, TMatrixDSym> total_covs;
         for (auto k : keys) {
             auto it = futures.nominal.find(k);
@@ -121,7 +118,6 @@ public:
         }
         out.setTotalHist(updated);
 
-        // Aggregate Variations
         for (auto k : keys) {
             auto vh = proc.getVariedHistograms(k, bin, futures);
             for (auto& [sys, maps] : vh) {
@@ -160,10 +156,9 @@ protected:
         return getStratifierBranch();
     }
 
-    virtual const std::string& getRegistryKey() const = 0;
-    virtual const std::string& getVariable()    const = 0;
-    virtual const StratificationRegistry&
-            getRegistry()                       const = 0;
+    virtual const std::string& getRegistryKey()             const = 0;
+    virtual const std::string& getVariable()                const = 0;
+    virtual const StratificationRegistry& getRegistry()     const = 0;
 };
 
 }
