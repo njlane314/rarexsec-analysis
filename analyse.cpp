@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
                 sel_reg,
                 ev_reg,
                 std::make_unique<analysis::DataFrameHistogramBuilder>(sys_proc, strat_reg),
+                sys_proc,
                 plugins_config
             );
 

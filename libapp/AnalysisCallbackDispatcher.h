@@ -35,8 +35,8 @@ public:
     }
 
     void broadcastAnalysisSetup(AnalysisDefinition& def,
-                                const SelectionRegistry& selReg) {
-        for (auto& pl : plugins_) pl->onInitialisation(def, selReg);
+                                const SelectionRegistry& selec_reg) {
+        for (auto& pl : plugins_) pl->onInitialisation(def, selec_reg);
     }
 
     void broadcastBeforeSampleProcessing(const std::string& rkey,

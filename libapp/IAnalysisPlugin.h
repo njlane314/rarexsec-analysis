@@ -11,21 +11,22 @@ namespace analysis {
 
 class IAnalysisPlugin {
 public:
-    using AnalysisResultMap = std::map<std::string, HistogramResult>;
+    using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
+
     virtual ~IAnalysisPlugin() = default;
 
     virtual void onInitialisation(AnalysisDefinition& def,
                               const SelectionRegistry& sel_reg) = 0;
 
-    virtual void onPreSampleProcessing(const std::string& region_key,
-                                        const RegionConfig& region,
-                                        const std::string& sample_key) = 0;
+    virtual void onPreSampleProcessing(const RegionKey& region_key,
+                                        const SampleKey& sample_key,
+                                        const RegionConfig& region) = 0;
 
-    virtual void onPostSampleProcessing(const std::string& region_key,
-                                        const std::string& sample_key,
-                                        const AnalysisResultMap& results) = 0;
+    virtual void onPostSampleProcessing(const RegionKey& region_key,
+                                        const SampleKey& sample_key,
+                                        const AnalysisRegionMap& results) = 0;
 
-    virtual void onFinalisation(const AnalysisResultMap& all_results) = 0;
+    virtual void onFinalisation(const AnalysisRegionMap& results) = 0;
 };
 
 }
