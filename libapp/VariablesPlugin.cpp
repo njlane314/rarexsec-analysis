@@ -1,4 +1,3 @@
-// VariablesPlugin.cpp
 #include "VariablesPlugin.h"
 #include <nlohmann/json.hpp>
 

@@ -1,4 +1,3 @@
-// StackedHistogramPlugin.cpp
 #include "StackedHistogramPlugin.h"
 #include <nlohmann/json.hpp>
 

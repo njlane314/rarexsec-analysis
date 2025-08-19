@@ -1,5 +1,5 @@
-#ifndef ANALYSIS_CALLBACK_DISPATCHER_H
-#define ANALYSIS_CALLBACK_DISPATCHER_H
+#ifndef ANALYSIS_DISPATCHER_H
+#define ANALYSIS_DISPATCHER_H
 
 #include "IAnalysisPlugin.h"
 #include <nlohmann/json.hpp>
@@ -12,15 +12,15 @@
 
 namespace analysis {
 
-class AnalysisCallbackDispatcher {
+class AnalysisDispatcher {
 public:
-    using AnalysisResultMap = std::map<std::string, HistogramResult>;
+    using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
 
     void loadPlugins(const nlohmann::json& jobj) {
         if (!jobj.contains("plugins")) return;
         for (auto const& p : jobj.at("plugins")) {
             std::string path = p.at("path");
-            log::info("AnalysisCallbackDispatcher", "Loading plugin from:", path);
+            log::info("AnalysisDispatcher", "Loading plugin from:", path);
             void* handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle) throw std::runtime_error(dlerror());
 
@@ -39,23 +39,23 @@ public:
         for (auto& pl : plugins_) pl->onInitialisation(def, selec_reg);
     }
 
-    void broadcastBeforeSampleProcessing(const std::string& rkey,
-                                         const RegionConfig& region,
-                                         const std::string& skey) {
-        for (auto& pl : plugins_) pl->onPreSampleProcessing(rkey, region, skey);
+    void broadcastBeforeSampleProcessing(const SampleKey& skey,
+                                         const RegionKey& rkey,
+                                         const RegionConfig& reg) {
+        for (auto& pl : plugins_) pl->onPreSampleProcessing(skey, rkey, reg);
     }
 
-    void broadcastAfterSampleProcessing(const std::string& rkey,
-                                        const std::string& skey,
-                                        const AnalysisResultMap& res) {
-        for (auto& pl : plugins_) pl->onPostSampleProcessing(rkey, skey, res);
+    void broadcastAfterSampleProcessing(const SampleKey& skey,
+                                        const RegionKey& rkey,
+                                        const AnalysisRegionMap& res) {
+        for (auto& pl : plugins_) pl->onPostSampleProcessing(skey, rkey, res);
     }
 
-    void broadcastAnalysisCompletion(const AnalysisResultMap& allRes) {
-        for (auto& pl : plugins_) pl->onFinalisation(allRes);
+    void broadcastAnalysisCompletion(const AnalysisRegionMap& res) {
+        for (auto& pl : plugins_) pl->onFinalisation(res);
     }
 
-    ~AnalysisCallbackDispatcher() {
+    ~AnalysisDispatcher() {
         for (auto h : handles_) dlclose(h);
     }
 

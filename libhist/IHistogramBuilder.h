@@ -27,7 +27,6 @@ public:
         const SampleDataFrameMap& sample_dataframes
     ) = 0;
     
-    // Legacy interface for backward compatibility during transition
     MaterialisedHistograms build(const BinDefinition& variable_binning,
                                  const SampleDataFrameMap& sample_dataframes) {
         const VariableKey variable{variable_binning.getName().Data()};

@@ -32,15 +32,6 @@ public:
             }
         }
     }
-    void onPreSampleProcessing(const std::string&,
-                               const RegionConfig&,
-                               const std::string&) override {}
-
-    void onPostSampleProcessing(const std::string&,
-                                const std::string&,
-                                const AnalysisResultMap&) override {}
-                                
-    void onFinalisation(const AnalysisResultMap&) override {}
 };
 
 } 

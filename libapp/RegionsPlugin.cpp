@@ -1,4 +1,3 @@
-// RegionsPlugin.cpp
 #include "RegionsPlugin.h"
 #include <nlohmann/json.hpp>
 

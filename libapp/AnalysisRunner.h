@@ -55,6 +55,14 @@ public:
                     sample.type, 
                     sample.nominal.Filter(region_view.selection().str())
                 ));
+
+                for (auto& [detvar_type, detvar] : sample.variations()) {
+                    std::string detvar_key = sample_key + "_" + std::to_string(static_cast<unsigned int>(detvar_type));
+                    detvar.emplace(detvar_key, std::make_pair(
+                        sample.type, 
+                        detvar.Filter(region_view.selection().str()))
+                    );
+                }
             }
 
             std::vector<std::pair<VariableKey, BinDefinition>> variable_definitions;

@@ -4,7 +4,6 @@
 #include "HistogramDirector.h"
 #include "StratifierFactory.h"
 #include "StratificationRegistry.h"
-#include "SystematicsProcessor.h"
 #include "RegionAnalysis.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
@@ -21,10 +20,8 @@ namespace analysis {
 
 class DataFrameHistogramBuilder : public HistogramDirector {
 public:
-    DataFrameHistogramBuilder(SystematicsProcessor& syst_proc,
-                              StratificationRegistry& strat_reg)
-      : systematic_processor_(syst_proc)
-      , stratification_registry_(strat_reg)
+    DataFrameHistogramBuilder(StratificationRegistry& strat_reg)
+      : stratification_registry_(strat_reg)
     {}
 
 protected:
@@ -73,7 +70,7 @@ protected:
         }
     }
 
-    void buildSystematicVariations(const BinDefinition& variable_binning,
+    void buildVariationHistograms(const BinDefinition& variable_binning,
                                    const SampleDataFrameMap& samples,
                                    const ROOT::RDF::TH1DModel& histogram_model,
                                    VariableHistogramFutures& variable_futures) override {
@@ -81,11 +78,11 @@ protected:
         
         for (const auto& [sample_identifier, sample_data] : samples) {
             if (sample_data.first != SampleType::kData) {
-                const auto sample_systematic_variations = histogram_stratifier->bookVariationHistograms(
+                const auto detector_variations = histogram_stratifier->bookDetectorVariations(
                     sample_data.second, variable_binning, histogram_model
                 );
                 
-                mergeSampleSystematics(variable_futures.systematic_variations, sample_systematic_variations);
+                mergeSampleSystematics(variable_futures.systematic_variations, detector_variations);
             }
         }
     }
@@ -124,7 +121,6 @@ private:
         }
     }
     
-    SystematicsProcessor& systematic_processor_;
     StratificationRegistry& stratification_registry_;
 };
 

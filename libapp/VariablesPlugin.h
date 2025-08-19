@@ -1,5 +1,5 @@
-#ifndef VARIABLESPLUGIN_H
-#define VARIABLESPLUGIN_H
+#ifndef VARIABLES_PLUGIN_H
+#define VARIABLES_PLUGIN_H
 
 #include "IAnalysisPlugin.h"
 #include "AnalysisDefinition.h"
@@ -38,15 +38,6 @@ public:
             def.addVariable(name, branch, label, bins, strat);
         }
     }
-    void onPreSampleProcessing(const std::string&,
-                               const RegionConfig&,
-                               const std::string&) override {}
-
-    void onPostSampleProcessing(const std::string&,
-                                const std::string&,
-                                const AnalysisResultMap&) override {}
-                                
-    void onFinalisation(const AnalysisResultMap&) override {}
 };
 
 } 

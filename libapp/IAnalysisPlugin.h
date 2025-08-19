@@ -18,12 +18,12 @@ public:
     virtual void onInitialisation(AnalysisDefinition& def,
                               const SelectionRegistry& sel_reg) = 0;
 
-    virtual void onPreSampleProcessing(const RegionKey& region_key,
-                                        const SampleKey& sample_key,
+    virtual void onPreSampleProcessing(const SampleKey& sample_key,
+                                        const RegionKey& region_key,
                                         const RegionConfig& region) = 0;
 
-    virtual void onPostSampleProcessing(const RegionKey& region_key,
-                                        const SampleKey& sample_key,
+    virtual void onPostSampleProcessing(const SampleKey& sample_key,
+                                        const RegionKey& region_key,
                                         const AnalysisRegionMap& results) = 0;
 
     virtual void onFinalisation(const AnalysisRegionMap& results) = 0;

@@ -51,17 +51,13 @@ public:
         }
     }
 
-    void onInitialisation(AnalysisDefinition&, const SelectionRegistry&) override {}
-    void onPreSampleProcessing(const std::string&, const RegionConfig&, const std::string&) override {}
-    void onPostSampleProcessing(const std::string&, const std::string&, const AnalysisResultMap&) override {}
-
-    void onFinalisation(const AnalysisResultMap& results) override {
+    void onFinalisation(const AnalysisRegionMap& region_map) override {
         gSystem->mkdir("plots", true);
         for (auto const& pc : plots_) {
             std::string result_key = pc.variable + "@" + pc.region;
-            auto it = results.find(result_key);
+            auto it = region_map.find(result_key);
 
-            if (it == results.end()) {
+            if (it == region_map.end()) {
                 log::error("StackedHistogramPlugin", "Could not find analysis result for key:", result_key);
                 continue;
             }
