@@ -5,6 +5,7 @@
 #include "BinDefinition.h"
 #include "Keys.h"
 #include "SystematicsProcessor.h"
+#include "BinnedHistogram.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 #include <map>
@@ -17,19 +18,27 @@ namespace analysis {
 
 using TH1DFuture = ROOT::RDF::RResultPtr<TH1D>;
 
-struct VariableHistogramFutures {
+struct VariableFutures {
     BinDefinition bin_def;
-
-    TH1DFuture total_data_future;
-
+    TH1DFuture data_future;
     TH1DFuture total_mc_future;
-    std::unordered_map<StratumKey, TH1DFuture> stratified_mc_futures;
-    std::unordered_map<VariationKey, TH1DFuture> variation_mc_futures;
+    std::unordered_map<int, TH1DFuture> stratified_mc_futures;
+    SystematicFutures systematic_variations;
 };
+
+struct VariableResults {
+    BinDefinition bin_def;
+    BinnedHistogram data_hist;
+    BinnedHistogram total_mc_hist;
+    std::map<int, BinnedHistogram> stratified_mc_hists;
+    std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists;
+    std::map<int, std::map<std::string, TMatrixDSym>> covariance_matrices;
+};
+
 
 class RegionAnalysis : public TObject {
 public:
-    RegionAnalysis(RegionKey region_key,
+    RegionAnalysis(RegionKey region_key = RegionKey{},
                    double pot = 0.0,
                    bool is_blinded = true,
                    std::string beam_config = "",
@@ -41,36 +50,32 @@ public:
         , run_numbers_(std::move(run_numbers))
     {}
 
-    void addVariableHistograms(const VariableKey& variable, VariableHistogramFutures histograms) {
-        variable_histograms_[variable] = std::move(histograms);
+    void addFinalVariable(const VariableKey& variable, VariableResults results) {
+        final_variables_[variable] = std::move(results);
     }
 
-    const VariableHistogramFutures& getVariableFutures(const VariableKey& variable) const {
-        auto it = variable_histograms_.find(variable);
-        if (it == variable_histograms_.end()) {
-            log::fatal("RegionAnalysis", "Variable not found in region analysis:", variable.str());
+    const VariableResults& getFinalVariable(const VariableKey& variable) const {
+        auto it = final_variables_.find(variable);
+        if (it == final_variables_.end()) {
+            throw std::runtime_error("Final variable not found in region analysis: " + variable.str());
         }
         return it->second;
     }
 
     std::vector<VariableKey> getAvailableVariables() const {
         std::vector<VariableKey> variables;
-        variables.reserve(variable_histograms_.size());
-        for (const auto& [variable_key, _] : variable_histograms_) {
+        variables.reserve(final_variables_.size());
+        for (const auto& [variable_key, _] : final_variables_) {
             variables.emplace_back(variable_key);
         }
         return variables;
     }
 
-    const RegionKey& getRegionKey() const { return region_key_; }
-    bool hasVariable(const VariableKey& variable) const {
-        return variable_histograms_.count(variable);
-    }
+    std::map<VariableKey, VariableFutures> futures_;
 
 private:
     RegionKey region_key_;
-    std::map<VariableKey, VariableHistogramFutures> variable_histograms_;
-
+    std::map<VariableKey, VariableResults> final_variables_;
     double protons_on_target_;
     bool is_blinded_;
     std::string beam_config_;
@@ -81,4 +86,4 @@ private:
 
 }
 
-#endif // REGION_ANALYSIS_H
+#endif

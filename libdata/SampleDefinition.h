@@ -16,7 +16,7 @@ namespace analysis {
 
 class SampleDefinition {
 public:
-    std::string internal_key_;
+    SampleKey sample_key_;
     SampleType sample_type_;
     std::string rel_path_;
     std::string truth_filter_;
@@ -31,13 +31,15 @@ public:
                      const std::string& base_dir,
                      const EventVariableRegistry& var_reg,
                      IEventProcessor& processor)
-      : nominal_node_(makeDataFrame(base_dir, var_reg, processor, parseMetadata(j), all_samples_json))
+      : sample_key_(SampleKey{j.at("sample_key").get<std::string>()}),
+        nominal_node_(this->makeDataFrame(base_dir, var_reg, processor, parseMetadata(j), all_samples_json))
     {
         if (sample_type_ == SampleType::kMonteCarlo) {
             for (auto& [dv, path] : var_paths_) {
+                VariationKey var_key{key_.str() + "_" + std::to_string(static_cast<unsigned int>(dv))};
                 variation_nodes_.emplace(
-                    dv,
-                    makeDataFrame(base_dir, var_reg, processor, path, all_samples_json)
+                    var_key,
+                    this->makeDataFrame(base_dir, var_reg, processor, path, all_samples_json)
                 );
             }
         }

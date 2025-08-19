@@ -16,12 +16,13 @@
 #include "EventVariableRegistry.h"
 #include "Selection.h"
 #include "Logger.h"
+#include "Keys.h"
 
 namespace analysis {
 
 class AnalysisDataLoader {
 public:
-    using SampleFrameMap = std::map<std::string, SampleDefinition>;
+    using SampleFrameMap = std::map<SampleKey, SampleDefinition>;
 
     AnalysisDataLoader(const RunConfigRegistry& rnreg,
                        EventVariableRegistry varreg,

@@ -18,9 +18,9 @@
 
 namespace analysis {
 
-class VariableView {
+class VariableHandle {
 public:
-    VariableView(const VariableKey& k, 
+    VariableHandle(const VariableKey& k, 
                  const std::map<VariableKey, std::string>& exprs,
                  const std::map<VariableKey, std::string>& lbls,
                  const std::map<VariableKey, BinDefinition>& bins,
@@ -45,9 +45,9 @@ private:
     const std::map<VariableKey, std::string>& stratifiers_;
 };
 
-class RegionView {
+class RegionHandle {
 public:
-    RegionView(const RegionKey& k, 
+    RegionHandle(const RegionKey& k, 
                const std::map<RegionKey, std::string>& names,
                const std::map<RegionKey, Selection>& sels,
                const std::map<RegionKey, std::unique_ptr<RegionAnalysis>>& analyses,
@@ -167,13 +167,13 @@ public:
         region_variables_[region_key].emplace_back(variable_key);
     }
 
-    VariableView variable(const std::string& key) const {
-        return VariableView{VariableKey{key}, variable_expressions_, variable_labels_, 
+    VariableHandle variable(const std::string& key) const {
+        return VariableHandle{VariableKey{key}, variable_expressions_, variable_labels_, 
                            variable_binning_, variable_stratifiers_};
     }
     
-    RegionView region(const std::string& key) const {
-        return RegionView{RegionKey{key}, region_names_, region_selections_, 
+    RegionHandle region(const std::string& key) const {
+        return RegionHandle{RegionKey{key}, region_names_, region_selections_, 
                          region_analyses_, region_variables_};
     }
 
@@ -181,15 +181,15 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = VariableView;
+        using value_type = VariableHandle;
         using pointer = value_type*;
         using reference = value_type&;
 
         VariableIterator(std::map<VariableKey, std::string>::const_iterator it, const AnalysisDefinition& def)
             : it_(it), def_(def) {}
 
-        VariableView operator*() const {
-            return VariableView{it_->first, def_.variable_expressions_, def_.variable_labels_, def_.variable_binning_, def_.variable_stratifiers_};
+        VariableHandle operator*() const {
+            return VariableHandle{it_->first, def_.variable_expressions_, def_.variable_labels_, def_.variable_binning_, def_.variable_stratifiers_};
         }
 
         VariableIterator& operator++() { ++it_; return *this; }
@@ -207,15 +207,15 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = RegionView;
+        using value_type = RegionHandle;
         using pointer = value_type*;
         using reference = value_type&;
 
         RegionIterator(std::map<RegionKey, std::string>::const_iterator it, const AnalysisDefinition& def)
             : it_(it), def_(def) {}
 
-        RegionView operator*() const {
-            return RegionView{it_->first, def_.region_names_, def_.region_selections_, def_.region_analyses_, def_.region_variables_};
+        RegionHandle operator*() const {
+            return RegionHandle{it_->first, def_.region_names_, def_.region_selections_, def_.region_analyses_, def_.region_variables_};
         }
 
         RegionIterator& operator++() { ++it_; return *this; }
