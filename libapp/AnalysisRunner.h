@@ -87,7 +87,7 @@ public:
             auto hist_futures = histogram_booker_->bookHistograms(variable_definitions, sample_ensembles);
             
             RegionAnalysis region_analysis(region_handle.key_);
-            this->materializeResults(region_analysis, hist_futures);
+            this->materialiseResults(region_analysis, hist_futures);
             
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
@@ -105,7 +105,7 @@ public:
     }
 
 private:
-    void materializeResults(RegionAnalysis& region, std::map<VariableKey, VariableFutures>& futures_map) {
+    void materialiseResults(RegionAnalysis& region, std::map<VariableKey, VariableFutures>& futures_map) {
         log::info("AnalysisRunner", "Materializing results for analysis region:", region.getRegionKey().str());
 
         auto materialise = [](const auto& hist_futur, const auto& binning, const StratumProperties& style) {
@@ -133,6 +133,8 @@ private:
             }
 
             for (const auto& [var_key, hist_futur] : var_future.variation_hists_) {
+                var_results.variation_hists_
+
                 for (const auto& [var_name, strata] : variations) {
                     for (const auto& [stratum_key, hist_futur] : strata) {
                         var_results.variation_hists_[var_key][var_name][stratum_key] = BinnedHistogram::createFromTH1D(var_future.binning_, *hist_futur.GetPtr());

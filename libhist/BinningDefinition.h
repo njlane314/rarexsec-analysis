@@ -40,6 +40,15 @@ public:
     const std::vector<SelectionKey>& getSelectionKeys() const { return selec_keys_; }
     const StratifierKey& getStratifierKey() const { return strat_key_; }
 
+    ROOT::RDF::TH1DModel toTH1DModel() const {
+        return ROOT::RDF::TH1DModel(
+            getVariable().c_str(),
+            getTexLabel().c_str(),
+            static_cast<int>(getEdges().size() - 1),
+            getEdges().data()
+        );
+    }
+
 private:
     std::vector<double>         edges_;
     BranchExpression            branch_;

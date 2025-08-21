@@ -1,13 +1,8 @@
 #ifndef IHISTOGRAM_BOOKER_H
 #define IHISTOGRAM_BOOKER_H
 
-#include "BinDefinition.h"
-#include "RegionAnalysis.h"
 #include "AnalysisTypes.h"
-#include "Keys.h"
-#include <map>
-#include <string>
-#include <vector>
+#include "BinningDefinition.h"
 
 namespace analysis {
 
@@ -15,9 +10,16 @@ class IHistogramBooker {
 public:
     virtual ~IHistogramBooker() = default;
 
-    virtual std::map<VariableKey, VariableFutures> bookHistograms(
-        const std::vector<std::pair<VariableKey, BinDefinition>>& variable_definitions,
-        const SampleEnsembleMap& sample_ensembles
+    virtual ROOT::RDF::RResultPtr<TH1D> bookNominalHist(
+        const BinningDefinition& binning,
+        const AnalysisDataset& dataset,
+        const ROOT::RDF::TH1DModel& model
+    ) = 0;
+
+    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookStratifiedHists(
+        const BinningDefinition& binning,
+        const AnalysisDataset& dataset,
+        const ROOT::RDF::TH1DModel& model
     ) = 0;
 };
 
