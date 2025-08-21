@@ -36,9 +36,9 @@ public:
     {
         if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto& [dv, path] : var_paths_) {
-                VariationKey var_key{key_.str() + "_" + std::to_string(static_cast<unsigned int>(dv))};
+                DatasetKey dataset_key{key_.str() + "_" + variationToKey(dv)};
                 variation_nodes_.emplace(
-                    var_key,
+                    dataset_key,
                     this->makeDataFrame(base_dir, var_reg, processor, path, all_samples_json)
                 );
             }
@@ -50,7 +50,7 @@ public:
     bool isExt()  const noexcept { return sample_origin_ == SampleOrigin::kExternal; }
 
     void validateFiles(const std::string& base_dir) const {
-        if (internal_key_.empty())                                      log::fatal("SampleDefinition", "empty internal_key_");
+        if (internal_key_.empty())                                          log::fatal("SampleDefinition", "empty internal_key_");
         if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_origin_ for", internal_key_);
         if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", internal_key_);
         if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", internal_key_);

@@ -44,7 +44,7 @@ public:
         AnalysisRegionMap analysis_regions;
 
         for (const auto& region_handle : analysis_definition_.regions()) {
-            SampleDataFrameMap sample_dataframes;
+            AnalysisDatasetMap analysis_datasets;
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
                 dispatcher_.broadcastBeforeSampleProcessing(
                     sample_key, 
@@ -52,7 +52,7 @@ public:
                     region_handle.selection()
                 );
 
-                sample_dataframes.emplace(
+                analysis_datasets.emplace(
                     sample_key, 
                     std::make_tuple(
                         sample_def.sample_origin_, 
@@ -62,7 +62,7 @@ public:
                 );
 
                 for (auto& [variation_key, variation_node] : sample_def.variation_nodes_) {
-                    sample_dataframes.emplace(
+                    analysis_datasets.emplace(
                         variation_key, 
                         std::make_tuple(
                             sample_def.sample_origin_,
@@ -82,7 +82,7 @@ public:
             }
             if (variable_definitions.empty()) continue;
 
-            auto region_with_futures = histogram_builder_->buildRegionAnalysis(region_handle.key, variable_definitions, sample_dataframes);
+            auto region_with_futures = histogram_builder_->buildRegionAnalysis(region_handle.key, variable_definitions, analysis_datasets);
 
             this->materialiseRegion(region_with_futures);
             

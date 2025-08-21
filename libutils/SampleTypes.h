@@ -33,6 +33,22 @@ enum class AnalysisRole {
     kSystematicVariation
 };
 
+inline std::string variationToString(DetectorVariation dv) {
+    switch (dv) {
+        case DetectorVariation::kDetVarCV:               return "CV";
+        case DetectorVariation::kDetVarLYAttenuation:    return "LYAttenuation";
+        case DetectorVariation::kDetVarLYDown:           return "LYDown";
+        case DetectorVariation::kDetVarLYRayleigh:       return "LYRayleigh";
+        case DetectorVariation::kDetVarRecomb2:          return "Recomb2";
+        case DetectorVariation::kDetVarSCE:              return "SCE";
+        case DetectorVariation::kDetVarWireModX:         return "WireModX";
+        case DetectorVariation::kDetVarWireModYZ:        return "WireModYZ";
+        case DetectorVariation::kDetVarWireModAngleXZ:   return "WireModAngleXZ";
+        case DetectorVariation::kDetVarWireModAngleYZ:   return "WireModAngleYZ";
+        default:                                return "Unknown";
+    }
+}
+
 }
 
 #endif

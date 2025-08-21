@@ -12,7 +12,7 @@
 
 namespace analysis {
 
-using SampleDataFrameMap = std::map<VariationKey, std::tuple<SampleOrigin, AnalysisRole, ROOT::RDF::RNode>>;
+using AnalysisDatasetMap = std::map<DatasetKey, std::tuple<SampleOrigin, AnalysisRole, ROOT::RDF::RNode>>;
 
 }
 
