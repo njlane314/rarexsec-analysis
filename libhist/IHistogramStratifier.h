@@ -11,8 +11,9 @@
 #include "BinDefinition.h"
 #include "BinnedHistogram.h"
 #include "HistogramBuilderFactory.h"
-#include "StratificationRegistry.h"
+#include "StratifierRegistry.h"
 #include "Logger.h"
+#include "Keys.h"
 
 namespace analysis {
 
@@ -20,33 +21,33 @@ class IHistogramStratifier {
 public:
     virtual ~IHistogramStratifier() = default;
 
-    virtual std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>> bookHistogram(ROOT::RDF::RNode df,
-                                            const BinDefinition& bin,
-                                            const ROOT::RDF::TH1DModel& model,
+    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookHistogram(ROOT::RDF::RNode dataframe,
+                                            const BinDefinition& binning,
+                                            const ROOT::RDF::TH1DModel& hist_model,
                                             const std::string& weight_column) const
     {
-        std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>> out;
-        for (auto key : this->getRegistryKeys()) {
-            auto slice = this->filterNode(df, bin, key);
-            out[key] = slice.Histo1D(
-                model,
-                bin.getVariable().Data(),
+        std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> strat_futurs;
+        for (const auto& key : this->getRegistryKeys()) {
+            auto slice = this->filterNode(dataframe, binning, std::stoi(key.str()));
+            strat_futurs[key] = slice.Histo1D(
+                hist_model,
+                binning.getVariable().Data(),
                 weight_column.c_str()
             );
         }
-        return out;
+        return strat_futurs;
     }
 
 protected:
-    virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                        const BinDefinition& bin,
+    virtual ROOT::RDF::RNode filterNode(ROOT::RDF::RNode dataframe,
+                                        const BinDefinition& binning,
                                         int key) const = 0;
 
     virtual const std::string& getSchemeName() const = 0;
-    virtual const StratificationRegistry& getRegistry() const = 0;
+    virtual const StratifierRegistry& getRegistry() const = 0;
 
-    std::vector<int> getRegistryKeys() const {
-        return this->getRegistry().getAllKeyForScheme(this->getSchemeName());
+    std::vector<StratumKey> getRegistryKeys() const {
+        return this->getRegistry().getAllStratumKeysForScheme(this->getSchemeName());
     }
 };
 

@@ -111,15 +111,15 @@ public:
         return it->second;
     }
 
-    std::vector<int> getAllKeysForScheme(const std::string& scheme_name) const {
+    std::vector<StratumKey> getAllStratumKeysForScheme(const std::string& scheme_name) const {
         auto scheme_it = scheme_definitions_.find(scheme_name);
         if (scheme_it == scheme_definitions_.end())
             log::fatal("StratifierRegistry", "Scheme not found: " + scheme_name);
         
-        std::vector<int> keys;
+        std::vector<StratumKey> keys;
         keys.reserve(scheme_it->second.strata.size());
-        for (const auto& [key, _] : scheme_it->second.strata) {
-            keys.push_back(key);
+        for (const auto& [key_int, _] : scheme_it->second.strata) {
+            keys.emplace_back(std::to_string(key_int));
         }
         return keys;
     }

@@ -28,12 +28,12 @@ public:
             var_future.binning_ = binning;
 
             for (const auto& [sample_key, sample_ensemble] : sample_ensembles) {
-                if (sample_ensembles.nominal.origin == SampleOrigin::kData) {
-                    this->bookDataHists(binning, sample_ensemble.nominal, hist_model, var_future);
+                if (sample_ensembles.nominal.origin_ == SampleOrigin::kData) {
+                    this->bookDataHists(binning, sample_ensemble.nominal_, hist_model, var_future);
                 } else {
-                    this->bookNominalHists(binning, sample_ensemble.nominal, hist_model, var_future);
+                    this->bookNominalHists(binning, sample_ensemble.nominal_, hist_model, var_future);
 
-                    for (const auto& [variation_key, variation_dataset] : sample_ensemble.variations) {
+                    for (const auto& [variation_key, variation_dataset] : sample_ensemble.variations_) {
                         this->bookVariationHists(binning, variation_dataset, hist_model, variable_future);
                     }
                 }

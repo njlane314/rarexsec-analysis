@@ -13,14 +13,14 @@
 namespace analysis {
 
 struct AnalysisDataset {
-    SampleOrigin origin;
-    AnalysisRole role;
-    ROOT::RDF::RNode dataframe;
+    SampleOrigin origin_;
+    AnalysisRole role_;
+    ROOT::RDF::RNode dataframe_;
 }
 
 struct SampleEnsemble {
-    AnalysisDataset nominal;
-    std::map<SampleVariation, AnalysisDataset> variations;
+    AnalysisDataset nominal_;
+    std::map<SampleVariation, AnalysisDataset> variations_;
 }
 
 using SampleEnsembleMap = std::map<SampleKey, SampleEnsemble>;

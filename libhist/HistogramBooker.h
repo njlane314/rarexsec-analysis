@@ -3,7 +3,7 @@
 
 #include "HistogramBookerDirector.h"
 #include "StratifierFactory.h"
-#include "StratificationRegistry.h"
+#include "StratifierRegistry.h"
 #include "RegionAnalysis.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
@@ -21,8 +21,8 @@ namespace analysis {
 
 class HistogramBooker : public HistogramBookerDirector {
 public:
-    HistogramBooker(StratificationRegistry& strat_reg)
-      : stratification_registry_(strat_reg)
+    HistogramBooker(StratifierRegistry& strat_reg)
+      : stratifier_registry_(strat_reg)
     {}
 
 protected:
@@ -30,22 +30,20 @@ protected:
                             const AnalysisDataset& ana_dataset,
                             const ROOT::RDF::TH1DModel& hist_model,
                             VariableFuture& var_future) override {
-        var_future.data_future = ana_dataset.dataframe.Histo1D(hist_model, binning.getVariable().Data(), "nominal_event_weight");
+        var_future.data_future = ana_dataset.dataframe_.Histo1D(hist_model, binning.getVariable().Data(), "nominal_event_weight");
     }
 
     void bookNominalHists(const BinningDefinition& binning,
-                            const AnalysisDataset& mc_sample,
+                            const AnalysisDataset& ana_dataset,
                             const ROOT::RDF::TH1DModel& hist_model,
                             VariableFuture& var_future) override {
-        const auto histogram_stratifier = this->createStratifier(binning);
-        const auto channel_histogram_futures = histogram_stratifier->bookNominalHists(
-            mc_sample.dataframe, binning, hist_model
-        );
+        const auto hist_stratifier = this->createStratifier(binning);
+        const auto strat_futurs = hist_stratifier->stratifiyHist(ana_dataset.dataframe_, binning, hist_model);
 
         std::vector<ROOT::RDF::RResultPtr<TH1D>> monte_carlo_histogram_futures;
-        for (const auto& [channel_identifier, histogram_future] : channel_histogram_futures) {
-            var_future.stratified_mc_futures[channel_identifier] = histogram_future;
-            monte_carlo_histogram_futures.emplace_back(histogram_future);
+        for (const auto& [stratum_key, hist_futur] : strat_futurs) {
+            var_future.stratified_mc_futures[stratum_key] = hist_futur;
+            monte_carlo_histogram_futures.emplace_back(hist_futur);
         }
 
         if (!monte_carlo_histogram_futures.empty()) {
@@ -65,7 +63,7 @@ private:
     std::unique_ptr<IHistogramStratifier> createStratifier(const BinningDefinition& binning) const {
         return StratifierFactory::create(
             binning.getStratifierKey(),
-            stratification_registry_
+            stratifier_registry_
         );
     }
 
@@ -80,7 +78,7 @@ private:
         return combined_result;
     }
 
-    StratificationRegistry& stratification_registry_;
+    StratifierRegistry& stratifier_registry_;
 };
 
 }
