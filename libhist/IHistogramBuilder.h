@@ -22,7 +22,7 @@ public:
     virtual ~IHistogramBuilder() = default;
 
     virtual RegionAnalysis buildRegionAnalysis(
-        const RegionKey& region_identifier,
+        const RegionKey& region_key,
         const std::vector<std::pair<VariableKey, BinDefinition>>& variable_definitions,
         const SampleDataFrameMap& sample_dataframes
     ) = 0;
@@ -37,9 +37,6 @@ public:
             {{variable, variable_binning}},
             sample_dataframes
         );
-        
-        // This would need a SystematicsProcessor reference - simplified for now
-        throw std::runtime_error("Legacy build() method requires SystematicsProcessor - use buildRegionAnalysis() instead");
     }
 };
 

@@ -27,15 +27,13 @@ public:
             
             buildDataHistograms(binning, samples, histogram_model, variable_futures);
             buildNominalHistograms(binning, samples, histogram_model, variable_futures);
-            buildSystematicVariations(binning, samples, histogram_model, variable_futures);
+            buildVariationHistograms(binning, samples, histogram_model, variable_futures);
             
             region_analysis.addVariableHistograms(variable, std::move(variable_futures));
         }
         
         return region_analysis;
     }
-    
-
 
 protected:
     static ROOT::RDF::TH1DModel createHistogramModel(const BinDefinition& binning) {
@@ -58,10 +56,10 @@ protected:
                                         const ROOT::RDF::TH1DModel& model,
                                         VariableHistogramFutures& variable_futures) = 0;
 
-    virtual void buildSystematicVariations(const BinDefinition& binning,
-                                           const SampleDataFrameMap& samples,
-                                           const ROOT::RDF::TH1DModel& model,
-                                           VariableHistogramFutures& variable_futures) = 0;
+    virtual void buildVariationHistograms(const BinDefinition& binning,
+                                                  const SampleDataFrameMap& samples,
+                                                  const ROOT::RDF::TH1DModel& model,
+                                                  VariableHistogramFutures& variable_futures) = 0;
 };
 
 }

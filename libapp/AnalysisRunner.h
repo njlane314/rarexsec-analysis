@@ -43,7 +43,7 @@ public:
 
         AnalysisRegionMap analysis_regions;
 
-        for (const auto& region_key : analysis_definition_.regions()) {
+        for (const auto& region_handle : analysis_definition_.regions()) {
             SampleDataFrameMap sample_dataframes;
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
                 dispatcher_.broadcastBeforeSampleProcessing(
@@ -53,7 +53,7 @@ public:
                 );
 
                 sample_dataframes.emplace(
-                    sample_key.str(), 
+                    sample_key, 
                     std::make_tuple(
                         sample_def.sample_origin_, 
                         sample_def.sample_origin_ == SampleOrigin::kData ? AnalysisRole::kData : AnalysisRole::kNominal,

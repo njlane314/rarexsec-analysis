@@ -39,7 +39,7 @@ public:
       , total_pot_(0.0)
       , total_triggers_(0)
     {
-        loadAll();
+        this->loadAll();
     }
 
     SampleFrameMap& getSampleFrames() noexcept { return frames_; }
@@ -74,7 +74,7 @@ public:
 
     void printAllBranches() {
         log::debug("AnalysisDataLoader", "Available branches in loaded samples:");
-        for (auto& [sample_key, sample_def] : frames_) { // <-- The const is removed here
+        for (auto& [sample_key, sample_def] : frames_) { 
             log::debug("AnalysisDataLoader", "--- Sample:", sample_key, "---");
             auto branches = sample_def.nominal_node_.GetColumnNames();
             for (const auto& branch : branches) {
@@ -141,6 +141,6 @@ private:
     }
 };
 
-} // namespace analysis
+} 
 
 #endif // ANALYSIS_DATA_LOADER_H

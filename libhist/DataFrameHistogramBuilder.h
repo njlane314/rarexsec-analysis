@@ -32,9 +32,9 @@ protected:
         std::vector<ROOT::RDF::RResultPtr<TH1D>> data_histogram_futures;
         
         for (const auto& [sample_identifier, sample_data] : samples) {
-            if (sample_data.first == SampleType::kData) {
+            if (std::get<0>(sample_data) == SampleOrigin::kData) {
                 data_histogram_futures.emplace_back(
-                    sample_data.second.Histo1D(histogram_model, variable_binning.getVariable().Data())
+                    std::get<2>(sample_data).Histo1D(histogram_model, variable_binning.getVariable().Data())
                 );
             }
         }
@@ -52,44 +52,39 @@ protected:
         std::vector<ROOT::RDF::RResultPtr<TH1D>> monte_carlo_histogram_futures;
         
         for (const auto& [sample_identifier, sample_data] : samples) {
-            if (sample_data.first != SampleType::kData) {
+            if (std::get<0>(sample_data) != SampleOrigin::kData && std::get<1>(sample_data) == AnalysisRole::kNominal) {
                 const auto channel_histogram_futures = histogram_stratifier->bookNominalHistograms(
-                    sample_data.second, variable_binning, histogram_model
+                    std::get<2>(sample_data), variable_binning, histogram_model
                 );
                 
                 for (const auto& [channel_identifier, histogram_future] : channel_histogram_futures) {
-                    const ChannelKey channel_key{channel_identifier};
-                    variable_futures.channel_futures[channel_key] = histogram_future;
+                    variable_futures.stratified_mc_futures[channel_identifier] = histogram_future;
                     monte_carlo_histogram_futures.emplace_back(histogram_future);
                 }
             }
         }
         
         if (!monte_carlo_histogram_futures.empty()) {
-            variable_futures.total_monte_carlo_future = combineHistogramFutures(monte_carlo_histogram_futures);
+            variable_futures.total_mc_future = combineHistogramFutures(monte_carlo_histogram_futures);
         }
     }
 
-    void buildVariationHistograms(const BinDefinition& variable_binning,
-                                   const SampleDataFrameMap& samples,
-                                   const ROOT::RDF::TH1DModel& histogram_model,
-                                   VariableHistogramFutures& variable_futures) override {
-        const auto histogram_stratifier = createStratifier(variable_binning);
-        
+    void buildDetectorVariationHistograms(const BinDefinition& variable_binning,
+                                          const SampleDataFrameMap& samples,
+                                          const ROOT::RDF::TH1DModel& histogram_model,
+                                          VariableHistogramFutures& variable_futures) override {
         for (const auto& [sample_identifier, sample_data] : samples) {
-            if (sample_data.first != SampleType::kData) {
-                const auto detector_variations = histogram_stratifier->bookDetectorVariations(
-                    sample_data.second, variable_binning, histogram_model
-                );
-                
-                mergeSampleSystematics(variable_futures.systematic_variations, detector_variations);
+            if (std::get<1>(sample_data) == AnalysisRole::kSystematicVariation) {
+                auto hist = std::get<2>(sample_data).Histo1D(histogram_model, variable_binning.getVariable().Data(), "central_value_weight");
+                variable_futures.detector_variation_futures[sample_identifier.str()] = hist;
             }
         }
     }
+
 private:
     std::unique_ptr<IHistogramStratifier> createStratifier(const BinDefinition& variable_binning) const {
         return StratifierFactory::create(
-            variable_binning.stratification_key.str(),
+            variable_binning.getStratifierKey().str(),
             stratification_registry_
         );
     }
@@ -104,21 +99,6 @@ private:
             combined_result = combined_result + histogram_futures[i];
         }
         return combined_result;
-    }
-    
-    static void mergeSampleSystematics(SystematicFutures& accumulated_systematics,
-                                       const SystematicFutures& sample_systematics) {
-        for (const auto& [stratum_key, histogram_future] : sample_systematics.nominal) {
-            accumulated_systematics.nominal[stratum_key] = histogram_future;
-        }
-        
-        for (const auto& [systematic_name, systematic_variations] : sample_systematics.variations) {
-            for (const auto& [variation_name, variation_histograms] : systematic_variations) {
-                for (const auto& [stratum_key, histogram_future] : variation_histograms) {
-                    accumulated_systematics.variations[systematic_name][variation_name][stratum_key] = histogram_future;
-                }
-            }
-        }
     }
     
     StratificationRegistry& stratification_registry_;

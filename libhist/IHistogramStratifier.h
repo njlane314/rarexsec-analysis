@@ -14,7 +14,6 @@
 #include "HistogramBuilderFactory.h"
 #include "StratificationRegistry.h"
 #include "Logger.h"
-#include "SystematicsProcessor.h"
 
 namespace analysis {
 
@@ -24,7 +23,7 @@ public:
 
     virtual ~IHistogramStratifier() = default;
 
-    virtual FutureMap bookNominalHistograms(ROOT::RDF::RNode df,
+    virtual FutureMap bookHistogram(ROOT::RDF::RNode df,
                                             const BinDefinition& bin,
                                             const ROOT::RDF::TH1DModel& model) const
     {
@@ -38,21 +37,6 @@ public:
             );
         }
         return out;
-    }
-
-    virtual SystematicFutures bookVariationHistograms(ROOT::RDF::RNode df,
-                                                        const BinDefinition& bin,
-                                                        const ROOT::RDF::TH1DModel& model,
-                                                        SystematicsProcessor& syst_proc) const
-    {
-        SystematicFutures futures;
-        auto book_fn = [&](int key, const std::string& weight_col) {
-            auto slice = this->filterNode(df, bin, key);
-            return slice.Histo1D(model, bin.getVariable().Data(), weight_col.c_str());
-        };
-
-        syst_proc.bookAllSystematics(this->getRegistryKeys(), book_fn, futures);
-        return futures;
     }
 
 protected:

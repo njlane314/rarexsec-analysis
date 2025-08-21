@@ -17,7 +17,7 @@ namespace analysis {
 class SampleDefinition {
 public:
     SampleKey sample_key_;
-    SampleType sample_type_;
+    SampleOrigin sample_origin_;
     std::string rel_path_;
     std::string truth_filter_;
     std::vector<std::string> truth_exclusions_;
@@ -34,7 +34,7 @@ public:
       : sample_key_(SampleKey{j.at("sample_key").get<std::string>()}),
         nominal_node_(this->makeDataFrame(base_dir, var_reg, processor, parseMetadata(j), all_samples_json))
     {
-        if (sample_type_ == SampleType::kMonteCarlo) {
+        if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto& [dv, path] : var_paths_) {
                 VariationKey var_key{key_.str() + "_" + std::to_string(static_cast<unsigned int>(dv))};
                 variation_nodes_.emplace(
@@ -45,16 +45,16 @@ public:
         }
     }
 
-    bool isMc()   const noexcept { return sample_type_ == SampleType::kMonteCarlo; }
-    bool isData() const noexcept { return sample_type_ == SampleType::kData; }
-    bool isExt()  const noexcept { return sample_type_ == SampleType::kExternal; }
+    bool isMc()   const noexcept { return sample_origin_ == SampleOrigin::kMonteCarlo; }
+    bool isData() const noexcept { return sample_origin_ == SampleOrigin::kData; }
+    bool isExt()  const noexcept { return sample_origin_ == SampleOrigin::kExternal; }
 
     void validateFiles(const std::string& base_dir) const {
         if (internal_key_.empty())                                      log::fatal("SampleDefinition", "empty internal_key_");
-        if (sample_type_ == SampleType::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_type_ for", internal_key_);
-        if (sample_type_ == SampleType::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", internal_key_);
-        if (sample_type_ == SampleType::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", internal_key_);
-        if (sample_type_ != SampleType::kData && rel_path_.empty())     log::fatal("SampleDefinition", "missing path for", internal_key_);
+        if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_origin_ for", internal_key_);
+        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", internal_key_);
+        if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", internal_key_);
+        if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())     log::fatal("SampleDefinition", "missing path for", internal_key_);
         if (!rel_path_.empty()) {
             auto p = std::filesystem::path(base_dir) / rel_path_;
             if (!std::filesystem::exists(p)) log::fatal("SampleDefinition", "missing file", p.string());
@@ -71,10 +71,10 @@ private:
     const std::string& parseMetadata(const nlohmann::json& j) {
         internal_key_   = j.at("sample_key").get<std::string>();
         auto ts         = j.at("sample_type").get<std::string>();
-        sample_type_    = (ts == "mc"   ? SampleType::kMonteCarlo
-                        : ts == "data" ? SampleType::kData
-                        : ts == "ext"  ? SampleType::kExternal
-                                       : SampleType::kUnknown);
+        sample_origin_    = (ts == "mc"   ? SampleOrigin::kMonteCarlo
+                        : ts == "data" ? SampleOrigin::kData
+                        : ts == "ext"  ? SampleOrigin::kExternal
+                                       : SampleOrigin::kUnknown);
         rel_path_           = j.value("relative_path", "");
         truth_filter_       = j.value("truth_filter", "");
         truth_exclusions_   = j.value("exclusion_truth_filters", std::vector<std::string>{});
@@ -112,7 +112,7 @@ private:
     {
         auto path = base_dir + "/" + relPath;
         ROOT::RDataFrame df("nuselection/EventSelectionFilter", path);
-        auto processed_df = processor.process(df, sample_type_);
+        auto processed_df = processor.process(df, sample_origin_);
 
         if (!truth_filter_.empty()) {
             processed_df = processed_df.Filter(truth_filter_);
