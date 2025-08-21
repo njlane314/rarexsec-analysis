@@ -12,7 +12,18 @@
 
 namespace analysis {
 
-using AnalysisDatasetMap = std::map<DatasetKey, std::tuple<SampleOrigin, AnalysisRole, ROOT::RDF::RNode>>;
+struct AnalysisDataset {
+    SampleOrigin origin;
+    AnalysisRole role;
+    ROOT::RDF::RNode dataframe;
+}
+
+struct SampleEnsemble {
+    AnalysisDataset nominal;
+    std::map<SampleVariation, AnalysisDataset> variations;
+}
+
+using SampleEnsembleMap = std::map<SampleKey, SampleEnsemble>;
 
 }
 

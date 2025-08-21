@@ -18,19 +18,20 @@ namespace analysis {
 
 using TH1DFuture = ROOT::RDF::RResultPtr<TH1D>;
 
-struct VariableFutures {
+struct VariableFuture {
     BinDefinition bin_def;
     TH1DFuture data_future;
     TH1DFuture total_mc_future;
     std::unordered_map<int, TH1DFuture> stratified_mc_futures;
-    SystematicFutures systematic_variations;
 };
 
-struct VariableResults {
+struct VariableResult {
     BinDefinition bin_def;
+
     BinnedHistogram data_hist;
     BinnedHistogram total_mc_hist;
     std::map<int, BinnedHistogram> stratified_mc_hists;
+
     std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists;
     std::map<int, std::map<std::string, TMatrixDSym>> covariance_matrices;
 };
@@ -50,11 +51,11 @@ public:
         , run_numbers_(std::move(run_numbers))
     {}
 
-    void addFinalVariable(const VariableKey& variable, VariableResults results) {
+    void addFinalVariable(const VariableKey& variable, VariableResult results) {
         final_variables_[variable] = std::move(results);
     }
 
-    const VariableResults& getFinalVariable(const VariableKey& variable) const {
+    const VariableResult& getFinalVariable(const VariableKey& variable) const {
         auto it = final_variables_.find(variable);
         if (it == final_variables_.end()) {
             throw std::runtime_error("Final variable not found in region analysis: " + variable.str());
@@ -71,11 +72,11 @@ public:
         return variables;
     }
 
-    std::map<VariableKey, VariableFutures> futures_;
+    std::map<VariableKey, VariableFuture> futures_;
 
 private:
     RegionKey region_key_;
-    std::map<VariableKey, VariableResults> final_variables_;
+    std::map<VariableKey, VariableResult> final_variables_;
     double protons_on_target_;
     bool is_blinded_;
     std::string beam_config_;

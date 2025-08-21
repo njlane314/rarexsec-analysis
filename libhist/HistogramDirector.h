@@ -1,65 +1,66 @@
 #ifndef HISTOGRAM_DIRECTOR_H
 #define HISTOGRAM_DIRECTOR_H
 
-#include "BinDefinition.h"
-#include "IHistogramBuilder.h"
+#include "BinningDefinition.h"
+#include "IHistogramBooker.h"
 #include "RegionAnalysis.h"
 #include "Keys.h"
+#include "AnalysisTypes.h"
 #include "ROOT/RDataFrame.hxx"
 #include <TH1D.h>
 #include <vector>
 #include <iterator>
+#include <map>
 
 namespace analysis {
 
-class HistogramDirector : public IHistogramBuilder {
+class HistogramDirector : public IHistogramBooker {
 public:
-    RegionAnalysis buildRegionAnalysis(const RegionKey& region,
-                                        const std::vector<std::pair<VariableKey, BinDefinition>>& variable_definitions,
-                                        const SampleDataFrameMap& samples) override {
-        RegionAnalysis region_analysis(region);
-        
-        for (const auto& [variable, binning] : variable_definitions) {
-            const auto histogram_model = createHistogramModel(binning);
-            VariableHistogramFutures variable_futures;
-            variable_futures.binning = binning;
-            variable_futures.axis_label = binning.getName().Data();
-            
-            buildDataHistograms(binning, samples, histogram_model, variable_futures);
-            buildNominalHistograms(binning, samples, histogram_model, variable_futures);
-            buildVariationHistograms(binning, samples, histogram_model, variable_futures);
-            
-            region_analysis.addVariableHistograms(variable, std::move(variable_futures));
+    std::unordered_map<VariableKey, VariableFuture> bookHistograms(
+        const std::vector<std::pair<VariableKey, BinningDefinition>>& variable_definitions,
+        const SampleEnsembleMap& samples
+    ) override {
+        std::unordered_map<VariableKey, VariableFuture> variable_map;
+
+        for (const auto& [variable_key, binning] : variable_definitions) {
+            const auto histogram_model = this->createHistModel(binning);
+            VariableFuture variable_future;
+            variable_future.binning_ = binning;
+
+            this->bookDataHists(binning, samples, histogram_model, variable_future);
+            this->bookNominalHists(binning, samples, histogram_model, variable_future);
+            this->bookVariationHists(binning, samples, histogram_model, variable_future);
+
+            variable_map[variable_key] = std::move(variable_future);
         }
-        
-        return region_analysis;
+
+        return variable_map;
     }
 
 protected:
-    static ROOT::RDF::TH1DModel createHistogramModel(const BinDefinition& binning) {
+    static ROOT::RDF::TH1DModel createHistModel(const BinningDefinition& binning) {
         return ROOT::RDF::TH1DModel(
-            binning.getName().Data(),
-            binning.getName().Data(),
-            static_cast<int>(binning.nBins()),
-            binning.getLowEdge(),
-            binning.getHighEdge()
+            binning.getVariable().c_str(),
+            binning.getTexLabel().c_str(),
+            static_cast<int>(binning.getEdges().size() - 1),
+            binning.getEdges().data()
         );
     }
 
-    virtual void buildDataHistograms(const BinDefinition& binning,
-                                     const SampleDataFrameMap& samples,
-                                     const ROOT::RDF::TH1DModel& model,
-                                     VariableHistogramFutures& variable_futures) = 0;
+    virtual void bookDataHists(const BinningDefinition& binning,
+                                const SampleEnsembleMap& samples,
+                                const ROOT::RDF::TH1DModel& model,
+                                VariableFuture& variable_future) = 0;
 
-    virtual void buildNominalHistograms(const BinDefinition& binning,
-                                        const SampleDataFrameMap& samples,
-                                        const ROOT::RDF::TH1DModel& model,
-                                        VariableHistogramFutures& variable_futures) = 0;
+    virtual void bookNominalHists(const BinningDefinition& binning,
+                                    const SampleEnsembleMap& samples,
+                                    const ROOT::RDF::TH1DModel& model,
+                                    VariableFuture& variable_future) = 0;
 
-    virtual void buildVariationHistograms(const BinDefinition& binning,
-                                                  const SampleDataFrameMap& samples,
-                                                  const ROOT::RDF::TH1DModel& model,
-                                                  VariableHistogramFutures& variable_futures) = 0;
+    virtual void bookVariationHists(const BinningDefinition& binning,
+                                    const SampleEnsembleMap& samples,
+                                    const ROOT::RDF::TH1DModel& model,
+                                    VariableFuture& variable_future) = 0;
 };
 
 }

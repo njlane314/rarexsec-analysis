@@ -23,25 +23,25 @@ public:
     VariableHandle(const VariableKey& k, 
                  const std::map<VariableKey, std::string>& exprs,
                  const std::map<VariableKey, std::string>& lbls,
-                 const std::map<VariableKey, BinDefinition>& bins,
+                 const std::map<VariableKey, BinDefinition>& bdefs,
                  const std::map<VariableKey, std::string>& strats)
-        : key(k), expressions_(exprs), labels_(lbls), binning_(bins), stratifiers_(strats) {}
+        : key_(k), expressions_(exprs), labels_(lbls), binnings_(bdefs), stratifiers_(strats) {}
 
-    const std::string& expression() const { return expressions_.at(key); }
-    const std::string& label() const { return labels_.at(key); }
-    const BinDefinition& bins() const { return binning_.at(key); }
+    const std::string& expression() const { return expressions_.at(key_); }
+    const std::string& label() const { return labels_.at(key_); }
+    const BinDefinition& binning() const { return binnings_.at(key_); }
 
     std::string stratifier() const { 
-        auto it = stratifiers_.find(key);
+        auto it = stratifiers_.find(key_);
         return it != stratifiers_.end() ? it->second : "";
     }
 
-    const VariableKey key;
+    const VariableKey key_;
     
 private:
     const std::map<VariableKey, std::string>& expressions_;
     const std::map<VariableKey, std::string>& labels_;
-    const std::map<VariableKey, BinDefinition>& binning_;
+    const std::map<VariableKey, BinDefinition>& binnings_;
     const std::map<VariableKey, std::string>& stratifiers_;
 };
 
@@ -52,22 +52,22 @@ public:
                const std::map<RegionKey, Selection>& sels,
                const std::map<RegionKey, std::unique_ptr<RegionAnalysis>>& analyses,
                const std::map<RegionKey, std::vector<VariableKey>>& vars)
-        : key(k), names_(names), selections_(sels), analyses_(analyses), variables_(vars) {}
+        : key_(k), names_(names), selections_(sels), analyses_(analyses), variables_(vars) {}
 
-    const std::string& name() const { return names_.at(key); }
-    const Selection& selection() const { return selections_.at(key); }
+    const std::string& name() const { return names_.at(key_); }
+    const Selection& selection() const { return selections_.at(key_); }
 
     std::unique_ptr<RegionAnalysis>& analysis() const { 
-        return const_cast<std::unique_ptr<RegionAnalysis>&>(analyses_.at(key)); 
+        return const_cast<std::unique_ptr<RegionAnalysis>&>(analyses_.at(key_)); 
     }
 
     const std::vector<VariableKey>& vars() const { 
-        auto it = variables_.find(key);
+        auto it = variables_.find(key_);
         static const std::vector<VariableKey> empty;
         return it != variables_.end() ? it->second : empty;
     }
 
-    const RegionKey key;
+    const RegionKey key_;
 
 private:
     const std::map<RegionKey, std::string>& names_;
@@ -167,13 +167,13 @@ public:
         region_variables_[region_key].emplace_back(variable_key);
     }
 
-    VariableHandle variable(const std::string& key) const {
-        return VariableHandle{VariableKey{key}, variable_expressions_, variable_labels_, 
+    VariableHandle variable(const VariableKey& key) const {
+        return VariableHandle{key, variable_expressions_, variable_labels_,
                            variable_binning_, variable_stratifiers_};
     }
     
-    RegionHandle region(const std::string& key) const {
-        return RegionHandle{RegionKey{key}, region_names_, region_selections_, 
+    RegionHandle region(const RegionKey& key) const {
+        return RegionHandle{key, region_names_, region_selections_,
                          region_analyses_, region_variables_};
     }
 
