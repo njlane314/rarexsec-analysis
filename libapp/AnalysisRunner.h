@@ -14,6 +14,7 @@
 #include "EventVariableRegistry.h"
 #include "AnalysisPluginManager.h"
 #include "SystematicsProcessor.h"
+#include "StratifierRegistry.h" 
 #include "Logger.h"
 #include "Keys.h"
 
@@ -30,7 +31,7 @@ public:
       : analysis_definition_(sel_reg, var_reg)
       , data_loader_(ldr)
       , selection_registry_(sel_reg)
-      , (std::move(bldr))
+      , histogram_booker_(std::move(bldr))
       , systematics_processor_(sys_proc)
     {
         plugin_manager.loadPlugins(plgn_cfg);
@@ -51,9 +52,9 @@ public:
                 );
 
                 AnalysisDataset nominal_dataset{
-                    sample_def.sample_origin_;
+                    sample_def.sample_origin_,
                     sample_def.sample_origin_ == SampleOrigin::kData ? AnalysisRole::kData : AnalysisRole::kNominal,
-                    sample_def.nominal_mode_.Filter(region_handle.selection().str());
+                    sample_def.nominal_node_.Filter(region_handle.selection().str())
                 };
 
                 std::map<SampleVariation, AnalysisDataset> variation_datasets;
@@ -63,22 +64,22 @@ public:
                         AnalysisDataset{
                             sample_def.sample_origin_,
                             AnalysisRole::kVariation,
-                            variation_node.Filter(region_handle.selection().str());
+                            variation_node.Filter(region_handle.selection().str())
                         }
                     );
                 }
 
-                sample_ensembles.empalce(
+                sample_ensembles.emplace(
                     sample_key,
-                    SampleEnsemble{std::move(nominal_dataset), std::move(variation_dataset)}
+                    SampleEnsemble{std::move(nominal_dataset), std::move(variation_datasets)}
                 );
             }
 
             std::vector<std::pair<VariableKey, BinDefinition>> variable_definitions;
-            for (const VariableKey& variable_key : region_handle.vars()) {
+            for (const VariableKey& var_key : region_handle.vars()) {
                 variable_definitions.emplace_back(
-                    variable_key, 
-                    analysis_definition_.variable(variable_key).binning()
+                    var_key, 
+                    analysis_definition_.variable(var_key).binning()
                 );
             }
             if (variable_definitions.empty()) continue;
@@ -86,7 +87,7 @@ public:
             auto hist_futures = histogram_booker_->bookHistograms(variable_definitions, sample_ensembles);
             
             RegionAnalysis region_analysis(region_handle.key_);
-            this->processFutures(region_analysis, hist_futures);
+            this->materializeResults(region_analysis, hist_futures);
             
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
@@ -104,44 +105,59 @@ public:
     }
 
 private:
-    void processFutures(RegionAnalysis& region) {
-        log::info("AnalysisRunner", "processing results for analysis region:", region.getRegionKey().str());
-        for (auto& [variable_key, futures] : region.futures_) {
-            VariableResults final_results;
-            final_results.binning_ = futures.binning_;
+    void materializeResults(RegionAnalysis& region, std::map<VariableKey, VariableFutures>& futures_map) {
+        log::info("AnalysisRunner", "Materializing results for analysis region:", region.getRegionKey().str());
 
-            if (futures.data_future) final_results.data_hist = BinnedHistogram::createFromTH1D(futures.binning_, *futures.data_future.GetPtr());
-            if (futures.total_mc_future) final_results.total_mc_hist = BinnedHistogram::createFromTH1D(futures.binning_, *futures.total_mc_future.GetPtr());
-            
-            for (const auto& [key, future] : futures.stratified_mc_futures) {
-                final_results.stratified_mc_hists[key] = BinnedHistogram::createFromTH1D(futures.binning_, *future.GetPtr());
+        auto materialise = [](const auto& hist_futur, const auto& binning, const StratumProperties& style) {
+            return BinnedHistogram::createFromTH1D(binning, *hist_futur.GetPtr(), style.plain_name.c_str(), style.tex_label.c_str(), style.fill_colour, style.fill_style);
+        };
+    
+        for (auto& [var_key, var_future] : futures_map) {
+            VariableResults var_results;
+            var_results.binning_ = var_future.binning_;
+            const std::string& scheme_name = var_future.binning_.getStratifierKey().str();
+
+            if (var_future.data_hist_) {
+                int data_key = stratifier_registry_.findStratumKeyByName(scheme_name, "Data");
+                const StratumProperties& props = stratifier_registry_.getStratumProperties(scheme_name, data_key);
+                var_results.data_hist_ = materialise(var_future.data_hist_, var_future.binning_, props);
             }
 
-            for (const auto& [syst_name, variations] : futures.systematic_variations.variations) {
+            if (var_future.total_hist_) {
+                var_results.total_hist_ = BinnedHistogram::createFromTH1D(var_future.binning_, *var_future.total_hist_.GetPtr());
+            }
+
+            for (const auto& [strat_key, hist_futur] : var_future.strat_hists_) {
+                const StratumProperties& props = stratifier_registry_.getStratumProperties(scheme_name, strat_key);
+                var_results.strat_hists_[strat_key] = materialise(hist_futur, var_future.binning_, props);
+            }
+
+            for (const auto& [var_key, hist_futur] : var_future.variation_hists_) {
                 for (const auto& [var_name, strata] : variations) {
-                    for (const auto& [stratum_key, future] : strata) {
-                        final_results.variation_hists[syst_name][var_name][stratum_key] = BinnedHistogram::createFromTH1D(futures.binning_, *future.GetPtr());
+                    for (const auto& [stratum_key, hist_futur] : strata) {
+                        var_results.variation_hists_[var_key][var_name][stratum_key] = BinnedHistogram::createFromTH1D(var_future.binning_, *hist_futur.GetPtr());
                     }
                 }
             }
-            
-            for (const auto& [stratum_key, nominal_hist] : final_results.stratified_mc_hists) {
-                final_results.covariance_matrices[stratum_key] = 
+    
+            for (const auto& [stratum_key, nominal_hist] : var_results.strat_hists_) {
+                var_results.covariance_matrices_[stratum_key] =
                     systematics_processor_.computeCovarianceMatrices(
-                        stratum_key, nominal_hist, final_results.variation_hists
+                        stratum_key, nominal_hist, var_results.variation_hists_
                     );
             }
-            region.addFinalVariable(variable_key, std::move(final_results));
+            region.addFinalVariable(var_key, std::move(var_results));
         }
-        region.futures_.clear();
+        futures_map.clear();
     }
 
     AnalysisPluginManager plugin_manager; 
     AnalysisDefinition analysis_definition_;
     AnalysisDataLoader& data_loader_;
     const SelectionRegistry& selection_registry_;
-    std::unique_ptr<IHistogramBuilder> ;
+    std::unique_ptr<IHistogramBuilder> histogram_booker_;
     SystematicsProcessor& systematics_processor_;
+    StratifierRegistry stratifier_registry_;
 };
 
 }

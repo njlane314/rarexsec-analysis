@@ -37,4 +37,4 @@ public:
 
 }
 
-#endif // STRATIFIER_FACTORY_H
+#endif

@@ -15,15 +15,15 @@ class VectorStratifier : public IHistogramStratifier {
 public:
     VectorStratifier(const StratifierKey& key,
                      StratifierRegistry& registry)
-      : stratifier_key_(key)
-      , registry_(registry)
+      : strat_key_(key)
+      , strat_registry_(registry)
     {}
 
 protected:
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
                                 const BinDefinition&,
                                 int key) const override {
-        auto predicate = registry_.findPredicate(stratifier_key_);
+        auto predicate = strat_registry_.findPredicate(strat_key_);
         return df.Filter(
             [predicate, key](const ROOT::RVec<int>& branch_values) {
                 return predicate(branch_values, key);
@@ -33,16 +33,16 @@ protected:
     }
 
     const std::string& getSchemeName() const override {
-        return stratifier_key_.str();
+        return strat_key_.str();
     }
 
     const StratifierRegistry& getRegistry() const override {
-        return registry_;
+        return strat_registry_;
     }
 
 private:
-    StratifierKey          stratifier_key_;
-    StratifierRegistry&    registry_;
+    StratifierKey          strat_key_;
+    StratifierRegistry&    strat_registry_;
 };
 
 }

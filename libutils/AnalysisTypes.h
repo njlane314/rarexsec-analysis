@@ -20,6 +20,8 @@ struct VariableFuture {
     TH1DFuture data_hist_;
     TH1DFuture total_hist_;
     std::unordered_map<StratumKey, TH1DFuture> strat_hists_;
+
+    std::unordered_map<VariationKey, TH1DFuture> variation_hists_;
 };
 
 struct VariableResult {
@@ -29,7 +31,7 @@ struct VariableResult {
     BinnedHistogram total_hist_;
     std::map<StratumKey, BinnedHistogram> strat_hists_;
 
-    std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists;
+    std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists_;
     std::map<int, std::map<std::string, TMatrixDSym>> covariance_matrices;
 };
 

@@ -14,7 +14,7 @@ public:
     ScalarStratifier(const StratifierKey& key,
                      StratificationRegistry& registry)
       : stratifier_key_(key)
-      , registry_(registry)
+      , stratifier_registry_(registry)
     {}
 
 protected:
@@ -31,14 +31,14 @@ protected:
     }
 
     const StratificationRegistry& getRegistry() const override {
-        return registry_;
+        return stratifier_registry_;
     }
 
 private:
     StratifierKey              stratifier_key_;
-    StratificationRegistry&    registry_;
+    StratificationRegistry&    stratifier_registry_;
 };
 
 }
 
-#endif // SCALAR_STRATIFIER_H
+#endif

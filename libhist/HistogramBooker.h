@@ -30,7 +30,7 @@ protected:
                             const AnalysisDataset& ana_dataset,
                             const ROOT::RDF::TH1DModel& hist_model,
                             VariableFuture& var_future) override {
-        var_future.data_future_ = ana_dataset.dataframe_.Histo1D(hist_model, binning.getVariable().Data(), "nominal_event_weight");
+        var_future.data_hist_ = ana_dataset.dataframe_.Histo1D(hist_model, binning.getVariable().Data(), "nominal_event_weight");
     }
 
     void bookNominalHists(const BinningDefinition& binning,
@@ -40,7 +40,7 @@ protected:
         const auto hist_stratifier = StratifierFactory::create(binning.getStratifierKey(), stratifier_registry_);
         const auto strat_futurs = hist_stratifier->stratifiyHist(ana_dataset.dataframe_, binning, hist_model);
 
-        var_future.stratified_mc_ = strat_futurs;
+        var_future.strat_hists_ = strat_futurs;
         
         if (!strat_futurs.empty()) {
             auto it = strat_futurs.begin();
@@ -55,11 +55,12 @@ protected:
     }
 
     void bookVariationHists(const BinningDefinition& binning,
+                            const VariationKey& variation_key,
                             const AnalysisDataset& variation_sample,
                             const ROOT::RDF::TH1DModel& hist_model,
                             VariableFuture& var_future) override {
         auto hist = variation_sample.dataframe.Histo1D(hist_model, binning.getVariable().Data(), "nominal_event_weight");
-        var_future.variation_mc_[variation_sample.role_] = hist;
+        var_future.variation_hists_[variation_key] = hist;
     }
 
 private:

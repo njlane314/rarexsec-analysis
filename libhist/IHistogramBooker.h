@@ -23,4 +23,4 @@ public:
 
 }
 
-#endif // IHISTOGRAM_BOOKER_H
+#endif

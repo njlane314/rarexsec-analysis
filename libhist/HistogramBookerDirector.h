@@ -34,7 +34,7 @@ public:
                     this->bookNominalHists(binning, sample_ensemble.nominal_, hist_model, var_future);
 
                     for (const auto& [variation_key, variation_dataset] : sample_ensemble.variations_) {
-                        this->bookVariationHists(binning, variation_dataset, hist_model, variable_future);
+                        this->bookVariationHists(binning, variation_key, variation_dataset, hist_model, variable_future);
                     }
                 }
             } 
