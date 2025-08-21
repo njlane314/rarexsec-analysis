@@ -12,7 +12,7 @@
 
 namespace analysis {
 
-class AnalysisDispatcher {
+class AnalysisPluginManager {
 public:
     using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
 
@@ -20,7 +20,7 @@ public:
         if (!jobj.contains("plugins")) return;
         for (auto const& p : jobj.at("plugins")) {
             std::string path = p.at("path");
-            log::info("AnalysisDispatcher", "Loading plugin from:", path);
+            log::info("AnalysisPluginManager", "Loading plugin from:", path);
             void* handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle) throw std::runtime_error(dlerror());
 
@@ -34,28 +34,28 @@ public:
         }
     }
 
-    void broadcastAnalysisSetup(AnalysisDefinition& def,
+    void notifyInitialisation(AnalysisDefinition& def,
                                 const SelectionRegistry& selec_reg) {
         for (auto& pl : plugins_) pl->onInitialisation(def, selec_reg);
     }
 
-    void broadcastBeforeSampleProcessing(const SampleKey& skey,
+    void notifyPreSampleProcessing(const SampleKey& skey,
                                          const RegionKey& rkey,
                                          const RegionConfig& reg) {
         for (auto& pl : plugins_) pl->onPreSampleProcessing(skey, rkey, reg);
     }
 
-    void broadcastAfterSampleProcessing(const SampleKey& skey,
+    void notifyPostSampleProcessing(const SampleKey& skey,
                                         const RegionKey& rkey,
                                         const AnalysisRegionMap& res) {
         for (auto& pl : plugins_) pl->onPostSampleProcessing(skey, rkey, res);
     }
 
-    void broadcastAnalysisCompletion(const AnalysisRegionMap& res) {
+    void notifyFinalisation(const AnalysisRegionMap& res) {
         for (auto& pl : plugins_) pl->onFinalisation(res);
     }
 
-    ~AnalysisDispatcher() {
+    ~AnalysisPluginManager() {
         for (auto h : handles_) dlclose(h);
     }
 

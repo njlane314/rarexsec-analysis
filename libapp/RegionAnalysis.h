@@ -1,64 +1,49 @@
-#ifndef REGION_ANALYSIS_H
-#define REGION_ANALYSIS_H
+#pragma once
 
 #include "TObject.h"
-#include "BinDefinition.h"
 #include "Keys.h"
-#include "SystematicsProcessor.h"
-#include "BinnedHistogram.h"
-#include "ROOT/RDataFrame.hxx"
-#include <TH1D.h>
+
 #include <map>
-#include <vector>
 #include <string>
-#include <memory>
+#include <utility>
+#include <vector>
 #include <stdexcept>
 
 namespace analysis {
 
-using TH1DFuture = ROOT::RDF::RResultPtr<TH1D>;
-
-struct VariableFuture {
-    BinDefinition bin_def;
-    TH1DFuture data_future;
-    TH1DFuture total_mc_future;
-    std::unordered_map<int, TH1DFuture> stratified_mc_futures;
-};
-
-struct VariableResult {
-    BinDefinition bin_def;
-
-    BinnedHistogram data_hist;
-    BinnedHistogram total_mc_hist;
-    std::map<int, BinnedHistogram> stratified_mc_hists;
-
-    std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists;
-    std::map<int, std::map<std::string, TMatrixDSym>> covariance_matrices;
-};
-
-
 class RegionAnalysis : public TObject {
 public:
-    RegionAnalysis(RegionKey region_key = RegionKey{},
+    RegionAnalysis(RegionKey rk = RegionKey{},
                    double pot = 0.0,
-                   bool is_blinded = true,
-                   std::string beam_config = "",
-                   std::vector<std::string> run_numbers = {})
-        : region_key_(std::move(region_key))
+                   bool bl = true,
+                   std::string bc = {},
+                   std::vector<std::string> runs = {})
+        : region_key_(std::move(rk))
         , protons_on_target_(pot)
-        , is_blinded_(is_blinded)
-        , beam_config_(std::move(beam_config))
-        , run_numbers_(std::move(run_numbers))
-    {}
+        , is_blinded_(bl)
+        , beam_config_(std::move(bc))
+        , run_numbers_(std::move(runs)) {}
 
-    void addFinalVariable(const VariableKey& variable, VariableResult results) {
-        final_variables_[variable] = std::move(results);
+    ~RegionAnalysis() override = default;
+
+    const RegionKey& regionKey() const noexcept { return region_key_; }
+    double protonsOnTarget() const noexcept { return protons_on_target_; }
+    bool isBlinded() const noexcept { return is_blinded_; }
+    const std::string& beamConfig() const noexcept { return beam_config_; }
+    const std::vector<std::string>& runNumbers() const noexcept { return run_numbers_; }
+
+    void addFinalVariable(VariableKey v, VariableResult r) {
+        final_variables_.insert_or_assign(std::move(v), std::move(r));
     }
 
-    const VariableResult& getFinalVariable(const VariableKey& variable) const {
-        auto it = final_variables_.find(variable);
+    bool hasFinalVariable(const VariableKey& v) const {
+        return final_variables_.find(v) != final_variables_.end();
+    }
+
+    const VariableResult& getFinalVariable(const VariableKey& v) const {
+        auto it = final_variables_.find(v);
         if (it == final_variables_.end()) {
-            throw std::runtime_error("Final variable not found in region analysis: " + variable.str());
+            throw std::runtime_error("Final variable not found in RegionAnalysis: " + v.str());
         }
         return it->second;
     }
@@ -66,25 +51,25 @@ public:
     std::vector<VariableKey> getAvailableVariables() const {
         std::vector<VariableKey> variables;
         variables.reserve(final_variables_.size());
-        for (const auto& [variable_key, _] : final_variables_) {
-            variables.emplace_back(variable_key);
+        for (const auto& kv : final_variables_) {
+            variables.emplace_back(kv.first);
         }
         return variables;
     }
 
-    std::map<VariableKey, VariableFuture> futures_;
+    const std::map<VariableKey, VariableResult>& finalVariables() const noexcept {
+        return final_variables_;
+    }
 
 private:
-    RegionKey region_key_;
+    RegionKey region_key_{};
+    double protons_on_target_{0.0};
+    bool is_blinded_{true};
+    std::string beam_config_{};
+    std::vector<std::string> run_numbers_{};
     std::map<VariableKey, VariableResult> final_variables_;
-    double protons_on_target_;
-    bool is_blinded_;
-    std::string beam_config_;
-    std::vector<std::string> run_numbers_;
 
     ClassDef(RegionAnalysis, 1);
 };
 
-}
-
-#endif
+} 

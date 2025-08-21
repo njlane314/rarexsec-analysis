@@ -1,5 +1,5 @@
-#ifndef REGIONSPLUGIN_H
-#define REGIONSPLUGIN_H
+#ifndef REGIONS_PLUGIN_H
+#define REGIONS_PLUGIN_H
 
 #include "IAnalysisPlugin.h"
 #include "AnalysisDefinition.h"
@@ -9,17 +9,20 @@
 namespace analysis {
 
 class RegionsPlugin : public IAnalysisPlugin {
-    nlohmann::json config_;
 public:
     explicit RegionsPlugin(const nlohmann::json& cfg)
       : config_(cfg) {}
+
     void onInitialisation(AnalysisDefinition& def,
                           const SelectionRegistry&) override {
         log::info("RegionsPlugin", "Defining regions...");
         if (!config_.contains("regions")) return;
+
         for (auto const& region_cfg : config_.at("regions")) {
+        
             auto region_key = region_cfg.at("region_key").get<std::string>();
             auto label      = region_cfg.at("label").get<std::string>();
+
             if (region_cfg.contains("selection_rule")) {
                 auto rule_key = region_cfg.at("selection_rule").get<std::string>();
                 def.addRegion(region_key, label, rule_key);
@@ -32,6 +35,9 @@ public:
             }
         }
     }
+
+private:
+    nlohmann::json config_;
 };
 
 } 

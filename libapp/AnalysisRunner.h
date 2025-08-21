@@ -12,7 +12,7 @@
 #include "AnalysisDefinition.h"
 #include "SelectionRegistry.h"
 #include "EventVariableRegistry.h"
-#include "AnalysisDispatcher.h"
+#include "AnalysisPluginManager.h"
 #include "SystematicsProcessor.h"
 #include "Logger.h"
 #include "Keys.h"
@@ -21,8 +21,6 @@ namespace analysis {
 
 class AnalysisRunner {
 public:
-    using AnalysisRegionMap = std::unordered_map<RegionKey, RegionAnalysis>;
-
     AnalysisRunner(AnalysisDataLoader& ldr,
                    const SelectionRegistry& sel_reg,
                    const EventVariableRegistry& var_reg,
@@ -35,18 +33,18 @@ public:
       , (std::move(bldr))
       , systematics_processor_(sys_proc)
     {
-        dispatcher_.loadPlugins(plgn_cfg);
+        plugin_manager.loadPlugins(plgn_cfg);
     }
 
     AnalysisRegionMap run() {
-        dispatcher_.broadcastAnalysisSetup(analysis_definition_, selection_registry_);
+        plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
 
         AnalysisRegionMap analysis_regions;
 
         for (const auto& region_handle : analysis_definition_.regions()) {
             SampleEnsembleMap sample_ensembles;
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
-                dispatcher_.broadcastBeforeSampleProcessing(
+                plugin_manager.notifyPreSampleProcessing(
                     sample_key, 
                     region_handle.key_, 
                     region_handle.selection()
@@ -93,7 +91,7 @@ public:
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
-                dispatcher_.broadcastAfterSampleProcessing(
+                plugin_manager.notifyPostSampleProcessing(
                     region_handle.key_,
                     sample_key, 
                     analysis_regions
@@ -101,28 +99,28 @@ public:
             }
         }
 
-        dispatcher_.broadcastAnalysisCompletion(analysis_regions);
+        plugin_manager.notifyFinalisation(analysis_regions);
         return analysis_regions;
     }
 
 private:
     void processFutures(RegionAnalysis& region) {
-        log::info("AnalysisRunner", "Materializing results for region:", region.getRegionKey().str());
+        log::info("AnalysisRunner", "processing results for analysis region:", region.getRegionKey().str());
         for (auto& [variable_key, futures] : region.futures_) {
             VariableResults final_results;
-            final_results.bin_def = futures.bin_def;
+            final_results.binning_ = futures.binning_;
 
-            if (futures.data_future) final_results.data_hist = BinnedHistogram::createFromTH1D(futures.bin_def, *futures.data_future.GetPtr());
-            if (futures.total_mc_future) final_results.total_mc_hist = BinnedHistogram::createFromTH1D(futures.bin_def, *futures.total_mc_future.GetPtr());
+            if (futures.data_future) final_results.data_hist = BinnedHistogram::createFromTH1D(futures.binning_, *futures.data_future.GetPtr());
+            if (futures.total_mc_future) final_results.total_mc_hist = BinnedHistogram::createFromTH1D(futures.binning_, *futures.total_mc_future.GetPtr());
             
             for (const auto& [key, future] : futures.stratified_mc_futures) {
-                final_results.stratified_mc_hists[key] = BinnedHistogram::createFromTH1D(futures.bin_def, *future.GetPtr());
+                final_results.stratified_mc_hists[key] = BinnedHistogram::createFromTH1D(futures.binning_, *future.GetPtr());
             }
 
             for (const auto& [syst_name, variations] : futures.systematic_variations.variations) {
                 for (const auto& [var_name, strata] : variations) {
                     for (const auto& [stratum_key, future] : strata) {
-                        final_results.variation_hists[syst_name][var_name][stratum_key] = BinnedHistogram::createFromTH1D(futures.bin_def, *future.GetPtr());
+                        final_results.variation_hists[syst_name][var_name][stratum_key] = BinnedHistogram::createFromTH1D(futures.binning_, *future.GetPtr());
                     }
                 }
             }
@@ -138,7 +136,7 @@ private:
         region.futures_.clear();
     }
 
-    AnalysisDispatcher dispatcher_; 
+    AnalysisPluginManager plugin_manager; 
     AnalysisDefinition analysis_definition_;
     AnalysisDataLoader& data_loader_;
     const SelectionRegistry& selection_registry_;

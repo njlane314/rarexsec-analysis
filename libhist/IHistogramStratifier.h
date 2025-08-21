@@ -21,7 +21,7 @@ class IHistogramStratifier {
 public:
     virtual ~IHistogramStratifier() = default;
 
-    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookHistogram(ROOT::RDF::RNode dataframe,
+    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> stratifyHist(ROOT::RDF::RNode dataframe,
                                             const BinDefinition& binning,
                                             const ROOT::RDF::TH1DModel& hist_model,
                                             const std::string& weight_column) const

@@ -12,6 +12,29 @@
 
 namespace analysis {
 
+using TH1DFuture = ROOT::RDF::RResultPtr<TH1D>;
+
+struct VariableFuture {
+    BinDefinition binning_;
+
+    TH1DFuture data_hist_;
+    TH1DFuture total_hist_;
+    std::unordered_map<StratumKey, TH1DFuture> strat_hists_;
+};
+
+struct VariableResult {
+    BinDefinition binning_;
+
+    BinnedHistogram data_hist_;
+    BinnedHistogram total_hist_;
+    std::map<StratumKey, BinnedHistogram> strat_hists_;
+
+    std::map<std::string, std::map<std::string, std::map<int, BinnedHistogram>>> variation_hists;
+    std::map<int, std::map<std::string, TMatrixDSym>> covariance_matrices;
+};
+
+using AnalysisRegionMap = std::unordered_map<RegionKey, RegionAnalysis>;
+
 struct AnalysisDataset {
     SampleOrigin origin_;
     AnalysisRole role_;
