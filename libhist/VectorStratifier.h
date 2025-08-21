@@ -2,60 +2,49 @@
 #define VECTOR_STRATIFIER_H
 
 #include "IHistogramStratifier.h"
-#include "StratificationRegistry.h"
+#include "StratifierRegistry.h"
 #include "ROOT/RVec.hxx"
+#include "Keys.h"
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace analysis {
 
 class VectorStratifier : public IHistogramStratifier {
 public:
-    VectorStratifier(std::string key,
-                     std::string variable,
-                     StratificationRegistry& registry)
-      : registry_key_(std::move(key))
-      , variable_(std::move(variable))
+    VectorStratifier(const StratifierKey& key,
+                     StratifierRegistry& registry)
+      : stratifier_key_(key)
       , registry_(registry)
     {}
 
 protected:
-    std::vector<int> getRegistryKeys() const override {
-        return registry_.getStratumKeys(registry_key_);
-    }
-
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
                                 const BinDefinition&,
                                 int key) const override {
-            [key](const ROOT::RVec<int>& ids) {
-                return ROOT::VecOps::Sum(ROOT::VecOps::abs(ids) == key) > 0;
+        auto predicate = registry_.findPredicate(stratifier_key_);
+        return df.Filter(
+            [predicate, key](const ROOT::RVec<int>& branch_values) {
+                return predicate(branch_values, key);
             },
-            {variable_}
+            {getSchemeName()}
         );
     }
 
-    std::string getTempVariable(int) const override {
-        return variable_; 
+    const std::string& getSchemeName() const override {
+        return stratifier_key_.str();
     }
 
-    const std::string& getRegistryKey() const override {
-        return registry_key_;
-    }
-
-    const std::string& getVariable() const override {
-        return variable_;
-    }
-
-    const StratificationRegistry& getRegistry() const override {
+    const StratifierRegistry& getRegistry() const override {
         return registry_;
     }
 
 private:
-    std::string                registry_key_;
-    std::string                variable_;
-    StratificationRegistry&    registry_;
+    StratifierKey          stratifier_key_;
+    StratifierRegistry&    registry_;
 };
 
 }
 
-#endif // VECTOR_STRATIFIER_H
+#endif

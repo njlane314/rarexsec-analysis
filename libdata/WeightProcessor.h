@@ -30,7 +30,7 @@ public:
                            [scale](){ return scale; });
 
             df = df.Define(
-                "central_value_weight",
+                "nominal_event_weight",
                 [](
                   double w,
                   float w_spline,
@@ -46,11 +46,11 @@ public:
             );
         }
         else {
-            if (!df.HasColumn("central_value_weight")) {
+            if (!df.HasColumn("nominal_event_weight")) {
                 if (df.HasColumn("base_event_weight")) {
-                    df = df.Alias("central_value_weight", "base_event_weight");
+                    df = df.Alias("nominal_event_weight", "base_event_weight");
                 } else {
-                    df = df.Define("central_value_weight",
+                    df = df.Define("nominal_event_weight",
                                    [](){ return 1.0; });
                 }
             }
