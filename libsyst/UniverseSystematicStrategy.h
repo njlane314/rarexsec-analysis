@@ -42,7 +42,7 @@ public:
     ) override {
         const auto& nominal_hist = result.total_mc_hist_;
         const auto& binning = result.binning_;
-        int n = nominal_hist.nBins();
+        int n = nominal_hist.getNumberOfBins();
         TMatrixDSym cov(n);
         cov.Zero();
 
@@ -52,7 +52,7 @@ public:
             if (!futures.variations.count(uni_key)) continue;
 
             BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), cov);
-            for(const auto& [sample_key, future] : futures.variations.at(uni_key)) {
+            for(auto& [sample_key, future] : futures.variations.at(uni_key)) {
                 if (future.IsValid())
                     h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
@@ -78,8 +78,8 @@ public:
     }
 
     std::map<SystematicKey, BinnedHistogram> getVariedHistograms(
-        const BinDefinition& bin,
-        SystematicFutures& futures
+        const BinningDefinition&,
+        SystematicFutures&
     ) override {
         std::map<SystematicKey, BinnedHistogram> out;
         return out;

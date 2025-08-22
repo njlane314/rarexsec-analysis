@@ -60,7 +60,7 @@ public:
                 df = df.Filter(filter_expr);
             }
             opts.fMode = first ? "RECREATE" : "UPDATE";
-            df.Snapshot(key, output_file, columns, opts);
+            df.Snapshot(key.c_str(), output_file, columns, opts);
             first = false;
         }
     }
@@ -75,7 +75,7 @@ public:
     void printAllBranches() {
         log::debug("AnalysisDataLoader", "Available branches in loaded samples:");
         for (auto& [sample_key, sample_def] : frames_) { 
-            log::debug("AnalysisDataLoader", "--- Sample:", sample_key, "---");
+            log::debug("AnalysisDataLoader", "--- Sample:", sample_key.str(), "---");
             auto branches = sample_def.nominal_node_.GetColumnNames();
             for (const auto& branch : branches) {
                 log::debug("AnalysisDataLoader", "  - ", branch);
@@ -135,7 +135,7 @@ private:
                     var_registry_,
                     proc
                 };
-                frames_.emplace(sample.internal_key_, std::move(sample));
+                frames_.emplace(sample.sample_key_, std::move(sample));
             }
         }
     }

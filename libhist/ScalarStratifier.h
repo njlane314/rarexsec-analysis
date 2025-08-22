@@ -2,7 +2,7 @@
 #define SCALAR_STRATIFIER_H
 
 #include "IHistogramStratifier.h"
-#include "StratificationRegistry.h"
+#include "StratifierRegistry.h"
 #include "Keys.h"
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ namespace analysis {
 class ScalarStratifier : public IHistogramStratifier {
 public:
     ScalarStratifier(const StratifierKey& key,
-                     StratificationRegistry& registry)
+                     StratifierRegistry& registry)
       : stratifier_key_(key)
       , stratifier_registry_(registry)
     {}
@@ -30,13 +30,13 @@ protected:
         return stratifier_key_.str();
     }
 
-    const StratificationRegistry& getRegistry() const override {
+    const StratifierRegistry& getRegistry() const override {
         return stratifier_registry_;
     }
 
 private:
     StratifierKey              stratifier_key_;
-    StratificationRegistry&    stratifier_registry_;
+    StratifierRegistry&    stratifier_registry_;
 };
 
 }

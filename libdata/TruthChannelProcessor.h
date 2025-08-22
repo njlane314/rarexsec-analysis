@@ -10,16 +10,16 @@ class TruthChannelProcessor : public IEventProcessor {
 public:
     explicit TruthChannelProcessor() = default;
 
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleType st) const override {
-        if (st != SampleType::kMonteCarlo) {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
+        if (st != SampleOrigin::kMonteCarlo) {
             auto incl_df = df.Define(
                 "incl_channel",
-                [c = st]() { return c == SampleType::kData ? 0 : 1; }
+                [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }
             );
 
             auto excl_df = incl_df.Define(
                 "excl_channel",
-                [c = st]() { return c == SampleType::kData ? 0 : 1; }
+                [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }
             );
 
             return next_ ? next_->process(excl_df, st) : excl_df;
@@ -103,6 +103,6 @@ public:
     }
 };
 
-} 
+}
 
 #endif // TRUTH_CHANNEL_PROCESSOR_H

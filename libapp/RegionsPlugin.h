@@ -19,7 +19,7 @@ public:
         if (!config_.contains("regions")) return;
 
         for (auto const& region_cfg : config_.at("regions")) {
-        
+
             auto region_key = region_cfg.at("region_key").get<std::string>();
             auto label      = region_cfg.at("label").get<std::string>();
 
@@ -35,11 +35,14 @@ public:
             }
         }
     }
+    void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
+    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
+    void onFinalisation(const AnalysisRegionMap&) override {}
 
 private:
     nlohmann::json config_;
 };
 
-} 
+}
 
 #endif

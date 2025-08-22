@@ -29,16 +29,16 @@ public:
 
     void contributeTo(VariableResult& result) override {
         for (auto& [stratum_key, future] : nominal_futures_) {
-            if (future.IsValid()) {
+            if (future.GetPtr()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
                 ChannelKey channel_key{stratum_key.str()};
-                result.strat_hists_[channel_key] += hist;
-                result.total_mc_hist_ += hist;
+                result.strat_hists_[channel_key] = result.strat_hists_[channel_key] + hist;
+                result.total_mc_hist_ = result.total_mc_hist_ + hist;
             }
         }
 
         for (auto& [var_key, future] : variation_futures_) {
-            if (future.IsValid()) {
+            if (future.GetPtr()) {
                 result.raw_detvar_hists_[sample_key_][var_key] =
                     BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
             }

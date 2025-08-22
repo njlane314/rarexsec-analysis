@@ -2,6 +2,7 @@
 
 #include "TObject.h"
 #include "Keys.h"
+#include "AnalysisTypes.h"
 
 #include <map>
 #include <string>
@@ -72,4 +73,4 @@ private:
     ClassDef(RegionAnalysis, 1);
 };
 
-} 
+}

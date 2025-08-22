@@ -34,14 +34,8 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
 )
 
-ROOT_GENERATE_DICTIONARY(G__Hist
-    "${CMAKE_CURRENT_SOURCE_DIR}/libapp/BinnedHistogram.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libhist/BinningDefinition.h"
-    LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/libhist/LinkDef.h"
-)
-
 foreach(exe ${ANALYSIS_EXECUTABLES})
-    add_executable(${exe} ${exe}.cpp ${CMAKE_BINARY_DIR}/G__Hist.cxx)
+    add_executable(${exe} ${exe}.cpp)
     target_link_libraries(${exe}
         PRIVATE
             libapp

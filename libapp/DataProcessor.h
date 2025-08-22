@@ -16,8 +16,8 @@ public:
     }
 
     void contributeTo(VariableResult& result) override {
-        if (data_future_.IsValid()) {
-            result.data_hist_ += BinnedHistogram::createFromTH1D(result.binning_, *data_future_.GetPtr());
+        if (data_future_.GetPtr()) {
+            result.data_hist_ = result.data_hist_ + BinnedHistogram::createFromTH1D(result.binning_, *data_future_.GetPtr());
         }
     }
 

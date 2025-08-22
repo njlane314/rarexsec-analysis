@@ -101,9 +101,9 @@ struct TH1DRenderer {
 
             hist = new TH1D(
                 unique_name,
-                ";" + s.binning.tex_ + ";Events",
+                (";" + s.binning.getTexLabel() + ";Events").c_str(),
                 s.binning.getBinNumber(),
-                s.binning.edges_.data()
+                s.binning.getEdges().data()
             );
             hist->SetDirectory(nullptr);
         }

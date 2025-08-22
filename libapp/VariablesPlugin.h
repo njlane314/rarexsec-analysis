@@ -4,7 +4,7 @@
 #include "IAnalysisPlugin.h"
 #include "AnalysisDefinition.h"
 #include "Logger.h"
-#include "BinDefinition.h"
+#include "BinningDefinition.h"
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <string>
@@ -38,16 +38,20 @@ public:
                 for (int i = 0; i <= n; ++i)
                     edges.push_back(min + (max - min) * i / n);
             }
-            
-            BinDefinition bins(edges, branch, label, {}, name, strat);
+
+            BinningDefinition bins(edges, branch, label, {}, strat);
             def.addVariable(name, branch, label, bins, strat);
         }
     }
+    void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
+    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
+    void onFinalisation(const AnalysisRegionMap&) override {}
+
 
 private:
     nlohmann::json config_;
 };
 
-} 
+}
 
 #endif

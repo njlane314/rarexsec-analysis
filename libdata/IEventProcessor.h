@@ -12,7 +12,7 @@ public:
     virtual ~IEventProcessor() = default;
 
     virtual ROOT::RDF::RNode
-    process(ROOT::RDF::RNode df, SampleType st) const = 0;
+    process(ROOT::RDF::RNode df, SampleOrigin st) const = 0;
 
     void chainNextProcessor(std::unique_ptr<IEventProcessor> next) {
         next_ = std::move(next);

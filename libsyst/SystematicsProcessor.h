@@ -11,7 +11,6 @@
 #include "BinnedHistogram.h"
 #include "WeightSystematicStrategy.h"
 #include "UniverseSystematicStrategy.h"
-#include "NormalisationSystematicStrategy.h"
 #include "DetectorSystematicStrategy.h"
 
 namespace analysis {
@@ -38,9 +37,6 @@ public:
                 std::make_unique<UniverseSystematicStrategy>(universe)
             );
         }
-        systematic_strategies_.emplace_back(
-            std::make_unique<NormalisationSystematicStrategy>("normalisation", 0.03)
-        );
     }
 
     void bookSystematics(

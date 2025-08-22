@@ -8,7 +8,7 @@ namespace analysis {
 
 class MuonSelectionProcessor : public IEventProcessor {
 public:
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleType st) const override {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         if (!df.HasColumn("track_trunk_rr_dedx_u")) {
             return next_ ? next_->process(df, st) : df;
         }

@@ -18,7 +18,7 @@ public:
         const AnalysisDataset& dataset,
         const ROOT::RDF::TH1DModel& model
     ) override {
-        return dataset.dataframe_.Histo1D(model, binning.getVariable().Data(), "nominal_event_weight");
+        return dataset.dataframe_.Histo1D(model, binning.getVariable().c_str(), "nominal_event_weight");
     }
 
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookStratifiedHists(

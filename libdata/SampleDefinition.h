@@ -24,7 +24,7 @@ public:
     double pot_{0.0};
     long triggers_{0};
     ROOT::RDF::RNode nominal_node_;
-    std::map<DetVarType, ROOT::RDF::RNode> variation_nodes_;
+    std::map<SampleVariation, ROOT::RDF::RNode> variation_nodes_;
 
     SampleDefinition(const nlohmann::json& j,
                      const nlohmann::json& all_samples_json,
@@ -36,9 +36,9 @@ public:
     {
         if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto& [dv, path] : var_paths_) {
-                DatasetKey dataset_key{key_.str() + "_" + variationToKey(dv)};
+                SampleKey dataset_key{sample_key_.str() + "_" + variationToKey(dv)};
                 variation_nodes_.emplace(
-                    dataset_key,
+                    dv,
                     this->makeDataFrame(base_dir, var_reg, processor, path, all_samples_json)
                 );
             }
@@ -50,11 +50,11 @@ public:
     bool isExt()  const noexcept { return sample_origin_ == SampleOrigin::kExternal; }
 
     void validateFiles(const std::string& base_dir) const {
-        if (internal_key_.empty())                                          log::fatal("SampleDefinition", "empty internal_key_");
-        if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_origin_ for", internal_key_);
-        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", internal_key_);
-        if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", internal_key_);
-        if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())     log::fatal("SampleDefinition", "missing path for", internal_key_);
+        if (sample_key_.str().empty())                                          log::fatal("SampleDefinition", "empty sample_key_");
+        if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_origin_ for", sample_key_.str());
+        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", sample_key_.str());
+        if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", sample_key_.str());
+        if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())     log::fatal("SampleDefinition", "missing path for", sample_key_.str());
         if (!rel_path_.empty()) {
             auto p = std::filesystem::path(base_dir) / rel_path_;
             if (!std::filesystem::exists(p)) log::fatal("SampleDefinition", "missing file", p.string());
@@ -66,10 +66,10 @@ public:
     }
 
 private:
-    std::map<DetVarType, std::string> var_paths_;
+    std::map<SampleVariation, std::string> var_paths_;
 
     const std::string& parseMetadata(const nlohmann::json& j) {
-        internal_key_   = j.at("sample_key").get<std::string>();
+        sample_key_   = SampleKey{j.at("sample_key").get<std::string>()};
         auto ts         = j.at("sample_type").get<std::string>();
         sample_origin_    = (ts == "mc"   ? SampleOrigin::kMonteCarlo
                         : ts == "data" ? SampleOrigin::kData
@@ -82,26 +82,26 @@ private:
         triggers_           = j.value("triggers", 0L);
         if (j.contains("detector_variations")) {
             for (auto& dv : j.at("detector_variations")) {
-                DetVarType dvt = convertDetVarType(dv.at("variation_type").get<std::string>());
+                SampleVariation dvt = convertDetVarType(dv.at("variation_type").get<std::string>());
                 var_paths_[dvt] = dv.at("relative_path").get<std::string>();
             }
         }
         return rel_path_;
     }
 
-    DetVarType convertDetVarType(const std::string& s) const {
-        if      (s == "cv")             return DetVarType::kDetVarCV;
-        if      (s == "lyatt")          return DetVarType::kDetVarLYAttenuation;
-        if      (s == "lydown")         return DetVarType::kDetVarLYDown;
-        if      (s == "lyray")          return DetVarType::kDetVarLYRayleigh;
-        if      (s == "recomb2")        return DetVarType::kDetVarRecomb2;
-        if      (s == "sce")            return DetVarType::kDetVarSCE;
-        if      (s == "wiremodx")       return DetVarType::kDetVarWireModX;
-        if      (s == "wiremodyz")      return DetVarType::kDetVarWireModYZ;
-        if      (s == "wiremodanglexz") return DetVarType::kDetVarWireModAngleXZ;
-        if      (s == "wiremodangleyz") return DetVarType::kDetVarWireModAngleYZ;
+    SampleVariation convertDetVarType(const std::string& s) const {
+        if      (s == "cv")             return SampleVariation::kCV;
+        if      (s == "lyatt")          return SampleVariation::kLYAttenuation;
+        if      (s == "lydown")         return SampleVariation::kLYDown;
+        if      (s == "lyray")          return SampleVariation::kLYRayleigh;
+        if      (s == "recomb2")        return SampleVariation::kRecomb2;
+        if      (s == "sce")            return SampleVariation::kSCE;
+        if      (s == "wiremodx")       return SampleVariation::kWireModX;
+        if      (s == "wiremodyz")      return SampleVariation::kWireModYZ;
+        if      (s == "wiremodanglexz") return SampleVariation::kWireModAngleXZ;
+        if      (s == "wiremodangleyz") return SampleVariation::kWireModAngleYZ;
         log::fatal("SampleDefinition", "invalid detvar_type:", s);
-        return DetVarType::kUnknown;
+        return SampleVariation::kUnknown;
     }
 
     ROOT::RDF::RNode makeDataFrame(const std::string&           base_dir,

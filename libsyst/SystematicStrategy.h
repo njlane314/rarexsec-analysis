@@ -7,7 +7,8 @@
 #include <vector>
 #include <unordered_map>
 #include <TMatrixDSym.h>
-#include "BinDefinition.h"
+#include "BinningDefinition.h"
+#include "BinnedHistogram.h"
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 #include "SampleTypes.h"
@@ -15,8 +16,6 @@
 #include "Keys.h"
 
 namespace analysis {
-
-class BinnedHistogram;
 
 struct SystematicFutures {
     std::unordered_map<
@@ -64,7 +63,7 @@ public:
 
     virtual std::map<SystematicKey, BinnedHistogram>
     getVariedHistograms(
-        const BinDefinition& bin,
+        const BinningDefinition& bin,
         SystematicFutures& futures
     ) = 0;
 };

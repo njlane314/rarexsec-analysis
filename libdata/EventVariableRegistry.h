@@ -46,7 +46,7 @@ public:
         return s;
     }
 
-    static std::vector<std::string> eventVariables(SampleType type) {
+    static std::vector<std::string> eventVariables(SampleOrigin type) {
         std::unordered_set<std::string> vars{
             baseVariables().begin(), baseVariables().end()
         };
@@ -54,7 +54,7 @@ public:
         vars.insert(recoEventVariables().begin(), recoEventVariables().end());
         vars.insert(recoTrackVariables().begin(), recoTrackVariables().end());
 
-        if (type == SampleType::kMonteCarlo) {
+        if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
 
             for (auto& kv : knobVariations()) {

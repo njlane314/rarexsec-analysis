@@ -20,8 +20,8 @@ public:
         }
     }
 
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleType st) const override {
-        if (st == SampleType::kMonteCarlo) {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
+        if (st == SampleOrigin::kMonteCarlo) {
             double scale = 1.0;
             if (sample_pot_ > 0.0 && total_run_pot_ > 0.0) {
                 scale = total_run_pot_ / sample_pot_;
@@ -67,6 +67,6 @@ private:
     double total_run_pot_;
 };
 
-} 
+}
 
 #endif // WEIGHT_PROCESSOR_H

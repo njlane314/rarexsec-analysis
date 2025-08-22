@@ -41,7 +41,7 @@ public:
 
     void notifyPreSampleProcessing(const SampleKey& skey,
                                          const RegionKey& rkey,
-                                         const RegionConfig& reg) {
+                                         const RunConfig& reg) {
         for (auto& pl : plugins_) pl->onPreSampleProcessing(skey, rkey, reg);
     }
 

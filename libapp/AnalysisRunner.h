@@ -47,7 +47,7 @@ public:
 
         for (const auto& region_handle : analysis_definition_.regions()) {
             RegionAnalysis region_analysis(region_handle.key_);
-            
+
             std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
             std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
 
@@ -55,7 +55,7 @@ public:
                 plugin_manager.notifyPreSampleProcessing(
                     sample_key,
                     region_handle.key_,
-                    region_handle.selection()
+                    data_loader_.getRunConfig(sample_key)
                 );
 
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
@@ -71,7 +71,7 @@ public:
                         }
                     );
                 }
-                
+
                 AnalysisDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
                 SampleEnsemble ensemble{nominal_dataset, variation_datasets};
 
@@ -87,33 +87,33 @@ public:
                 const auto& variable_handle = analysis_definition_.variable(var_key);
                 const auto& binning = variable_handle.binning();
                 auto model = binning.toTH1DModel();
-                
+
                 VariableResult result;
                 result.binning_ = binning;
 
                 for (auto& [_, processor] : sample_processors) {
                     processor->book(*histogram_booker_, binning, model);
                 }
-                
+
                 for (auto const& [sample_key, rnode] : mc_rnodes) {
                     systematics_processor_.bookSystematics(sample_key, rnode, binning, model);
                 }
-                
+
                 for (auto& [_, processor] : sample_processors) {
                     processor->contributeTo(result);
                 }
-                
+
                 systematics_processor_.processSystematics(result);
-                
+
                 region_analysis.addFinalVariable(var_key, std::move(result));
             }
-            
+
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
                 plugin_manager.notifyPostSampleProcessing(
-                    region_handle.key_,
                     sample_key,
+                    region_handle.key_,
                     analysis_regions
                 );
             }

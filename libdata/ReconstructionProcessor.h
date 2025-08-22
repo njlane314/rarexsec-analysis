@@ -8,7 +8,7 @@ namespace analysis {
 
 class ReconstructionProcessor : public IEventProcessor {
 public:
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleType st) const override {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         auto fid_df = df.Define(
             "in_reco_fiducial",
             "reco_neutrino_vertex_sce_x > 5 && reco_neutrino_vertex_sce_x < 251 && "

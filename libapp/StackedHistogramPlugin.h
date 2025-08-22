@@ -51,6 +51,10 @@ public:
         }
     }
 
+    void onInitialisation(AnalysisDefinition&, const SelectionRegistry&) override {}
+    void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
+    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
+
     void onFinalisation(const AnalysisRegionMap& region_map) override {
         gSystem->mkdir("plots", true);
         for (auto const& pc : plots_) {

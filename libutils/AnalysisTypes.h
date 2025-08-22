@@ -14,6 +14,8 @@
 
 namespace analysis {
 
+class RegionAnalysis;
+
 struct VariableResult {
     BinningDefinition binning_;
     BinnedHistogram   data_hist_;
@@ -34,7 +36,7 @@ struct VariableResult {
     std::map<SystematicKey, std::vector<BinnedHistogram>> universe_projected_hists_;
 };
 
-using AnalysisRegionMap = std::unordered_map<RegionKey, RegionAnalysis>;
+using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
 
 struct AnalysisDataset {
     SampleOrigin origin_;

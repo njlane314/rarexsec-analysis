@@ -2,7 +2,7 @@
 #define STRATIFIER_FACTORY_H
 
 #include "IHistogramStratifier.h"
-#include "StratificationRegistry.h"
+#include "StratifierRegistry.h"
 #include "ScalarStratifier.h"
 #include "VectorStratifier.h"
 #include "Logger.h"
@@ -16,7 +16,7 @@ class StratifierFactory {
 public:
     static std::unique_ptr<IHistogramStratifier> create(
         const StratifierKey& key,
-        StratificationRegistry& registry)
+        StratifierRegistry& registry)
     {
         log::info("StratifierFactory", "Requested stratifier key:", key.str());
 

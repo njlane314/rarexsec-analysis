@@ -20,7 +20,7 @@ namespace analysis {
 
 class VariableHandle {
 public:
-    VariableHandle(const VariableKey& k, 
+    VariableHandle(const VariableKey& k,
                  const std::map<VariableKey, std::string>& exprs,
                  const std::map<VariableKey, std::string>& lbls,
                  const std::map<VariableKey, BinningDefinition>& bdefs,
@@ -31,13 +31,13 @@ public:
     const std::string& label() const { return labels_.at(key_); }
     const BinningDefinition& binning() const { return binnings_.at(key_); }
 
-    std::string stratifier() const { 
+    std::string stratifier() const {
         auto it = stratifiers_.find(key_);
         return it != stratifiers_.end() ? it->second : "";
     }
 
     const VariableKey key_;
-    
+
 private:
     const std::map<VariableKey, std::string>& expressions_;
     const std::map<VariableKey, std::string>& labels_;
@@ -47,7 +47,7 @@ private:
 
 class RegionHandle {
 public:
-    RegionHandle(const RegionKey& k, 
+    RegionHandle(const RegionKey& k,
                const std::map<RegionKey, std::string>& names,
                const std::map<RegionKey, Selection>& sels,
                const std::map<RegionKey, std::unique_ptr<RegionAnalysis>>& analyses,
@@ -57,11 +57,11 @@ public:
     const std::string& name() const { return names_.at(key_); }
     const Selection& selection() const { return selections_.at(key_); }
 
-    std::unique_ptr<RegionAnalysis>& analysis() const { 
-        return const_cast<std::unique_ptr<RegionAnalysis>&>(analyses_.at(key_)); 
+    std::unique_ptr<RegionAnalysis>& analysis() const {
+        return const_cast<std::unique_ptr<RegionAnalysis>&>(analyses_.at(key_));
     }
 
-    const std::vector<VariableKey>& vars() const { 
+    const std::vector<VariableKey>& vars() const {
         auto it = variables_.find(key_);
         static const std::vector<VariableKey> empty;
         return it != variables_.end() ? it->second : empty;
@@ -80,7 +80,7 @@ class AnalysisDefinition {
 public:
     AnalysisDefinition(const SelectionRegistry& sel_reg,
                        const EventVariableRegistry& var_reg)
-      : sel_reg_(sel_reg), var_reg_(var_reg) 
+      : sel_reg_(sel_reg), var_reg_(var_reg)
     {}
 
     AnalysisDefinition& addVariable(const std::string& key,
@@ -90,42 +90,42 @@ public:
                                     const std::string& strat)
     {
         VariableKey var_key{key};
-        if (variable_expressions_.count(var_key)) 
+        if (variable_expressions_.count(var_key))
             log::fatal("AnalysisDefinition", "duplicate variable:", key);
 
-        auto valid = EventVariableRegistry::eventVariables(SampleType::kMonteCarlo);
-        if (std::find(valid.begin(), valid.end(), expr) == valid.end()) 
+        auto valid = EventVariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
+        if (std::find(valid.begin(), valid.end(), expr) == valid.end())
             log::fatal("AnalysisDefinition", "unknown expression:", expr);
-        
+
         variable_expressions_[var_key] = expr;
         variable_labels_[var_key] = lbl;
         variable_binning_[var_key] = bdef;
         variable_stratifiers_[var_key] = strat;
-        
+
         return *this;
     }
 
     AnalysisDefinition& addRegion(const std::string& key,
                                   const std::string& region_name,
                                   std::string sel_rule_key,
-                                  double pot,
-                                  bool blinded,
-                                  std::string beam_config,
-                                  std::vector<std::string> runs)
+                                  double pot = 0.0,
+                                  bool blinded = true,
+                                  std::string beam_config = "",
+                                  std::vector<std::string> runs = {})
     {
         RegionKey region_key{key};
-        if (region_analyses_.count(region_key)) 
+        if (region_analyses_.count(region_key))
             log::fatal("AnalysisDefinition", "duplicate region:", key);
-        
+
         Selection sel = sel_reg_.get(sel_rule_key);
         region_names_[region_key] = region_name;
         region_selections_[region_key] = std::move(sel);
-        
+
         auto region_analysis = std::make_unique<RegionAnalysis>(
-            region_key, pot, blinded, 
+            region_key, pot, blinded,
             std::move(beam_config), std::move(runs)
         );
-        
+
         region_analyses_[region_key] = std::move(region_analysis);
         return *this;
     }
@@ -133,23 +133,23 @@ public:
     AnalysisDefinition& addRegionExpr(const std::string& key,
                                      const std::string& label,
                                      std::string raw_expr,
-                                     double pot,
-                                     bool blinded,
-                                     std::string beam_config,
-                                     std::vector<std::string> runs)
+                                     double pot = 0.0,
+                                     bool blinded = true,
+                                     std::string beam_config = "",
+                                     std::vector<std::string> runs = {})
     {
         RegionKey region_key{key};
-        if (region_analyses_.count(region_key)) 
+        if (region_analyses_.count(region_key))
             log::fatal("AnalysisDefinition", "duplicate region: " + key);
-        
+
         region_names_[region_key] = label;
         region_selections_[region_key] = Selection(std::move(raw_expr));
-        
+
         auto region_analysis = std::make_unique<RegionAnalysis>(
             region_key, pot, blinded,
             std::move(beam_config), std::move(runs)
         );
-        
+
         region_analyses_[region_key] = std::move(region_analysis);
         return *this;
     }
@@ -157,13 +157,13 @@ public:
     void addVariableToRegion(const std::string& reg_key, const std::string& var_key) {
         RegionKey region_key{reg_key};
         VariableKey variable_key{var_key};
-        
-        if (!region_analyses_.count(region_key)) 
+
+        if (!region_analyses_.count(region_key))
             log::fatal("AnalysisDefinition", "region not found:", reg_key);
-        
-        if (!variable_expressions_.count(variable_key)) 
+
+        if (!variable_expressions_.count(variable_key))
             log::fatal("AnalysisDefinition", "variable not found:", var_key);
-        
+
         region_variables_[region_key].emplace_back(variable_key);
     }
 
@@ -171,7 +171,7 @@ public:
         return VariableHandle{key, variable_expressions_, variable_labels_,
                            variable_binning_, variable_stratifiers_};
     }
-    
+
     RegionHandle region(const RegionKey& key) const {
         return RegionHandle{key, region_names_, region_selections_,
                          region_analyses_, region_variables_};

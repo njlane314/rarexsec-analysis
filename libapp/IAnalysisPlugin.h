@@ -6,6 +6,7 @@
 #include "SelectionRegistry.h"
 #include "AnalysisDataLoader.h"
 #include <nlohmann/json.hpp>
+#include "RunConfig.h"
 
 namespace analysis {
 
@@ -20,7 +21,7 @@ public:
     virtual void onPreSampleProcessing(
                             const SampleKey& sample_key,
                             const RegionKey& region_key,
-                            const RegionConfig& region) = 0;
+                            const RunConfig& region) = 0;
 
     virtual void onPostSampleProcessing(
                             const SampleKey& sample_key,
