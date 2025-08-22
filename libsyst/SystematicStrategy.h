@@ -10,17 +10,25 @@
 #include "BinDefinition.h"
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
+#include "SampleTypes.h"
+#include "AnalysisTypes.h" 
+#include "Keys.h"
 
 namespace analysis {
 
 class BinnedHistogram;
 
 struct SystematicFutures {
-    std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>> nominal;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<int, ROOT::RDF::RResultPtr<TH1D>>>> variations;
+    std::unordered_map<
+        SystematicKey, 
+        std::map<
+            SampleKey, 
+            ROOT::RDF::RResultPtr<TH1D>
+        >
+    > variations;
 };
 
-using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(int, const std::string&)>;
+using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(const std::string&)>;
 
 struct UniverseDef {
     std::string name_;
@@ -43,21 +51,19 @@ public:
 
     virtual void
     bookVariations(
-        const std::vector<int>& keys,
+        const SampleKey&        sample_key,
         BookHistFn              book_fn,
         SystematicFutures&      futures
     ) = 0;
 
     virtual TMatrixDSym
     computeCovariance(
-        int                    key,
-        const BinnedHistogram& nominal_hist,
+        VariableResult&  result,
         SystematicFutures&     futures
     ) = 0;
 
-    virtual std::map<std::string, BinnedHistogram>
+    virtual std::map<SystematicKey, BinnedHistogram>
     getVariedHistograms(
-        int key,
         const BinDefinition& bin,
         SystematicFutures& futures
     ) = 0;

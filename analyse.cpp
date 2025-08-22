@@ -8,15 +8,13 @@
 
 #include "AnalysisRunner.h"
 #include "AnalysisDataLoader.h"
-#include "DataFrameHistogramBuilder.h"
 #include "SystematicsProcessor.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
 #include "EventVariableRegistry.h"
 #include "SelectionRegistry.h"
-#include "StratificationRegistry.h"
-#include "BinnedHistogram.h"
-#include "SystematicStrategy.h"
+#include "StratifierRegistry.h"
+#include "HistogramBooker.h"
 #include "Logger.h"
 
 int main(int argc, char* argv[]) {
@@ -57,7 +55,7 @@ int main(int argc, char* argv[]) {
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;
-            analysis::StratificationRegistry strat_reg;
+            analysis::StratifierRegistry strat_reg;
 
             std::vector<analysis::KnobDef> knob_defs;
             for(const auto& [name, columns] : ev_reg.knobVariations()){
@@ -80,13 +78,13 @@ int main(int argc, char* argv[]) {
                 true
             );
 
-            data_loader.printAllBranches();
+            auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
 
             analysis::AnalysisRunner runner(
                 data_loader,
                 sel_reg,
                 ev_reg,
-                std::make_unique<analysis::DataFrameHistogramBuilder>(sys_proc, strat_reg),
+                std::move(histogram_booker),
                 sys_proc,
                 plugins_config
             );

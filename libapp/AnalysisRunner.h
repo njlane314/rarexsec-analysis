@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <numeric>
 #include <nlohmann/json.hpp>
 
 #include "AnalysisTypes.h"
@@ -13,13 +14,12 @@
 #include "EventVariableRegistry.h"
 #include "AnalysisPluginManager.h"
 #include "SystematicsProcessor.h"
-#include "StratifierRegistry.h"
 #include "Logger.h"
 #include "Keys.h"
 #include "ISampleProcessor.h"
 #include "DataProcessor.h"
 #include "MonteCarloProcessor.h"
-#include "HistogramBooker.h"
+#include "IHistogramBooker.h"
 
 namespace analysis {
 
@@ -28,14 +28,14 @@ public:
     AnalysisRunner(AnalysisDataLoader& ldr,
                    const SelectionRegistry& sel_reg,
                    const EventVariableRegistry& var_reg,
+                   std::unique_ptr<IHistogramBooker> booker,
                    SystematicsProcessor& sys_proc,
                    const nlohmann::json& plgn_cfg)
       : analysis_definition_(sel_reg, var_reg)
       , data_loader_(ldr)
       , selection_registry_(sel_reg)
       , systematics_processor_(sys_proc)
-      , stratifier_registry_()
-      , histogram_booker_(std::make_unique<HistogramBooker>(stratifier_registry_))
+      , histogram_booker_(std::move(booker))
     {
         plugin_manager.loadPlugins(plgn_cfg);
     }
@@ -49,6 +49,7 @@ public:
             RegionAnalysis region_analysis(region_handle.key_);
             
             std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
+            std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
 
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
                 plugin_manager.notifyPreSampleProcessing(
@@ -77,7 +78,8 @@ public:
                 if (sample_def.isData()) {
                     sample_processors[sample_key] = std::make_unique<DataProcessor>(ensemble.nominal_);
                 } else {
-                    sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(ensemble);
+                    mc_rnodes[sample_key] = region_df;
+                    sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, ensemble);
                 }
             }
 
@@ -93,18 +95,15 @@ public:
                     processor->book(*histogram_booker_, binning, model);
                 }
                 
+                for (auto const& [sample_key, rnode] : mc_rnodes) {
+                    systematics_processor_.bookSystematics(sample_key, rnode, binning, model);
+                }
+                
                 for (auto& [_, processor] : sample_processors) {
                     processor->contributeTo(result);
                 }
                 
-                for (auto& [stratum_key, nominal_hist] : result.strat_hists_) {
-                    result.covariance_matrices_[stratum_key] =
-                        systematics_processor_.computeCovarianceMatrices(
-                            std::stoi(stratum_key.str()),
-                            nominal_hist,
-                            result.variation_hists_
-                        );
-                }
+                systematics_processor_.processSystematics(result);
                 
                 region_analysis.addFinalVariable(var_key, std::move(result));
             }
@@ -130,7 +129,6 @@ private:
     AnalysisDataLoader& data_loader_;
     const SelectionRegistry& selection_registry_;
     SystematicsProcessor& systematics_processor_;
-    StratifierRegistry stratifier_registry_;
     std::unique_ptr<IHistogramBooker> histogram_booker_;
 };
 

@@ -24,30 +24,47 @@ public:
     }
 
     void bookVariations(
-        const std::vector<int>& keys,
-        BookHistFn              book_fn,
-        SystematicFutures&      futures
+        const SampleKey& sample_key,
+        BookHistFn       book_fn,
+        SystematicFutures& futures
     ) override {
-        for (auto key : keys) {
-            futures.variations["weight"][identifier_ + "_up"][key] = book_fn(key, up_column_);
-            futures.variations["weight"][identifier_ + "_dn"][key] = book_fn(key, dn_column_);
-        }
+        SystematicKey up_key{identifier_ + "_up"};
+        SystematicKey dn_key{identifier_ + "_dn"};
+        futures.variations[up_key][sample_key] = book_fn(up_column_);
+        futures.variations[dn_key][sample_key] = book_fn(dn_column_);
     }
 
     TMatrixDSym computeCovariance(
-        int                    key,
-        const BinnedHistogram& nominal_hist,
+        VariableResult&  result,
         SystematicFutures&     futures
     ) override {
-        auto& hu_future = futures.variations["weight"][identifier_ + "_up"].at(key);
-        auto& hd_future = futures.variations["weight"][identifier_ + "_dn"].at(key);
-
-        BinnedHistogram hu = BinnedHistogram::createFromTH1D(nominal_hist.bins, *hu_future.GetPtr());
-        BinnedHistogram hd = BinnedHistogram::createFromTH1D(nominal_hist.bins, *hd_future.GetPtr());
-
+        const auto& nominal_hist = result.total_mc_hist_;
+        const auto& binning = result.binning_;
         int n = nominal_hist.nBins();
         TMatrixDSym cov(n);
         cov.Zero();
+
+        BinnedHistogram hu(binning, std::vector<double>(n, 0.0), cov);
+        BinnedHistogram hd(binning, std::vector<double>(n, 0.0), cov);
+
+        SystematicKey up_key{identifier_ + "_up"};
+        SystematicKey dn_key{identifier_ + "_dn"};
+
+        if (futures.variations.count(up_key)) {
+            for(const auto& [sample_key, future] : futures.variations.at(up_key)){
+                if (future.IsValid())
+                    hu = hu + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
+            }
+        }
+        if (futures.variations.count(dn_key)) {
+            for(const auto& [sample_key, future] : futures.variations.at(dn_key)){
+                if (future.IsValid())
+                    hd = hd + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
+            }
+        }
+        
+        result.variation_hists_[up_key] = hu;
+        result.variation_hists_[dn_key] = hd;
 
         for (int i = 0; i < n; ++i) {
             double d = 0.5 * (hu.getBinContent(i) - hd.getBinContent(i));
@@ -56,14 +73,11 @@ public:
         return cov;
     }
 
-    std::map<std::string, BinnedHistogram> getVariedHistograms(
-        int key,
+    std::map<SystematicKey, BinnedHistogram> getVariedHistograms(
         const BinDefinition& bin,
         SystematicFutures& futures
     ) override {
-        std::map<std::string, BinnedHistogram> out;
-        out["up"] = BinnedHistogram::createFromTH1D(bin, *futures.variations["weight"][identifier_ + "_up"].at(key).GetPtr());
-        out["dn"] = BinnedHistogram::createFromTH1D(bin, *futures.variations["weight"][identifier_ + "_dn"].at(key).GetPtr());
+        std::map<SystematicKey, BinnedHistogram> out;
         return out;
     }
 

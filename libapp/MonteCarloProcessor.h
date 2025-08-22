@@ -9,8 +9,9 @@ namespace analysis {
 
 class MonteCarloProcessor : public ISampleProcessor {
 public:
-    explicit MonteCarloProcessor(const SampleEnsemble& ensemble)
-      : nominal_dataset_(ensemble.nominal_),
+    explicit MonteCarloProcessor(const SampleKey& key, const SampleEnsemble& ensemble)
+      : sample_key_(key),
+        nominal_dataset_(ensemble.nominal_),
         variation_datasets_(ensemble.variations_) {}
 
     void book(IHistogramBooker& booker,
@@ -27,53 +28,25 @@ public:
     }
 
     void contributeTo(VariableResult& result) override {
-        BinnedHistogram sample_nominal_total;
-        std::map<StratumKey, BinnedHistogram> sample_nominal_stratified;
         for (auto& [stratum_key, future] : nominal_futures_) {
             if (future.IsValid()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
-                sample_nominal_stratified[stratum_key] = hist;
-                sample_nominal_total += hist;
+                ChannelKey channel_key{stratum_key.str()};
+                result.strat_hists_[channel_key] += hist;
+                result.total_mc_hist_ += hist;
             }
         }
 
-        for(const auto& [stratum_key, hist] : sample_nominal_stratified) {
-            result.strat_hists_[stratum_key] += hist;
-        }
-        result.total_mc_hist_ += sample_nominal_total;
-
-        if (!variation_datasets_.empty()) {
-            std::map<SampleVariation, BinnedHistogram> variation_hists;
-            for (auto& [var_key, future] : variation_futures_) {
-                if (future.IsValid()) {
-                    variation_hists[var_key] = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
-                }
-            }
-
-            auto it_cv = variation_hists.find(SampleVariation::kCV);
-            if (it_cv == variation_hists.end()) {
-                log::warn("MonteCarloProcessor", "Detector variation CV histogram not found. Cannot compute transfer ratios.");
-                return;
-            }
-            const auto& h_det_cv = it_cv->second;
-
-            for (const auto& [var_key, h_det_k] : variation_hists) {
-                if (var_key == SampleVariation::kCV) continue; 
-
-                SystematicKey syst_key(variationToKey(var_key));
-
-                auto transfer_ratio = h_det_k / h_det_cv;
-                result.transfer_ratio_hists_[syst_key] = transfer_ratio;
-
-                auto h_proj_k = transfer_ratio * result.total_mc_hist_;
-                result.variation_hists_[syst_key] = h_proj_k;
-
-                result.delta_hists_[syst_key] = h_proj_k - result.total_mc_hist_;
+        for (auto& [var_key, future] : variation_futures_) {
+            if (future.IsValid()) {
+                result.raw_detvar_hists_[sample_key_][var_key] =
+                    BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
             }
         }
     }
 
 private:
+    SampleKey sample_key_;
     const AnalysisDataset& nominal_dataset_;
     const std::map<SampleVariation, AnalysisDataset>& variation_datasets_;
 
