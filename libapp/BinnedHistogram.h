@@ -101,6 +101,34 @@ public:
         return tmp;
     }
 
+    BinnedHistogram operator/(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() != o.getNumberOfBins()) {
+            log::fatal("BinnedHistogram::operator/", "Attempting to divide histograms with different numbers of bins.");
+        }
+        auto tmp = *this;
+        for (int i = 0; i < getNumberOfBins(); ++i) {
+            if (o.counts[i] != 0) {
+                tmp.counts[i] /= o.counts[i];
+            } else {
+                tmp.counts[i] = 0; 
+            }
+        }
+        tmp.cov.Zero();
+        return tmp;
+    }
+
+    BinnedHistogram operator-(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() != o.getNumberOfBins()) {
+            log::fatal("BinnedHistogram::operator-", "Attempting to subtract histograms with different numbers of bins.");
+        }
+        auto tmp = *this;
+        for (int i = 0; i < getNumberOfBins(); ++i) {
+            tmp.counts[i] -= o.counts[i];
+        }
+        tmp.cov -= o.cov;
+        return tmp;
+    }
+
     const TH1D* get() const { return TH1DRenderer::get(*this); }
 };
 

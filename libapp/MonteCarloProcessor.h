@@ -2,6 +2,8 @@
 #define MC_PROCESSOR_H
 
 #include "ISampleProcessor.h"
+#include "BinnedHistogram.h"
+#include "Logger.h"
 
 namespace analysis {
 
@@ -14,7 +16,7 @@ public:
     void book(IHistogramBooker& booker,
               const BinningDefinition& binning,
               const ROOT::RDF::TH1DModel& model) override {
-        
+
         nominal_futures_ = booker.bookStratifiedHists(binning, nominal_dataset_, model);
 
         if (!variation_datasets_.empty()) {
@@ -40,14 +42,33 @@ public:
         }
         result.total_mc_hist_ += sample_nominal_total;
 
-        if (!variation_futures_.empty()) {
+        if (!variation_datasets_.empty()) {
+            std::map<SampleVariation, BinnedHistogram> variation_hists;
             for (auto& [var_key, future] : variation_futures_) {
                 if (future.IsValid()) {
-                    SystematicKey syst_key(variationToKey(var_key));
-            
-                    final_result.uncombined_variations_[syst_key][sample_key_] = 
-                        BinnedHistogram::createFromTH1D(final_result.binning_, *future.GetPtr());
+                    variation_hists[var_key] = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
                 }
+            }
+
+            auto it_cv = variation_hists.find(SampleVariation::kCV);
+            if (it_cv == variation_hists.end()) {
+                log::warn("MonteCarloProcessor", "Detector variation CV histogram not found. Cannot compute transfer ratios.");
+                return;
+            }
+            const auto& h_det_cv = it_cv->second;
+
+            for (const auto& [var_key, h_det_k] : variation_hists) {
+                if (var_key == SampleVariation::kCV) continue; 
+
+                SystematicKey syst_key(variationToKey(var_key));
+
+                auto transfer_ratio = h_det_k / h_det_cv;
+                result.transfer_ratio_hists_[syst_key] = transfer_ratio;
+
+                auto h_proj_k = transfer_ratio * result.total_mc_hist_;
+                result.variation_hists_[syst_key] = h_proj_k;
+
+                result.delta_hists_[syst_key] = h_proj_k - result.total_mc_hist_;
             }
         }
     }
@@ -55,7 +76,7 @@ public:
 private:
     const AnalysisDataset& nominal_dataset_;
     const std::map<SampleVariation, AnalysisDataset>& variation_datasets_;
-    
+
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> nominal_futures_;
     std::map<SampleVariation, ROOT::RDF::RResultPtr<TH1D>> variation_futures_;
 };
