@@ -35,10 +35,9 @@ include_directories(
 )
 
 ROOT_GENERATE_DICTIONARY(G__Hist
-    "HistogramResult.h"
-    "BinnedHistogram.h"
-    "BinDefinition.h"
-    LINKDEF "libhist/LinkDef.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libapp/BinnedHistogram.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libhist/BinningDefinition.h"
+    LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/libhist/LinkDef.h"
 )
 
 foreach(exe ${ANALYSIS_EXECUTABLES})

@@ -17,7 +17,7 @@ public:
     BinningDefinition(std::vector<double> ed,
                   const std::string& br,
                   const std::string& tx,
-                  std::vector<std::string> ks,
+                  std::vector<SelectionKey> ks,
                   const std::string& sk = "")
       : edges_(std::move(ed))
       , branch_(br) 
@@ -39,12 +39,13 @@ public:
     const TexAxisLabel& getTexLabel() const { return tex_; }
     const std::vector<SelectionKey>& getSelectionKeys() const { return selec_keys_; }
     const StratifierKey& getStratifierKey() const { return strat_key_; }
+    size_t getBinNumber() const { return edges_.size() - 1; }
 
     ROOT::RDF::TH1DModel toTH1DModel() const {
         return ROOT::RDF::TH1DModel(
             getVariable().c_str(),
             getTexLabel().c_str(),
-            static_cast<int>(getEdges().size() - 1),
+            getBinNumber(),
             getEdges().data()
         );
     }

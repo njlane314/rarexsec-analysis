@@ -54,17 +54,27 @@ public:
     void onFinalisation(const AnalysisRegionMap& region_map) override {
         gSystem->mkdir("plots", true);
         for (auto const& pc : plots_) {
-            std::string result_key = pc.variable + "@" + pc.region;
-            auto it = region_map.find(result_key);
+            RegionKey rkey{pc.region};
+            auto it = region_map.find(rkey);
 
             if (it == region_map.end()) {
-                log::error("StackedHistogramPlugin", "Could not find analysis result for key:", result_key);
+                log::error("StackedHistogramPlugin", "Could not find analysis region for key:", rkey.str());
                 continue;
             }
             
+            VariableKey vkey{pc.variable};
+            if (!it->second.hasFinalVariable(vkey)) {
+                log::error("StackedHistogramPlugin", "Could not find variable", vkey.str(), "in region", rkey.str());
+                continue;
+            }
+            
+            const auto& region_analysis = it->second;
+            const auto& variable_result = region_analysis.getFinalVariable(vkey);
+
             StackedHistogramPlot plot(
                 "stack_" + pc.variable + "_" + pc.region,
-                it->second,
+                variable_result,
+                region_analysis,
                 pc.category_column,
                 pc.output_directory,
                 pc.overlay_signal,

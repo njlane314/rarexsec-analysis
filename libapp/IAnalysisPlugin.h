@@ -1,10 +1,9 @@
 #ifndef IANALYSIS_PLUGIN_H
 #define IANALYSIS_PLUGIN_H
 
-#include "AnalusisTypes.h"
+#include "AnalysisTypes.h"
 #include "AnalysisDefinition.h"
 #include "SelectionRegistry.h"
-#include "HistogramResult.h"
 #include "AnalysisDataLoader.h"
 #include <nlohmann/json.hpp>
 
@@ -32,4 +31,4 @@ public:
 };
 
 }
-#endif 
+#endif

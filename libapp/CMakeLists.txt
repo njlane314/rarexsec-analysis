@@ -16,16 +16,20 @@ target_link_libraries(libapp
 function(add_plugin NAME SRC EXTRA_LIBS)
   add_library(${NAME} SHARED ${SRC})
   target_include_directories(${NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}    
+    ${CMAKE_CURRENT_SOURCE_DIR}
   )
   target_link_libraries(${NAME} PRIVATE
-    libapp                         
-    nlohmann_json::nlohmann_json   
-    ${ROOT_LIBRARIES}              
-    ${EXTRA_LIBS}                  
+    libapp
+    libplot
+    libhist
+    libdata
+    libutils
+    nlohmann_json::nlohmann_json
+    ${ROOT_LIBRARIES}
+    ${EXTRA_LIBS}
   )
   set_target_properties(${NAME} PROPERTIES
-    PREFIX ""                     
+    PREFIX ""
     POSITION_INDEPENDENT_CODE ON
   )
 endfunction()

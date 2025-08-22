@@ -10,8 +10,9 @@
 #include <map>
 
 #include "HistogramPlotterBase.h"
-#include "HistogramResult.h"
-#include "StratificationRegistry.h"
+#include "AnalysisTypes.h"
+#include "RegionAnalysis.h"
+#include "StratifierRegistry.h"
 #include "TCanvas.h"
 #include "THStack.h"
 #include "TLegend.h"
@@ -33,7 +34,8 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 public:
     StackedHistogramPlot(
         std::string            plot_name,
-        const HistogramResult& data,
+        const VariableResult&  var_result,
+        const RegionAnalysis&  region_info,
         std::string            category_column,
         std::string            output_directory = "plots",
         bool                   overlay_signal    = true,
@@ -43,7 +45,8 @@ public:
         std::string            y_axis_label      = "Events"
     )
       : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
-        result_(data),
+        variable_result_(var_result),
+        region_analysis_(region_info),
         category_column_(std::move(category_column)),
         overlay_signal_(overlay_signal),
         cuts_(cut_list),
@@ -73,7 +76,7 @@ private:
         std::string line1 = "#bf{#muBooNE Simulation, Preliminary}";
 
         std::stringstream pot_stream;
-        pot_stream << std::scientific << std::setprecision(2) << result_.pot;
+        pot_stream << std::scientific << std::setprecision(2) << region_analysis_.protonsOnTarget();
         std::string pot_str = pot_stream.str();
         size_t e_pos = pot_str.find('e');
         if (e_pos != std::string::npos) {
@@ -86,13 +89,13 @@ private:
             {"numi_rhc", "NuMI RHC"}
         };
 
-        std::string beam_name = result_.beam;
+        std::string beam_name = region_analysis_.beamConfig();
         if (beam_map.count(beam_name)) {
             beam_name = beam_map.at(beam_name);
         }
 
         std::string line2 = beam_name + " (" + pot_str + " POT)";
-        std::string line3 = "Analysis Region: " + result_.region;
+        std::string line3 = "Analysis Region: " + region_analysis_.regionKey().str();
 
 
         TLatex watermark;
@@ -109,8 +112,7 @@ private:
 
 protected:
     void draw(TCanvas& canvas) override {
-        log::info("StackedHistogramPlot::draw", "Plotting histogram with name:", result_.GetName()); // Added
-        log::info("StackedHistogramPlot::draw", "X-axis label from result:", result_.axis_label.c_str());
+        log::info("StackedHistogramPlot::draw", "X-axis label from result:", variable_result_.binning_.getTexLabel().c_str());
         const double PLOT_LEGEND_SPLIT = 0.85;
         canvas.cd();
         TPad* p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
@@ -126,26 +128,25 @@ protected:
         p_main->Draw();
 
         mc_stack_ = new THStack("mc_stack", "");
-        StratificationRegistry registry;
-
-        // Work with DeferredBinnedHistogram directly instead of materializing early
-        std::vector<std::pair<ChannelKey, const DeferredBinnedHistogram*>> mc_hist_refs;
-        for (auto const& [key, hist] : result_.channels) {
-            mc_hist_refs.emplace_back(key, &hist);
+        StratifierRegistry registry;
+        
+        std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
+        for (auto const& [key, hist] : variable_result_.strat_hists_) {
+            mc_hists.emplace_back(key, hist);
         }
-        // Sort by sum without materializing histograms
-        std::sort(mc_hist_refs.begin(), mc_hist_refs.end(), 
+        
+        std::sort(mc_hists.begin(), mc_hists.end(), 
                   [](const auto& a, const auto& b) {
-                      return a.second->sum() < b.second->sum();
+                      return a.second.getSum() < b.second.getSum();
                   });
-        std::reverse(mc_hist_refs.begin(), mc_hist_refs.end());
+        std::reverse(mc_hists.begin(), mc_hists.end());
 
         p_legend->cd();
         legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
-        const int n_entries = mc_hist_refs.size() + 1;
+        const int n_entries = mc_hists.size() + 1;
         int n_cols = (n_entries > 4) ? 3 : 2;
         legend_->SetNColumns(n_cols);
 
@@ -155,26 +156,26 @@ protected:
             return stream.str();
         };
 
-        for (const auto& [key, hist_ptr] : mc_hist_refs) {
+        for (const auto& [key, hist] : mc_hists) {
             TH1D* h_leg = new TH1D();
-            const auto& stratum = registry.getStratum(category_column_, key.str());
+            const auto& stratum = registry.getStratumProperties(category_column_, std::stoi(key.str()));
             h_leg->SetFillColor(stratum.fill_colour);
             h_leg->SetFillStyle(stratum.fill_style);
             h_leg->SetLineColor(kBlack);
             h_leg->SetLineWidth(1.5);
-            std::string legend_label = annotate_numbers_ ? std::string(stratum.tex_label) + " : " + format_double(hist_ptr->sum(), 2) : stratum.tex_label;
+            std::string legend_label = annotate_numbers_ ? std::string(stratum.tex_label) + " : " + format_double(hist.getSum(), 2) : stratum.tex_label;
             legend_->AddEntry(h_leg, legend_label.c_str(), "f");
         }
         
-        if (!mc_hist_refs.empty()) {
+        if (!mc_hists.empty()) {
             TH1D* h_unc = new TH1D();
             h_unc->SetFillColor(kBlack);
             h_unc->SetFillStyle(3004);
             h_unc->SetLineColor(kBlack);
             h_unc->SetLineWidth(1);
             double total_mc_events = 0.0;
-            for(const auto& [key, hist_ptr] : mc_hist_refs) {
-                total_mc_events += hist_ptr->sum();
+            for(const auto& [key, hist] : mc_hists) {
+                total_mc_events += hist.getSum();
             }
             std::string total_label = annotate_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
@@ -182,10 +183,10 @@ protected:
         legend_->Draw();
         
         p_main->cd();
-        // Only now do we materialize histograms for actual plotting
-        for (const auto& [key, hist_ptr] : mc_hist_refs) {
-            TH1D* h = static_cast<TH1D*>(hist_ptr->asTH1D()->Clone());
-            const auto& stratum = registry.getStratum(category_column_, key.str());
+
+        for (const auto& [key, hist] : mc_hists) {
+            TH1D* h = (TH1D*)hist.get()->Clone();
+            const auto& stratum = registry.getStratumProperties(category_column_, std::stoi(key.str()));
             h->SetFillColor(stratum.fill_colour);
             h->SetFillStyle(stratum.fill_style);
             h->SetLineColor(kBlack);
@@ -205,13 +206,7 @@ protected:
         mc_stack_->SetMinimum(use_log_y_ ? 0.1 : 0.0);
         
         if (total_mc_hist_) {
-            TMatrixDSym total_syst_cov(total_mc_hist_->GetNbinsX());
-            total_syst_cov.Zero();
-            for (const auto& [name, cov] : result_.syst_cov) {
-                if (cov.GetNrows() == total_syst_cov.GetNrows()) {
-                    total_syst_cov += cov;
-                }
-            }
+            TMatrixDSym total_syst_cov = variable_result_.total_covariance_;
 
             for (int i = 1; i <= total_mc_hist_->GetNbinsX(); ++i) {
                 double stat_err = total_mc_hist_->GetBinError(i);
@@ -255,7 +250,7 @@ protected:
         }
 
         TH1* frame = mc_stack_->GetHistogram();
-        frame->GetXaxis()->SetTitle(result_.axis_label.c_str());
+        frame->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
         frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
@@ -267,7 +262,8 @@ protected:
     }
 
 private:
-    const HistogramResult&          result_;
+    const VariableResult&           variable_result_;
+    const RegionAnalysis&           region_analysis_;
     std::string                     category_column_;
     bool                            overlay_signal_;
     std::vector<Cut>                cuts_;

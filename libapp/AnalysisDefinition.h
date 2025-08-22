@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "Logger.h"
-#include "BinDefinition.h"
+#include "BinningDefinition.h"
 #include "EventVariableRegistry.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
@@ -23,13 +23,13 @@ public:
     VariableHandle(const VariableKey& k, 
                  const std::map<VariableKey, std::string>& exprs,
                  const std::map<VariableKey, std::string>& lbls,
-                 const std::map<VariableKey, BinDefinition>& bdefs,
+                 const std::map<VariableKey, BinningDefinition>& bdefs,
                  const std::map<VariableKey, std::string>& strats)
         : key_(k), expressions_(exprs), labels_(lbls), binnings_(bdefs), stratifiers_(strats) {}
 
     const std::string& expression() const { return expressions_.at(key_); }
     const std::string& label() const { return labels_.at(key_); }
-    const BinDefinition& binning() const { return binnings_.at(key_); }
+    const BinningDefinition& binning() const { return binnings_.at(key_); }
 
     std::string stratifier() const { 
         auto it = stratifiers_.find(key_);
@@ -41,7 +41,7 @@ public:
 private:
     const std::map<VariableKey, std::string>& expressions_;
     const std::map<VariableKey, std::string>& labels_;
-    const std::map<VariableKey, BinDefinition>& binnings_;
+    const std::map<VariableKey, BinningDefinition>& binnings_;
     const std::map<VariableKey, std::string>& stratifiers_;
 };
 
@@ -86,7 +86,7 @@ public:
     AnalysisDefinition& addVariable(const std::string& key,
                                     const std::string& expr,
                                     const std::string& lbl,
-                                    const BinDefinition& bdef,
+                                    const BinningDefinition& bdef,
                                     const std::string& strat)
     {
         VariableKey var_key{key};
@@ -257,7 +257,7 @@ private:
 
     std::map<VariableKey, std::string> variable_expressions_;
     std::map<VariableKey, std::string> variable_labels_;
-    std::map<VariableKey, BinDefinition> variable_binning_;
+    std::map<VariableKey, BinningDefinition> variable_binning_;
     std::map<VariableKey, std::string> variable_stratifiers_;
 
     std::map<RegionKey, std::string> region_names_;

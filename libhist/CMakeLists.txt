@@ -8,6 +8,5 @@ target_include_directories(libhist
 
 target_link_libraries(libhist
   INTERFACE
-    libapp
     libutils
 )

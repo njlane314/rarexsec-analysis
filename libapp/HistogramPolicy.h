@@ -8,7 +8,7 @@
 #include "TH1D.h"
 #include "TMatrixDSym.h"
 #include "TVectorD.h"
-#include "BinDefinition.h"
+#include "BinningDefinition.h"
 #include "Logger.h"
 
 namespace analysis {
@@ -16,31 +16,31 @@ namespace analysis {
 class BinnedHistogram;
 
 struct TH1DStorage {
-    BinDefinition               bins;
+    BinningDefinition               binning;
     std::vector<double>         counts;
     TMatrixDSym                 cov;
 
     TH1DStorage() = default;
 
     TH1DStorage(const TH1DStorage& other)
-      : bins(other.bins), counts(other.counts), cov(other.cov)
+      : binning(other.binning), counts(other.counts), cov(other.cov)
     {
     }
 
 
-    TH1DStorage(const BinDefinition& b, const std::vector<double>& c, const TMatrixDSym& m)
-        : bins(b), counts(c), cov(m)
+    TH1DStorage(const BinningDefinition& b, const std::vector<double>& c, const TMatrixDSym& m)
+        : binning(b), counts(c), cov(m)
     {
-        if (b.nBins() == 0)
-            log::fatal("TH1DStorage", "Zero bins");
+        if (b.getBinNumber() == 0)
+            log::fatal("TH1DStorage", "Zero binning");
 
-        if (c.size() != b.nBins() || (unsigned)m.GetNrows() != b.nBins())
+        if (c.size() != b.getBinNumber() || (unsigned)m.GetNrows() != b.getBinNumber())
             log::fatal("TH1DStorage", "Dimension mismatch");
     }
 
     TH1DStorage& operator=(const TH1DStorage& other) {
         if (this != &other) {
-            bins   = other.bins;
+            binning   = other.binning;
             counts = other.counts;
 
             cov.ResizeTo(other.cov.GetNrows(), other.cov.GetNcols());
@@ -49,7 +49,7 @@ struct TH1DStorage {
         return *this;
     }
 
-    std::size_t size() const { return bins.nBins(); }
+    std::size_t size() const { return binning.getBinNumber(); }
     double count(int i) const { return counts.at(i); }
 
     double err(int i) const {
@@ -101,9 +101,9 @@ struct TH1DRenderer {
 
             hist = new TH1D(
                 unique_name,
-                ";" + s.bins.tex_ + ";Events",
-                s.bins.nBins(),
-                s.bins.edges_.data()
+                ";" + s.binning.tex_ + ";Events",
+                s.binning.getBinNumber(),
+                s.binning.edges_.data()
             );
             hist->SetDirectory(nullptr);
         }

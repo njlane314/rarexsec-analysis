@@ -14,7 +14,7 @@ class BinnedHistogram : public TNamed, public TH1DStorage, private TH1DRenderer 
 public:
     BinnedHistogram() = default;
 
-    BinnedHistogram(const BinDefinition&        bn,
+    BinnedHistogram(const BinningDefinition&        bn,
               const std::vector<double>&        ct,
               const TMatrixDSym&                cv,
               TString                           nm  = "hist",
@@ -27,7 +27,11 @@ public:
         TH1DRenderer::style(cl, ht, tx);
     }
 
-    static BinnedHistogram createFromTH1D(const BinDefinition& bn,
+    BinnedHistogram(const BinnedHistogram& other)
+      : TNamed(other), TH1DStorage(other), TH1DRenderer(other)
+    {}
+
+    static BinnedHistogram createFromTH1D(const BinningDefinition& bn,
                                           const TH1D& hist,
                                           TString nm = "hist",
                                           TString ti = "",
