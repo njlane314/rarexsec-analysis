@@ -19,7 +19,7 @@ public:
 
 protected:
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                const BinDefinition&,
+                                const BinningDefinition&,
                                 int key) const override {
         return df.Filter(
             getSchemeName() + " == " + std::to_string(key)

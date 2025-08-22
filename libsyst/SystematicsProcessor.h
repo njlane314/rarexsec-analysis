@@ -41,12 +41,12 @@ public:
 
     void bookSystematics(
         const SampleKey& sample_key,
-        const ROOT::RDF::RNode& rnode,
+        ROOT::RDF::RNode& rnode,
         const BinningDefinition& binning,
         const ROOT::RDF::TH1DModel& model
     ) {
         auto book_hist_fn = [&](const std::string& weight_column) {
-            return rnode.Histo1D(model, binning.getVariable().Data(), weight_column);
+            return rnode.Histo1D(model, binning.getVariable(), weight_column);
         };
         for (const auto& strategy : systematic_strategies_) {
             strategy->bookVariations(sample_key, book_hist_fn, systematic_futures_);
@@ -64,7 +64,7 @@ public:
         int n_bins = result.total_mc_hist_.getNumberOfBins();
         if (n_bins > 0) {
             result.total_covariance_.ResizeTo(n_bins, n_bins);
-            result.total_covariance_ = result.total_mc_hist_.cov; 
+            result.total_covariance_ = result.total_mc_hist_.cov;
             for (const auto& [name, cov] : result.covariance_matrices_) {
                 if (cov.GetNrows() == n_bins) {
                     result.total_covariance_ += cov;

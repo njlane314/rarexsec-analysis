@@ -34,9 +34,9 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-add_plugin(RegionsPlugin           RegionsPlugin.cpp           "")
-add_plugin(VariablesPlugin         VariablesPlugin.cpp         "")
-add_plugin(StackedHistogramPlugin  StackedHistogramPlugin.cpp  libplot)
+add_plugin(RegionsPlugin          RegionsPlugin.cpp           "")
+add_plugin(VariablesPlugin        VariablesPlugin.cpp         "")
+add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cpp  libplot)
 
 foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin)
   set_target_properties(${_p} PROPERTIES

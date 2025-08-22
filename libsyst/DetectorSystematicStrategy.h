@@ -20,15 +20,18 @@ public:
         SystematicFutures&
     ) override {
         const auto& nominal_hist = result.total_mc_hist_;
-        const auto& binning = result.binning_;
-        int n_bins = nominal_hist.nBins();
+        int n_bins = nominal_hist.getNumberOfBins();
         TMatrixDSym total_detvar_cov(n_bins);
         total_detvar_cov.Zero();
 
         std::map<SampleVariation, BinnedHistogram> total_detvar_hists;
         for (const auto& [sample_key, var_map] : result.raw_detvar_hists_) {
             for (const auto& [var_type, hist] : var_map) {
-                total_detvar_hists[var_type] += hist;
+                if (total_detvar_hists.find(var_type) == total_detvar_hists.end()) {
+                    total_detvar_hists[var_type] = hist;
+                } else {
+                    total_detvar_hists[var_type] = total_detvar_hists[var_type] + hist;
+                }
             }
         }
 
@@ -63,7 +66,7 @@ public:
     }
 
     std::map<SystematicKey, BinnedHistogram> getVariedHistograms(
-        const BinDefinition&, SystematicFutures&
+        const BinningDefinition&, SystematicFutures&
     ) override {
         return {};
     }

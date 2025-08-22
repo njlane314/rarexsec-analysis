@@ -52,11 +52,15 @@ public:
             std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
 
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
-                plugin_manager.notifyPreSampleProcessing(
-                    sample_key,
-                    region_handle.key_,
-                    data_loader_.getRunConfig(sample_key)
-                );
+                const auto* run_config = data_loader_.getRunConfigForSample(sample_key);
+                if (run_config) {
+                    plugin_manager.notifyPreSampleProcessing(
+                        sample_key,
+                        region_handle.key_,
+                        *run_config
+                    );
+                }
+
 
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
 
@@ -78,7 +82,7 @@ public:
                 if (sample_def.isData()) {
                     sample_processors[sample_key] = std::make_unique<DataProcessor>(ensemble.nominal_);
                 } else {
-                    mc_rnodes[sample_key] = region_df;
+                    mc_rnodes.emplace(sample_key, region_df);
                     sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, ensemble);
                 }
             }
@@ -95,7 +99,7 @@ public:
                     processor->book(*histogram_booker_, binning, model);
                 }
 
-                for (auto const& [sample_key, rnode] : mc_rnodes) {
+                for (auto& [sample_key, rnode] : mc_rnodes) {
                     systematics_processor_.bookSystematics(sample_key, rnode, binning, model);
                 }
 

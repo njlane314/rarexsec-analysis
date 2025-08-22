@@ -1,6 +1,5 @@
 #pragma once
 
-#include "TObject.h"
 #include "Keys.h"
 #include "AnalysisTypes.h"
 
@@ -12,7 +11,7 @@
 
 namespace analysis {
 
-class RegionAnalysis : public TObject {
+class RegionAnalysis {
 public:
     RegionAnalysis(RegionKey rk = RegionKey{},
                    double pot = 0.0,
@@ -25,7 +24,7 @@ public:
         , beam_config_(std::move(bc))
         , run_numbers_(std::move(runs)) {}
 
-    ~RegionAnalysis() override = default;
+    ~RegionAnalysis() = default;
 
     const RegionKey& regionKey() const noexcept { return region_key_; }
     double protonsOnTarget() const noexcept { return protons_on_target_; }
@@ -69,8 +68,6 @@ private:
     std::string beam_config_{};
     std::vector<std::string> run_numbers_{};
     std::map<VariableKey, VariableResult> final_variables_;
-
-    ClassDef(RegionAnalysis, 1);
 };
 
 }

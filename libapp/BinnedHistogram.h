@@ -83,6 +83,20 @@ public:
         return tmp;
     }
 
+    BinnedHistogram operator*(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() != o.getNumberOfBins()) {
+            log::fatal("BinnedHistogram::operator*", "Attempting to multiply histograms with different numbers of bins.");
+        }
+        auto tmp = *this;
+        for (int i = 0; i < getNumberOfBins(); ++i) {
+            tmp.counts[i] *= o.counts[i];
+        }
+        // NOTE: This is a simplification. Proper error propagation for multiplication is more complex.
+        tmp.cov.Zero();
+        return tmp;
+    }
+
+
     friend BinnedHistogram operator*(double s, const BinnedHistogram& h) {
         return h * s;
     }
@@ -114,7 +128,7 @@ public:
             if (o.counts[i] != 0) {
                 tmp.counts[i] /= o.counts[i];
             } else {
-                tmp.counts[i] = 0; 
+                tmp.counts[i] = 0;
             }
         }
         tmp.cov.Zero();

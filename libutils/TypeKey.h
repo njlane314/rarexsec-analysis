@@ -14,7 +14,7 @@ public:
     explicit TypeKey(std::string_view v): v_(v) {}
     const std::string& str() const noexcept { return v_; }
     const char* c_str() const noexcept { return v_.c_str(); }
-    friend bool operator==(const TypeKey& a, const TypeKey& b) noexcept { return a.v_ == b.v_; }
+    bool operator==(const TypeKey& b) const noexcept { return v_ == b.v_; }
     friend bool operator!=(const TypeKey& a, const TypeKey& b) noexcept { return !(a == b); }
     friend bool operator<(const TypeKey& a, const TypeKey& b) noexcept { return a.v_ < b.v_; }
     friend std::ostream& operator<<(std::ostream& os, const TypeKey& k) {

@@ -21,7 +21,7 @@ public:
 
 protected:
     ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                const BinDefinition&,
+                                const BinningDefinition&,
                                 int key) const override {
         auto predicate = strat_registry_.findPredicate(strat_key_);
         return df.Filter(

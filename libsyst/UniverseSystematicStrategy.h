@@ -53,7 +53,7 @@ public:
 
             BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), cov);
             for(auto& [sample_key, future] : futures.variations.at(uni_key)) {
-                if (future.IsValid())
+                if (future.GetPtr())
                     h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
             varied_hists.push_back(h_universe);

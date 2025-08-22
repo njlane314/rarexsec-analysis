@@ -52,13 +52,13 @@ public:
 
         if (futures.variations.count(up_key)) {
             for(auto& [sample_key, future] : futures.variations.at(up_key)){
-                if (future.IsValid())
+                if (future.GetPtr())
                     hu = hu + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
         }
         if (futures.variations.count(dn_key)) {
             for(auto& [sample_key, future] : futures.variations.at(dn_key)){
-                if (future.IsValid())
+                if (future.GetPtr())
                     hd = hd + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
         }

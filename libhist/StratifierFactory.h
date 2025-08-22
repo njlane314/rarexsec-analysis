@@ -20,7 +20,7 @@ public:
     {
         log::info("StratifierFactory", "Requested stratifier key:", key.str());
 
-        StratifierType type = registry.getSchemeType(key);
+        StratifierType type = registry.findSchemeType(key);
 
         if (type == StratifierType::kScalar) {
             return std::make_unique<ScalarStratifier>(key, registry);
@@ -31,7 +31,7 @@ public:
         }
 
         log::fatal("StratifierFactory", "Unknown or unregistered stratifier configuration:", key.str());
-        return nullptr; 
+        return nullptr;
     }
 };
 

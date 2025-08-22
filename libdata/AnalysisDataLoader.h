@@ -47,6 +47,18 @@ public:
     long getTotalTriggers() const noexcept { return total_triggers_; }
     const std::string& getBeam() const noexcept { return beam_; }
     const std::vector<std::string>& getPeriods() const noexcept { return periods_; }
+    const RunConfig* getRunConfigForSample(const SampleKey& sk) const {
+        for (const auto& period : periods_) {
+            const auto& rc = run_registry_.get(beam_, period);
+            for (const auto& sample_json : rc.samples) {
+                if (sample_json.at("sample_key").get<std::string>() == sk.str()) {
+                    return &rc;
+                }
+            }
+        }
+        return nullptr;
+    }
+
 
     void snapshot(const std::string& filter_expr,
                   const std::string& output_file,
@@ -74,7 +86,7 @@ public:
 
     void printAllBranches() {
         log::debug("AnalysisDataLoader", "Available branches in loaded samples:");
-        for (auto& [sample_key, sample_def] : frames_) { 
+        for (auto& [sample_key, sample_def] : frames_) {
             log::debug("AnalysisDataLoader", "--- Sample:", sample_key.str(), "---");
             auto branches = sample_def.nominal_node_.GetColumnNames();
             for (const auto& branch : branches) {
@@ -141,6 +153,6 @@ private:
     }
 };
 
-} 
+}
 
 #endif // ANALYSIS_DATA_LOADER_H
