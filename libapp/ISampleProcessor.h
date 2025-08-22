@@ -14,8 +14,7 @@ public:
                       const BinningDefinition& binning,
                       const ROOT::RDF::TH1DModel& model) = 0;
 
-    virtual void contributeTo(VariableResult& final_result,
-                              SystematicsProcessor& systematics_processor) = 0;
+    virtual void contributeTo(VariableResult& result) = 0;
 };
 
 }
