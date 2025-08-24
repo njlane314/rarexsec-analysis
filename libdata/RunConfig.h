@@ -32,15 +32,15 @@ struct RunConfig {
     }
 
     void validate() const {
-        if (beam_mode.empty())     log::fatal("RunConfig", "empty beam_mode");
-        if (run_period.empty())    log::fatal("RunConfig", "empty run_period");
-        if (samples.empty())       log::fatal("RunConfig", "no samples for", beam_mode + "/" + run_period);
+        if (beam_mode.empty())     log::fatal("RunConfig::validate", "empty beam_mode");
+        if (run_period.empty())    log::fatal("RunConfig::validate", "empty run_period");
+        if (samples.empty())       log::fatal("RunConfig::validate", "no samples for", beam_mode + "/" + run_period);
 
         std::set<std::string> keys;
         for (auto& s : samples) {
             std::string key = s.at("sample_key").get<std::string>();
             if (!keys.insert(key).second) {
-                log::fatal("RunConfig", "duplicate sample key:", key);
+                log::fatal("RunConfig::validate", "duplicate sample key:", key);
             }
         }
     }

@@ -67,7 +67,7 @@ public:
                 if (cov.GetNrows() == n_bins) {
                     result.total_covariance_ += cov;
                 } else {
-                    log::warn("SystematicsProcessor", "Skipping systematic", name.str(), "due to incompatible matrix size (", cov.GetNrows(), "x", cov.GetNcols(), "vs expected", n_bins, "x", n_bins, ")");
+                    log::warn("SystematicsProcessor::processSystematics", "Skipping systematic", name.str(), "due to incompatible matrix size (", cov.GetNrows(), "x", cov.GetNcols(), "vs expected", n_bins, "x", n_bins, ")");
                 }
             }
             result.nominal_with_band_ = result.total_mc_hist_;

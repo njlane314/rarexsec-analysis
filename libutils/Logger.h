@@ -73,15 +73,12 @@ private:
       const char *reset = "\033[0m";
       const char *timeColour = "\033[90m";
       const char *levelColour = levelToColour(level);
-
       std::cout << timeColour << "["
                 << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "]"
                 << reset << " ";
 
       std::cout << "[" << levelColour << levelToString(level) << reset << "] ";
-
       std::cout << "[" << "\033[1m" << levelColour << context << reset << "] ";
-
       printArgs(std::cout, args...);
       std::cout << reset << std::endl;
     }

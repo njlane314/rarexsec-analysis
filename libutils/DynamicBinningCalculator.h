@@ -21,7 +21,7 @@ public:
                                        double min_neff_per_bin = 50.0)
     {
         if (nodes.empty()) {
-            log::warn("DynamicBinningCalculator", "Cannot calculate bins: RNode vector is empty.");
+            log::warn("DynamicBinningCalculator::calculate", "Cannot calculate bins: RNode vector is empty.");
             return original_bdef;
         }
 
@@ -60,7 +60,7 @@ public:
                    || typeName.find("vector<Long64_t>") != std::string::npos) {
             return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
         } else {
-            log::fatal("DynamicBinningCalculator", "Unsupported type for dynamic binning:", typeName);
+            log::fatal("DynamicBinningCalculator::calculate", "Unsupported type for dynamic binning:", typeName);
             return original_bdef;
         }
     }

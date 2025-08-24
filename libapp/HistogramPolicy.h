@@ -33,10 +33,10 @@ struct TH1DStorage {
         : binning(b), counts(c), shifts(s)
     {
         if (b.getBinNumber() == 0)
-            log::fatal("TH1DStorage", "Zero binning");
+            log::fatal("TH1DStorage::TH1DStorage", "Zero binning");
 
         if (c.size() != b.getBinNumber() || s.rows() != static_cast<int>(b.getBinNumber()))
-            log::fatal("TH1DStorage", "Dimension mismatch");
+            log::fatal("TH1DStorage::TH1DStorage", "Dimension mismatch");
     }
 
     TH1DStorage& operator=(const TH1DStorage& other) {

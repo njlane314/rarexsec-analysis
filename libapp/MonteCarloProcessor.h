@@ -29,7 +29,7 @@ public:
     }
 
     void contributeTo(VariableResult& result) override {
-        log::info("MonteCarloProcessor", "Contributing histograms from sample:", sample_key_.str());
+        log::info("MonteCarloProcessor::contributeTo", "Contributing histograms from sample:", sample_key_.str());
         for (auto& [stratum_key, future] : nominal_futures_) {
             if (future.GetPtr()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());

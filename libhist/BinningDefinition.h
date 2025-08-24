@@ -26,10 +26,10 @@ public:
       , strat_key_(StratifierKey{sk})
     {
         if (edges_.size() < 2)
-            log::fatal("BinningDefinition", "Edges must contain at least two values.");
+            log::fatal("BinningDefinition::BinningDefinition", "Edges must contain at least two values.");
 
         if (!std::is_sorted(edges_.begin(), edges_.end()))
-            log::fatal("BinningDefinition", "Edges must be sorted.");
+            log::fatal("BinningDefinition::BinningDefinition", "Edges must be sorted.");
     }
 
     BinningDefinition() = default;

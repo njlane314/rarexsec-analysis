@@ -50,18 +50,18 @@ public:
     bool isExt()  const noexcept { return sample_origin_ == SampleOrigin::kExternal; }
 
     void validateFiles(const std::string& base_dir) const {
-        if (sample_key_.str().empty())                                          log::fatal("SampleDefinition", "empty sample_key_");
-        if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition", "unknown sample_origin_ for", sample_key_.str());
-        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition", "invalid pot_ for MC", sample_key_.str());
-        if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition", "invalid triggers_ for Data", sample_key_.str());
-        if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())     log::fatal("SampleDefinition", "missing path for", sample_key_.str());
+        if (sample_key_.str().empty())                                          log::fatal("SampleDefinition::validateFiles", "empty sample_key_");
+        if (sample_origin_ == SampleOrigin::kUnknown)                       log::fatal("SampleDefinition::validateFiles", "unknown sample_origin_ for", sample_key_.str());
+        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)       log::fatal("SampleDefinition::validateFiles", "invalid pot_ for MC", sample_key_.str());
+        if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)        log::fatal("SampleDefinition::validateFiles", "invalid triggers_ for Data", sample_key_.str());
+        if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())     log::fatal("SampleDefinition::validateFiles", "missing path for", sample_key_.str());
         if (!rel_path_.empty()) {
             auto p = std::filesystem::path(base_dir) / rel_path_;
-            if (!std::filesystem::exists(p)) log::fatal("SampleDefinition", "missing file", p.string());
+            if (!std::filesystem::exists(p)) log::fatal("SampleDefinition::validateFiles", "missing file", p.string());
         }
         for (auto& [dv, rp] : var_paths_) {
             auto vp = std::filesystem::path(base_dir) / rp;
-            if (!std::filesystem::exists(vp)) log::fatal("SampleDefinition", "missing variation", rp);
+            if (!std::filesystem::exists(vp)) log::fatal("SampleDefinition::validateFiles", "missing variation", rp);
         }
     }
 
@@ -100,7 +100,7 @@ private:
         if      (s == "wiremodyz")      return SampleVariation::kWireModYZ;
         if      (s == "wiremodanglexz") return SampleVariation::kWireModAngleXZ;
         if      (s == "wiremodangleyz") return SampleVariation::kWireModAngleYZ;
-        log::fatal("SampleDefinition", "invalid detvar_type:", s);
+        log::fatal("SampleDefinition::convertDetVarType", "invalid detvar_type:", s);
         return SampleVariation::kUnknown;
     }
 
@@ -131,7 +131,7 @@ private:
                 }
             }
             if (!found_key) {
-                log::warn("SampleDefinition", "Exclusion key not found or missing truth_filter:", exclusion_key);
+                log::warn("SampleDefinition::makeDataFrame", "Exclusion key not found or missing truth_filter:", exclusion_key);
             }
         }
         return processed_df;

@@ -18,7 +18,7 @@ public:
 
     void onInitialisation(AnalysisDefinition& def,
                             const SelectionRegistry&) override {
-        log::info("VariablesPlugin", "Defining variables...");
+        log::info("VariablesPlugin::onInitialisation", "Defining variables...");
         if (!config_.contains("variables")) return;
 
         for (auto const& var_cfg : config_.at("variables")) {

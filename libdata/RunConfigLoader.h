@@ -15,7 +15,7 @@ public:
     static inline void loadRunConfigurations(const std::string& config_path, RunConfigRegistry& registry) {
         std::ifstream f(config_path);
         if (!f.is_open()) {
-            log::fatal("RunConfigLoader", "Could not open config file:", config_path);
+            log::fatal("RunConfigLoader::loadRunConfigurations", "Could not open config file:", config_path);
         }
         nlohmann::json data = nlohmann::json::parse(f);
 

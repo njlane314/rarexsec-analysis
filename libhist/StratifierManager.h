@@ -18,10 +18,10 @@ public:
     explicit StratifierManager(StratifierRegistry& registry) : registry_(registry) {}
 
     IHistogramStratifier& get(const StratifierKey& key) {
-        log::debug("StratifierManager", "Attempting to get stratifier for key:", key.str());
+        log::debug("StratifierManager::get", "Attempting to get stratifier for key:", key.str());
         auto it = cache_.find(key);
         if (it == cache_.end()) {
-            log::info("StratifierManager", "Creating new stratifier for key:", key.str());
+            log::info("StratifierManager::get", "Creating new stratifier for key:", key.str());
 
             std::unique_ptr<IHistogramStratifier> stratifier;
             StratifierType type = registry_.findSchemeType(key);
@@ -31,13 +31,13 @@ public:
             } else if (type == StratifierType::kVector) {
                 stratifier = std::make_unique<VectorStratifier>(key, registry_);
             } else {
-                log::fatal("StratifierManager", "Unknown or unregistered stratifier configuration:", key.str());
+                log::fatal("StratifierManager::get", "Unknown or unregistered stratifier configuration:", key.str());
             }
             
             it = cache_.emplace(key, std::move(stratifier)).first;
-            log::debug("StratifierManager", "Successfully created and cached stratifier for key:", key.str());
+            log::debug("StratifierManager::get", "Successfully created and cached stratifier for key:", key.str());
         } else {
-            log::debug("StratifierManager", "Found cached stratifier for key:", key.str());
+            log::debug("StratifierManager::get", "Found cached stratifier for key:", key.str());
         }
         return *it->second;
     }
