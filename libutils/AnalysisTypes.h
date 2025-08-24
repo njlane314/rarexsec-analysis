@@ -1,18 +1,20 @@
 #ifndef ANALYSIS_TYPES_H
 #define ANALYSIS_TYPES_H
 
-#include <string>
-#include <vector>
-#include <map>
-#include <utility>
-#include <unordered_map>
 #include <iostream>
 #include <iomanip>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include "ROOT/RDataFrame.hxx"
-#include "SampleTypes.h"
-#include "Keys.h"
-#include "BinnedHistogram.h"
 #include "TMatrixDSym.h"
+
+#include "BinnedHistogram.h"
+#include "Keys.h"
+#include "SampleTypes.h"
 
 namespace analysis {
 
@@ -59,20 +61,20 @@ struct VariableResult {
     }
 };
 
-using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
+using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
 
-struct AnalysisDataset {
+struct SampleDataset {
     SampleOrigin origin_;
     AnalysisRole role_;
     mutable ROOT::RDF::RNode dataframe_;
 };
 
-struct SampleEnsemble {
-    AnalysisDataset nominal_;
-    std::map<SampleVariation, AnalysisDataset> variations_;
+struct SampleDatasetGroup {
+    SampleDataset nominal_;
+    std::map<SampleVariation, SampleDataset> variations_;
 };
 
-using SampleEnsembleMap = std::map<SampleKey, SampleEnsemble>;
+using SampleDatasetGroupMap = std::map<SampleKey, SampleDatasetGroup>;
 
 }
 

@@ -1,19 +1,21 @@
-#ifndef DYNAMIC_BINNING_CALCULATOR_H
-#define DYNAMIC_BINNING_CALCULATOR_H
+#ifndef ADAPTIVE_BINNING_CALCULATOR_H
+#define ADAPTIVE_BINNING_CALCULATOR_H
 
-#include "BinningDefinition.h"
-#include "Logger.h"
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RVec.hxx"
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <string>
+#include <vector>
+
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RVec.hxx"
+
+#include "AnalysisLogger.h"
+#include "BinningDefinition.h"
 
 namespace analysis {
 
-class DynamicBinningCalculator {
+class AdaptiveBinningCalculator {
 public:
     static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes,
                                        const BinningDefinition& original_bdef,
@@ -21,7 +23,7 @@ public:
                                        double min_neff_per_bin = 50.0)
     {
         if (nodes.empty()) {
-            log::warn("DynamicBinningCalculator::calculate", "Cannot calculate bins: RNode vector is empty.");
+            log::warn("AdaptiveBinningCalculator::calculate", "Cannot calculate bins: RNode vector is empty.");
             return original_bdef;
         }
 
@@ -60,7 +62,7 @@ public:
                    || typeName.find("vector<Long64_t>") != std::string::npos) {
             return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
         } else {
-            log::fatal("DynamicBinningCalculator::calculate", "Unsupported type for dynamic binning:", typeName);
+            log::fatal("AdaptiveBinningCalculator::calculate", "Unsupported type for dynamic binning:", typeName);
             return original_bdef;
         }
     }

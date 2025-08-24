@@ -1,19 +1,21 @@
 #ifndef IHISTOGRAM_STRATIFIER_H
 #define IHISTOGRAM_STRATIFIER_H
 
+#include <algorithm>
+#include <functional>
 #include <map>
 #include <string>
-#include <vector>
-#include <functional>
 #include <unordered_map>
-#include <algorithm> // <-- Add this include for std::replace
+#include <vector>
+
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
-#include "BinningDefinition.h"
+
+#include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
-#include "StratifierRegistry.h"
-#include "Logger.h"
+#include "BinningDefinition.h"
 #include "Keys.h"
+#include "StratifierRegistry.h"
 
 namespace analysis {
 

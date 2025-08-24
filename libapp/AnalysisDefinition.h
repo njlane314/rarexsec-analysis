@@ -1,21 +1,21 @@
 #ifndef ANALYSIS_DEFINITION_H
 #define ANALYSIS_DEFINITION_H
 
+#include <initializer_list>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <map>
-#include <stdexcept>
-#include <initializer_list>
-#include <memory>
-#include <iterator>
 
-#include "Logger.h"
+#include "AnalysisLogger.h"
 #include "BinningDefinition.h"
 #include "EventVariableRegistry.h"
+#include "Keys.h"
+#include "RegionAnalysis.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
-#include "RegionAnalysis.h"
-#include "Keys.h"
 
 namespace analysis {
 

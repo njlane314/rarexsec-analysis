@@ -40,4 +40,4 @@ private:
 
 } 
 
-#endif // SELECTION_H
+#endif

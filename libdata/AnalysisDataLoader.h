@@ -1,22 +1,24 @@
 #ifndef ANALYSIS_DATA_LOADER_H
 #define ANALYSIS_DATA_LOADER_H
 
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
+
 #include "ROOT/RDataFrame.hxx"
+
+#include "AnalysisLogger.h"
+#include "EventVariableRegistry.h"
 #include "IEventProcessor.h"
-#include "WeightProcessor.h"
-#include "TruthChannelProcessor.h"
+#include "Keys.h"
 #include "MuonSelectionProcessor.h"
 #include "ReconstructionProcessor.h"
-#include "SampleDefinition.h"
 #include "RunConfigRegistry.h"
-#include "EventVariableRegistry.h"
+#include "SampleDefinition.h"
 #include "Selection.h"
-#include "Logger.h"
-#include "Keys.h"
+#include "TruthChannelProcessor.h"
+#include "WeightProcessor.h"
 
 namespace analysis {
 
@@ -155,4 +157,4 @@ private:
 
 }
 
-#endif // ANALYSIS_DATA_LOADER_H
+#endif

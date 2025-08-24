@@ -1,16 +1,18 @@
 #ifndef SAMPLE_DEFINITION_H
 #define SAMPLE_DEFINITION_H
 
+#include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <filesystem>
+
 #include "ROOT/RDataFrame.hxx"
-#include "SampleTypes.h"
-#include "IEventProcessor.h"
-#include "EventVariableRegistry.h"
-#include "Logger.h"
 #include "nlohmann/json.hpp"
+
+#include "AnalysisLogger.h"
+#include "EventVariableRegistry.h"
+#include "IEventProcessor.h"
+#include "SampleTypes.h"
 
 namespace analysis {
 

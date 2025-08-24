@@ -1,14 +1,16 @@
 #ifndef PLOT_CATALOG_H
 #define PLOT_CATALOG_H
 
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
+
 #include "TSystem.h"
-#include "AnalysisResult.h"
-#include "StackedHistogramPlot.h"
-#include "EventDisplay.h"
+
 #include "AnalysisDataLoader.h"
+#include "AnalysisResult.h"
+#include "EventDisplay.h"
+#include "StackedHistogramPlot.h"
 
 namespace analysis {
 
@@ -89,4 +91,4 @@ private:
 
 } 
 
-#endif // PLOT_CATALOG_H
+#endif

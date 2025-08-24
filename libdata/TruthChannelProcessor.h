@@ -2,6 +2,7 @@
 #define TRUTH_CHANNEL_PROCESSOR_H
 
 #include <cmath>
+
 #include "IEventProcessor.h"
 
 namespace analysis {
@@ -105,4 +106,4 @@ public:
 
 }
 
-#endif // TRUTH_CHANNEL_PROCESSOR_H
+#endif

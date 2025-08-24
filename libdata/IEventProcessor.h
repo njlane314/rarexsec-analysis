@@ -1,9 +1,11 @@
 #ifndef IEVENT_PROCESSOR_H
 #define IEVENT_PROCESSOR_H
 
-#include "ROOT/RDataFrame.hxx"
 #include <memory>
-#include "SampleTypes.h"    
+
+#include "ROOT/RDataFrame.hxx"
+
+#include "SampleTypes.h"
 
 namespace analysis {
 
@@ -24,4 +26,4 @@ protected:
 
 } 
 
-#endif // IEVENT_PROCESSOR_H
+#endif

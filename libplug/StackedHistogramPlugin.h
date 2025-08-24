@@ -1,14 +1,16 @@
 #ifndef STACKEDHISTOGRAMPLUGIN_H
 #define STACKEDHISTOGRAMPLUGIN_H
 
+#include <nlohmann/json.hpp>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <TSystem.h>
+
+#include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
 #include "StackedHistogramPlot.h"
-#include <nlohmann/json.hpp>
-#include <vector>
-#include <string>
-#include <stdexcept>
-#include <TSystem.h>
-#include "Logger.h"
 
 namespace analysis {
 
@@ -53,9 +55,9 @@ public:
 
     void onInitialisation(AnalysisDefinition&, const SelectionRegistry&) override {}
     void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
-    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
+    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const RegionAnalysisMap&) override {}
 
-    void onFinalisation(const AnalysisRegionMap& region_map) override {
+    void onFinalisation(const RegionAnalysisMap& region_map) override {
         gSystem->mkdir("plots", true);
         for (auto const& pc : plots_) {
             RegionKey rkey{pc.region};

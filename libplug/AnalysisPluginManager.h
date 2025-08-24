@@ -1,20 +1,23 @@
 #ifndef ANALYSIS_DISPATCHER_H
 #define ANALYSIS_DISPATCHER_H
 
-#include "IAnalysisPlugin.h"
-#include <nlohmann/json.hpp>
-#include <vector>
-#include <string>
-#include <memory>
 #include <dlfcn.h>
+#include <map>
+#include <memory>
 #include <stdexcept>
-#include "Logger.h"
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
+#include "AnalysisLogger.h"
+#include "IAnalysisPlugin.h"
 
 namespace analysis {
 
 class AnalysisPluginManager {
 public:
-    using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
+    using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
 
     void loadPlugins(const nlohmann::json& jobj) {
         if (!jobj.contains("plugins")) return;
@@ -47,11 +50,11 @@ public:
 
     void notifyPostSampleProcessing(const SampleKey& skey,
                                         const RegionKey& rkey,
-                                        const AnalysisRegionMap& res) {
+                                        const RegionAnalysisMap& res) {
         for (auto& pl : plugins_) pl->onPostSampleProcessing(skey, rkey, res);
     }
 
-    void notifyFinalisation(const AnalysisRegionMap& res) {
+    void notifyFinalisation(const RegionAnalysisMap& res) {
         for (auto& pl : plugins_) pl->onFinalisation(res);
     }
 

@@ -1,16 +1,18 @@
 #ifndef HISTOGRAM_POLICY_H
 #define HISTOGRAM_POLICY_H
 
-#include <vector>
-#include <numeric>
 #include <cmath>
 #include <map>
-#include "TH1D.h"
+#include <numeric>
+#include <vector>
+
 #include <Eigen/Dense>
+#include "TH1D.h"
 #include "TMatrixDSym.h"
 #include "TVectorD.h"
+
+#include "AnalysisLogger.h"
 #include "BinningDefinition.h"
-#include "Logger.h"
 
 namespace analysis {
 
@@ -19,7 +21,7 @@ class BinnedHistogram;
 struct TH1DStorage {
     BinningDefinition               binning;
     std::vector<double>             counts;
-    Eigen::MatrixXd                 shifts; // n_bins x n_sys
+    Eigen::MatrixXd                 shifts;
 
     TH1DStorage() = default;
 

@@ -3,10 +3,12 @@
 
 #include <map>
 #include <string>
+
 #include <TMatrixDSym.h>
-#include "SystematicStrategy.h"
+
+#include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
-#include "Logger.h"
+#include "SystematicStrategy.h"
 
 namespace analysis {
 

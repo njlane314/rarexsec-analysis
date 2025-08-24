@@ -4,16 +4,18 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
 #include <TMatrixDSym.h>
-#include "BinningDefinition.h"
-#include "BinnedHistogram.h"
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
-#include "SampleTypes.h"
+
 #include "AnalysisTypes.h"
+#include "BinnedHistogram.h"
+#include "BinningDefinition.h"
 #include "Keys.h"
+#include "SampleTypes.h"
 
 namespace analysis {
 
@@ -27,7 +29,6 @@ struct SystematicFutures {
     > variations;
 };
 
-// This is no longer needed: using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(const std::string&)>;
 
 struct UniverseDef {
     std::string name_;

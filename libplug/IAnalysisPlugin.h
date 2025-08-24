@@ -1,12 +1,13 @@
 #ifndef IANALYSIS_PLUGIN_H
 #define IANALYSIS_PLUGIN_H
 
-#include "AnalysisTypes.h"
-#include "AnalysisDefinition.h"
-#include "SelectionRegistry.h"
-#include "AnalysisDataLoader.h"
 #include <nlohmann/json.hpp>
+
+#include "AnalysisDataLoader.h"
+#include "AnalysisDefinition.h"
+#include "AnalysisTypes.h"
 #include "RunConfig.h"
+#include "SelectionRegistry.h"
 
 namespace analysis {
 
@@ -26,9 +27,9 @@ public:
     virtual void onPostSampleProcessing(
                             const SampleKey& sample_key,
                             const RegionKey& region_key,
-                            const AnalysisRegionMap& results) = 0;
+                            const RegionAnalysisMap& results) = 0;
 
-    virtual void onFinalisation(const AnalysisRegionMap& results) = 0;
+    virtual void onFinalisation(const RegionAnalysisMap& results) = 0;
 };
 
 }

@@ -2,12 +2,14 @@
 #define BINNED_HISTOGRAM_H
 
 #include <vector>
-#include "TNamed.h"
-#include "TH1D.h"
+
 #include <Eigen/Dense>
+#include "TH1D.h"
 #include "TMatrixDSym.h"
+#include "TNamed.h"
+
+#include "AnalysisLogger.h"
 #include "HistogramPolicy.h"
-#include "Logger.h"
 
 namespace analysis {
 

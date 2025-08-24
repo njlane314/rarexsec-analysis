@@ -2,6 +2,7 @@
 #define MUON_SELECTION_PROCESSOR_H
 
 #include "ROOT/RVec.hxx"
+
 #include "IEventProcessor.h"
 
 namespace analysis {
@@ -38,8 +39,9 @@ public:
             "muon_mask",
             [](const ROOT::RVec<float>& scores,
                const ROOT::RVec<float>& lengths,
-               const ROOT::RVec<float>& /*dists*/,
+               const ROOT::RVec<float>& dists,
                const ROOT::RVec<float>& avg) {
+                static_cast<void>(dists);
                 ROOT::RVec<bool> mask(scores.size());
                 for (size_t i = 0; i < scores.size(); ++i) {
                     mask[i] = (scores[i] > 0.3f && lengths[i] > 5 && avg[i] < 3);
@@ -68,4 +70,4 @@ public:
 
 }
 
-#endif // MUON_SELECTION_PROCESSOR_H
+#endif

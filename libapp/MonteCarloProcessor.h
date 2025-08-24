@@ -1,15 +1,15 @@
 #ifndef MC_PROCESSOR_H
 #define MC_PROCESSOR_H
 
-#include "ISampleProcessor.h"
 #include "BinnedHistogram.h"
-#include "Logger.h"
+#include "ISampleProcessor.h"
+#include "AnalysisLogger.h"
 
 namespace analysis {
 
 class MonteCarloProcessor : public ISampleProcessor {
 public:
-    explicit MonteCarloProcessor(const SampleKey& key, SampleEnsemble ensemble)
+    explicit MonteCarloProcessor(const SampleKey& key, SampleDatasetGroup ensemble)
       : sample_key_(key),
         nominal_dataset_(std::move(ensemble.nominal_)),
         variation_datasets_(std::move(ensemble.variations_)) {}
@@ -49,8 +49,8 @@ public:
 
 private:
     SampleKey sample_key_;
-    AnalysisDataset nominal_dataset_;
-    std::map<SampleVariation, AnalysisDataset> variation_datasets_;
+    SampleDataset nominal_dataset_;
+    std::map<SampleVariation, SampleDataset> variation_datasets_;
 
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> nominal_futures_;
     std::map<SampleVariation, ROOT::RDF::RResultPtr<TH1D>> variation_futures_;

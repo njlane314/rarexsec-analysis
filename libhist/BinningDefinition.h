@@ -1,11 +1,12 @@
 #ifndef BINNING_DEFINITION_H
 #define BINNING_DEFINITION_H
 
-#include <vector>
-#include <string>
 #include <algorithm>
-#include "Logger.h"
-#include "TypeKey.h"
+#include <string>
+#include <vector>
+
+#include "AnalysisLogger.h"
+#include "Keys.h"
 
 namespace analysis {
 

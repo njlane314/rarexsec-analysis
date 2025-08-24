@@ -1,20 +1,21 @@
 #ifndef STRATIFIER_REGISTRY_H
 #define STRATIFIER_REGISTRY_H
 
+#include <atomic>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <map>
-#include <stdexcept>
-#include <functional>
-#include <set>
-#include <atomic>
-#include <iostream>
 
 #include "RtypesCore.h"
 #include "TColor.h"
-#include "Logger.h"
-#include "Keys.h"
 #include "ROOT/RVec.hxx"
+
+#include "AnalysisLogger.h"
+#include "Keys.h"
 
 namespace analysis {
 

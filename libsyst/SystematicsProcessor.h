@@ -3,16 +3,18 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
 #include <TMatrixDSym.h>
-#include "SystematicStrategy.h"
+
+#include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
-#include "WeightSystematicStrategy.h"
-#include "UniverseSystematicStrategy.h"
 #include "DetectorSystematicStrategy.h"
-#include "Logger.h"
+#include "SystematicStrategy.h"
+#include "UniverseSystematicStrategy.h"
+#include "WeightSystematicStrategy.h"
 
 namespace analysis {
 

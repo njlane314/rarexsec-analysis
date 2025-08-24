@@ -1,26 +1,27 @@
 #ifndef ANALYSIS_RUNNER_H
 #define ANALYSIS_RUNNER_H
 
-#include <memory>
-#include <string>
 #include <map>
+#include <memory>
 #include <numeric>
+#include <string>
+
 #include <nlohmann/json.hpp>
 
-#include "AnalysisTypes.h"
+#include "AdaptiveBinningCalculator.h"
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
-#include "SelectionRegistry.h"
-#include "EventVariableRegistry.h"
+#include "AnalysisLogger.h"
 #include "AnalysisPluginManager.h"
-#include "SystematicsProcessor.h"
-#include "Logger.h"
-#include "Keys.h"
-#include "ISampleProcessor.h"
+#include "AnalysisTypes.h"
 #include "DataProcessor.h"
-#include "MonteCarloProcessor.h"
+#include "EventVariableRegistry.h"
 #include "IHistogramBooker.h"
-#include "DynamicBinningCalculator.h"
+#include "ISampleProcessor.h"
+#include "Keys.h"
+#include "MonteCarloProcessor.h"
+#include "SelectionRegistry.h"
+#include "SystematicsProcessor.h"
 
 namespace analysis {
 
@@ -41,7 +42,7 @@ public:
         plugin_manager.loadPlugins(plgn_cfg);
     }
 
-    AnalysisRegionMap run() {
+    RegionAnalysisMap run() {
         analysis::log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
         plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
 
@@ -60,7 +61,7 @@ public:
                     log::fatal("AnalysisRunner::run", "Cannot perform dynamic binning: No Monte Carlo samples were found!");
                 }
 
-                BinningDefinition new_bins = DynamicBinningCalculator::calculate(
+                BinningDefinition new_bins = AdaptiveBinningCalculator::calculate(
                     mc_nodes,
                     var_handle.binning(),
                     "nominal_event_weight",
@@ -73,7 +74,7 @@ public:
             }
         }
 
-        AnalysisRegionMap analysis_regions;
+        RegionAnalysisMap analysis_regions;
 
         const auto& regions = analysis_definition_.regions();
         size_t region_count = regions.size();
@@ -84,8 +85,8 @@ public:
 
             RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
-            std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
-            std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
+                std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
+                std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
 
             analysis::log::info("AnalysisRunner::run", "Processing sample ensemble...");
             auto& sample_frames = data_loader_.getSampleFrames();
@@ -106,11 +107,11 @@ public:
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
 
                 analysis::log::info("AnalysisRunner::run", "Configuring systematic variations...");
-                std::map<SampleVariation, AnalysisDataset> variation_datasets;
+                std::map<SampleVariation, SampleDataset> variation_datasets;
                 for (auto& [variation_type, variation_node] : sample_def.variation_nodes_) {
                     variation_datasets.emplace(
                         variation_type,
-                        AnalysisDataset{
+                        SampleDataset{
                             sample_def.sample_origin_,
                             AnalysisRole::kVariation,
                             variation_node.Filter(region_handle.selection().str())
@@ -118,8 +119,8 @@ public:
                     );
                 }
 
-                AnalysisDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
-                SampleEnsemble ensemble{std::move(nominal_dataset), std::move(variation_datasets)};
+                SampleDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
+                SampleDatasetGroup ensemble{std::move(nominal_dataset), std::move(variation_datasets)};
 
                 if (sample_def.isData()) {
                     sample_processors[sample_key] = std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
@@ -197,4 +198,5 @@ private:
 }
 
 #endif
+
 
