@@ -15,7 +15,7 @@ public:
 
     void onInitialisation(AnalysisDefinition& def,
                           const SelectionRegistry&) override {
-        log::info("RegionsPlugin", "Defining regions...");
+        log::info("RegionsPlugin::onInitialisation", "Defining regions...");
         if (!config_.contains("regions")) return;
 
         for (auto const& region_cfg : config_.at("regions")) {
@@ -30,7 +30,7 @@ public:
                 auto expr = region_cfg.at("expression").get<std::string>();
                 def.addRegionExpr(region_key, label, expr);
             } else {
-                log::fatal("RegionsPlugin",
+                log::fatal("RegionsPlugin::onInitialisation",
                            "each region must have either selection_rule or expression");
             }
         }

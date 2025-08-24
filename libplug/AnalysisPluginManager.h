@@ -20,7 +20,7 @@ public:
         if (!jobj.contains("plugins")) return;
         for (auto const& p : jobj.at("plugins")) {
             std::string path = p.at("path");
-            log::info("AnalysisPluginManager", "Loading plugin from:", path);
+            log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
             void* handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle) throw std::runtime_error(dlerror());
 

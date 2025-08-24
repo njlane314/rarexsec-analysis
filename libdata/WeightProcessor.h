@@ -16,7 +16,7 @@ public:
       , total_run_pot_(total_run_pot)
     {
         if (sample_pot_ <= 0.0) {
-            log::warn("WeightProcessor", "sample JSON has no or invalid 'pot';" "base_event_weight will default to 1");
+            log::warn("WeightProcessor::WeightProcessor", "sample JSON has no or invalid 'pot';" "base_event_weight will default to 1");
         }
     }
 

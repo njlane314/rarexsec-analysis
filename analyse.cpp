@@ -31,34 +31,33 @@ int main(int argc, char* argv[]) {
                  "---------------------------------------------------------------\033[0m" << std::endl;
 
     if (argc != 3) {
-        analysis::log::fatal("main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json>");
+        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json>");
         return 1;
     }
 
     std::ifstream config_file(argv[1]);
     if (!config_file.is_open()) {
-        analysis::log::fatal("main", "Configuration file inaccessible:", argv[1]);
+        analysis::log::fatal("analyse::main", "Configuration file inaccessible:", argv[1]);
         return 1;
     }
     nlohmann::json config_data = nlohmann::json::parse(config_file);
 
     std::ifstream plugins_file(argv[2]);
     if (!plugins_file.is_open()) {
-        analysis::log::fatal("main", "Plugin manifest inaccessible:", argv[2]);
+        analysis::log::fatal("analyse::main", "Plugin manifest inaccessible:", argv[2]);
         return 1;
     }
     nlohmann::json plugins_config = nlohmann::json::parse(plugins_file);
 
     try {
         ROOT::EnableImplicitMT();
-        analysis::log::info("main", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
+        analysis::log::info("analyse::main", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
         std::string ntuple_base_directory = config_data.at("ntuple_base_directory").get<std::string>();
 
-        analysis::log::info("main", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
+        analysis::log::info("analyse::main", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
 
         for (auto const& [beam, run_configs] : config_data.at("run_configurations").items()) {
-            analysis::log::info("main", "Initiating analysis sequence for beam:", beam);
 
             std::vector<std::string> periods;
             for (auto const& [period, period_details] : run_configs.items()) {
@@ -67,7 +66,6 @@ int main(int argc, char* argv[]) {
 
             analysis::RunConfigRegistry rc_reg;
             analysis::RunConfigLoader::loadRunConfigurations(argv[1], rc_reg);
-            analysis::log::info("main", "Configuration registry initialised with", rc_reg.all().size(), "entries.");
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;
@@ -85,7 +83,6 @@ int main(int argc, char* argv[]) {
 
             analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
 
-            analysis::log::info("main", "Commencing data ingestion phase for", periods.size(), "periods...");
             analysis::AnalysisDataLoader data_loader(
                 rc_reg,
                 ev_reg,
@@ -94,11 +91,9 @@ int main(int argc, char* argv[]) {
                 ntuple_base_directory,
                 true
             );
-            analysis::log::info("main", "Data ingestion phase concluded with", data_loader.getSampleFrames().size(), "samples prepared.");
 
             auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
 
-            analysis::log::info("main", "Calibrating analysis subsystems...");
             analysis::AnalysisRunner runner(
                 data_loader,
                 sel_reg,
@@ -108,16 +103,14 @@ int main(int argc, char* argv[]) {
                 plugins_config
             );
 
-            analysis::log::info("main", "Dispatching analysis execution...");
             runner.run();
-            analysis::log::info("main", "Beam processing cycle complete:", beam);
         }
 
     } catch (const std::exception& e) {
-        analysis::log::fatal("main", "An error occurred:", e.what());
+        analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
     }
 
-    analysis::log::info("main", "Global analysis routine terminated nominally.");
+    analysis::log::info("analyse::main", "Global analysis routine terminated nominally.");
     return 0;
 }

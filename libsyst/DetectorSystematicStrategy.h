@@ -32,7 +32,7 @@ public:
         total_detvar_cov.Zero();
 
         if (result.raw_detvar_hists_.empty()) {
-            log::info("DetectorSystematicStrategy", "No detector variation samples found. Skipping detector systematics.");
+            log::info("DetectorSystematicStrategy::computeCovariance", "No detector variation samples found. Skipping detector systematics.");
             return total_detvar_cov;
         }
 
@@ -49,7 +49,7 @@ public:
 
         auto it_cv = total_detvar_hists.find(SampleVariation::kCV);
         if (it_cv == total_detvar_hists.end()) {
-            log::warn("DetectorSystematicStrategy", "No detector variation CV histogram found. Skipping.");
+            log::warn("DetectorSystematicStrategy::computeCovariance", "No detector variation CV histogram found. Skipping.");
             return total_detvar_cov;
         }
         const auto& h_det_cv = it_cv->second;

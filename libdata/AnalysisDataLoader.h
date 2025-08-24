@@ -85,12 +85,12 @@ public:
     }
 
     void printAllBranches() {
-        log::debug("AnalysisDataLoader", "Available branches in loaded samples:");
+        log::debug("AnalysisDataLoader::printAllBranches", "Available branches in loaded samples:");
         for (auto& [sample_key, sample_def] : frames_) {
-            log::debug("AnalysisDataLoader", "--- Sample:", sample_key.str(), "---");
+            log::debug("AnalysisDataLoader::printAllBranches", "--- Sample:", sample_key.str(), "---");
             auto branches = sample_def.nominal_node_.GetColumnNames();
             for (const auto& branch : branches) {
-                log::debug("AnalysisDataLoader", "  - ", branch);
+                log::debug("AnalysisDataLoader::printAllBranches", "  - ", branch);
             }
         }
     }
@@ -127,7 +127,7 @@ private:
             total_triggers_ += rc.nominal_triggers;
             for (auto& sample_json : rc.samples) {
                 if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
-                    log::info("AnalysisDataLoader",
+                    log::info("AnalysisDataLoader::loadAll",
                               "Skipping inactive sample: ",
                               sample_json.at("sample_key").get<std::string>());
                     continue;

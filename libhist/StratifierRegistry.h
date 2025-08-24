@@ -111,17 +111,17 @@ public:
                 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61
             }}
         };
-        log::info("StratifierRegistry", "Registry initialised successfully.");
+        log::info("StratifierRegistry::StratifierRegistry", "Registry initialised successfully.");
     }
 
     const StratumProperties& getStratumProperties(const std::string& scheme_name, int key) const {
         auto scheme_it = scheme_definitions_.find(scheme_name);
         if (scheme_it == scheme_definitions_.end())
-            log::fatal("StratifierRegistry", "Scheme not found: " + scheme_name);
+            log::fatal("StratifierRegistry::getStratumProperties", "Scheme not found: " + scheme_name);
         
         auto stratum_it = scheme_it->second.strata.find(key);
         if (stratum_it == scheme_it->second.strata.end())
-            log::fatal("StratifierRegistry", "Stratum not found in scheme '" + scheme_name + "': " + std::to_string(key));
+            log::fatal("StratifierRegistry::getStratumProperties", "Stratum not found in scheme '" + scheme_name + "': " + std::to_string(key));
         
         return stratum_it->second;
     }
@@ -141,7 +141,7 @@ public:
     const std::vector<int>& getSignalKeys(const std::string& signal_group_name) const {
         auto it = signal_channel_groups_.find(signal_group_name);
         if (it == signal_channel_groups_.end()) {
-            log::fatal("StratifierRegistry", "Signal group not found: " + signal_group_name);
+            log::fatal("StratifierRegistry::getSignalKeys", "Signal group not found: " + signal_group_name);
         }
         return it->second;
     }
@@ -149,7 +149,7 @@ public:
     std::vector<StratumKey> getAllStratumKeysForScheme(const std::string& scheme_name) const {
         auto scheme_it = scheme_definitions_.find(scheme_name);
         if (scheme_it == scheme_definitions_.end())
-            log::fatal("StratifierRegistry", "Scheme not found: " + scheme_name);
+            log::fatal("StratifierRegistry::getAllStratumKeysForScheme", "Scheme not found: " + scheme_name);
         
         std::vector<StratumKey> keys;
         keys.reserve(scheme_it->second.strata.size());
@@ -170,7 +170,7 @@ public:
     VectorFilterPredicate findPredicate(const StratifierKey& key) const {
         auto it = scheme_definitions_.find(key.str());
         if (it == scheme_definitions_.end() || it->second.type != StratifierType::kVector) {
-            log::fatal("StratifierRegistry", "No predicate found for vector scheme:", key.str());
+            log::fatal("StratifierRegistry::findPredicate", "No predicate found for vector scheme:", key.str());
         }
         return it->second.predicate;
     }

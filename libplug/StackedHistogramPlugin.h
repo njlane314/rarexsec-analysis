@@ -62,13 +62,13 @@ public:
             auto it = region_map.find(rkey);
 
             if (it == region_map.end()) {
-                log::error("StackedHistogramPlugin", "Could not find analysis region for key:", rkey.str());
+                log::error("StackedHistogramPlugin::onFinalisation", "Could not find analysis region for key:", rkey.str());
                 continue;
             }
             
             VariableKey vkey{pc.variable};
             if (!it->second.hasFinalVariable(vkey)) {
-                log::error("StackedHistogramPlugin", "Could not find variable", vkey.str(), "in region", rkey.str());
+                log::error("StackedHistogramPlugin::onFinalisation", "Could not find variable", vkey.str(), "in region", rkey.str());
                 continue;
             }
             

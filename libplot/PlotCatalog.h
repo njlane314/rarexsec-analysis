@@ -79,7 +79,7 @@ private:
         auto it = phase_space.find(key);
         if (it != phase_space.end())
             return it->second;
-        log::fatal("PlotCatalog", "Missing analysis result for key", key);
+        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for key", key);
     }
 
     AnalysisDataLoader&         loader_;
