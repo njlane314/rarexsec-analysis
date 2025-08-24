@@ -19,9 +19,9 @@
           "label": "Track Length [cm]",
           "stratum": "backtracked_pdg_codes",
           "bins": {
-            "n": 50,
+            "n": 200,
             "min": 0.0,
-            "max": 500.0
+            "max": 1000.0
           },
           "regions": [ "NUMU_CC_SEL" ]
         }

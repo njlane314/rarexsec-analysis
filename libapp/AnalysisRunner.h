@@ -47,7 +47,7 @@ public:
         AnalysisRegionMap analysis_regions;
 
         for (const auto& region_handle : analysis_definition_.regions()) {
-            RegionAnalysis region_analysis(region_handle.key_);
+            RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
             std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
             std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
@@ -80,13 +80,13 @@ public:
                 }
 
                 AnalysisDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
-                SampleEnsemble ensemble{nominal_dataset, variation_datasets};
+                SampleEnsemble ensemble{std::move(nominal_dataset), std::move(variation_datasets)};
 
                 if (sample_def.isData()) {
-                    sample_processors[sample_key] = std::make_unique<DataProcessor>(ensemble.nominal_);
+                    sample_processors[sample_key] = std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
                 } else {
                     mc_rnodes.emplace(sample_key, region_df);
-                    sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, ensemble);
+                    sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
                 }
             }
 
@@ -116,6 +116,7 @@ public:
 
                 systematics_processor_.processSystematics(result);
 
+                result.printSummary();
                 region_analysis.addFinalVariable(var_key, std::move(result));
             }
 

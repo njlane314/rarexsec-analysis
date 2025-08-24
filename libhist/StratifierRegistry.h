@@ -6,6 +6,9 @@
 #include <map>
 #include <stdexcept>
 #include <functional>
+#include <set>
+#include <atomic>
+#include <iostream>
 
 #include "RtypesCore.h"
 #include "TColor.h"
@@ -37,6 +40,8 @@ private:
 
 public:
     StratifierRegistry() {
+        static std::atomic<int> other_events_logged_count(0);
+
         this->addScheme("inclusive_strange_channels", StratifierType::kScalar, {
             {0, "Data", "Data", kBlack, 1001}, {1, "External", "External", kGray, 3004},
             {2, "Dirt", "Dirt", kGray+2, 1001}, {10, "numu_cc_1s", R"(#nu_{#mu}CC 1s)", kSpring+5, 1001},
@@ -61,13 +66,43 @@ public:
         });
 
         this->addScheme("backtracked_pdg_codes", StratifierType::kVector, {
-            {13, "muon", R"(#mu^{#pm})", kAzure+2, 1001}, {2212, "proton", "p", kOrange+1, 1001},
-            {211, "pion", R"(#pi^{#pm})", kTeal+1, 1001}, {321, "kaon", R"(K^{#pm})", kPink+1, 1001},
-            {3224, "sigma", R"(#Sigma^{#pm})", kSpring-5, 1001}, {22, "gamma", R"(#gamma)", kOrange-9, 1001},
-            {11, "electron", R"(e^{#pm})", kCyan-7, 1001}, {0, "other", "Other", kGray, 1001}
+            {13,    "muon",               R"(#mu^{#pm})",      kBlue-7,    1001},
+            {2212,  "proton",             "p",                 kRed-4,     1001},
+            {211,   "pion",               R"(#pi^{#pm})",      kGreen+2,   1001},
+            {2112,  "neutron",            "n",                 kGray+1,    1001},
+            {321,   "kaon",               R"(K^{#pm})",        kMagenta-7, 1001},
+            {22,    "gamma",              R"(#gamma)",         kOrange-3,  1001},
+            {11,    "electron",           R"(e^{#pm})",        kCyan+1,    1001},
+            {3224,  "sigma",              R"(#Sigma^{#pm})",   kPink+10,   1001},
+            {0,     "unmatched",          "Unmatched",         kGray+3,    1001},
+            {-1,    "other",              "Other",             kBlack,     3005}
         },
         [](const ROOT::RVec<int>& pdg_codes, int key) {
-            return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == key) > 0;
+            if (key == 0) {
+                return ROOT::VecOps::Sum(pdg_codes == 0) > 0;
+            }
+            if (key == -1) {
+                if (pdg_codes.empty()) return false;
+                const std::set<int> known_pdgs = {0, 11, 13, 22, 211, 321, 2112, 2212, 3112, 3224};
+                for (int code : pdg_codes) {
+                    if (known_pdgs.count(std::abs(code))) {
+                        return false;
+                    }
+                }
+                if (other_events_logged_count < 5) {
+                    other_events_logged_count++;
+                    std::cout << "[DEBUG: Stratifier] 'Other' event contains PDG codes: ";
+                    for(int code : pdg_codes) { std::cout << code << " "; }
+                    std::cout << std::endl;
+                }
+                return true;
+            }
+            if (key == 3224) {
+                 return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == 3224 || ROOT::VecOps::abs(pdg_codes) == 3112) > 0;
+            }
+            else {
+                return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == key) > 0;
+            }
         });
 
         signal_channel_groups_ = {

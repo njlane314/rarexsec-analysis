@@ -84,6 +84,7 @@ public:
     }
 
     BinnedHistogram operator*(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() <= 0 || o.getNumberOfBins() <= 0) return BinnedHistogram();
         if (this->getNumberOfBins() != o.getNumberOfBins()) {
             log::fatal("BinnedHistogram::operator*", "Attempting to multiply histograms with different numbers of bins.");
         }
@@ -104,8 +105,8 @@ public:
     BinnedHistogram operator+(const BinnedHistogram& o) const {
         log::debug("BinnedHistogram::operator+", "Adding '", o.GetName(), "' (", o.getNumberOfBins(), " bins, cov ", o.cov.GetNrows(), "x", o.cov.GetNcols(), ") to '", this->GetName(), "' (", this->getNumberOfBins(), " bins, cov ", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
 
-        if (this->getNumberOfBins() == 0) return o;
-        if (o.getNumberOfBins() == 0) return *this;
+        if (this->getNumberOfBins() <= 0) return o;
+        if (o.getNumberOfBins() <= 0) return *this;
 
         if (this->getNumberOfBins() != o.getNumberOfBins()) {
             log::fatal("BinnedHistogram::operator+", "Attempting to add histograms with different numbers of bins:", this->getNumberOfBins(), "vs", o.getNumberOfBins());
@@ -120,6 +121,7 @@ public:
     }
 
     BinnedHistogram operator/(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() <= 0 || o.getNumberOfBins() <= 0) return BinnedHistogram();
         if (this->getNumberOfBins() != o.getNumberOfBins()) {
             log::fatal("BinnedHistogram::operator/", "Attempting to divide histograms with different numbers of bins.");
         }
@@ -136,6 +138,9 @@ public:
     }
 
     BinnedHistogram operator-(const BinnedHistogram& o) const {
+        if (this->getNumberOfBins() <= 0) return o * -1.0;
+        if (o.getNumberOfBins() <= 0) return *this;
+
         if (this->getNumberOfBins() != o.getNumberOfBins()) {
             log::fatal("BinnedHistogram::operator-", "Attempting to subtract histograms with different numbers of bins.");
         }

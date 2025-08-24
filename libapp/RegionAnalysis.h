@@ -14,11 +14,13 @@ namespace analysis {
 class RegionAnalysis {
 public:
     RegionAnalysis(RegionKey rk = RegionKey{},
+                   std::string lbl = "",
                    double pot = 0.0,
                    bool bl = true,
                    std::string bc = {},
                    std::vector<std::string> runs = {})
         : region_key_(std::move(rk))
+        , region_label_(std::move(lbl))
         , protons_on_target_(pot)
         , is_blinded_(bl)
         , beam_config_(std::move(bc))
@@ -27,6 +29,7 @@ public:
     ~RegionAnalysis() = default;
 
     const RegionKey& regionKey() const noexcept { return region_key_; }
+    const std::string& regionLabel() const noexcept { return region_label_.empty() ? region_key_.str() : region_label_; }
     double protonsOnTarget() const noexcept { return protons_on_target_; }
     bool isBlinded() const noexcept { return is_blinded_; }
     const std::string& beamConfig() const noexcept { return beam_config_; }
@@ -63,6 +66,7 @@ public:
 
 private:
     RegionKey region_key_{};
+    std::string region_label_{};
     double protons_on_target_{0.0};
     bool is_blinded_{true};
     std::string beam_config_{};

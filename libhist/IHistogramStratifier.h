@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
+#include <algorithm> // <-- Add this include for std::replace
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 #include "BinningDefinition.h"
@@ -31,7 +32,10 @@ public:
         auto df_with_filters = dataframe;
 
         for (const auto& key : this->getRegistryKeys()) {
-            std::string filter_col_name = "pass_" + getSchemeName() + "_" + key.str();
+            std::string stratum_key_str = key.str();
+            std::replace(stratum_key_str.begin(), stratum_key_str.end(), '-', 'n');
+            std::string filter_col_name = "pass_" + getSchemeName() + "_" + stratum_key_str;
+            
             df_with_filters = this->defineFilterColumn(df_with_filters, std::stoi(key.str()), filter_col_name);
             strat_futurs[key] = df_with_filters.Filter(filter_col_name)
                                 .Histo1D(hist_model, binning.getVariable(), weight_column);

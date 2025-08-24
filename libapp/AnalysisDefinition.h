@@ -122,7 +122,7 @@ public:
         region_selections_[region_key] = std::move(sel);
 
         auto region_analysis = std::make_unique<RegionAnalysis>(
-            region_key, pot, blinded,
+            region_key, region_name, pot, blinded,
             std::move(beam_config), std::move(runs)
         );
 
@@ -146,7 +146,7 @@ public:
         region_selections_[region_key] = Selection(std::move(raw_expr));
 
         auto region_analysis = std::make_unique<RegionAnalysis>(
-            region_key, pot, blinded,
+            region_key, label, pot, blinded,
             std::move(beam_config), std::move(runs)
         );
 

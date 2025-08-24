@@ -70,9 +70,15 @@ public:
 
 
 private:
-    void drawWatermark(TPad* pad) const {
+    void drawWatermark(TPad* pad, double total_mc_events) const {
         pad->cd();
         
+        auto format_double = [](double val, int precision) {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(precision) << val;
+            return stream.str();
+        };
+
         std::string line1 = "#bf{#muBooNE Simulation, Preliminary}";
 
         std::stringstream pot_stream;
@@ -94,8 +100,17 @@ private:
             beam_name = beam_map.at(beam_name);
         }
 
-        std::string line2 = beam_name + " (" + pot_str + " POT)";
-        std::string line3 = "Analysis Region: " + region_analysis_.regionKey().str();
+        std::string runs_str;
+        if (!region_analysis_.runNumbers().empty()) {
+            runs_str = " ";
+            for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
+                runs_str += region_analysis_.runNumbers()[i] + (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
+            }
+        }
+
+        std::string line2 = beam_name + runs_str + " (" + pot_str + " POT)";
+        std::string line3 = "Analysis Region: " + region_analysis_.regionLabel();
+        std::string line4 = "Total MC Events: " + format_double(total_mc_events, 2);
 
 
         TLatex watermark;
@@ -108,6 +123,7 @@ private:
         watermark.SetTextSize(0.05 * 0.8);
         watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, line2.c_str());
         watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, line3.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, line4.c_str());
     }
 
 protected:
@@ -141,6 +157,11 @@ protected:
                   });
         std::reverse(mc_hists.begin(), mc_hists.end());
 
+        double total_mc_events = 0.0;
+        for(const auto& [key, hist] : mc_hists) {
+            total_mc_events += hist.getSum();
+        }
+
         p_legend->cd();
         legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
         legend_->SetBorderSize(0);
@@ -173,11 +194,7 @@ protected:
             h_unc->SetFillStyle(3004);
             h_unc->SetLineColor(kBlack);
             h_unc->SetLineWidth(1);
-            double total_mc_events = 0.0;
-            for(const auto& [key, hist] : mc_hists) {
-                total_mc_events += hist.getSum();
-            }
-            std::string total_label = annotate_numbers_ ? "Stat. Unc. : " + format_double(total_mc_events, 2) : "Stat. Unc.";
+            std::string total_label = "Stat. #oplus Syst. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
         }
         legend_->Draw();
@@ -202,7 +219,7 @@ protected:
 
         double max_y = total_mc_hist_ ? total_mc_hist_->GetMaximum() + total_mc_hist_->GetBinError(total_mc_hist_->GetMaximumBin()) : 1.0;
         mc_stack_->Draw("HIST");
-        mc_stack_->SetMaximum(max_y * (use_log_y_ ? 100 : 1.3));
+        mc_stack_->SetMaximum(max_y * (use_log_y_ ? 10 : 1.3));
         mc_stack_->SetMinimum(use_log_y_ ? 0.1 : 0.0);
         
         if (total_mc_hist_) {
@@ -255,7 +272,7 @@ protected:
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
 
-        drawWatermark(p_main);
+        drawWatermark(p_main, total_mc_events);
 
         p_main->RedrawAxis();
         canvas.Update();

@@ -12,22 +12,22 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 #include "SampleTypes.h"
-#include "AnalysisTypes.h" 
+#include "AnalysisTypes.h"
 #include "Keys.h"
 
 namespace analysis {
 
 struct SystematicFutures {
     std::unordered_map<
-        SystematicKey, 
+        SystematicKey,
         std::map<
-            SampleKey, 
+            SampleKey,
             ROOT::RDF::RResultPtr<TH1D>
         >
     > variations;
 };
 
-using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(const std::string&)>;
+// This is no longer needed: using BookHistFn = std::function<ROOT::RDF::RResultPtr<TH1D>(const std::string&)>;
 
 struct UniverseDef {
     std::string name_;
@@ -51,7 +51,9 @@ public:
     virtual void
     bookVariations(
         const SampleKey&        sample_key,
-        BookHistFn              book_fn,
+        ROOT::RDF::RNode&       rnode,
+        const BinningDefinition& binning,
+        const ROOT::RDF::TH1DModel& model,
         SystematicFutures&      futures
     ) = 0;
 

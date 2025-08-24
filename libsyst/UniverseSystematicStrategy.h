@@ -26,13 +26,26 @@ public:
 
     void bookVariations(
         const SampleKey&   sample_key,
-        BookHistFn         book_fn,
+        ROOT::RDF::RNode& rnode,
+        const BinningDefinition& binning,
+        const ROOT::RDF::TH1DModel& model,
         SystematicFutures& futures
     ) override {
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
-            std::string col_name = vector_name_ + "[" + std::to_string(u) + "]";
-            futures.variations[uni_key][sample_key] = book_fn(col_name);
+            std::string new_col_name = vector_name_ + "_u" + std::to_string(u);
+
+            auto d_with_weight = rnode.Define(new_col_name,
+                [u, vec_name = this->vector_name_](const ROOT::RVec<unsigned short>& weights) {
+                    if (u < weights.size()) {
+                        return static_cast<double>(weights[u]);
+                    }
+                    return 1.0;
+                },
+                {vector_name_}
+            );
+
+            futures.variations[uni_key][sample_key] = d_with_weight.Histo1D(model, binning.getVariable(), new_col_name);
         }
     }
 

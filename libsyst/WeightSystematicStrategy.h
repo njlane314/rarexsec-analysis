@@ -25,13 +25,15 @@ public:
 
     void bookVariations(
         const SampleKey& sample_key,
-        BookHistFn       book_fn,
+        ROOT::RDF::RNode& rnode,
+        const BinningDefinition& binning,
+        const ROOT::RDF::TH1DModel& model,
         SystematicFutures& futures
     ) override {
         SystematicKey up_key{identifier_ + "_up"};
         SystematicKey dn_key{identifier_ + "_dn"};
-        futures.variations[up_key][sample_key] = book_fn(up_column_);
-        futures.variations[dn_key][sample_key] = book_fn(dn_column_);
+        futures.variations[up_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), up_column_);
+        futures.variations[dn_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), dn_column_);
     }
 
     TMatrixDSym computeCovariance(

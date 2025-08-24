@@ -13,7 +13,14 @@ public:
 
     const std::string& getName() const override { return identifier_; }
 
-    void bookVariations(const SampleKey&, BookHistFn, SystematicFutures&) override {}
+    void bookVariations(
+        const SampleKey&,
+        ROOT::RDF::RNode&,
+        const BinningDefinition&,
+        const ROOT::RDF::TH1DModel&,
+        SystematicFutures&
+    ) override {
+    }
 
     TMatrixDSym computeCovariance(
         VariableResult&  result,
@@ -23,6 +30,11 @@ public:
         int n_bins = nominal_hist.getNumberOfBins();
         TMatrixDSym total_detvar_cov(n_bins);
         total_detvar_cov.Zero();
+
+        if (result.raw_detvar_hists_.empty()) {
+            log::info("DetectorSystematicStrategy", "No detector variation samples found. Skipping detector systematics.");
+            return total_detvar_cov;
+        }
 
         std::map<SampleVariation, BinnedHistogram> total_detvar_hists;
         for (const auto& [sample_key, var_map] : result.raw_detvar_hists_) {

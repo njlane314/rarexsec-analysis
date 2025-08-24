@@ -9,10 +9,10 @@ namespace analysis {
 
 class MonteCarloProcessor : public ISampleProcessor {
 public:
-    explicit MonteCarloProcessor(const SampleKey& key, const SampleEnsemble& ensemble)
+    explicit MonteCarloProcessor(const SampleKey& key, SampleEnsemble ensemble)
       : sample_key_(key),
-        nominal_dataset_(ensemble.nominal_),
-        variation_datasets_(ensemble.variations_) {}
+        nominal_dataset_(std::move(ensemble.nominal_)),
+        variation_datasets_(std::move(ensemble.variations_)) {}
 
     void book(IHistogramBooker& booker,
               const BinningDefinition& binning,
@@ -22,13 +22,14 @@ public:
         
         analysis::log::info("MonteCarloProcessor::book", "Booking nominals...");
         if (!variation_datasets_.empty()) {
-            for (const auto& [var_key, dataset] : variation_datasets_) {
+            for (auto& [var_key, dataset] : variation_datasets_) {
                 variation_futures_[var_key] = booker.bookNominalHist(binning, dataset, model);
             }
         }
     }
 
     void contributeTo(VariableResult& result) override {
+        log::info("MonteCarloProcessor", "Contributing histograms from sample:", sample_key_.str());
         for (auto& [stratum_key, future] : nominal_futures_) {
             if (future.GetPtr()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
@@ -48,8 +49,8 @@ public:
 
 private:
     SampleKey sample_key_;
-    const AnalysisDataset& nominal_dataset_;
-    const std::map<SampleVariation, AnalysisDataset>& variation_datasets_;
+    AnalysisDataset nominal_dataset_;
+    std::map<SampleVariation, AnalysisDataset> variation_datasets_;
 
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> nominal_futures_;
     std::map<SampleVariation, ROOT::RDF::RResultPtr<TH1D>> variation_futures_;

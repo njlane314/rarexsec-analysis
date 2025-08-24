@@ -12,6 +12,7 @@
 #include "WeightSystematicStrategy.h"
 #include "UniverseSystematicStrategy.h"
 #include "DetectorSystematicStrategy.h"
+#include "Logger.h"
 
 namespace analysis {
 
@@ -45,11 +46,8 @@ public:
         const BinningDefinition& binning,
         const ROOT::RDF::TH1DModel& model
     ) {
-        auto book_hist_fn = [&](const std::string& weight_column) {
-            return rnode.Histo1D(model, binning.getVariable(), weight_column);
-        };
         for (const auto& strategy : systematic_strategies_) {
-            strategy->bookVariations(sample_key, book_hist_fn, systematic_futures_);
+            strategy->bookVariations(sample_key, rnode, binning, model, systematic_futures_);
         }
     }
 
@@ -68,6 +66,8 @@ public:
             for (const auto& [name, cov] : result.covariance_matrices_) {
                 if (cov.GetNrows() == n_bins) {
                     result.total_covariance_ += cov;
+                } else {
+                    log::warn("SystematicsProcessor", "Skipping systematic", name.str(), "due to incompatible matrix size (", cov.GetNrows(), "x", cov.GetNcols(), "vs expected", n_bins, "x", n_bins, ")");
                 }
             }
             result.nominal_with_band_ = result.total_mc_hist_;

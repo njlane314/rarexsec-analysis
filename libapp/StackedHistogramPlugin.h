@@ -87,7 +87,7 @@ public:
                 pc.use_log_y,
                 pc.y_axis_label
             );
-            plot.drawAndSave();
+            plot.drawAndSave("pdf");
         }
     }
 
