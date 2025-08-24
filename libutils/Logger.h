@@ -73,11 +73,12 @@ private:
       const char *reset = "\033[0m";
       const char *timeColour = "\033[90m";
       const char *levelColour = levelToColour(level);
-      std::string levelStr = pad(levelToString(level), 5);
+      std::cout << timeColour << "["
+                << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "]"
+                << reset << " ";
 
-      std::cout << timeColour << "[" << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "]" << reset << " ";
-      std::cout << "[" << levelColour << levelStr << reset << "] ";
-      std::cout << levelColour << "\033[1m[" << context << "]" << reset << " ";
+      std::cout << "[" << levelColour << levelToString(level) << reset << "] ";
+      std::cout << "[" << "\033[1m" << levelColour << context << reset << "] ";
       printArgs(std::cout, args...);
       std::cout << reset << std::endl;
     }
@@ -102,25 +103,17 @@ private:
   const char *levelToColour(LogLevel level) const {
     switch (level) {
     case LogLevel::DEBUG:
-      return "\033[94m";
+      return "\033[38;5;33m";
     case LogLevel::INFO:
-      return "\033[92m";
+      return "\033[38;5;40m";
     case LogLevel::WARN:
-      return "\033[93m";
+      return "\033[38;5;214m";
     case LogLevel::ERROR:
-      return "\033[91m";
+      return "\033[38;5;196m";
     case LogLevel::FATAL:
-      return "\033[95m";
+      return "\033[38;5;201m";
     }
     return "\033[0m";
-  }
-
-  std::string pad(const std::string &s, std::size_t w) const {
-    if (s.size() >= w)
-      return s;
-    std::size_t left = (w - s.size() + 1) / 2;
-    std::size_t right = w - s.size() - left;
-    return std::string(left, ' ') + s + std::string(right, ' ');
   }
 
   LogLevel level_ = LogLevel::DEBUG;
