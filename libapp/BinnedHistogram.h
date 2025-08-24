@@ -112,7 +112,7 @@ public:
     }
 
     BinnedHistogram operator+(const BinnedHistogram& o) const {
-        log::debug("BinnedHistogram::operator+", "Adding '", o.GetName(), "' (", o.getNumberOfBins(), " bins, cov ", o.cov.GetNrows(), "x", o.cov.GetNcols(), ") to '", this->GetName(), "' (", this->getNumberOfBins(), " bins, cov ", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
+        log::debug("BinnedHistogram::operator+", "Adding '", o.GetName(), "' (", o.getNumberOfBins(), " bins, shifts ", o.shifts.cols(), ") to '", this->GetName(), "' (", this->getNumberOfBins(), " bins, shifts ", this->shifts.cols(), ")");
 
         if (this->getNumberOfBins() <= 0) return o;
         if (o.getNumberOfBins() <= 0) return *this;
@@ -125,11 +125,11 @@ public:
         for (int i = 0; i < getNumberOfBins(); ++i) {
             tmp.counts[i] += o.counts[i];
         }
-        if (tmp.cov.GetNrows() != o.cov.GetNrows()) {
+        if (tmp.shifts.rows() != o.shifts.rows()) {
             log::error(
                 "BinnedHistogram::operator+",
-                "Covariance matrix dimension mismatch: ",
-                tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
+                "Shifts matrix dimension mismatch: ",
+                tmp.shifts.rows(), " vs ", o.shifts.rows());
             return BinnedHistogram();
         }
         int c1 = shifts.cols();
@@ -167,11 +167,11 @@ public:
         for (int i = 0; i < getNumberOfBins(); ++i) {
             tmp.counts[i] -= o.counts[i];
         }
-        if (tmp.cov.GetNrows() != o.cov.GetNrows()) {
+        if (tmp.shifts.rows() != o.shifts.rows()) {
             log::error(
                 "BinnedHistogram::operator-",
-                "Covariance matrix dimension mismatch: ",
-                tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
+                "Shifts matrix dimension mismatch: ",
+                tmp.shifts.rows(), " vs ", o.shifts.rows());
             return BinnedHistogram();
         }
         int c1 = shifts.cols();

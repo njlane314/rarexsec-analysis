@@ -46,8 +46,9 @@ public:
         TMatrixDSym cov(n);
         cov.Zero();
 
-        BinnedHistogram hu(binning, std::vector<double>(n, 0.0), cov);
-        BinnedHistogram hd(binning, std::vector<double>(n, 0.0), cov);
+        Eigen::MatrixXd shifts = Eigen::MatrixXd::Zero(n, n);
+        BinnedHistogram hu(binning, std::vector<double>(n, 0.0), shifts);
+        BinnedHistogram hd(binning, std::vector<double>(n, 0.0), shifts);
 
         SystematicKey up_key{identifier_ + "_up"};
         SystematicKey dn_key{identifier_ + "_dn"};
