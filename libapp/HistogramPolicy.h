@@ -52,7 +52,8 @@ struct TH1DStorage {
     double count(int i) const { return counts.at(i); }
 
     double err(int i) const {
-        double v = cov(i, i);
+        if (i < 0 || i >= shifts.rows()) return 0;
+        double v = shifts.row(i).squaredNorm();
         return v > 0 ? std::sqrt(v) : 0;
     }
 
