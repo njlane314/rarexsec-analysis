@@ -74,11 +74,13 @@ private:
             std::lock_guard<std::mutex> lock(mutex_);
             auto now = std::chrono::system_clock::now();
             auto t   = std::chrono::system_clock::to_time_t(now);
-            std::cout << "[" << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "] "
+            const char* colour = levelToColour(level);
+            std::cout << colour
+                      << "[" << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "] "
                       << "[" << levelToString(level) << "] "
                       << "[" << context << "] ";
             printArgs(std::cout, args...);
-            std::cout << std::endl;
+            std::cout << "\033[0m" << std::endl;
         }
     }
 
@@ -91,6 +93,17 @@ private:
             case LogLevel::FATAL: return "FATAL";
         }
         return "UNKNOWN";
+    }
+
+    const char* levelToColour(LogLevel level) const {
+        switch (level) {
+            case LogLevel::DEBUG: return "\033[38;5;33m"; // aqua
+            case LogLevel::INFO:  return "\033[38;5;40m"; // green
+            case LogLevel::WARN:  return "\033[38;5;214m"; // amber
+            case LogLevel::ERROR: return "\033[38;5;196m"; // red
+            case LogLevel::FATAL: return "\033[38;5;201m"; // magenta
+        }
+        return "\033[0m";
     }
 
     LogLevel        level_ = LogLevel::DEBUG;

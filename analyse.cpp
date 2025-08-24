@@ -19,32 +19,46 @@
 
 int main(int argc, char* argv[]) {
     analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
+
+    std::cout << "\033[38;5;51m" << R"(
+ ____      /\\  ____   _____ __  __  ____   _____   ____  
+|  _ \\    /  \\|  _ \\ | ____|\\ \\/ / / ___| | ____| / ___| 
+| |_) |  / /\\ \\| |_) ||  _|   >  <  \\___ \\ |  _|  | |     
+|  _ <  / ____ \\|  _ < | |___ /_/\\_\\ ___) || |___ | |___  
+|_| \\_\\/_/    \\_\\|_| \\_\\|_____|       |____/ |_____| \\____|
+)" << "\033[0m" << std::endl;
+    std::cout << "\033[1;90mν RareXSec Cross-Section Analysis Pipeline\n"
+                 "---------------------------------------------------------------\033[0m" << std::endl;
+
     if (argc != 3) {
-        analysis::log::fatal("main", "Usage: ", argv[0], " <config.json> <plugins.json>");
+        analysis::log::fatal("main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json>");
         return 1;
     }
 
     std::ifstream config_file(argv[1]);
     if (!config_file.is_open()) {
-        analysis::log::fatal("main", "Could not open config file: ", argv[1]);
+        analysis::log::fatal("main", "Configuration file inaccessible:", argv[1]);
         return 1;
     }
     nlohmann::json config_data = nlohmann::json::parse(config_file);
 
     std::ifstream plugins_file(argv[2]);
     if (!plugins_file.is_open()) {
-        analysis::log::fatal("main", "Could not open plugins file: ", argv[2]);
+        analysis::log::fatal("main", "Plugin manifest inaccessible:", argv[2]);
         return 1;
     }
     nlohmann::json plugins_config = nlohmann::json::parse(plugins_file);
 
     try {
         ROOT::EnableImplicitMT();
+        analysis::log::info("main", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
         std::string ntuple_base_directory = config_data.at("ntuple_base_directory").get<std::string>();
 
+        analysis::log::info("main", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
+
         for (auto const& [beam, run_configs] : config_data.at("run_configurations").items()) {
-            analysis::log::info("main", "Starting analysis for beam: ", beam);
+            analysis::log::info("main", "Initiating analysis sequence for beam:", beam);
 
             std::vector<std::string> periods;
             for (auto const& [period, period_details] : run_configs.items()) {
@@ -53,7 +67,7 @@ int main(int argc, char* argv[]) {
 
             analysis::RunConfigRegistry rc_reg;
             analysis::RunConfigLoader::loadRunConfigurations(argv[1], rc_reg);
-            analysis::log::info("main", "Successfully loaded in config");
+            analysis::log::info("main", "Configuration registry initialised with", rc_reg.all().size(), "entries.");
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;
@@ -71,7 +85,7 @@ int main(int argc, char* argv[]) {
 
             analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
 
-            analysis::log::info("main", "Beginning data loading...");
+            analysis::log::info("main", "Commencing data ingestion phase for", periods.size(), "periods...");
             analysis::AnalysisDataLoader data_loader(
                 rc_reg,
                 ev_reg,
@@ -80,11 +94,11 @@ int main(int argc, char* argv[]) {
                 ntuple_base_directory,
                 true
             );
-            analysis::log::info("main", "Finished data loading!");
+            analysis::log::info("main", "Data ingestion phase concluded with", data_loader.getSampleFrames().size(), "samples prepared.");
 
             auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
 
-            analysis::log::info("main", "Preparing analysis...");
+            analysis::log::info("main", "Calibrating analysis subsystems...");
             analysis::AnalysisRunner runner(
                 data_loader,
                 sel_reg,
@@ -94,9 +108,9 @@ int main(int argc, char* argv[]) {
                 plugins_config
             );
 
-            analysis::log::info("main", "About to run analysis...");
+            analysis::log::info("main", "Dispatching analysis execution...");
             runner.run();
-            analysis::log::info("main", "Finished analysis for beam:", beam);
+            analysis::log::info("main", "Beam processing cycle complete:", beam);
         }
 
     } catch (const std::exception& e) {
@@ -104,6 +118,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    analysis::log::info("main", "Analysis finished successfully.");
+    analysis::log::info("main", "Global analysis routine terminated nominally.");
     return 0;
 }
