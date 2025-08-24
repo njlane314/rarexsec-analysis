@@ -17,7 +17,7 @@ public:
         : config_(cfg) {}
 
     void onInitialisation(AnalysisDefinition& def,
-                          const SelectionRegistry&) override {
+                            const SelectionRegistry&) override {
         log::info("VariablesPlugin", "Defining variables...");
         if (!config_.contains("variables")) return;
 
@@ -37,16 +37,22 @@ public:
                 double max = var_cfg.at("bins").at("max").get<double>();
                 for (int i = 0; i <= n; ++i)
                     edges.push_back(min + (max - min) * i / n);
-            }
+            }   
 
             BinningDefinition bins(edges, branch, label, {}, strat);
             def.addVariable(name, branch, label, bins, strat);
+
+            if (var_cfg.contains("regions")) {
+                for (auto const& region_name : var_cfg.at("regions")) {
+                    def.addVariableToRegion(region_name.get<std::string>(), name);
+                }
+            }
         }
     }
+
     void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
     void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
     void onFinalisation(const AnalysisRegionMap&) override {}
-
 
 private:
     nlohmann::json config_;

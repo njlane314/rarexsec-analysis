@@ -20,15 +20,17 @@ public:
     {}
 
 protected:
-    ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                const BinningDefinition&,
-                                int key) const override {
-        auto predicate = strat_registry_.findPredicate(strat_key_);
-        return df.Filter(
-            [predicate, key](const ROOT::RVec<int>& branch_values) {
+    ROOT::RDF::RNode defineFilterColumn(
+        ROOT::RDF::RNode dataframe, int key, const std::string& new_column_name) const override {
+        
+        std::vector<std::string> columns = { getSchemeName() };
+
+        return dataframe.Define(new_column_name,
+            [this, key](const ROOT::RVec<int>& branch_values) {
+                auto predicate = this->strat_registry_.findPredicate(this->strat_key_);
                 return predicate(branch_values, key);
             },
-            {getSchemeName()}
+            columns
         );
     }
 

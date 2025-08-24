@@ -3,7 +3,7 @@ project(RareXSec LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra -Werror -g)
 
 find_package(ROOT REQUIRED COMPONENTS Core Hist Tree RIO Graf)
 include(${ROOT_USE_FILE})

@@ -41,7 +41,7 @@ using AnalysisRegionMap = std::map<RegionKey, RegionAnalysis>;
 struct AnalysisDataset {
     SampleOrigin origin_;
     AnalysisRole role_;
-    ROOT::RDF::RNode dataframe_;
+    mutable ROOT::RDF::RNode dataframe_;
 };
 
 struct SampleEnsemble {

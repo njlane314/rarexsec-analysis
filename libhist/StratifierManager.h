@@ -1,0 +1,52 @@
+#ifndef STRATIFIER_MANAGER_H
+#define STRATIFIER_MANAGER_H
+
+#include "IHistogramStratifier.h"
+#include "StratifierRegistry.h"
+#include "ScalarStratifier.h"
+#include "VectorStratifier.h"
+#include "Logger.h"
+#include "Keys.h"
+#include <memory>
+#include <string>
+#include <unordered_map>
+
+namespace analysis {
+
+class StratifierManager {
+public:
+    explicit StratifierManager(StratifierRegistry& registry) : registry_(registry) {}
+
+    IHistogramStratifier& get(const StratifierKey& key) {
+        log::debug("StratifierManager", "Attempting to get stratifier for key:", key.str());
+        auto it = cache_.find(key);
+        if (it == cache_.end()) {
+            log::info("StratifierManager", "Creating new stratifier for key:", key.str());
+
+            std::unique_ptr<IHistogramStratifier> stratifier;
+            StratifierType type = registry_.findSchemeType(key);
+
+            if (type == StratifierType::kScalar) {
+                stratifier = std::make_unique<ScalarStratifier>(key, registry_);
+            } else if (type == StratifierType::kVector) {
+                stratifier = std::make_unique<VectorStratifier>(key, registry_);
+            } else {
+                log::fatal("StratifierManager", "Unknown or unregistered stratifier configuration:", key.str());
+            }
+            
+            it = cache_.emplace(key, std::move(stratifier)).first;
+            log::debug("StratifierManager", "Successfully created and cached stratifier for key:", key.str());
+        } else {
+            log::debug("StratifierManager", "Found cached stratifier for key:", key.str());
+        }
+        return *it->second;
+    }
+
+private:
+    StratifierRegistry& registry_;
+    std::unordered_map<StratifierKey, std::unique_ptr<IHistogramStratifier>> cache_;
+};
+
+}
+
+#endif

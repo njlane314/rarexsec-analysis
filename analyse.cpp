@@ -18,6 +18,7 @@
 #include "Logger.h"
 
 int main(int argc, char* argv[]) {
+    analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
     if (argc != 3) {
         analysis::log::fatal("main", "Usage: ", argv[0], " <config.json> <plugins.json>");
         return 1;
@@ -52,6 +53,7 @@ int main(int argc, char* argv[]) {
 
             analysis::RunConfigRegistry rc_reg;
             analysis::RunConfigLoader::loadRunConfigurations(argv[1], rc_reg);
+            analysis::log::info("main", "Successfully loaded in config");
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;
@@ -69,6 +71,7 @@ int main(int argc, char* argv[]) {
 
             analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
 
+            analysis::log::info("main", "Beginning data loading...");
             analysis::AnalysisDataLoader data_loader(
                 rc_reg,
                 ev_reg,
@@ -77,9 +80,11 @@ int main(int argc, char* argv[]) {
                 ntuple_base_directory,
                 true
             );
+            analysis::log::info("main", "Finished data loading!");
 
             auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
 
+            analysis::log::info("main", "Preparing analysis...");
             analysis::AnalysisRunner runner(
                 data_loader,
                 sel_reg,
@@ -89,6 +94,7 @@ int main(int argc, char* argv[]) {
                 plugins_config
             );
 
+            analysis::log::info("main", "About to run analysis...");
             runner.run();
             analysis::log::info("main", "Finished analysis for beam:", beam);
         }

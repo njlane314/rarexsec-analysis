@@ -41,6 +41,7 @@ public:
     }
 
     AnalysisRegionMap run() {
+        analysis::log::info("AnalysisRunner::run", "Beginning analysis run...");
         plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
 
         AnalysisRegionMap analysis_regions;
@@ -50,7 +51,8 @@ public:
 
             std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
             std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
-
+            
+            analysis::log::info("AnalysisRunner::run", "Looping through samples and processing...");
             for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
                 const auto* run_config = data_loader_.getRunConfigForSample(sample_key);
                 if (run_config) {
@@ -61,9 +63,10 @@ public:
                     );
                 }
 
-
+                analysis::log::info("AnalysisRunner::run", "Filtering...");
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
 
+                analysis::log::info("AnalysisRunner::run", "Configuring variation samples...");
                 std::map<SampleVariation, AnalysisDataset> variation_datasets;
                 for (auto& [variation_type, variation_node] : sample_def.variation_nodes_) {
                     variation_datasets.emplace(
@@ -87,6 +90,7 @@ public:
                 }
             }
 
+            analysis::log::info("AnalysisRunner::run", "Looping through variables...");
             for (const auto& var_key : region_handle.vars()) {
                 const auto& variable_handle = analysis_definition_.variable(var_key);
                 const auto& binning = variable_handle.binning();
@@ -94,15 +98,18 @@ public:
 
                 VariableResult result;
                 result.binning_ = binning;
-
+                
+                analysis::log::info("AnalysisRunner::run", "Running sample processors...");
                 for (auto& [_, processor] : sample_processors) {
                     processor->book(*histogram_booker_, binning, model);
                 }
 
+                analysis::log::info("AnalysisRunner::run", "Booking systematics...");
                 for (auto& [sample_key, rnode] : mc_rnodes) {
                     systematics_processor_.bookSystematics(sample_key, rnode, binning, model);
                 }
 
+                analysis::log::info("AnalysisRunner::run", "Saving results...");
                 for (auto& [_, processor] : sample_processors) {
                     processor->contributeTo(result);
                 }

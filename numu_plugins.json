@@ -17,12 +17,13 @@
           "name": "muon_length",
           "branch": "track_length",
           "label": "Track Length [cm]",
-          "stratum": "vector:backtracked_pdg_codes",
+          "stratum": "backtracked_pdg_codes",
           "bins": {
             "n": 50,
             "min": 0.0,
             "max": 500.0
-          }
+          },
+          "regions": [ "NUMU_CC_SEL" ]
         }
       ]
     },

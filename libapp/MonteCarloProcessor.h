@@ -17,9 +17,10 @@ public:
     void book(IHistogramBooker& booker,
               const BinningDefinition& binning,
               const ROOT::RDF::TH1DModel& model) override {
-
+        analysis::log::info("MonteCarloProcessor::book", "Beginning stratification...");
         nominal_futures_ = booker.bookStratifiedHists(binning, nominal_dataset_, model);
-
+        
+        analysis::log::info("MonteCarloProcessor::book", "Booking nominals...");
         if (!variation_datasets_.empty()) {
             for (const auto& [var_key, dataset] : variation_datasets_) {
                 variation_futures_[var_key] = booker.bookNominalHist(binning, dataset, model);

@@ -18,12 +18,11 @@ public:
     {}
 
 protected:
-    ROOT::RDF::RNode filterNode(ROOT::RDF::RNode df,
-                                const BinningDefinition&,
-                                int key) const override {
-        return df.Filter(
-            getSchemeName() + " == " + std::to_string(key)
-        );
+    ROOT::RDF::RNode defineFilterColumn(
+        ROOT::RDF::RNode dataframe, int key, const std::string& new_column_name) const override {
+        
+        std::string filter_expression = getSchemeName() + " == " + std::to_string(key);
+        return dataframe.Define(new_column_name, filter_expression);
     }
 
     const std::string& getSchemeName() const override {
@@ -36,7 +35,7 @@ protected:
 
 private:
     StratifierKey              stratifier_key_;
-    StratifierRegistry&    stratifier_registry_;
+    StratifierRegistry&        stratifier_registry_;
 };
 
 }
