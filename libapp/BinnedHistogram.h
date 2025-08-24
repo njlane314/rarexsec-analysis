@@ -67,6 +67,13 @@ public:
 
     void addCovariance(const TMatrixDSym& cov_to_add) {
         log::debug("BinnedHistogram::addCovariance", "Adding cov matrix (", cov_to_add.GetNrows(), "x", cov_to_add.GetNcols(), ") to '", this->GetName(), "' (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
+        if (this->cov.GetNrows() != cov_to_add.GetNrows()) {
+            log::error(
+                "BinnedHistogram::addCovariance",
+                "Covariance matrix dimension mismatch: ",
+                this->cov.GetNrows(), " vs ", cov_to_add.GetNrows());
+            return;
+        }
         this->cov += cov_to_add;
     }
 
@@ -116,6 +123,13 @@ public:
         for (int i = 0; i < getNumberOfBins(); ++i) {
             tmp.counts[i] += o.counts[i];
         }
+        if (tmp.cov.GetNrows() != o.cov.GetNrows()) {
+            log::error(
+                "BinnedHistogram::operator+",
+                "Covariance matrix dimension mismatch: ",
+                tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
+            return BinnedHistogram();
+        }
         tmp.cov += o.cov;
         return tmp;
     }
@@ -147,6 +161,13 @@ public:
         auto tmp = *this;
         for (int i = 0; i < getNumberOfBins(); ++i) {
             tmp.counts[i] -= o.counts[i];
+        }
+        if (tmp.cov.GetNrows() != o.cov.GetNrows()) {
+            log::error(
+                "BinnedHistogram::operator-",
+                "Covariance matrix dimension mismatch: ",
+                tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
+            return BinnedHistogram();
         }
         tmp.cov -= o.cov;
         return tmp;

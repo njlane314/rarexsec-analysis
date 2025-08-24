@@ -20,6 +20,7 @@ add_subdirectory(libhist)
 add_subdirectory(libplot)
 add_subdirectory(libsyst)
 add_subdirectory(libapp)
+add_subdirectory(libplg)  
 
 set(ANALYSIS_EXECUTABLES
     analyse
@@ -32,6 +33,7 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/libplot"
     "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
     "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libplg"  
 )
 
 foreach(exe ${ANALYSIS_EXECUTABLES})
@@ -39,6 +41,7 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
     target_link_libraries(${exe}
         PRIVATE
             libapp
+            libplg  
             libdata
             libhist
             libplot
