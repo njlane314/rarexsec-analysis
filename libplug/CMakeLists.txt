@@ -1,12 +1,12 @@
-add_library(libplg INTERFACE)
+add_library(libplug INTERFACE)
 
-target_include_directories(libplg
+target_include_directories(libplug
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(libplg
+target_link_libraries(libplug
   INTERFACE
     libapp
     libplot
@@ -21,7 +21,7 @@ function(add_plugin NAME SRC EXTRA_LIBS)
     ${CMAKE_CURRENT_SOURCE_DIR}
   )
   target_link_libraries(${NAME} PRIVATE
-    libplg
+    libplug
     nlohmann_json::nlohmann_json
     ${ROOT_LIBRARIES}
     ${EXTRA_LIBS}
