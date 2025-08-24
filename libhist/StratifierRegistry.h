@@ -66,15 +66,15 @@ public:
         });
 
         this->addScheme("backtracked_pdg_codes", StratifierType::kVector, {
-            {13,    "muon",               R"(#mu^{#pm})",      kBlue-7,    1001},
-            {2212,  "proton",             "p",                 kRed-4,     1001},
-            {211,   "pion",               R"(#pi^{#pm})",      kGreen+2,   1001},
+            {13,    "muon",               R"(#mu^{#pm})",      kAzure-4,   1001},
+            {2212,  "proton",             "p",                 kOrange-3,  1001},
+            {211,   "pion",               R"(#pi^{#pm})",      kGreen+1,   1001},
+            {22,    "gamma",              R"(#gamma)",         kYellow-7,  1001},
+            {11,    "electron",           R"(e^{#pm})",        kCyan-3,    1001},
             {2112,  "neutron",            "n",                 kGray+1,    1001},
-            {321,   "kaon",               R"(K^{#pm})",        kMagenta-7, 1001},
-            {22,    "gamma",              R"(#gamma)",         kOrange-3,  1001},
-            {11,    "electron",           R"(e^{#pm})",        kCyan+1,    1001},
-            {3224,  "sigma",              R"(#Sigma^{#pm})",   kPink+10,   1001},
-            {0,     "unmatched",          "Unmatched",         kGray+3,    1001},
+            {321,   "kaon",               R"(K^{#pm})",        kMagenta-9, 1001},
+            {3222,  "sigma",              R"(#Sigma^{#pm})",   kRed-9,     1001},
+            {0,     "unmatched",          "Unmatched",         kGray+2,    1001},
             {-1,    "other",              "Other",             kBlack,     3005}
         },
         [](const ROOT::RVec<int>& pdg_codes, int key) {
@@ -83,7 +83,7 @@ public:
             }
             if (key == -1) {
                 if (pdg_codes.empty()) return false;
-                const std::set<int> known_pdgs = {0, 11, 13, 22, 211, 321, 2112, 2212, 3112, 3224};
+                const std::set<int> known_pdgs = {0, 11, 13, 22, 211, 321, 2112, 2212, 3112, 3222};
                 for (int code : pdg_codes) {
                     if (known_pdgs.count(std::abs(code))) {
                         return false;
@@ -97,8 +97,8 @@ public:
                 }
                 return true;
             }
-            if (key == 3224) {
-                 return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == 3224 || ROOT::VecOps::abs(pdg_codes) == 3112) > 0;
+            if (key == 3222) { 
+                 return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == 3222 || ROOT::VecOps::abs(pdg_codes) == 3112) > 0;
             }
             else {
                 return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == key) > 0;

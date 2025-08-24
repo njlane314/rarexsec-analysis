@@ -28,19 +28,23 @@ public:
             auto label  = var_cfg.at("label").get<std::string>();
             auto strat  = var_cfg.at("stratum").get<std::string>();
 
-            std::vector<double> edges;
-            if (var_cfg.at("bins").is_array()) {
-                edges = var_cfg.at("bins").get<std::vector<double>>();
+            if (var_cfg.at("bins").is_string() && var_cfg.at("bins").get<std::string>() == "dynamic") {
+                BinningDefinition placeholder_bins({0.0, 1.0}, branch, label, {}, strat);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true);
             } else {
-                int n      = var_cfg.at("bins").at("n").get<int>();
-                double min = var_cfg.at("bins").at("min").get<double>();
-                double max = var_cfg.at("bins").at("max").get<double>();
-                for (int i = 0; i <= n; ++i)
-                    edges.push_back(min + (max - min) * i / n);
-            }   
-
-            BinningDefinition bins(edges, branch, label, {}, strat);
-            def.addVariable(name, branch, label, bins, strat);
+                std::vector<double> edges;
+                if (var_cfg.at("bins").is_array()) {
+                    edges = var_cfg.at("bins").get<std::vector<double>>();
+                } else {
+                    int n      = var_cfg.at("bins").at("n").get<int>();
+                    double min = var_cfg.at("bins").at("min").get<double>();
+                    double max = var_cfg.at("bins").at("max").get<double>();
+                    for (int i = 0; i <= n; ++i)
+                        edges.push_back(min + (max - min) * i / n);
+                }
+                BinningDefinition bins(edges, branch, label, {}, strat);
+                def.addVariable(name, branch, label, bins, strat);
+            }
 
             if (var_cfg.contains("regions")) {
                 for (auto const& region_name : var_cfg.at("regions")) {
