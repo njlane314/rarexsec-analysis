@@ -1,50 +1,48 @@
 #ifndef VECTOR_STRATIFIER_H
 #define VECTOR_STRATIFIER_H
 
-#include "IHistogramStratifier.h"
-#include "StratifierRegistry.h"
-#include "ROOT/RVec.hxx"
-#include "Keys.h"
+#include <ROOT/RVec.hxx>
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
+
+#include "AnalysisKeys.h"
+#include "IHistogramStratifier.h"
+#include "StratifierRegistry.h"
 
 namespace analysis {
 
 class VectorStratifier : public IHistogramStratifier {
 public:
-    VectorStratifier(const StratifierKey& key,
-                     StratifierRegistry& registry)
-      : strat_key_(key)
-      , strat_registry_(registry)
-    {}
+  VectorStratifier(const StratifierKey &key, StratifierRegistry &registry)
+      : strat_key_(key), strat_registry_(registry) {}
 
 protected:
-    ROOT::RDF::RNode defineFilterColumn(
-        ROOT::RDF::RNode dataframe, int key, const std::string& new_column_name) const override {
-        
-        std::vector<std::string> columns = { getSchemeName() };
+  ROOT::RDF::RNode
+  defineFilterColumn(ROOT::RDF::RNode dataframe, int key,
+                     const std::string &new_column_name) const override {
 
-        return dataframe.Define(new_column_name,
-            [this, key](const ROOT::RVec<int>& branch_values) {
-                auto predicate = this->strat_registry_.findPredicate(this->strat_key_);
-                return predicate(branch_values, key);
-            },
-            columns
-        );
-    }
+    std::vector<std::string> columns = {getSchemeName()};
 
-    const std::string& getSchemeName() const override {
-        return strat_key_.str();
-    }
+    return dataframe.Define(
+        new_column_name,
+        [this, key](const ROOT::RVec<int> &branch_values) {
+          auto predicate =
+              this->strat_registry_.findPredicate(this->strat_key_);
+          return predicate(branch_values, key);
+        },
+        columns);
+  }
 
-    const StratifierRegistry& getRegistry() const override {
-        return strat_registry_;
-    }
+  const std::string &getSchemeName() const override { return strat_key_.str(); }
+
+  const StratifierRegistry &getRegistry() const override {
+    return strat_registry_;
+  }
 
 private:
-    StratifierKey          strat_key_;
-    StratifierRegistry&    strat_registry_;
+  StratifierKey strat_key_;
+  StratifierRegistry &strat_registry_;
 };
 
 }

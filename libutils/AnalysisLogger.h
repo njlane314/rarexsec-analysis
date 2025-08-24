@@ -1,5 +1,5 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef ANALYSIS_LOGGER_H
+#define ANALYSIS_LOGGER_H
 
 #include <chrono>
 #include <cstdlib>
@@ -12,10 +12,10 @@ namespace analysis {
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR, FATAL };
 
-class Logger {
+class AnalysisLogger {
 public:
-  static Logger &getInstance() {
-    static Logger instance;
+  static AnalysisLogger &getInstance() {
+    static AnalysisLogger instance;
     return instance;
   }
 
@@ -48,10 +48,10 @@ public:
   }
 
 private:
-  Logger() = default;
-  ~Logger() = default;
-  Logger(const Logger &) = delete;
-  Logger &operator=(const Logger &) = delete;
+  AnalysisLogger() = default;
+  ~AnalysisLogger() = default;
+  AnalysisLogger(const AnalysisLogger &) = delete;
+  AnalysisLogger &operator=(const AnalysisLogger &) = delete;
 
   template <typename T, typename... Args>
   void printArgs(std::ostream &os, const T &first, const Args &...rest) const {
@@ -126,27 +126,27 @@ private:
 namespace log {
 template <typename... Args>
 inline void debug(const std::string &ctx, const Args &...args) {
-  Logger::getInstance().debug(ctx, args...);
+  AnalysisLogger::getInstance().debug(ctx, args...);
 }
 
 template <typename... Args>
 inline void info(const std::string &ctx, const Args &...args) {
-  Logger::getInstance().info(ctx, args...);
+  AnalysisLogger::getInstance().info(ctx, args...);
 }
 
 template <typename... Args>
 inline void warn(const std::string &ctx, const Args &...args) {
-  Logger::getInstance().warn(ctx, args...);
+  AnalysisLogger::getInstance().warn(ctx, args...);
 }
 
 template <typename... Args>
 inline void error(const std::string &ctx, const Args &...args) {
-  Logger::getInstance().error(ctx, args...);
+  AnalysisLogger::getInstance().error(ctx, args...);
 }
 
 template <typename... Args>
 inline void fatal(const std::string &ctx, const Args &...args) {
-  Logger::getInstance().fatal(ctx, args...);
+  AnalysisLogger::getInstance().fatal(ctx, args...);
 }
 }
 
