@@ -6,6 +6,7 @@
 #include <cmath>
 #include <map>
 #include "TH1D.h"
+#include <Eigen/Dense>
 #include "TMatrixDSym.h"
 #include "TVectorD.h"
 #include "BinningDefinition.h"
@@ -17,34 +18,32 @@ class BinnedHistogram;
 
 struct TH1DStorage {
     BinningDefinition               binning;
-    std::vector<double>         counts;
-    TMatrixDSym                 cov;
+    std::vector<double>             counts;
+    Eigen::MatrixXd                 shifts; // n_bins x n_sys
 
     TH1DStorage() = default;
 
     TH1DStorage(const TH1DStorage& other)
-      : binning(other.binning), counts(other.counts), cov(other.cov)
+      :  binning(other.binning), counts(other.counts), shifts(other.shifts)
     {
     }
 
 
-    TH1DStorage(const BinningDefinition& b, const std::vector<double>& c, const TMatrixDSym& m)
-        : binning(b), counts(c), cov(m)
+    TH1DStorage(const BinningDefinition& b, const std::vector<double>& c, const Eigen::MatrixXd& s)
+        : binning(b), counts(c), shifts(s)
     {
         if (b.getBinNumber() == 0)
             log::fatal("TH1DStorage", "Zero binning");
 
-        if (c.size() != b.getBinNumber() || (unsigned)m.GetNrows() != b.getBinNumber())
+        if (c.size() != b.getBinNumber() || s.rows() != static_cast<int>(b.getBinNumber()))
             log::fatal("TH1DStorage", "Dimension mismatch");
     }
 
     TH1DStorage& operator=(const TH1DStorage& other) {
         if (this != &other) {
             binning   = other.binning;
-            counts = other.counts;
-
-            cov.ResizeTo(other.cov.GetNrows(), other.cov.GetNcols());
-            cov = other.cov;
+            counts    = other.counts;
+            shifts    = other.shifts;
         }
         return *this;
     }
@@ -63,14 +62,31 @@ struct TH1DStorage {
 
     double sumErr() const {
         int n = size();
-        TVectorD one(n);
-        for(int i = 0; i < n; ++i) one[i] = 1.0;
-        double var = (one * (cov * one));
+        if (n == 0 || shifts.cols() == 0) return 0;
+        Eigen::VectorXd ones = Eigen::VectorXd::Ones(n);
+        double var = (shifts.transpose() * ones).squaredNorm();
         return var > 0 ? std::sqrt(var) : 0;
+    }
+
+    TMatrixDSym covariance() const {
+        int n = size();
+        TMatrixDSym out(n);
+        out.Zero();
+        if (shifts.size() == 0) return out;
+        Eigen::MatrixXd cov = shifts * shifts.transpose();
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j <= i; ++j) {
+                double val = cov(i, j);
+                out(i, j) = val;
+                out(j, i) = val;
+            }
+        }
+        return out;
     }
 
     TMatrixDSym corrMat() const {
         int n = size();
+        TMatrixDSym cov = covariance();
         TMatrixDSym out(n);
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {

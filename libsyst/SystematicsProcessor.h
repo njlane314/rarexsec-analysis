@@ -62,7 +62,7 @@ public:
         int n_bins = result.total_mc_hist_.getNumberOfBins();
         if (n_bins > 0) {
             result.total_covariance_.ResizeTo(n_bins, n_bins);
-            result.total_covariance_ = result.total_mc_hist_.cov;
+            result.total_covariance_ = result.total_mc_hist_.covariance();
             for (const auto& [name, cov] : result.covariance_matrices_) {
                 if (cov.GetNrows() == n_bins) {
                     result.total_covariance_ += cov;
@@ -71,9 +71,12 @@ public:
                 }
             }
             result.nominal_with_band_ = result.total_mc_hist_;
-            result.nominal_with_band_.cov = result.total_covariance_;
+            result.nominal_with_band_.shifts.resize(n_bins, 0);
+            result.nominal_with_band_.addCovariance(result.total_covariance_);
         }
     }
+
+    
 
 private:
     std::vector<std::unique_ptr<SystematicStrategy>> systematic_strategies_;

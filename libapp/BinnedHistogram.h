@@ -4,6 +4,7 @@
 #include <vector>
 #include "TNamed.h"
 #include "TH1D.h"
+#include <Eigen/Dense>
 #include "TMatrixDSym.h"
 #include "HistogramPolicy.h"
 #include "Logger.h"
@@ -16,13 +17,13 @@ public:
 
     BinnedHistogram(const BinningDefinition&        bn,
               const std::vector<double>&        ct,
-              const TMatrixDSym&                cv,
+              const Eigen::MatrixXd&            sh,
               TString                           nm  = "hist",
               TString                           ti  = "",
               Color_t                           cl  = kBlack,
               int                               ht  = 0,
               TString                           tx  = "")
-      : TNamed(nm, ti), TH1DStorage(bn, ct, cv)
+        : TNamed(nm, ti), TH1DStorage(bn, ct, sh)
     {
         TH1DRenderer::style(cl, ht, tx);
     }
@@ -40,12 +41,13 @@ public:
                                           TString tx = "")
     {
         std::vector<double> counts;
-        TMatrixDSym cov(hist.GetNbinsX());
-        for (int i = 1; i <= hist.GetNbinsX(); ++i) {
+        int n = hist.GetNbinsX();
+        Eigen::MatrixXd sh = Eigen::MatrixXd::Zero(n, n);
+        for (int i = 1; i <= n; ++i) {
             counts.push_back(hist.GetBinContent(i));
-            cov(i - 1, i - 1) = hist.GetBinError(i) * hist.GetBinError(i);
+            sh(i - 1, i - 1) = hist.GetBinError(i);
         }
-        return BinnedHistogram(bn, counts, cov, nm, ti, cl, ht, tx);
+        return BinnedHistogram(bn, counts, sh, nm, ti, cl, ht, tx);
     }
 
     BinnedHistogram& operator=(const BinnedHistogram& other)
@@ -66,15 +68,16 @@ public:
     TMatrixDSym getCorrelationMatrix() const { return TH1DStorage::corrMat(); }
 
     void addCovariance(const TMatrixDSym& cov_to_add) {
-        log::debug("BinnedHistogram::addCovariance", "Adding cov matrix (", cov_to_add.GetNrows(), "x", cov_to_add.GetNcols(), ") to '", this->GetName(), "' (", this->cov.GetNrows(), "x", this->cov.GetNcols(), ")");
-        if (this->cov.GetNrows() != cov_to_add.GetNrows()) {
-            log::error(
-                "BinnedHistogram::addCovariance",
-                "Covariance matrix dimension mismatch: ",
-                this->cov.GetNrows(), " vs ", cov_to_add.GetNrows());
-            return;
-        }
-        this->cov += cov_to_add;
+        int n = getNumberOfBins();
+        Eigen::MatrixXd cov_e(n, n);
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j)
+                cov_e(i, j) = cov_to_add(i, j);
+        Eigen::LLT<Eigen::MatrixXd> llt(cov_e);
+        Eigen::MatrixXd L = llt.matrixL();
+        int old_cols = shifts.cols();
+        shifts.conservativeResize(n, old_cols + L.cols());
+        shifts.block(0, old_cols, n, L.cols()) = L;
     }
 
     BinnedHistogram operator+(double s) const {
@@ -86,7 +89,7 @@ public:
     BinnedHistogram operator*(double s) const {
         auto tmp = *this;
         for (auto& v : tmp.counts) v *= s;
-        tmp.cov *= s * s;
+        tmp.shifts *= s;
         return tmp;
     }
 
@@ -99,8 +102,7 @@ public:
         for (int i = 0; i < getNumberOfBins(); ++i) {
             tmp.counts[i] *= o.counts[i];
         }
-        // NOTE: This is a simplification. Proper error propagation for multiplication is more complex.
-        tmp.cov.Zero();
+        tmp.shifts.resize(getNumberOfBins(), 0);
         return tmp;
     }
 
@@ -116,7 +118,7 @@ public:
         if (o.getNumberOfBins() <= 0) return *this;
 
         if (this->getNumberOfBins() != o.getNumberOfBins()) {
-            log::fatal("BinnedHistogram::operator+", "Attempting to add histograms with different numbers of bins:", this->getNumberOfBins(), "vs", o.getNumberOfBins());
+            log::debug("BinnedHistogram::operator+", "Adding '", o.GetName(), "' (", o.getNumberOfBins(), " bins, shifts ", o.shifts.cols(), ") to '", this->GetName(), "' (", this->getNumberOfBins(), " bins, shifts ", this->shifts.cols(), ")");
         }
 
         auto tmp = *this;
@@ -130,7 +132,10 @@ public:
                 tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
             return BinnedHistogram();
         }
-        tmp.cov += o.cov;
+        int c1 = shifts.cols();
+        int c2 = o.shifts.cols();
+        tmp.shifts.conservativeResize(getNumberOfBins(), c1 + c2);
+        tmp.shifts.block(0, c1, getNumberOfBins(), c2) = o.shifts;
         return tmp;
     }
 
@@ -147,7 +152,7 @@ public:
                 tmp.counts[i] = 0;
             }
         }
-        tmp.cov.Zero();
+        tmp.shifts.resize(getNumberOfBins(), 0);
         return tmp;
     }
 
@@ -169,7 +174,10 @@ public:
                 tmp.cov.GetNrows(), " vs ", o.cov.GetNrows());
             return BinnedHistogram();
         }
-        tmp.cov -= o.cov;
+        int c1 = shifts.cols();
+        int c2 = o.shifts.cols();
+        tmp.shifts.conservativeResize(getNumberOfBins(), c1 + c2);
+        tmp.shifts.block(0, c1, getNumberOfBins(), c2) = o.shifts;
         return tmp;
     }
 

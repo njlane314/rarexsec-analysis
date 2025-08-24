@@ -10,9 +10,11 @@ include(${ROOT_USE_FILE})
 
 find_package(TBB COMPONENTS tbb REQUIRED)
 find_package(Torch REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(NLOHMANN_JSON_INCLUDE_DIR "/cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include")
 include_directories(SYSTEM ${NLOHMANN_JSON_INCLUDE_DIR})
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(libdata)
 add_subdirectory(libutils)
@@ -47,6 +49,7 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
             libplot
             libsyst
             libutils
+            Eigen3::Eigen
             ${ROOT_LIBRARIES}
             TBB::tbb
             TMVA
