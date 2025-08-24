@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <ROOT/RDataFrame.hxx>
 
 #include "AnalysisLogger.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 
 namespace analysis {
 

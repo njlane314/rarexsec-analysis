@@ -13,7 +13,7 @@
 #include "TMatrixDSym.h"
 
 #include "BinnedHistogram.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "SampleTypes.h"
 
 namespace analysis {

@@ -18,7 +18,7 @@
 #include "EventVariableRegistry.h"
 #include "IHistogramBooker.h"
 #include "ISampleProcessor.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "MonteCarloProcessor.h"
 #include "SelectionRegistry.h"
 #include "SystematicsProcessor.h"

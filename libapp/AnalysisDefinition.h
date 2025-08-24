@@ -12,7 +12,7 @@
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
 #include "EventVariableRegistry.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"

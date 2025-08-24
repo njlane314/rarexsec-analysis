@@ -11,7 +11,7 @@
 #include "AnalysisLogger.h"
 #include "EventVariableRegistry.h"
 #include "IEventProcessor.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "MuonSelectionProcessor.h"
 #include "ReconstructionProcessor.h"
 #include "RunConfigRegistry.h"

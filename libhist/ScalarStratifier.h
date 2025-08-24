@@ -3,7 +3,7 @@
 
 #include "IHistogramStratifier.h"
 #include "StratifierRegistry.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include <string>
 #include <vector>
 

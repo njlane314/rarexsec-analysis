@@ -4,7 +4,7 @@
 #include "IHistogramStratifier.h"
 #include "StratifierRegistry.h"
 #include "ROOT/RVec.hxx"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include <string>
 #include <vector>
 #include <functional>

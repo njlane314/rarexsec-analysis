@@ -7,7 +7,7 @@
 
 #include "AnalysisLogger.h"
 #include "IHistogramStratifier.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "ScalarStratifier.h"
 #include "StratifierRegistry.h"
 #include "VectorStratifier.h"

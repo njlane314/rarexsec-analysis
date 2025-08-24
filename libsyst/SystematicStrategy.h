@@ -14,7 +14,7 @@
 #include "AnalysisTypes.h"
 #include "BinnedHistogram.h"
 #include "BinningDefinition.h"
-#include "Keys.h"
+#include "KeyTypes.h"
 #include "SampleTypes.h"
 
 namespace analysis {
