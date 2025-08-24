@@ -7,7 +7,7 @@ namespace analysis {
 
 class DataProcessor : public ISampleProcessor {
 public:
-    explicit DataProcessor(AnalysisDataset dataset) : dataset_(std::move(dataset)) {}
+    explicit DataProcessor(SampleDataset dataset) : dataset_(std::move(dataset)) {}
 
     void book(IHistogramBooker& booker,
               const BinningDefinition& binning,
@@ -22,7 +22,7 @@ public:
     }
 
 private:
-    AnalysisDataset dataset_;
+    SampleDataset dataset_;
     ROOT::RDF::RResultPtr<TH1D> data_future_;
 };
 

@@ -9,10 +9,6 @@
 #include <tuple>
 #include <vector>
 
-#include "AnalysisTypes.h"
-#include "HistogramPlotterBase.h"
-#include "RegionAnalysis.h"
-#include "StratifierRegistry.h"
 #include "TArrow.h"
 #include "TCanvas.h"
 #include "THStack.h"
@@ -20,6 +16,11 @@
 #include "TLegend.h"
 #include "TLine.h"
 #include "TPad.h"
+
+#include "AnalysisTypes.h"
+#include "HistogramPlotterBase.h"
+#include "RegionAnalysis.h"
+#include "StratifierRegistry.h"
 
 namespace analysis {
 
@@ -310,6 +311,6 @@ private:
   std::vector<TObject *> cut_visuals_;
 };
 
-} // namespace analysis
+}
 
 #endif

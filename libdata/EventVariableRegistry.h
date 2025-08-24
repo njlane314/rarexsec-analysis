@@ -2,9 +2,10 @@
 #define EVENT_VARIABLE_REGISTRY_H
 
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+
 #include "SampleTypes.h"
 
 namespace analysis {
@@ -126,4 +127,4 @@ private:
 
 }
 
-#endif // EVENT_VARIABLE_REGISTRY_H
+#endif

@@ -1,12 +1,14 @@
 #ifndef CONFIG_LOADER_H
 #define CONFIG_LOADER_H
 
+#include <fstream>
+#include <string>
+
+#include "nlohmann/json.hpp"
+
+#include "AnalysisLogger.h"
 #include "RunConfig.h"
 #include "RunConfigRegistry.h"
-#include "Logger.h"
-#include "nlohmann/json.hpp"
-#include <string>
-#include <fstream>
 
 namespace analysis {
 
@@ -31,4 +33,4 @@ public:
 
 }
 
-#endif // CONFIG_LOADER_H
+#endif

@@ -1,11 +1,11 @@
 #ifndef HISTOGRAM_BOOKER_H
 #define HISTOGRAM_BOOKER_H
 
+#include "AnalysisLogger.h"
+#include "AnalysisTypes.h"
 #include "IHistogramBooker.h"
 #include "StratifierManager.h"
 #include "StratifierRegistry.h"
-#include "AnalysisTypes.h"
-#include "Logger.h" 
 
 namespace analysis {
 
@@ -18,7 +18,7 @@ public:
 
     ROOT::RDF::RResultPtr<TH1D> bookNominalHist(
         const BinningDefinition& binning,
-        const AnalysisDataset& dataset,
+        const SampleDataset& dataset,
         const ROOT::RDF::TH1DModel& model
     ) override {
         auto d = dataset.dataframe_;
@@ -27,7 +27,7 @@ public:
 
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookStratifiedHists(
         const BinningDefinition& binning,
-        const AnalysisDataset& dataset,
+        const SampleDataset& dataset,
         const ROOT::RDF::TH1DModel& model
     ) override {
         analysis::log::info("HistogramBooker::bookStratifiedHists", "Calling stratifier manager...");

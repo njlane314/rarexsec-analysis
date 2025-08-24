@@ -1,15 +1,16 @@
 #ifndef STRATIFIER_MANAGER_H
 #define STRATIFIER_MANAGER_H
 
-#include "IHistogramStratifier.h"
-#include "StratifierRegistry.h"
-#include "ScalarStratifier.h"
-#include "VectorStratifier.h"
-#include "Logger.h"
-#include "Keys.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
+
+#include "AnalysisLogger.h"
+#include "IHistogramStratifier.h"
+#include "Keys.h"
+#include "ScalarStratifier.h"
+#include "StratifierRegistry.h"
+#include "VectorStratifier.h"
 
 namespace analysis {
 

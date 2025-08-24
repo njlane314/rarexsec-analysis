@@ -2,6 +2,7 @@
 #define RECONSTRUCTION_PROCESSOR_H
 
 #include "ROOT/RVec.hxx"
+
 #include "IEventProcessor.h"
 
 namespace analysis {
@@ -43,4 +44,4 @@ public:
 
 }
 
-#endif // RECONSTRUCTION_PROCESSOR_H
+#endif

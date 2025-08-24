@@ -1,24 +1,25 @@
+#include <fstream>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json.hpp>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <ROOT/RDataFrame.hxx>
 
-#include "AnalysisRunner.h"
+#include <ROOT/RDataFrame.hxx>
+#include <nlohmann/json.hpp>
+
 #include "AnalysisDataLoader.h"
-#include "SystematicsProcessor.h"
+#include "AnalysisLogger.h"
+#include "AnalysisRunner.h"
+#include "EventVariableRegistry.h"
+#include "HistogramBooker.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
-#include "EventVariableRegistry.h"
 #include "SelectionRegistry.h"
 #include "StratifierRegistry.h"
-#include "HistogramBooker.h"
-#include "Logger.h"
+#include "SystematicsProcessor.h"
 
 int main(int argc, char* argv[]) {
-    analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
+    analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
     std::cout << "\033[38;5;51m" << R"(
  ____      /\\  ____   _____ __  __  ____   _____   ____  

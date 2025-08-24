@@ -1,7 +1,7 @@
 #ifndef KEYS_H
 #define KEYS_H
 
-#include "TypeKey.h"
+#include "AnalysisKey.h"
 
 namespace analysis {
 
@@ -15,15 +15,15 @@ struct StratifierKeyTag {};
 struct StratumKeyTag {};
 struct SelectionKeyTag {};
 
-using RegionKey     = TypeKey<RegionKeyTag>;
-using VariableKey   = TypeKey<VariableKeyTag>;
-using SampleKey     = TypeKey<SampleKeyTag>;
-using VariationKey  = TypeKey<VariationKeyTag>;
-using ChannelKey    = TypeKey<ChannelKeyTag>;
-using SystematicKey = TypeKey<SystematicKeyTag>;
-using StratifierKey = TypeKey<StratifierKeyTag>;
-using StratumKey    = TypeKey<StratumKeyTag>;
-using SelectionKey  = TypeKey<SelectionKeyTag>;
+using RegionKey     = AnalysisKey<RegionKeyTag>;
+using VariableKey   = AnalysisKey<VariableKeyTag>;
+using SampleKey     = AnalysisKey<SampleKeyTag>;
+using VariationKey  = AnalysisKey<VariationKeyTag>;
+using ChannelKey    = AnalysisKey<ChannelKeyTag>;
+using SystematicKey = AnalysisKey<SystematicKeyTag>;
+using StratifierKey = AnalysisKey<StratifierKeyTag>;
+using StratumKey    = AnalysisKey<StratumKeyTag>;
+using SelectionKey  = AnalysisKey<SelectionKeyTag>;
 
 }
 

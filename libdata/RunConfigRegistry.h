@@ -1,10 +1,10 @@
-// RUN_CONFIG_REGISTRY_H
 #ifndef RUN_CONFIG_REGISTRY_H
 #define RUN_CONFIG_REGISTRY_H
 
-#include <string>
 #include <map>
 #include <stdexcept>
+#include <string>
+
 #include "RunConfig.h"
 
 namespace analysis {
@@ -38,4 +38,4 @@ private:
 
 } 
 
-#endif // RUN_CONFIG_REGISTRY_H
+#endif

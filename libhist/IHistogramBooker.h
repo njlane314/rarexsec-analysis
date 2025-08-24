@@ -12,13 +12,13 @@ public:
 
     virtual ROOT::RDF::RResultPtr<TH1D> bookNominalHist(
         const BinningDefinition& binning,
-        const AnalysisDataset& dataset,
+        const SampleDataset& dataset,
         const ROOT::RDF::TH1DModel& model
     ) = 0;
 
     virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookStratifiedHists(
         const BinningDefinition& binning,
-        const AnalysisDataset& dataset,
+        const SampleDataset& dataset,
         const ROOT::RDF::TH1DModel& model
     ) = 0;
 };
@@ -26,3 +26,4 @@ public:
 }
 
 #endif
+

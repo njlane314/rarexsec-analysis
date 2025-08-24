@@ -1,15 +1,15 @@
 #ifndef SELECTION_REGISTRY_H
 #define SELECTION_REGISTRY_H
 
-#include <string>
-#include <vector>
-#include <unordered_map>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
-#include <numeric>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "Selection.h"
 #include "AnalysisDefinition.h"
+#include "Selection.h"
 
 namespace analysis {
 
@@ -73,4 +73,4 @@ private:
 
 }
 
-#endif // SELECTION_REGISTRY_H
+#endif

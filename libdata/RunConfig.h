@@ -1,12 +1,14 @@
 #ifndef RUN_CONFIG_H
 #define RUN_CONFIG_H
 
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
+
 #include <nlohmann/json.hpp>
+
+#include "AnalysisLogger.h"
 #include "SampleDefinition.h"
-#include "Logger.h"
 
 namespace analysis {
 
@@ -48,4 +50,4 @@ struct RunConfig {
 
 } 
 
-#endif // RUN_CONFIG_H
+#endif

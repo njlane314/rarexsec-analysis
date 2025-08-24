@@ -1,13 +1,14 @@
 #ifndef VARIABLES_PLUGIN_H
 #define VARIABLES_PLUGIN_H
 
-#include "IAnalysisPlugin.h"
-#include "AnalysisDefinition.h"
-#include "Logger.h"
-#include "BinningDefinition.h"
 #include <nlohmann/json.hpp>
-#include <vector>
 #include <string>
+#include <vector>
+
+#include "AnalysisDefinition.h"
+#include "AnalysisLogger.h"
+#include "BinningDefinition.h"
+#include "IAnalysisPlugin.h"
 
 namespace analysis {
 
@@ -55,8 +56,8 @@ public:
     }
 
     void onPreSampleProcessing(const SampleKey&, const RegionKey&, const RunConfig&) override {}
-    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const AnalysisRegionMap&) override {}
-    void onFinalisation(const AnalysisRegionMap&) override {}
+    void onPostSampleProcessing(const SampleKey&, const RegionKey&, const RegionAnalysisMap&) override {}
+    void onFinalisation(const RegionAnalysisMap&) override {}
 
 private:
     nlohmann::json config_;

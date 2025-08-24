@@ -1,9 +1,9 @@
 #ifndef DETECTOR_SYSTEMATIC_STRATEGY_H
 #define DETECTOR_SYSTEMATIC_STRATEGY_H
 
-#include "SystematicStrategy.h"
+#include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
-#include "Logger.h"
+#include "SystematicStrategy.h"
 
 namespace analysis {
 

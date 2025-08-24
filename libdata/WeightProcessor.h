@@ -1,11 +1,13 @@
 #ifndef WEIGHT_PROCESSOR_H
 #define WEIGHT_PROCESSOR_H
 
+#include <cmath>
+
+#include <nlohmann/json.hpp>
+
+#include "AnalysisLogger.h"
 #include "IEventProcessor.h"
 #include "SampleTypes.h"
-#include <cmath>
-#include <nlohmann/json.hpp>
-#include "Logger.h"
 
 namespace analysis {
 
@@ -69,4 +71,4 @@ private:
 
 }
 
-#endif // WEIGHT_PROCESSOR_H
+#endif
