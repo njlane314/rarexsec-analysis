@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <memory>
+#include <iterator>
 
 #include "Logger.h"
 #include "BinningDefinition.h"
@@ -243,12 +244,14 @@ public:
     struct VariableRange {
         VariableIterator begin() const { return begin_; }
         VariableIterator end() const { return end_; }
+        std::size_t size() const { return std::distance(begin_, end_); }
         VariableIterator begin_, end_;
     };
 
     struct RegionRange {
         RegionIterator begin() const { return begin_; }
         RegionIterator end() const { return end_; }
+        std::size_t size() const { return std::distance(begin_, end_); }
         RegionIterator begin_, end_;
     };
 

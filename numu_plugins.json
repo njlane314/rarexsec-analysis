@@ -14,7 +14,7 @@
       "path": "build/VariablesPlugin.so",
       "variables": [
         {
-          "name": "muon_length",
+          "name": "pfp track length",
           "branch": "track_length",
           "label": "Track Length [cm]",
           "stratum": "backtracked_pdg_codes",
@@ -27,7 +27,7 @@
       "path": "build/StackedHistogramPlugin.so",
       "plots": [
         {
-          "variable": "muon_length",
+          "variable": "pfp track length",
           "region": "NUMU_CC_SEL",
           "category_column": "backtracked_pdg_codes",
           "output_directory": "plots",
