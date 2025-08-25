@@ -77,5 +77,19 @@
         }
       ]
     }
+    ,
+    {
+      "path": "build/SelectionEfficiencyPlugin.so",
+      "efficiency_plots": [
+        {
+          "region": "NUMU_CC_SEL",
+          "selection_rule": "NUMU_CC",
+          "channel_column": "incl_channel",
+          "signal_group": "inclusive_strange_channels",
+          "output_directory": "plots",
+          "plot_name": "selection_efficiency"
+        }
+      ]
+    }
   ]
 }
