@@ -10,7 +10,8 @@
 #include "TSystem.h"
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisResult.h"
+#include "RegionAnalysis.h"
+#include "AnalysisTypes.h"
 #include "EventDisplay.h"
 #include "StackedHistogramPlot.h"
 #include "Selection.h"
@@ -30,7 +31,7 @@ public:
     }
 
     void generateStackedPlot(
-        const AnalysisPhaseSpace& phase_space,
+        const RegionAnalysisMap& phase_space,
         const std::string&       variable,
         const std::string&       region,
         const std::string&       category_column,
@@ -50,9 +51,12 @@ public:
             sanitise(region.empty() ? "default" : region) + "_" +
             sanitise(category_column);
 
+        const RegionAnalysis& region_info = phase_space.at(RegionKey{region});
+
         StackedHistogramPlot plot(
             std::move(name),
             result,
+            region_info,
             category_column,
             output_directory_,
             overlay_signal,
@@ -124,16 +128,21 @@ public:
     }
 
 private:
-    const AnalysisResult& fetchResult(
-        const AnalysisPhaseSpace& phase_space,
+    const VariableResult& fetchResult(
+        const RegionAnalysisMap& phase_space,
         const std::string&       variable,
         const std::string&       region) const
     {
-        std::string key = variable + "@" + region;
-        auto it = phase_space.find(key);
-        if (it != phase_space.end())
-            return it->second;
-        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for key", key);
+        RegionKey   rkey{region};
+        VariableKey vkey{variable};
+        auto rit = phase_space.find(rkey);
+        if (rit != phase_space.end()) {
+            if (rit->second.hasFinalVariable(vkey)) {
+                return rit->second.getFinalVariable(vkey);
+            }
+            log::fatal("PlotCatalog::fetchResult", "Missing analysis result for variable", variable, "in region", region);
+        }
+        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for region", region);
     }
 
     AnalysisDataLoader&         loader_;
