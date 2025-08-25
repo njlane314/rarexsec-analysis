@@ -30,6 +30,28 @@ An analysis framework for rare cross-section measurements.
     ./plot_analysis ../config.json
     ```
 
+## Dynamic Binning Strategies
+
+Variables can request automatic binning by setting their `bins` configuration to
+`{"mode": "dynamic"}`. By default, the bin edges are chosen so that each bin
+contains an equal total weight. To preserve the natural shape of the
+distribution, a Freedman–Diaconis strategy is also available:
+
+```json
+{
+  "bins": {
+    "mode": "dynamic",
+    "min": 0.0,
+    "max": 3000.0,
+    "include_out_of_range_bins": true,
+    "strategy": "freedman_diaconis"
+  }
+}
+```
+
+Omitting `strategy` or setting it to `equal_weight` retains the original
+equal-weight quantile binning.
+
 ```json
 {
   "path": "build/EventDisplayPlugin.so",

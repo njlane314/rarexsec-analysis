@@ -26,7 +26,8 @@
             "mode": "dynamic",
             "min": 0.0,
             "max": 3000.0,
-            "include_out_of_range_bins": true
+            "include_out_of_range_bins": true,
+            "strategy": "freedman_diaconis"
           },
           "regions": [
             "NUMU_CC_SEL"
