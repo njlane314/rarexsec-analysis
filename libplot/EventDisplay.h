@@ -7,11 +7,11 @@
 #include "TH2F.h"
 #include "TLegend.h"
 #include "TPad.h"
-#include "TStyle.h"
-#include "TSystem.h"
 #include "TROOT.h"
+#include "TStyle.h"
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <set>
 #include <string>
 #include <tuple>
@@ -26,9 +26,10 @@ class EventDisplay {
     EventDisplay(AnalysisDataLoader &loader, int image_size,
                  const std::string &output_directory)
         : loader_(loader), image_size_(image_size),
-          output_directory_(output_directory) {
+          output_directory_(
+              std::filesystem::absolute(output_directory).lexically_normal()) {
         gROOT->SetBatch(kTRUE);
-        gSystem->mkdir(output_directory_.c_str(), true);
+        std::filesystem::create_directories(output_directory_);
     }
 
     void visualiseEvent(const EventIdentifier &sample_event,
@@ -85,7 +86,8 @@ class EventDisplay {
         if (sample_events.empty())
             return;
 
-        std::string pdf_path = output_directory_ + "/" + pdf_file;
+        std::filesystem::path pdf_path = output_directory_ / pdf_file;
+        auto pdf_path_str = pdf_path.string();
         TCanvas opener("opener", "", 1, 1);
         bool opened = false;
 
@@ -102,28 +104,31 @@ class EventDisplay {
             if (df.Count().GetValue() == 0)
                 continue;
 
-            auto det_u_vec = df.Take<std::vector<float>>("event_detector_image_u")
-                                 .GetValue();
-            auto det_v_vec = df.Take<std::vector<float>>("event_detector_image_v")
-                                 .GetValue();
-            auto det_w_vec = df.Take<std::vector<float>>("event_detector_image_w")
-                                 .GetValue();
+            auto det_u_vec =
+                df.Take<std::vector<float>>("event_detector_image_u")
+                    .GetValue();
+            auto det_v_vec =
+                df.Take<std::vector<float>>("event_detector_image_v")
+                    .GetValue();
+            auto det_w_vec =
+                df.Take<std::vector<float>>("event_detector_image_w")
+                    .GetValue();
 
             if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
                 continue;
 
-            auto sem_u_vec = df.Take<std::vector<int>>("semantic_image_u")
-                                 .GetValue();
-            auto sem_v_vec = df.Take<std::vector<int>>("semantic_image_v")
-                                 .GetValue();
-            auto sem_w_vec = df.Take<std::vector<int>>("semantic_image_w")
-                                 .GetValue();
+            auto sem_u_vec =
+                df.Take<std::vector<int>>("semantic_image_u").GetValue();
+            auto sem_v_vec =
+                df.Take<std::vector<int>>("semantic_image_v").GetValue();
+            auto sem_w_vec =
+                df.Take<std::vector<int>>("semantic_image_w").GetValue();
 
             if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
                 continue;
 
             if (!opened) {
-                opener.Print((pdf_path + "[").c_str());
+                opener.Print((pdf_path_str + "[").c_str());
                 opened = true;
             }
 
@@ -136,12 +141,12 @@ class EventDisplay {
 
             for (auto const &plane : planes_) {
                 plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v,
-                          det_w, sem_u, sem_v, sem_w, &pdf_path);
+                          det_w, sem_u, sem_v, sem_w, &pdf_path_str);
             }
         }
 
         if (opened)
-            opener.Print((pdf_path + "]").c_str());
+            opener.Print((pdf_path_str + "]").c_str());
     }
 
   private:
@@ -169,8 +174,9 @@ class EventDisplay {
         if (pdf_path) {
             canvas_det.Print(pdf_path->c_str(), "pdf");
         } else {
-            canvas_det.Print(
-                (output_directory_ + "/detector_" + tag + ".png").c_str());
+            auto out =
+                (output_directory_ / ("detector_" + tag + ".png")).string();
+            canvas_det.Print(out.c_str());
         }
         delete hist_det;
 
@@ -222,8 +228,9 @@ class EventDisplay {
         if (pdf_path) {
             canvas_sem.Print(pdf_path->c_str(), "pdf");
         } else {
-            canvas_sem.Print(
-                (output_directory_ + "/semantic_" + tag + ".png").c_str());
+            auto out =
+                (output_directory_ / ("semantic_" + tag + ".png")).string();
+            canvas_sem.Print(out.c_str());
         }
         delete hist_sem;
     }
@@ -269,7 +276,7 @@ class EventDisplay {
 
     AnalysisDataLoader &loader_;
     int image_size_;
-    std::string output_directory_;
+    std::filesystem::path output_directory_;
     const std::array<std::string, 3> planes_ = {"U", "V", "W"};
 };
 

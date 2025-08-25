@@ -1,12 +1,12 @@
 #ifndef EVENTDISPLAYPLUGIN_H
 #define EVENTDISPLAYPLUGIN_H
 
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-#include <filesystem>
 
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
@@ -24,7 +24,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
         int n_events{1};
         std::string pdf_name{"event_displays.pdf"};
         int image_size{800};
-        std::string output_directory{"./plots/event_displays"};
+        std::filesystem::path output_directory{"./plots/event_displays"};
     };
 
     inline explicit EventDisplayPlugin(const nlohmann::json &cfg) {
@@ -41,13 +41,10 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             dc.pdf_name =
                 ed.value("pdf_name", std::string{"event_displays.pdf"});
             dc.image_size = ed.value("image_size", 800);
-            dc.output_directory =
-                ed.value("output_directory", std::string{"./plots/event_displays"});
-            auto p = std::filesystem::path(dc.output_directory);
-            if (!p.is_absolute()) {
-                dc.output_directory =
-                    (std::filesystem::path{"."} / p).lexically_normal().string();
-            }
+            dc.output_directory = ed.value(
+                "output_directory", std::string{"./plots/event_displays"});
+            dc.output_directory = std::filesystem::absolute(dc.output_directory)
+                                      .lexically_normal();
             configs_.push_back(std::move(dc));
         }
     }
@@ -79,17 +76,18 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             return;
         }
         for (auto const &cfg : configs_) {
-            PlotCatalog catalog(*loader_, cfg.image_size, cfg.output_directory);
+            PlotCatalog catalog(*loader_, cfg.image_size,
+                                cfg.output_directory.string());
             auto produced = catalog.generateRandomEventDisplays(
                 cfg.sample, cfg.selection, cfg.n_events, cfg.pdf_name);
             if (produced > 0) {
-                log::info("EventDisplayPlugin::onFinalisation",
-                          "Saved", produced, "event displays to",
-                          cfg.output_directory + "/" + cfg.pdf_name);
+                auto full_path = (cfg.output_directory / cfg.pdf_name).string();
+                log::info("EventDisplayPlugin::onFinalisation", "Saved",
+                          produced, "event displays to", full_path);
             } else {
                 log::warn("EventDisplayPlugin::onFinalisation",
-                          "No events found for", cfg.sample,
-                          "in region", cfg.region);
+                          "No events found for", cfg.sample, "in region",
+                          cfg.region);
             }
         }
     }
