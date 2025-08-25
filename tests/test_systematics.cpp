@@ -19,8 +19,12 @@ int main() {
     std::vector<double> x{0.5, 1.5};
     std::vector<double> knob_up{1.2, 0.8};
     std::vector<double> knob_dn{0.8, 1.2};
+    // Two toy universes that migrate events between bins. The first universe
+    // doubles the weight in the lower bin while removing it from the upper bin
+    // and the second does the opposite. This setup should yield a covariance
+    // matrix with anti-correlated bins.
     std::vector<ROOT::RVec<unsigned short>> uni_w{
-        ROOT::RVec<unsigned short>{1, 1}, ROOT::RVec<unsigned short>{2, 0}};
+        ROOT::RVec<unsigned short>{2, 0}, ROOT::RVec<unsigned short>{0, 2}};
 
     ROOT::RDataFrame df(x.size());
     ROOT::RDF::RNode rnode =
