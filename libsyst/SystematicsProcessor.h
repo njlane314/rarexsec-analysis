@@ -56,8 +56,8 @@ public:
     void processSystematics(VariableResult& result) {
         for (const auto& strategy : systematic_strategies_) {
             SystematicKey key{strategy->getName()};
-            result.covariance_matrices_[key] = strategy->computeCovariance(
-                result, systematic_futures_
+            result.covariance_matrices_.insert_or_assign(
+                key, strategy->computeCovariance(result, systematic_futures_)
             );
         }
 
