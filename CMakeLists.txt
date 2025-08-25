@@ -16,6 +16,16 @@ set(NLOHMANN_JSON_INCLUDE_DIR "/cvmfs/larsoft.opensciencegrid.org/products/nlohm
 include_directories(SYSTEM ${NLOHMANN_JSON_INCLUDE_DIR})
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
+include_directories(
+    "${CMAKE_CURRENT_SOURCE_DIR}/libapp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libdata"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libhist"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libplot"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libplug"
+)
+
 add_subdirectory(libdata)
 add_subdirectory(libutils)
 add_subdirectory(libhist)
@@ -26,16 +36,6 @@ add_subdirectory(libplug)
 
 set(ANALYSIS_EXECUTABLES
     analyse
-)
-
-include_directories(
-    "${CMAKE_CURRENT_SOURCE_DIR}/libapp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libdata"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libhist"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libplot"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libplug"  
 )
 
 foreach(exe ${ANALYSIS_EXECUTABLES})
