@@ -3,12 +3,12 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <locale>
 #include <map>
 #include <numeric>
 #include <sstream>
 #include <tuple>
 #include <vector>
-#include <locale>
 
 #include "TArrow.h"
 #include "TCanvas.h"
@@ -152,6 +152,18 @@ protected:
     mc_stack_ = new THStack("mc_stack", "");
     StratifierRegistry registry;
 
+    const auto &orig_edges = variable_result_.binning_.getEdges();
+    std::vector<double> adjusted_edges = orig_edges;
+    if (adjusted_edges.size() >= 3) {
+      double uf_width = adjusted_edges[1] - adjusted_edges[0];
+      double of_width =
+          adjusted_edges.back() - adjusted_edges[adjusted_edges.size() - 2];
+      double factor = 1.2;
+      adjusted_edges[0] = adjusted_edges[1] - uf_width * factor;
+      adjusted_edges.back() =
+          adjusted_edges[adjusted_edges.size() - 2] + of_width * factor;
+    }
+
     std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
     for (auto const &[key, hist] : variable_result_.strat_hists_) {
       if (hist.getSum() > 0) {
@@ -195,18 +207,18 @@ protected:
       h_leg->SetLineColor(kBlack);
       h_leg->SetLineWidth(1.5);
 
-      // ROOT's TLatex does not render the "#emptyset" command, so
-      // explicitly replace it with the Unicode symbol to ensure the
-      // legend displays the empty-set correctly.
+      
+      
+      
       std::string tex_label = stratum.tex_label;
       if (tex_label == "#emptyset") {
-        tex_label = "\xE2\x88\x85"; // UTF-8 encoding of \u2205
+        tex_label = "\xE2\x88\x85"; 
       }
 
-      std::string legend_label = annotate_numbers_
-                                     ? tex_label + " : " +
-                                           format_double(hist.getSum(), 2)
-                                     : tex_label;
+      std::string legend_label =
+          annotate_numbers_
+              ? tex_label + " : " + format_double(hist.getSum(), 2)
+              : tex_label;
       legend_->AddEntry(h_leg, legend_label.c_str(), "f");
     }
 
@@ -225,6 +237,12 @@ protected:
 
     for (const auto &[key, hist] : mc_hists) {
       TH1D *h = (TH1D *)hist.get()->Clone();
+      if (adjusted_edges.size() == orig_edges.size()) {
+        TH1D *rebinned =
+            (TH1D *)h->Rebin(adjusted_edges.size() - 1, "", adjusted_edges.data());
+        delete h;
+        h = rebinned;
+      }
       const auto &stratum =
           registry.getStratumProperties(category_column_, std::stoi(key.str()));
       h->SetFillColor(stratum.fill_colour);
@@ -304,16 +322,34 @@ protected:
     frame->GetXaxis()->SetTitleOffset(1.0);
     frame->GetYaxis()->SetTitleOffset(1.0);
 
-    const auto &edges = variable_result_.binning_.getEdges();
-    mc_stack_->GetXaxis()->SetLimits(edges.front(), edges.back());
-    if (edges.size() >= 3) {
+    mc_stack_->GetXaxis()->SetLimits(adjusted_edges.front(),
+                                     adjusted_edges.back());
+    if (orig_edges.size() >= 3) {
       std::ostringstream uf_label, of_label;
-      uf_label << "<" << edges[1];
-      of_label << ">" << edges[edges.size() - 2];
+      uf_label << "<" << orig_edges[1];
+      of_label << ">" << orig_edges[orig_edges.size() - 2];
       frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
                                      uf_label.str().c_str());
-      frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1, -1,
-                                     -1, -1, -1, of_label.str().c_str());
+      frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1, -1, -1,
+                                     -1, -1, of_label.str().c_str());
+      double line_min = use_log_y_ ? 0.1 : 0.0;
+      double line_max = max_y * (use_log_y_ ? 10 : 1.3);
+      TLine *uf_edge = new TLine(orig_edges[1], line_min, orig_edges[1], line_max);
+      uf_edge->SetLineColor(kGray + 2);
+      uf_edge->SetLineWidth(2);
+      uf_edge->Draw("same");
+      cut_visuals_.push_back(uf_edge);
+      TLine *of_edge = new TLine(orig_edges[orig_edges.size() - 2], line_min,
+                                 orig_edges[orig_edges.size() - 2], line_max);
+      of_edge->SetLineColor(kGray + 2);
+      of_edge->SetLineWidth(2);
+      of_edge->Draw("same");
+      cut_visuals_.push_back(of_edge);
+      TLatex *of_marker =
+          new TLatex(orig_edges[orig_edges.size() - 2], line_min, ">");
+      of_marker->SetTextAlign(21);
+      of_marker->Draw("same");
+      cut_visuals_.push_back(of_marker);
     }
 
     drawWatermark(p_main, total_mc_events);
@@ -337,6 +373,6 @@ private:
   std::vector<TObject *> cut_visuals_;
 };
 
-}
+} 
 
 #endif
