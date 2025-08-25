@@ -30,6 +30,12 @@ public:
         const ROOT::RDF::TH1DModel& model,
         SystematicFutures& futures
     ) override {
+        log::debug(
+            "WeightSystematicStrategy::bookVariations",
+            identifier_,
+            "sample",
+            sample_key.str()
+        );
         SystematicKey up_key{identifier_ + "_up"};
         SystematicKey dn_key{identifier_ + "_dn"};
         futures.variations[up_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), up_column_);
@@ -54,17 +60,45 @@ public:
         SystematicKey up_key{identifier_ + "_up"};
         SystematicKey dn_key{identifier_ + "_dn"};
 
+        log::debug(
+            "WeightSystematicStrategy::computeCovariance",
+            identifier_,
+            "bins",
+            n
+        );
         if (futures.variations.count(up_key)) {
+            log::debug(
+                "WeightSystematicStrategy::computeCovariance",
+                "Accumulating up variations for",
+                identifier_
+            );
             for(auto& [sample_key, future] : futures.variations.at(up_key)){
                 if (future.GetPtr())
                     hu = hu + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
+        } else {
+            log::warn(
+                "WeightSystematicStrategy::computeCovariance",
+                "Missing up variation for",
+                identifier_
+            );
         }
         if (futures.variations.count(dn_key)) {
+            log::debug(
+                "WeightSystematicStrategy::computeCovariance",
+                "Accumulating down variations for",
+                identifier_
+            );
             for(auto& [sample_key, future] : futures.variations.at(dn_key)){
                 if (future.GetPtr())
                     hd = hd + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
             }
+        } else {
+            log::warn(
+                "WeightSystematicStrategy::computeCovariance",
+                "Missing down variation for",
+                identifier_
+            );
         }
 
         result.variation_hists_[up_key] = hu;
@@ -74,6 +108,11 @@ public:
             double d = 0.5 * (hu.getBinContent(i) - hd.getBinContent(i));
             cov(i, i) = d * d;
         }
+        log::debug(
+            "WeightSystematicStrategy::computeCovariance",
+            identifier_,
+            "covariance calculated"
+        );
         return cov;
     }
 

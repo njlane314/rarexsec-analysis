@@ -31,14 +31,32 @@ public:
         TMatrixDSym total_detvar_cov(n_bins);
         total_detvar_cov.Zero();
 
+        log::debug(
+            "DetectorSystematicStrategy::computeCovariance",
+            "Raw detvar histograms:",
+            result.raw_detvar_hists_.size()
+        );
         if (result.raw_detvar_hists_.empty()) {
-            log::info("DetectorSystematicStrategy::computeCovariance", "No detector variation samples found. Skipping detector systematics.");
+            log::info(
+                "DetectorSystematicStrategy::computeCovariance",
+                "No detector variation samples found. Skipping detector systematics."
+            );
             return total_detvar_cov;
         }
 
         std::map<SampleVariation, BinnedHistogram> total_detvar_hists;
         for (const auto& [sample_key, var_map] : result.raw_detvar_hists_) {
+            log::debug(
+                "DetectorSystematicStrategy::computeCovariance",
+                "Aggregating sample",
+                sample_key.str()
+            );
             for (const auto& [var_type, hist] : var_map) {
+                log::debug(
+                    "DetectorSystematicStrategy::computeCovariance",
+                    "--> variation",
+                    variationToKey(var_type)
+                );
                 if (total_detvar_hists.find(var_type) == total_detvar_hists.end()) {
                     total_detvar_hists[var_type] = hist;
                 } else {
@@ -49,13 +67,22 @@ public:
 
         auto it_cv = total_detvar_hists.find(SampleVariation::kCV);
         if (it_cv == total_detvar_hists.end()) {
-            log::warn("DetectorSystematicStrategy::computeCovariance", "No detector variation CV histogram found. Skipping.");
+            log::warn(
+                "DetectorSystematicStrategy::computeCovariance",
+                "No detector variation CV histogram found. Skipping."
+            );
             return total_detvar_cov;
         }
         const auto& h_det_cv = it_cv->second;
 
         for (const auto& [var_key, h_det_k] : total_detvar_hists) {
             if (var_key == SampleVariation::kCV) continue;
+
+            log::debug(
+                "DetectorSystematicStrategy::computeCovariance",
+                "Projecting variation",
+                variationToKey(var_key)
+            );
 
             auto transfer_ratio = h_det_k / h_det_cv;
             auto h_proj_k = transfer_ratio * nominal_hist;
@@ -74,6 +101,12 @@ public:
             }
             total_detvar_cov += cov_k;
         }
+        log::debug(
+            "DetectorSystematicStrategy::computeCovariance",
+            "Computed detector covariance with",
+            total_detvar_hists.size() - 1,
+            "variations"
+        );
         return total_detvar_cov;
     }
 
