@@ -8,4 +8,3 @@ extern "C" analysis::IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {
 extern "C" void setPluginContext(analysis::AnalysisDataLoader* loader) {
     analysis::EventDisplayPlugin::setLoader(loader);
 }
-

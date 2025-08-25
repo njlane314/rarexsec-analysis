@@ -71,6 +71,8 @@ public:
 
     inline static void setLoader(AnalysisDataLoader* loader) { loader_ = loader; }
 
+    static void setLoader(AnalysisDataLoader* loader);
+
 private:
     std::vector<DisplayConfig> configs_;
     inline static AnalysisDataLoader* loader_ = nullptr;
