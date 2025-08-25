@@ -8,6 +8,8 @@
 #include "TLegend.h"
 #include "TPad.h"
 #include "TStyle.h"
+#include "TSystem.h"
+#include "TROOT.h"
 #include <algorithm>
 #include <array>
 #include <set>
@@ -26,6 +28,7 @@ class EventDisplay {
         : loader_(loader), image_size_(image_size),
           output_directory_(output_directory) {
         gROOT->SetBatch(kTRUE);
+        gSystem->mkdir(output_directory_.c_str(), true);
     }
 
     void visualiseEvent(const EventIdentifier &sample_event,
@@ -39,22 +42,36 @@ class EventDisplay {
         auto df = sample.nominal_node_;
         df = df.Filter(filter_expr);
 
-        auto det_u = df.Take<std::vector<float>>("event_detector_image_u")
-                         .GetValue()
-                         .at(0);
-        auto det_v = df.Take<std::vector<float>>("event_detector_image_v")
-                         .GetValue()
-                         .at(0);
-        auto det_w = df.Take<std::vector<float>>("event_detector_image_w")
-                         .GetValue()
-                         .at(0);
+        if (df.Count().GetValue() == 0)
+            return;
 
-        auto sem_u =
-            df.Take<std::vector<int>>("semantic_image_u").GetValue().at(0);
-        auto sem_v =
-            df.Take<std::vector<int>>("semantic_image_v").GetValue().at(0);
-        auto sem_w =
-            df.Take<std::vector<int>>("semantic_image_w").GetValue().at(0);
+        auto det_u_vec =
+            df.Take<std::vector<float>>("event_detector_image_u").GetValue();
+        auto det_v_vec =
+            df.Take<std::vector<float>>("event_detector_image_v").GetValue();
+        auto det_w_vec =
+            df.Take<std::vector<float>>("event_detector_image_w").GetValue();
+
+        if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
+            return;
+
+        auto det_u = det_u_vec[0];
+        auto det_v = det_v_vec[0];
+        auto det_w = det_w_vec[0];
+
+        auto sem_u_vec =
+            df.Take<std::vector<int>>("semantic_image_u").GetValue();
+        auto sem_v_vec =
+            df.Take<std::vector<int>>("semantic_image_v").GetValue();
+        auto sem_w_vec =
+            df.Take<std::vector<int>>("semantic_image_w").GetValue();
+
+        if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
+            return;
+
+        auto sem_u = sem_u_vec[0];
+        auto sem_v = sem_v_vec[0];
+        auto sem_w = sem_w_vec[0];
 
         for (auto const &plane : planes_) {
             plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v, det_w,
@@ -70,7 +87,7 @@ class EventDisplay {
 
         std::string pdf_path = output_directory_ + "/" + pdf_file;
         TCanvas opener("opener", "", 1, 1);
-        opener.Print((pdf_path + "[").c_str());
+        bool opened = false;
 
         for (auto const &sample_event : sample_events) {
             auto [run_id, subrun_id, event_num] = sample_event;
@@ -82,22 +99,40 @@ class EventDisplay {
             auto df = sample.nominal_node_;
             df = df.Filter(filter_expr);
 
-            auto det_u = df.Take<std::vector<float>>("event_detector_image_u")
-                             .GetValue()
-                             .at(0);
-            auto det_v = df.Take<std::vector<float>>("event_detector_image_v")
-                             .GetValue()
-                             .at(0);
-            auto det_w = df.Take<std::vector<float>>("event_detector_image_w")
-                             .GetValue()
-                             .at(0);
+            if (df.Count().GetValue() == 0)
+                continue;
 
-            auto sem_u =
-                df.Take<std::vector<int>>("semantic_image_u").GetValue().at(0);
-            auto sem_v =
-                df.Take<std::vector<int>>("semantic_image_v").GetValue().at(0);
-            auto sem_w =
-                df.Take<std::vector<int>>("semantic_image_w").GetValue().at(0);
+            auto det_u_vec = df.Take<std::vector<float>>("event_detector_image_u")
+                                 .GetValue();
+            auto det_v_vec = df.Take<std::vector<float>>("event_detector_image_v")
+                                 .GetValue();
+            auto det_w_vec = df.Take<std::vector<float>>("event_detector_image_w")
+                                 .GetValue();
+
+            if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
+                continue;
+
+            auto sem_u_vec = df.Take<std::vector<int>>("semantic_image_u")
+                                 .GetValue();
+            auto sem_v_vec = df.Take<std::vector<int>>("semantic_image_v")
+                                 .GetValue();
+            auto sem_w_vec = df.Take<std::vector<int>>("semantic_image_w")
+                                 .GetValue();
+
+            if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
+                continue;
+
+            if (!opened) {
+                opener.Print((pdf_path + "[").c_str());
+                opened = true;
+            }
+
+            auto det_u = det_u_vec[0];
+            auto det_v = det_v_vec[0];
+            auto det_w = det_w_vec[0];
+            auto sem_u = sem_u_vec[0];
+            auto sem_v = sem_v_vec[0];
+            auto sem_w = sem_w_vec[0];
 
             for (auto const &plane : planes_) {
                 plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v,
@@ -105,7 +140,8 @@ class EventDisplay {
             }
         }
 
-        opener.Print((pdf_path + "]").c_str());
+        if (opened)
+            opener.Print((pdf_path + "]").c_str());
     }
 
   private:
