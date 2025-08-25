@@ -4,15 +4,6 @@
       "path": "build/RegionsPlugin.so",
       "regions": [
         {
-          "region_key": "NUMU_EMPTY",
-          "label": "Muon Neutrino No Selection",
-          "selection_rule": "NONE",
-          "beam_config": "numi_fhc",
-          "runs": [
-            "run1"
-          ]
-        },
-        {
           "region_key": "NUMU_QUALITY_PRE",
           "label": "Muon Neutrino Quality Preselection",
           "selection_rule": "QUALITY",
@@ -39,7 +30,6 @@
             "strategy": "freedman_diaconis"
           },
           "regions": [
-            "NUMU_EMPTY",
             "NUMU_QUALITY_PRE"
           ]
         },
@@ -56,7 +46,6 @@
             "strategy": "freedman_diaconis"
           },
           "regions": [
-            "NUMU_EMPTY",
             "NUMU_QUALITY_PRE"
           ]
         },
@@ -73,7 +62,6 @@
             "strategy": "freedman_diaconis"
           },
           "regions": [
-            "NUMU_EMPTY",
             "NUMU_QUALITY_PRE"
           ]
         },
@@ -100,16 +88,6 @@
       "plots": [
         {
           "variable": "pfp track length",
-          "region": "NUMU_EMPTY",
-          "category_column": "backtracked_pdg_codes",
-          "output_directory": "plots",
-          "overlay_signal": true,
-          "annotate_numbers": true,
-          "log_y": true,
-          "y_axis_label": "Particle Flows"
-        },
-        {
-          "variable": "pfp track length",
           "region": "NUMU_QUALITY_PRE",
           "category_column": "backtracked_pdg_codes",
           "output_directory": "plots",
@@ -117,22 +95,6 @@
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows"
-        },
-        {
-          "variable": "n_pfps_gen2",
-          "region": "NUMU_EMPTY",
-          "category_column": "inclusive_strange_channels",
-          "output_directory": "plots",
-          "overlay_signal": true,
-          "annotate_numbers": true,
-          "log_y": true,
-          "y_axis_label": "Particle Flows",
-          "cuts": [
-            {
-              "threshold": 1.0,
-              "direction": "GreaterThan"
-            }
-          ]
         },
         {
           "variable": "n_pfps_gen2",
@@ -146,22 +108,6 @@
           "cuts": [
             {
               "threshold": 1.0,
-              "direction": "GreaterThan"
-            }
-          ]
-        },
-        {
-          "variable": "n_muons",
-          "region": "NUMU_EMPTY",
-          "category_column": "inclusive_strange_channels",
-          "output_directory": "plots",
-          "overlay_signal": true,
-          "annotate_numbers": true,
-          "log_y": true,
-          "y_axis_label": "Particle Flows",
-          "cuts": [
-            {
-              "threshold": 0.0,
               "direction": "GreaterThan"
             }
           ]
@@ -196,3 +142,4 @@
     }
   ]
 }
+
