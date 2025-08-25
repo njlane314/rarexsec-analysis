@@ -68,7 +68,10 @@ public:
                     mc_nodes,
                     var_handle.binning(),
                     "nominal_event_weight",
-                    400.0
+                    400.0,
+                    0.0,
+                    1.0,
+                    true
                 );
 
                 log::info("AnalysisRunner::run", "--> Optimal bin count resolved:", new_bins.getBinNumber());
