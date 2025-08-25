@@ -30,13 +30,6 @@ An analysis framework for rare cross-section measurements.
     ./plot_analysis ../config.json
     ```
 
-## Dynamic Binning Strategies
-
-Variables can request automatic binning by setting their `bins` configuration to
-`{"mode": "dynamic"}`. By default, the bin edges are chosen so that each bin
-contains an equal total weight. To preserve the natural shape of the
-distribution, a Freedman–Diaconis strategy is also available:
-
 ```json
 {
   "bins": {
@@ -48,9 +41,6 @@ distribution, a Freedman–Diaconis strategy is also available:
   }
 }
 ```
-
-Omitting `strategy` or setting it to `equal_weight` retains the original
-equal-weight quantile binning.
 
 ```json
 {
@@ -67,13 +57,6 @@ equal-weight quantile binning.
   ]
 }
 ```
-
-### ROC Curve Plugin
-
-Generate signal efficiency versus background rejection plots by sweeping a
-threshold on a given variable. The plugin requires the column containing the
-channel information, a signal group definition, and the variable to threshold
-on:
 
 ```json
 {
