@@ -264,9 +264,21 @@ private:
             if (rit->second.hasFinalVariable(vkey)) {
                 return rit->second.getFinalVariable(vkey);
             }
-            log::fatal("PlotCatalog::fetchResult", "Missing analysis result for variable", variable, "in region", region);
+            log::fatal(
+                "PlotCatalog::fetchResult",
+                "Missing analysis result for variable",
+                variable,
+                "in region",
+                region
+            );
+            throw std::runtime_error("Missing analysis result for variable");
         }
-        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for region", region);
+        log::fatal(
+            "PlotCatalog::fetchResult",
+            "Missing analysis result for region",
+            region
+        );
+        throw std::runtime_error("Missing analysis result for region");
     }
 
     AnalysisDataLoader&         loader_;
