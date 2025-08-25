@@ -75,7 +75,7 @@ public:
             {2112,  "neutron",            "n",                 kGray+1,    1001},
             {321,   "kaon",               R"(K^{#pm})",        kMagenta-9, 1001},
             {3222,  "sigma",              R"(#Sigma^{#pm})",   kRed-9,     1001},
-            {0,     "none",              "∅",      kTeal,      1001},
+            {0,     "none",              R"(#emptyset)",      kGray+2,    1001},
             {-1,    "other",              "Other",             kBlack,     3005}
         },
         [](const ROOT::RVec<int>& pdg_codes, int key) {
