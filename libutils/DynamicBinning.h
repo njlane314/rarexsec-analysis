@@ -45,6 +45,8 @@ public:
             return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "unsigned int" || typeName == "UInt_t") {
             return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
+        } else if (typeName == "unsigned long" || typeName == "ULong64_t" || typeName == "unsigned long long") {
+            return calculate_scalar<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
             return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos
@@ -63,6 +65,14 @@ public:
                    || typeName.find("ROOT::RVec<unsigned int>") != std::string::npos
                    || typeName.find("vector<unsigned int>") != std::string::npos) {
             return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
+        } else if (typeName.find("ROOT::VecOps::RVec<unsigned long>") != std::string::npos
+                   || typeName.find("ROOT::RVec<unsigned long>") != std::string::npos
+                   || typeName.find("vector<unsigned long>") != std::string::npos
+                   || typeName.find("vector<ULong64_t>") != std::string::npos
+                   || typeName.find("ROOT::VecOps::RVec<unsigned long long>") != std::string::npos
+                   || typeName.find("ROOT::RVec<unsigned long long>") != std::string::npos
+                   || typeName.find("vector<unsigned long long>") != std::string::npos) {
+            return calculate_vector<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos
                    || typeName.find("ROOT::RVec<long long>") != std::string::npos
                    || typeName.find("vector<long long>") != std::string::npos
