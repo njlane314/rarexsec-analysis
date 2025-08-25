@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <string>
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
@@ -32,7 +33,7 @@ int main() {
     KnobDef knob{"knob", "knob_up", "knob_dn"};
     UniverseDef universe{"uni", "uni_weights", 2};
     SystematicsProcessor processor({knob}, {universe});
-    SampleKey sample_key("sample");
+    SampleKey sample_key(std::string{"sample"});
     processor.bookSystematics(sample_key, rnode, binning, binning.toTH1DModel());
 
     VariableResult result;
@@ -47,17 +48,17 @@ int main() {
 
     processor.processSystematics(result);
 
-    auto weight_cov = result.covariance_matrices_.at(SystematicKey("knob"));
+    auto weight_cov = result.covariance_matrices_.at(SystematicKey(std::string{"knob"}));
     assert(std::abs(weight_cov(0,0) - 0.04) < 1e-6);
     assert(std::abs(weight_cov(1,1) - 0.04) < 1e-6);
     assert(std::abs(weight_cov(0,1) - 0.0) < 1e-6);
 
-    auto uni_cov = result.covariance_matrices_.at(SystematicKey("uni"));
+    auto uni_cov = result.covariance_matrices_.at(SystematicKey(std::string{"uni"}));
     assert(std::abs(uni_cov(0,0) - 0.5) < 1e-6);
     assert(std::abs(uni_cov(1,1) - 0.5) < 1e-6);
     assert(std::abs(uni_cov(0,1) + 0.5) < 1e-6);
 
-    auto det_cov = result.covariance_matrices_.at(SystematicKey("detector_variation"));
+    auto det_cov = result.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"}));
     assert(std::abs(det_cov(0,0) - 0.01) < 1e-6);
     assert(std::abs(det_cov(1,1) - 0.01) < 1e-6);
     assert(std::abs(det_cov(0,1) + 0.01) < 1e-6);
