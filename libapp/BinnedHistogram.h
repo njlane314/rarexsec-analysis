@@ -2,6 +2,7 @@
 #define BINNED_HISTOGRAM_H
 
 #include <vector>
+#include <cmath>
 
 #include <Eigen/Dense>
 #include "TH1D.h"
@@ -75,11 +76,9 @@ public:
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < n; ++j)
                 cov_e(i, j) = cov_to_add(i, j);
-        Eigen::LLT<Eigen::MatrixXd> llt(cov_e);
-        Eigen::MatrixXd L = llt.matrixL();
-        int old_cols = shifts.cols();
-        shifts.conservativeResize(n, old_cols + L.cols());
-        shifts.block(0, old_cols, n, L.cols()) = L;
+        Eigen::MatrixXd cov = shifts * shifts.transpose() + cov_e;
+        Eigen::LLT<Eigen::MatrixXd> llt(cov);
+        shifts = llt.matrixL();
     }
 
     BinnedHistogram operator+(double s) const {
@@ -101,10 +100,19 @@ public:
             log::fatal("BinnedHistogram::operator*", "Attempting to multiply histograms with different numbers of bins.");
         }
         auto tmp = *this;
-        for (int i = 0; i < getNumberOfBins(); ++i) {
+        int n = getNumberOfBins();
+        tmp.shifts = Eigen::MatrixXd::Zero(n, n);
+        for (int i = 0; i < n; ++i) {
             tmp.counts[i] *= o.counts[i];
+            double v1 = this->counts[i];
+            double v2 = o.counts[i];
+            double e1 = this->getBinError(i);
+            double e2 = o.getBinError(i);
+            double rel1 = v1 != 0 ? e1 / v1 : 0;
+            double rel2 = v2 != 0 ? e2 / v2 : 0;
+            double err = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
+            tmp.shifts(i, i) = err;
         }
-        tmp.shifts.resize(getNumberOfBins(), 0);
         return tmp;
     }
 
@@ -124,20 +132,24 @@ public:
         }
 
         auto tmp = *this;
-        for (int i = 0; i < getNumberOfBins(); ++i) {
+        int n = getNumberOfBins();
+        for (int i = 0; i < n; ++i) {
             tmp.counts[i] += o.counts[i];
         }
-        if (tmp.shifts.rows() != o.shifts.rows()) {
+        if (this->shifts.rows() != o.shifts.rows()) {
             log::error(
                 "BinnedHistogram::operator+",
                 "Shifts matrix dimension mismatch: ",
-                tmp.shifts.rows(), " vs ", o.shifts.rows());
+                this->shifts.rows(), " vs ", o.shifts.rows());
             return BinnedHistogram();
         }
-        int c1 = shifts.cols();
-        int c2 = o.shifts.cols();
-        tmp.shifts.conservativeResize(getNumberOfBins(), c1 + c2);
-        tmp.shifts.block(0, c1, getNumberOfBins(), c2) = o.shifts;
+        Eigen::VectorXd errs(n);
+        for (int i = 0; i < n; ++i) {
+            double e1 = this->getBinError(i);
+            double e2 = o.getBinError(i);
+            errs(i) = std::sqrt(e1 * e1 + e2 * e2);
+        }
+        tmp.shifts = errs.asDiagonal();
         return tmp;
     }
 
@@ -147,14 +159,24 @@ public:
             log::fatal("BinnedHistogram::operator/", "Attempting to divide histograms with different numbers of bins.");
         }
         auto tmp = *this;
-        for (int i = 0; i < getNumberOfBins(); ++i) {
+        int n = getNumberOfBins();
+        tmp.shifts = Eigen::MatrixXd::Zero(n, n);
+        for (int i = 0; i < n; ++i) {
             if (o.counts[i] != 0) {
                 tmp.counts[i] /= o.counts[i];
+                double v1 = this->counts[i];
+                double v2 = o.counts[i];
+                double e1 = this->getBinError(i);
+                double e2 = o.getBinError(i);
+                double rel1 = v1 != 0 ? e1 / v1 : 0;
+                double rel2 = v2 != 0 ? e2 / v2 : 0;
+                double err = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
+                tmp.shifts(i, i) = err;
             } else {
                 tmp.counts[i] = 0;
+                tmp.shifts(i, i) = 0;
             }
         }
-        tmp.shifts.resize(getNumberOfBins(), 0);
         return tmp;
     }
 
@@ -166,20 +188,24 @@ public:
             log::fatal("BinnedHistogram::operator-", "Attempting to subtract histograms with different numbers of bins.");
         }
         auto tmp = *this;
-        for (int i = 0; i < getNumberOfBins(); ++i) {
+        int n = getNumberOfBins();
+        for (int i = 0; i < n; ++i) {
             tmp.counts[i] -= o.counts[i];
         }
-        if (tmp.shifts.rows() != o.shifts.rows()) {
+        if (this->shifts.rows() != o.shifts.rows()) {
             log::error(
                 "BinnedHistogram::operator-",
                 "Shifts matrix dimension mismatch: ",
-                tmp.shifts.rows(), " vs ", o.shifts.rows());
+                this->shifts.rows(), " vs ", o.shifts.rows());
             return BinnedHistogram();
         }
-        int c1 = shifts.cols();
-        int c2 = o.shifts.cols();
-        tmp.shifts.conservativeResize(getNumberOfBins(), c1 + c2);
-        tmp.shifts.block(0, c1, getNumberOfBins(), c2) = o.shifts;
+        Eigen::VectorXd errs(n);
+        for (int i = 0; i < n; ++i) {
+            double e1 = this->getBinError(i);
+            double e2 = o.getBinError(i);
+            errs(i) = std::sqrt(e1 * e1 + e2 * e2);
+        }
+        tmp.shifts = errs.asDiagonal();
         return tmp;
     }
 
