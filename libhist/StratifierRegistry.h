@@ -106,6 +106,74 @@ public:
             }
         });
 
+        this->addScheme("blip_pdg", StratifierType::kVector, {
+            {13,   "muon",     R"(#mu^{#pm})",      kAzure-4,   1001},
+            {2212, "proton",   "p",                 kOrange-3,  1001},
+            {211,  "pion",     R"(#pi^{#pm})",      kGreen+1,   1001},
+            {22,   "gamma",    R"(#gamma)",         kYellow-7,  1001},
+            {11,   "electron", R"(e^{#pm})",        kCyan-3,    1001},
+            {2112, "neutron",  "n",                 kGray+1,    1001},
+            {321,  "kaon",     R"(K^{#pm})",        kMagenta-9, 1001},
+            {0,    "none",     R"(#emptyset)",      kGray+2,    1001},
+            {-1,   "other",    "Other",             kBlack,     3005}
+        },
+        [](const ROOT::RVec<int>& pdg_codes, int key) {
+            if (key == 0) {
+                return ROOT::VecOps::Sum(pdg_codes == 0) > 0;
+            }
+            if (key == -1) {
+                if (pdg_codes.empty()) return false;
+                const std::set<int> known_pdgs = {0, 11, 13, 22, 211, 321, 2112, 2212};
+                for (int code : pdg_codes) {
+                    if (known_pdgs.count(std::abs(code))) {
+                        return false;
+                    }
+                }
+                if (other_events_logged_count < 5) {
+                    other_events_logged_count++;
+                    std::cout << "[DEBUG: Stratifier] 'Other' blip contains PDG codes: ";
+                    for(int code : pdg_codes) { std::cout << code << " "; }
+                    std::cout << std::endl;
+                }
+                return true;
+            }
+            return ROOT::VecOps::Sum(ROOT::VecOps::abs(pdg_codes) == key) > 0;
+        });
+
+        this->addScheme("blip_process_code", StratifierType::kVector, {
+            {1,  "muon_capture",     R"(#mu capture)",      kAzure-4,  1001},
+            {2,  "neutron_capture",  R"(n capture)",        kGreen+2,  1001},
+            {3,  "neutron_inelastic",R"(n inelastic)",      kMagenta-9,1001},
+            {4,  "gamma",            R"(#gamma)",           kYellow-7, 1001},
+            {5,  "electron",         R"(e processes)",      kCyan-3,   1001},
+            {6,  "muon",             R"(#mu processes)",    kBlue,     1001},
+            {7,  "hadron",           R"(hadron ion.)",      kOrange-3, 1001},
+            {0,  "none",             R"(#emptyset)",       kGray+2,   1001},
+            {-1, "other",            "Other",              kBlack,    3005}
+        },
+        [](const ROOT::RVec<int>& proc_codes, int key) {
+            if (key == 0) {
+                return ROOT::VecOps::Sum(proc_codes == 0) > 0;
+            }
+            if (key == -1) {
+                if (proc_codes.empty()) return false;
+                const std::set<int> known_codes = {0,1,2,3,4,5,6,7};
+                for (int code : proc_codes) {
+                    if (known_codes.count(code)) {
+                        return false;
+                    }
+                }
+                if (other_events_logged_count < 5) {
+                    other_events_logged_count++;
+                    std::cout << "[DEBUG: Stratifier] 'Other' blip contains process codes: ";
+                    for(int code : proc_codes) { std::cout << code << " "; }
+                    std::cout << std::endl;
+                }
+                return true;
+            }
+            return ROOT::VecOps::Sum(proc_codes == key) > 0;
+        });
+
         signal_channel_groups_ = {
             {"inclusive_strange_channels", {10, 11}},
             {"exclusive_strange_channels", {

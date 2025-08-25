@@ -55,6 +55,7 @@ public:
         vars.insert(recoEventVariables().begin(), recoEventVariables().end());
         vars.insert(recoTrackVariables().begin(), recoTrackVariables().end());
         vars.insert(processedEventVariables().begin(), processedEventVariables().end());
+        vars.insert(blipVariables().begin(), blipVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
@@ -98,7 +99,7 @@ private:
             "neutrino_completeness_from_pfp", "neutrino_purity_from_pfp",
             "target_nucleus_pdg", "hit_nucleon_pdg",
             "kinematic_W", "kinematic_X", "kinematic_Y", "kinematic_Q_squared",
-            "backtracked_pdg_codes"
+            "backtracked_pdg_codes", "blip_pdg"
         };
         return v;
     }
@@ -110,6 +111,19 @@ private:
             "slice_num_hits", "selection_pass", "slice_id",
             "optical_filter_pe_beam", "optical_filter_pe_veto",
             "num_pfps", "num_tracks", "num_showers", "event_total_hits"
+        };
+        return v;
+    }
+
+    static const std::vector<std::string>& blipVariables() {
+        static const std::vector<std::string> v = {
+            "blip_ID", "blip_isValid", "blip_TPC", "blip_NPlanes",
+            "blip_MaxWireSpan", "blip_Energy", "blip_EnergyESTAR",
+            "blip_Time", "blip_ProxTrkDist", "blip_ProxTrkID",
+            "blip_inCylinder", "blip_X", "blip_Y", "blip_Z",
+            "blip_SigmaYZ", "blip_dX", "blip_dYZ", "blip_Charge",
+            "blip_LeadG4ID", "blip_pdg", "blip_process", "blip_process_code", "blip_vx",
+            "blip_vy", "blip_vz", "blip_E", "blip_mass", "blip_trkid", "blip_distance_to_vertex"
         };
         return v;
     }
