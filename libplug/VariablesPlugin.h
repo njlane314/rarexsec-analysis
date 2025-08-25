@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include "AnalysisDefinition.h"
 #include "AnalysisLogger.h"
@@ -30,7 +31,12 @@ public:
             auto strat  = var_cfg.at("stratum").get<std::string>();
 
             if (var_cfg.at("bins").is_string() && var_cfg.at("bins").get<std::string>() == "dynamic") {
-                BinningDefinition placeholder_bins({0.0, 1.0}, branch, label, {}, strat);
+                BinningDefinition placeholder_bins({-std::numeric_limits<double>::infinity(),
+                                                  std::numeric_limits<double>::infinity()},
+                                                 branch,
+                                                 label,
+                                                 {},
+                                                 strat);
                 def.addVariable(name, branch, label, placeholder_bins, strat, true);
             } else {
                 std::vector<double> edges;
