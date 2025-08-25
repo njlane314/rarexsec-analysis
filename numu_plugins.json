@@ -6,7 +6,9 @@
         {
           "region_key": "NUMU_CC_SEL",
           "label": "Muon Neutrino CC Selection",
-          "selection_rule": "NUMU_CC"
+          "selection_rule": "NUMU_CC",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
         }
       ]
     },

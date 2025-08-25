@@ -1,9 +1,11 @@
 #ifndef ANALYSIS_RUNNER_H
 #define ANALYSIS_RUNNER_H
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <numeric>
+#include <set>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -93,20 +95,52 @@ public:
 
             analysis::log::info("AnalysisRunner::run", "Processing sample ensemble...");
             auto& sample_frames = data_loader_.getSampleFrames();
-            size_t sample_total = sample_frames.size();
-            size_t sample_index = 0;
-            for (auto& [sample_key, sample_def] : sample_frames) {
-                ++sample_index;
-                const auto* run_config = data_loader_.getRunConfigForSample(sample_key);
-                if (run_config) {
-                    plugin_manager.notifyPreSampleProcessing(
-                        sample_key,
-                        region_handle.key_,
-                        *run_config
-                    );
-                }
 
-                analysis::log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total, "):", sample_key.str());
+            const std::string region_beam = region_analysis.beamConfig();
+            const auto& region_runs = region_analysis.runNumbers();
+
+            size_t sample_total = 0;
+            for (auto& [sample_key, _] : sample_frames) {
+                const auto* run_config = data_loader_.getRunConfigForSample(sample_key);
+                if (!run_config) continue;
+                if (!region_beam.empty() && run_config->beam_mode != region_beam) continue;
+                if (!region_runs.empty() &&
+                    std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+                    continue;
+                ++sample_total;
+            }
+
+            size_t sample_index = 0;
+            std::set<std::string> accounted_runs;
+            for (auto& [sample_key, sample_def] : sample_frames) {
+                const auto* run_config = data_loader_.getRunConfigForSample(sample_key);
+                if (!run_config) continue;
+                if (!region_beam.empty() && run_config->beam_mode != region_beam) continue;
+                if (!region_runs.empty() &&
+                    std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+                    continue;
+                ++sample_index;
+
+                if (accounted_runs.insert(run_config->label()).second) {
+                    region_analysis.setProtonsOnTarget(
+                        region_analysis.protonsOnTarget() + run_config->nominal_pot);
+                }
+                plugin_manager.notifyPreSampleProcessing(
+                    sample_key,
+                    region_handle.key_,
+                    *run_config
+                );
+
+                analysis::log::info(
+                    "AnalysisRunner::run",
+                    "--> Conditioning sample (",
+                    sample_index,
+                    "/",
+                    sample_total,
+                    "):",
+                    sample_key.str()
+                );
+
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
 
                 analysis::log::info("AnalysisRunner::run", "Configuring systematic variations...");
@@ -174,7 +208,7 @@ public:
 
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
-            for (auto& [sample_key, sample_def] : data_loader_.getSampleFrames()) {
+            for (auto& [sample_key, _] : sample_processors) {
                 plugin_manager.notifyPostSampleProcessing(
                     sample_key,
                     region_handle.key_,
