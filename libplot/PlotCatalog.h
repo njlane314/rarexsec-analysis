@@ -1,12 +1,12 @@
 #ifndef PLOT_CATALOG_H
 #define PLOT_CATALOG_H
 
+#include <filesystem>
 #include <numeric>
 #include <random>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisTypes.h"
@@ -25,9 +25,9 @@ class PlotCatalog {
     PlotCatalog(AnalysisDataLoader &loader, int image_size,
                 const std::string &output_directory = "./plots")
         : loader_(loader), image_size_(image_size) {
-        auto p = std::filesystem::absolute(output_directory);
-        output_directory_ = p.lexically_normal().string();
-        std::filesystem::create_directories(output_directory_);
+        auto p = std::filesystem::absolute(output_directory).lexically_normal();
+        std::filesystem::create_directories(p);
+        output_directory_ = p;
     }
 
     void generateStackedPlot(const RegionAnalysisMap &phase_space,
@@ -51,7 +51,7 @@ class PlotCatalog {
         const RegionAnalysis &region_info = phase_space.at(RegionKey{region});
 
         StackedHistogramPlot plot(std::move(name), result, region_info,
-                                  category_column, output_directory_,
+                                  category_column, output_directory_.string(),
                                   overlay_signal, cut_list, annotate_numbers);
         plot.drawAndSave();
     }
@@ -76,7 +76,7 @@ class PlotCatalog {
         const RegionAnalysis &region_info = phase_space.at(RegionKey{region});
 
         UnstackedHistogramPlot plot(std::move(name), result, region_info,
-                                    category_column, output_directory_,
+                                    category_column, output_directory_.string(),
                                     cut_list, annotate_numbers, use_log_y,
                                     y_axis_label, area_normalise);
         plot.drawAndSave();
@@ -149,27 +149,27 @@ class PlotCatalog {
             }
         }
 
-        HeatmapPlot plot(std::move(name), hist, output_directory_);
+        HeatmapPlot plot(std::move(name), hist, output_directory_.string());
         plot.drawAndSave();
     }
 
     void generateEventDisplay(const EventIdentifier &sample_event,
                               const std::string &sample_key) const {
-        EventDisplay vis(loader_, image_size_, output_directory_);
+        EventDisplay vis(loader_, image_size_, output_directory_.string());
         vis.visualiseEvent(sample_event, sample_key);
     }
 
     size_t generateRandomEventDisplays(const std::string &sample_key,
-                                      const Selection &sel, int n_events,
-                                      const std::string &pdf_name) const {
+                                       const Selection &sel, int n_events,
+                                       const std::string &pdf_name) const {
         return generateRandomEventDisplays(sample_key, sel.str(), n_events,
-                                          pdf_name);
+                                           pdf_name);
     }
 
     size_t generateRandomEventDisplays(const std::string &sample_key,
-                                      const std::string &region_filter,
-                                      int n_events,
-                                      const std::string &pdf_name) const {
+                                       const std::string &region_filter,
+                                       int n_events,
+                                       const std::string &pdf_name) const {
         auto &sample = loader_.getSampleFrames().at(SampleKey{sample_key});
         auto df = sample.nominal_node_;
 
@@ -201,7 +201,7 @@ class PlotCatalog {
             events.emplace_back(runs[idx], subs[idx], evts[idx]);
         }
 
-        EventDisplay vis(loader_, image_size_, output_directory_);
+        EventDisplay vis(loader_, image_size_, output_directory_.string());
         vis.visualiseEvents(events, sample_key, pdf_name);
         return events.size();
     }
@@ -229,7 +229,7 @@ class PlotCatalog {
 
     AnalysisDataLoader &loader_;
     int image_size_;
-    std::string output_directory_;
+    std::filesystem::path output_directory_;
 };
 
 } // namespace analysis
