@@ -114,6 +114,21 @@
           "plot_name": "roc_curve"
         }
       ]
+    },
+    {
+      "path": "build/SnapshotPlugin.so",
+      "snapshots": [
+        {
+          "selection_rule": "NUMU_CC",
+          "output_directory": "snapshots",
+          "columns": [
+            "nominal_event_weight",
+            "incl_channel",
+            "detector_image",
+            "semantic_mask"
+          ]
+        }
+      ]
     }
   ]
 }
