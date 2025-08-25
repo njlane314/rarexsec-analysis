@@ -9,6 +9,7 @@
 #include "AnalysisDefinition.h"
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
+#include "DynamicBinning.h"
 #include "IAnalysisPlugin.h"
 
 namespace analysis {
@@ -43,12 +44,17 @@ public:
                 double domain_min = bins_cfg.value("min", -std::numeric_limits<double>::infinity());
                 double domain_max = bins_cfg.value("max",  std::numeric_limits<double>::infinity());
                 bool include_oob = bins_cfg.value("include_out_of_range_bins", true);
+                std::string strat_mode = bins_cfg.value("strategy", std::string("equal_weight"));
+                DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight;
+                if (strat_mode == "freedman_diaconis") {
+                    strategy = DynamicBinningStrategy::FreedmanDiaconis;
+                }
                 BinningDefinition placeholder_bins({domain_min, domain_max},
                                                   branch,
                                                   label,
                                                   {},
                                                   strat);
-                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob, strategy);
             } else {
                 std::vector<double> edges;
                 if (bins_cfg.is_array()) {
