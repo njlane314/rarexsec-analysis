@@ -38,8 +38,9 @@ add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cpp  libplot)
 add_plugin(EventDisplayPlugin     EventDisplayPlugin.cpp      libplot)
 add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.cpp libplot)
 add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.cpp libplot)
+add_plugin(SystematicBreakdownPlugin SystematicBreakdownPlugin.cpp libplot)
 
-foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin SelectionEfficiencyPlugin)
+foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin SelectionEfficiencyPlugin SystematicBreakdownPlugin)
 
   set_target_properties(${_p} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
