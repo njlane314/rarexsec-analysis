@@ -66,8 +66,9 @@ public:
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
             if (!futures.variations.count(uni_key)) continue;
 
-            Eigen::MatrixXd shifts = Eigen::MatrixXd::Zero(n, n);
-            BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), shifts);
+            Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
+            Eigen::MatrixXd shifts_mat = shifts;
+            BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), shifts_mat);
             for(auto& [sample_key, future] : futures.variations.at(uni_key)) {
                 if (future.GetPtr())
                     h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
