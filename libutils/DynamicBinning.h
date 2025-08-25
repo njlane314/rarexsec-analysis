@@ -273,9 +273,11 @@ private:
         if (include_out_of_range_bins) {
             double first_width = edges.size() > 1 ? (edges[1] - edges[0]) : (domain_max - domain_min);
             double last_width  = edges.size() > 1 ? (edges[edges.size()-1] - edges[edges.size()-2]) : (domain_max - domain_min);
-            edges.insert(edges.begin(), domain_min - first_width);
-            edges.push_back(domain_max + last_width);
-            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning", domain_min - first_width, "to", domain_max + last_width);
+            double underflow_width = 0.5 * first_width;
+            double overflow_width  = 0.5 * last_width;
+            edges.insert(edges.begin(), domain_min - underflow_width);
+            edges.push_back(domain_max + overflow_width);
+            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning", domain_min - underflow_width, "to", domain_max + overflow_width);
         }
 
         auto last = std::unique(edges.begin(), edges.end());
