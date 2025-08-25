@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "TArrow.h"
+#include "TBox.h"
 #include "TCanvas.h"
 #include "THStack.h"
 #include "TLatex.h"
@@ -148,12 +149,12 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         const auto &orig_edges = variable_result_.binning_.getEdges();
         std::vector<double> adjusted_edges = orig_edges;
         if (adjusted_edges.size() >= 4) {
-            double first_width = adjusted_edges[2] - adjusted_edges[1];
-            double last_width = adjusted_edges[adjusted_edges.size() - 2] -
-                                adjusted_edges[adjusted_edges.size() - 3];
-            adjusted_edges[0] = adjusted_edges[1] - first_width;
+            double interior_range =
+                adjusted_edges[adjusted_edges.size() - 2] - adjusted_edges[1];
+            double edge_width = interior_range * 0.05;
+            adjusted_edges[0] = adjusted_edges[1] - edge_width;
             adjusted_edges.back() =
-                adjusted_edges[adjusted_edges.size() - 2] + last_width;
+                adjusted_edges[adjusted_edges.size() - 2] + edge_width;
         }
 
         std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
@@ -314,6 +315,8 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 
         mc_stack_->GetXaxis()->SetLimits(adjusted_edges.front(),
                                          adjusted_edges.back());
+        frame->GetXaxis()->SetNdivisions(510);
+        frame->GetXaxis()->SetTickLength(0.02);
         if (orig_edges.size() >= 3) {
             std::ostringstream uf_label, of_label;
             uf_label << "<" << orig_edges[1];
@@ -328,17 +331,33 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             double tick_max = line_min + (line_max - line_min) * 0.05;
             TLine *uf_edge =
                 new TLine(orig_edges[1], line_min, orig_edges[1], tick_max);
-            uf_edge->SetLineColor(kGray + 2);
+            uf_edge->SetLineColorAlpha(kGray + 2, 0.4);
             uf_edge->SetLineWidth(2);
             uf_edge->Draw("same");
             cut_visuals_.push_back(uf_edge);
             TLine *of_edge =
                 new TLine(orig_edges[orig_edges.size() - 2], line_min,
                           orig_edges[orig_edges.size() - 2], tick_max);
-            of_edge->SetLineColor(kGray + 2);
+            of_edge->SetLineColorAlpha(kGray + 2, 0.4);
             of_edge->SetLineWidth(2);
             of_edge->Draw("same");
             cut_visuals_.push_back(of_edge);
+
+            TBox *uf_box = new TBox(adjusted_edges.front(), line_min,
+                                    orig_edges[1], line_max);
+            uf_box->SetFillStyle(3345);
+            uf_box->SetFillColorAlpha(kGray + 1, 0.15);
+            uf_box->SetLineColorAlpha(kGray + 1, 0.0);
+            uf_box->Draw("same");
+            cut_visuals_.push_back(uf_box);
+
+            TBox *of_box = new TBox(orig_edges[orig_edges.size() - 2], line_min,
+                                    adjusted_edges.back(), line_max);
+            of_box->SetFillStyle(3345);
+            of_box->SetFillColorAlpha(kGray + 1, 0.15);
+            of_box->SetLineColorAlpha(kGray + 1, 0.0);
+            of_box->Draw("same");
+            cut_visuals_.push_back(of_box);
         }
 
         drawWatermark(p_main, total_mc_events);
