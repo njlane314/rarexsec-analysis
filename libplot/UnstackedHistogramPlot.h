@@ -25,6 +25,7 @@
 #include "HistogramCut.h"
 
 namespace analysis {
+
 class UnstackedHistogramPlot : public HistogramPlotterBase {
 public:
   UnstackedHistogramPlot(std::string plot_name, const VariableResult &var_result,
