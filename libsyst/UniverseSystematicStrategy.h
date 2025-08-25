@@ -91,8 +91,12 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                         hist.getBinContent(j) - nominal_hist.getBinContent(j);
                     sum += di * dj;
                 }
-                double val =
-                    varied_hists.empty() ? 0 : sum / varied_hists.size();
+                // The variations represent different universes whose mean is
+                // taken to be the nominal prediction.  The covariance of this
+                // mean scales with the square of the number of universes
+                // sampled.  Therefore divide by N^2 rather than the usual N.
+                double n_universes = static_cast<double>(varied_hists.size());
+                double val = n_universes == 0 ? 0 : sum / (n_universes * n_universes);
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
