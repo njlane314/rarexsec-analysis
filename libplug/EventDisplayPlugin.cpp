@@ -4,6 +4,10 @@ using namespace analysis;
 
 AnalysisDataLoader* EventDisplayPlugin::loader_ = nullptr;
 
+void EventDisplayPlugin::setLoader(AnalysisDataLoader* loader) {
+    loader_ = loader;
+}
+
 EventDisplayPlugin::EventDisplayPlugin(const nlohmann::json& cfg) {
     if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
         throw std::runtime_error("EventDisplayPlugin missing event_displays");
@@ -49,5 +53,5 @@ extern "C" IAnalysisPlugin* createPlugin(const nlohmann::json& cfg) {
 }
 
 extern "C" void setPluginContext(AnalysisDataLoader* loader) {
-    EventDisplayPlugin::loader_ = loader;
+    EventDisplayPlugin::setLoader(loader);
 }

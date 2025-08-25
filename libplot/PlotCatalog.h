@@ -63,11 +63,11 @@ public:
             cut_list,
             annotate_numbers
         );
-        plot.renderAndSave();
+        plot.drawAndSave();
     }
 
     void generateEventDisplay(
-        const SampleEvent&      sample_event,
+        const EventIdentifier&  sample_event,
         const std::string&      sample_key) const
     {
         EventDisplay vis(
