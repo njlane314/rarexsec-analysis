@@ -22,9 +22,9 @@ int main(int argc, char *argv[]) {
   analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
   std::cout
-      << "\033[38;5;51mν RareXSec Cross-Section Analysis Pipeline\033[0m\n";
+      << "\033[38;5;51m RareXSec Cross-Section Analysis Pipeline\033[0m\n";
   std::cout << "\033["
-               "90m════════════════════════════════════════════════════════════"
+               "90------------------------------------------------------------------------------"
                "══\033[0m"
             << std::endl;
 

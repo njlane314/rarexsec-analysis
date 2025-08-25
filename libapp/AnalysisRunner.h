@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "DynamicBinning.h"
+#include "AdaptiveBinningCalculator.h"
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisLogger.h"
@@ -61,12 +61,18 @@ public:
                     log::fatal("AnalysisRunner::run", "Cannot perform dynamic binning: No Monte Carlo samples were found!");
                 }
 
-                BinningDefinition new_bins = DynamicBinning::calculate(
+                // Aim: per-bin statistical error ≤ 5% so it's sub-dominant to ~10% systematics.
+                // For weighted counts: n_eff = (sum w_i)^2 / (sum w_i^2), and rel_stat_err ≈ 1/sqrt(n_eff).
+                // Hence min_neff_per_bin = 400 (~5% stats; total ≈ sqrt(0.10^2 + 0.05^2) ≈ 11.2%).
+                BinningDefinition new_bins = AdaptiveBinningCalculator::calculate(
                     mc_nodes,
                     var_handle.binning(),
                     "nominal_event_weight",
-                    50.0
+                    400.0
                 );
+
+                log::info("AnalysisRunner::run", "--> Optimal bin count resolved:", new_bins.getBinNumber());
+
                 analysis_definition_.setBinning(var_handle.key_, std::move(new_bins));
             }
         }
@@ -100,7 +106,7 @@ public:
                     );
                 }
 
-                analysis::log::info("AnalysisRunner::run", "→ Conditioning sample (", sample_index, "/", sample_total, "):", sample_key.str());
+                analysis::log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total, "):", sample_key.str());
                 auto region_df = sample_def.nominal_node_.Filter(region_handle.selection().str());
 
                 analysis::log::info("AnalysisRunner::run", "Configuring systematic variations...");

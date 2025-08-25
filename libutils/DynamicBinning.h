@@ -1,5 +1,5 @@
-#ifndef DYNAMIC_BINNING_H
-#define DYNAMIC_BINNING_H
+#ifndef ADAPTIVE_BINNING_CALCULATOR_H
+#define ADAPTIVE_BINNING_CALCULATOR_H
 
 #include <algorithm>
 #include <cmath>
@@ -15,12 +15,57 @@
 
 namespace analysis {
 
-class DynamicBinning {
+class AdaptiveBinningCalculator {
 public:
     static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes,
                                        const BinningDefinition& original_bdef,
                                        const std::string& weight_col = "nominal_event_weight",
-                                       double min_neff_per_bin = 50.0);
+                                       double min_neff_per_bin = 400.0)
+    {
+        if (nodes.empty()) {
+            log::warn("AdaptiveBinningCalculator::calculate", "Cannot calculate bins: RNode vector is empty.");
+            return original_bdef;
+        }
+
+        const std::string& branch = original_bdef.getVariable();
+        std::string typeName = nodes.front().GetColumnType(branch);
+
+        if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
+            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
+            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName == "int" || typeName == "Int_t") {
+            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName == "unsigned int" || typeName == "UInt_t") {
+            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
+            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos
+                   || typeName.find("ROOT::RVec<double>") != std::string::npos
+                   || typeName.find("vector<double>") != std::string::npos) {
+            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos
+                   || typeName.find("ROOT::RVec<float>") != std::string::npos
+                   || typeName.find("vector<float>") != std::string::npos) {
+            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos
+                   || typeName.find("ROOT::RVec<int>") != std::string::npos
+                   || typeName.find("vector<int>") != std::string::npos) {
+            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos
+                   || typeName.find("ROOT::RVec<unsigned int>") != std::string::npos
+                   || typeName.find("vector<unsigned int>") != std::string::npos) {
+            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos
+                   || typeName.find("ROOT::RVec<long long>") != std::string::npos
+                   || typeName.find("vector<long long>") != std::string::npos
+                   || typeName.find("vector<Long64_t>") != std::string::npos) {
+            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+        } else {
+            log::fatal("AdaptiveBinningCalculator::calculate", "Unsupported type for dynamic binning:", typeName);
+            return original_bdef;
+        }
+    }
 
 private:
     template<typename T>
@@ -162,83 +207,6 @@ private:
         return BinningDefinition(edges, original_bdef.getVariable(), original_bdef.getTexLabel(), {}, original_bdef.getStratifierKey().str());
     }
 };
-
-inline BinningDefinition DynamicBinning::calculate(std::vector<ROOT::RDF::RNode> nodes,
-                                                   const BinningDefinition& original_bdef,
-                                                   const std::string& weight_col,
-                                                   double min_neff_per_bin)
-{
-    if (nodes.empty()) {
-        log::warn("DynamicBinning::calculate", "Cannot calculate bins: RNode vector is empty.");
-        return original_bdef;
-    }
-
-    const auto& orig_edges = original_bdef.getEdges();
-    log::info(
-        "DynamicBinning::calculate",
-        "Input binning: ",
-        original_bdef.getBinNumber(),
-        " bins spanning [",
-        orig_edges.front(),
-        ", ",
-        orig_edges.back(),
-        "]"
-    );
-
-    const std::string& branch = original_bdef.getVariable();
-    std::string typeName = nodes.front().GetColumnType(branch);
-    BinningDefinition result;
-
-    if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
-        result = calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
-        result = calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName == "int" || typeName == "Int_t") {
-        result = calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName == "unsigned int" || typeName == "UInt_t") {
-        result = calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
-        result = calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos
-               || typeName.find("ROOT::RVec<double>") != std::string::npos
-               || typeName.find("vector<double>") != std::string::npos) {
-        result = calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos
-               || typeName.find("ROOT::RVec<float>") != std::string::npos
-               || typeName.find("vector<float>") != std::string::npos) {
-        result = calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos
-               || typeName.find("ROOT::RVec<int>") != std::string::npos
-               || typeName.find("vector<int>") != std::string::npos) {
-        result = calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos
-               || typeName.find("ROOT::RVec<unsigned int>") != std::string::npos
-               || typeName.find("vector<unsigned int>") != std::string::npos) {
-        result = calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos
-               || typeName.find("ROOT::RVec<long long>") != std::string::npos
-               || typeName.find("vector<long long>") != std::string::npos
-               || typeName.find("vector<Long64_t>") != std::string::npos) {
-        result = calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
-    } else {
-        log::fatal("DynamicBinning::calculate", "Unsupported type for dynamic binning:", typeName);
-        return original_bdef;
-    }
-
-    const auto& new_edges = result.getEdges();
-    log::info(
-        "DynamicBinning::calculate",
-        "Resulting binning: ",
-        result.getBinNumber(),
-        " bins spanning [",
-        new_edges.front(),
-        ", ",
-        new_edges.back(),
-        "]"
-    );
-
-    return result;
-}
 
 }
 
