@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "AdaptiveBinningCalculator.h"
+#include "DynamicBinning.h"
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisLogger.h"
@@ -64,7 +64,7 @@ public:
                 // Aim: per-bin statistical error ≤ 5% so it's sub-dominant to ~10% systematics.
                 // For weighted counts: n_eff = (sum w_i)^2 / (sum w_i^2), and rel_stat_err ≈ 1/sqrt(n_eff).
                 // Hence min_neff_per_bin = 400 (~5% stats; total ≈ sqrt(0.10^2 + 0.05^2) ≈ 11.2%).
-                BinningDefinition new_bins = AdaptiveBinningCalculator::calculate(
+                BinningDefinition new_bins = DynamicBinning::calculate(
                     mc_nodes,
                     var_handle.binning(),
                     "nominal_event_weight",
