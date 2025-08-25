@@ -30,22 +30,33 @@ public:
             auto label  = var_cfg.at("label").get<std::string>();
             auto strat  = var_cfg.at("stratum").get<std::string>();
 
-            if (var_cfg.at("bins").is_string() && var_cfg.at("bins").get<std::string>() == "dynamic") {
+            const auto& bins_cfg = var_cfg.at("bins");
+            if (bins_cfg.is_string() && bins_cfg.get<std::string>() == "dynamic") {
                 BinningDefinition placeholder_bins({-std::numeric_limits<double>::infinity(),
                                                   std::numeric_limits<double>::infinity()},
                                                  branch,
                                                  label,
                                                  {},
                                                  strat);
-                def.addVariable(name, branch, label, placeholder_bins, strat, true);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, false);
+            } else if (bins_cfg.is_object() && bins_cfg.contains("mode") && bins_cfg.at("mode") == "dynamic") {
+                double domain_min = bins_cfg.value("min", -std::numeric_limits<double>::infinity());
+                double domain_max = bins_cfg.value("max",  std::numeric_limits<double>::infinity());
+                bool include_oob = bins_cfg.value("include_out_of_range_bins", true);
+                BinningDefinition placeholder_bins({domain_min, domain_max},
+                                                  branch,
+                                                  label,
+                                                  {},
+                                                  strat);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob);
             } else {
                 std::vector<double> edges;
-                if (var_cfg.at("bins").is_array()) {
-                    edges = var_cfg.at("bins").get<std::vector<double>>();
+                if (bins_cfg.is_array()) {
+                    edges = bins_cfg.get<std::vector<double>>();
                 } else {
-                    int n      = var_cfg.at("bins").at("n").get<int>();
-                    double min = var_cfg.at("bins").at("min").get<double>();
-                    double max = var_cfg.at("bins").at("max").get<double>();
+                    int n      = bins_cfg.at("n").get<int>();
+                    double min = bins_cfg.at("min").get<double>();
+                    double max = bins_cfg.at("max").get<double>();
                     for (int i = 0; i <= n; ++i)
                         edges.push_back(min + (max - min) * i / n);
                 }

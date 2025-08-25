@@ -18,7 +18,12 @@
           "branch": "track_length",
           "label": "Track Length [cm]",
           "stratum": "backtracked_pdg_codes",
-          "bins": "dynamic",
+          "bins": {
+            "mode": "dynamic",
+            "min": 0.0,
+            "max": 3000.0,
+            "include_out_of_range_bins": true
+          },
           "regions": [ "NUMU_CC_SEL" ]
         }
       ]

@@ -264,17 +264,25 @@ private:
 
         edges.push_back(xw.back().first);
 
+        // enforce the user-specified domain for the main histogram axis
+        edges.front() = domain_min;
+        edges.back()  = domain_max;
+
+        // Optionally append explicit underflow/overflow bins with a width
+        // matching the first and last in-domain bins so they are visible on plots
         if (include_out_of_range_bins) {
-            edges.insert(edges.begin(), domain_min);
-            edges.push_back(domain_max);
-            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning", domain_min, "to", domain_max);
+            double first_width = edges.size() > 1 ? (edges[1] - edges[0]) : (domain_max - domain_min);
+            double last_width  = edges.size() > 1 ? (edges[edges.size()-1] - edges[edges.size()-2]) : (domain_max - domain_min);
+            edges.insert(edges.begin(), domain_min - first_width);
+            edges.push_back(domain_max + last_width);
+            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning", domain_min - first_width, "to", domain_max + last_width);
         }
 
         auto last = std::unique(edges.begin(), edges.end());
         edges.erase(last, edges.end());
 
         if (edges.size() < 2) {
-            edges = {xw.front().first, xw.back().first};
+            edges = {domain_min, domain_max};
         }
 
         for (size_t i = 1; i < edges.size(); ++i) {

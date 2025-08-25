@@ -89,7 +89,8 @@ public:
                                     const std::string& lbl,
                                     const BinningDefinition& bdef,
                                     const std::string& strat,
-                                    bool is_dynamic = false)
+                                    bool is_dynamic = false,
+                                    bool include_out_of_range_bins = false)
     {
         VariableKey var_key{key};
         if (variable_expressions_.count(var_key))
@@ -104,6 +105,7 @@ public:
         variable_binning_[var_key] = bdef;
         variable_stratifiers_[var_key] = strat;
         is_dynamic_[var_key] = is_dynamic;
+        include_out_of_range_[var_key] = include_out_of_range_bins;
 
         return *this;
     }
@@ -173,6 +175,11 @@ public:
     bool isDynamic(const VariableKey& key) const {
         auto it = is_dynamic_.find(key);
         return it != is_dynamic_.end() && it->second;
+    }
+
+    bool includeOutOfRangeBins(const VariableKey& key) const {
+        auto it = include_out_of_range_.find(key);
+        return it != include_out_of_range_.end() && it->second;
     }
 
     void setBinning(const VariableKey& key, BinningDefinition&& bdef) {
@@ -274,6 +281,7 @@ private:
     std::map<VariableKey, BinningDefinition> variable_binning_;
     std::map<VariableKey, std::string> variable_stratifiers_;
     std::map<VariableKey, bool> is_dynamic_;
+    std::map<VariableKey, bool> include_out_of_range_;
 
     std::map<RegionKey, std::string> region_names_;
     std::map<RegionKey, Selection> region_selections_;
