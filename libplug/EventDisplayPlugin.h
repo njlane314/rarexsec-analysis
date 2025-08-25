@@ -74,8 +74,17 @@ class EventDisplayPlugin : public IAnalysisPlugin {
         }
         for (auto const &cfg : configs_) {
             PlotCatalog catalog(*loader_, cfg.image_size, cfg.output_directory);
-            catalog.generateRandomEventDisplays(cfg.sample, cfg.selection,
-                                                cfg.n_events, cfg.pdf_name);
+            auto produced = catalog.generateRandomEventDisplays(
+                cfg.sample, cfg.selection, cfg.n_events, cfg.pdf_name);
+            if (produced > 0) {
+                log::info("EventDisplayPlugin::onFinalisation",
+                          "Saved", produced, "event displays to",
+                          cfg.output_directory + "/" + cfg.pdf_name);
+            } else {
+                log::warn("EventDisplayPlugin::onFinalisation",
+                          "No events found for", cfg.sample,
+                          "in region", cfg.region);
+            }
         }
     }
 
