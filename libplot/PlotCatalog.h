@@ -159,16 +159,17 @@ class PlotCatalog {
         vis.visualiseEvent(sample_event, sample_key);
     }
 
-    void generateRandomEventDisplays(const std::string &sample_key,
-                                     const Selection &sel, int n_events,
-                                     const std::string &pdf_name) const {
-        generateRandomEventDisplays(sample_key, sel.str(), n_events, pdf_name);
+    size_t generateRandomEventDisplays(const std::string &sample_key,
+                                      const Selection &sel, int n_events,
+                                      const std::string &pdf_name) const {
+        return generateRandomEventDisplays(sample_key, sel.str(), n_events,
+                                          pdf_name);
     }
 
-    void generateRandomEventDisplays(const std::string &sample_key,
-                                     const std::string &region_filter,
-                                     int n_events,
-                                     const std::string &pdf_name) const {
+    size_t generateRandomEventDisplays(const std::string &sample_key,
+                                      const std::string &region_filter,
+                                      int n_events,
+                                      const std::string &pdf_name) const {
         auto &sample = loader_.getSampleFrames().at(SampleKey{sample_key});
         auto df = sample.nominal_node_;
 
@@ -184,7 +185,7 @@ class PlotCatalog {
 
         size_t total = runs.size();
         if (total == 0 || n_events <= 0)
-            return;
+            return 0;
 
         n_events = std::min<int>(n_events, static_cast<int>(total));
 
@@ -202,6 +203,7 @@ class PlotCatalog {
 
         EventDisplay vis(loader_, image_size_, output_directory_);
         vis.visualiseEvents(events, sample_key, pdf_name);
+        return events.size();
     }
 
   private:
