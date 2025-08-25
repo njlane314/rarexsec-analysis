@@ -14,6 +14,7 @@
 #include "AnalysisTypes.h"
 #include "EventDisplay.h"
 #include "StackedHistogramPlot.h"
+#include "UnstackedHistogramPlot.h"
 #include "Selection.h"
 
 namespace analysis {
@@ -62,6 +63,46 @@ public:
             overlay_signal,
             cut_list,
             annotate_numbers
+        );
+        plot.drawAndSave();
+    }
+
+    void generateUnstackedPlot(
+        const RegionAnalysisMap& phase_space,
+        const std::string&       variable,
+        const std::string&       region,
+        const std::string&       category_column,
+        const std::vector<Cut>&  cut_list = {},
+        bool                     annotate_numbers = true,
+        bool                     area_normalise = false,
+        bool                     use_log_y = false,
+        const std::string&       y_axis_label = "Events") const
+    {
+        const auto& result = this->fetchResult(phase_space, variable, region);
+        auto sanitise = [&](std::string s) {
+            for (auto& c : s)
+                if (c == '.' || c == '/' || c == ' ')
+                    c = '_';
+            return s;
+        };
+        std::string name =
+            "unstacked_" + sanitise(variable) + "_" +
+            sanitise(region.empty() ? "default" : region) + "_" +
+            sanitise(category_column);
+
+        const RegionAnalysis& region_info = phase_space.at(RegionKey{region});
+
+        UnstackedHistogramPlot plot(
+            std::move(name),
+            result,
+            region_info,
+            category_column,
+            output_directory_,
+            cut_list,
+            annotate_numbers,
+            use_log_y,
+            y_axis_label,
+            area_normalise
         );
         plot.drawAndSave();
     }
