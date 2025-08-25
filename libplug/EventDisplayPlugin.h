@@ -24,7 +24,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
         int n_events{1};
         std::string pdf_name{"event_displays.pdf"};
         int image_size{800};
-        std::string output_directory{"./plots"};
+        std::string output_directory{"./plots/event_displays"};
     };
 
     inline explicit EventDisplayPlugin(const nlohmann::json &cfg) {
@@ -42,7 +42,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
                 ed.value("pdf_name", std::string{"event_displays.pdf"});
             dc.image_size = ed.value("image_size", 800);
             dc.output_directory =
-                ed.value("output_directory", std::string{"./plots"});
+                ed.value("output_directory", std::string{"./plots/event_displays"});
             auto p = std::filesystem::path(dc.output_directory);
             if (!p.is_absolute()) {
                 dc.output_directory =
