@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    {
+      "path": "build/RegionsPlugin.so",
+      "regions": [
+        {
+          "region_key": "SIGNAL_REGION",
+          "label": "Signal Region",
+          "selection_rule": "NUMU_CC",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
+        }
+      ]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ public:
                            SampleOrigin st) const override {
     if (st != SampleOrigin::kMonteCarlo) {
       auto mode_df =
-          df.Define("genie_int_mode", []() { return -1; }); // Unknown mode
+          df.Define("genie_int_mode", []() { return -1; }); 
 
       auto incl_df = mode_df.Define("incl_channel", [c = st]() {
         return c == SampleOrigin::kData ? 0 : 1;
@@ -79,17 +79,17 @@ public:
           }
           switch (mode) {
           case 0:
-            return 0; // Quasi-elastic
+            return 0; 
           case 1:
-            return 1; // Resonant
+            return 1; 
           case 2:
-            return 2; // Deep inelastic
+            return 2; 
           case 3:
-            return 3; // Coherent
+            return 3; 
           case 10:
-            return 10; // Meson exchange current
+            return 10; 
           default:
-            return -1; // Other/unknown
+            return -1; 
           }
         },
         {"interaction_mode"});
@@ -175,6 +175,6 @@ public:
   }
 };
 
-} // namespace analysis
+} 
 
 #endif

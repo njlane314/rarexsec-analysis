@@ -144,11 +144,18 @@ public:
         hist->GetYaxis()->SetTitle(y_res.binning_.getTexLabel().c_str());
 
         std::string filter = selection.str();
+        
+        
+        
+        
+        
+        bool has_filter =
+            filter.find_first_not_of(" \t\n\r") != std::string::npos;
 
         for (auto& kv : loader_.getSampleFrames()) {
             auto& sample = kv.second;
             auto df = sample.nominal_node_;
-            if (!filter.empty()) {
+            if (has_filter) {
                 df = df.Filter(filter);
             }
             for (auto const& c : x_cuts) {
@@ -212,11 +219,11 @@ public:
         auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
         auto df = sample.nominal_node_;
 
-        // ROOT's Filter expects a valid boolean expression. If the provided
-        // region filter string only contains whitespace, ROOT would attempt to
-        // JIT-compile it as a function returning void, leading to a runtime
-        // static assertion failure. Guard against such cases by ensuring the
-        // filter contains non-whitespace characters before applying it.
+        
+        
+        
+        
+        
         auto has_filter =
             region_filter.find_first_not_of(" \t\n\r") != std::string::npos;
         if (has_filter) {
@@ -264,9 +271,21 @@ private:
             if (rit->second.hasFinalVariable(vkey)) {
                 return rit->second.getFinalVariable(vkey);
             }
-            log::fatal("PlotCatalog::fetchResult", "Missing analysis result for variable", variable, "in region", region);
+            log::fatal(
+                "PlotCatalog::fetchResult",
+                "Missing analysis result for variable",
+                variable,
+                "in region",
+                region
+            );
+            throw std::runtime_error("Missing analysis result for variable");
         }
-        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for region", region);
+        log::fatal(
+            "PlotCatalog::fetchResult",
+            "Missing analysis result for region",
+            region
+        );
+        throw std::runtime_error("Missing analysis result for region");
     }
 
     AnalysisDataLoader&         loader_;

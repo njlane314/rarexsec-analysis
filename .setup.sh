@@ -1,5 +1,3 @@
-#!/bin/bash
-
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone_mcc9.sh
 setup root v6_28_12 -q e20:p3915:prof
 setup cmake v3_20_0 -q Linux64bit+3.10-2.17

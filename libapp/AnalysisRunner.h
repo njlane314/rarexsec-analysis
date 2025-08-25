@@ -63,9 +63,9 @@ public:
                     log::fatal("AnalysisRunner::run", "Cannot perform dynamic binning: No Monte Carlo samples were found!");
                 }
 
-                // Aim: per-bin statistical error ≤ 5% so it's sub-dominant to ~10% systematics.
-                // For weighted counts: n_eff = (sum w_i)^2 / (sum w_i^2), and rel_stat_err ≈ 1/sqrt(n_eff).
-                // Hence min_neff_per_bin = 400 (~5% stats; total ≈ sqrt(0.10^2 + 0.05^2) ≈ 11.2%).
+                
+                
+                
                 bool include_oob = analysis_definition_.includeOutOfRangeBins(var_handle.key_);
                 auto strategy = analysis_definition_.dynamicBinningStrategy(var_handle.key_);
                 BinningDefinition new_bins = DynamicBinning::calculate(

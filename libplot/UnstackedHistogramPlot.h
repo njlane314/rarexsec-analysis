@@ -210,7 +210,7 @@ protected:
 
       std::string tex_label = stratum.tex_label;
       if (tex_label == "#emptyset") {
-        tex_label = "\xE2\x88\x85"; // UTF-8 encoding of \u2205
+        tex_label = "\xE2\x88\x85"; 
       }
       std::string legend_label = annotate_numbers_
                                      ? tex_label + " : " +
@@ -294,6 +294,6 @@ private:
   std::vector<TObject *> cut_visuals_;
 };
 
-} // namespace analysis
+} 
 
 #endif
