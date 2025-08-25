@@ -32,7 +32,7 @@ public:
         double min{0.0};
         double max{1.0};
         CutDirection cut_direction{CutDirection::GreaterThan};
-        std::vector<std::string> clauses; // filled during initialisation
+        std::vector<std::string> clauses; 
     };
 
     explicit RocCurvePlugin(const nlohmann::json& cfg) {
@@ -161,6 +161,6 @@ private:
     inline static AnalysisDataLoader* loader_ = nullptr;
 };
 
-} // namespace analysis
+} 
 
 #endif

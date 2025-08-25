@@ -32,7 +32,7 @@ private:
     TH2F* hist_;
 };
 
-} // namespace analysis
+} 
 
-#endif // HEATMAP_PLOT_H
+#endif 
 

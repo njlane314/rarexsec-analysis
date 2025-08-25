@@ -144,11 +144,11 @@ public:
         hist->GetYaxis()->SetTitle(y_res.binning_.getTexLabel().c_str());
 
         std::string filter = selection.str();
-        // Guard against filter strings that contain only whitespace. ROOT's
-        // `Filter` expects a valid boolean expression; passing a string of
-        // whitespace triggers a static assertion during just-in-time
-        // compilation, as it attempts to compile a function returning `void`.
-        // Detect such cases up front and skip applying the filter entirely.
+        
+        
+        
+        
+        
         bool has_filter =
             filter.find_first_not_of(" \t\n\r") != std::string::npos;
 
@@ -219,11 +219,11 @@ public:
         auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
         auto df = sample.nominal_node_;
 
-        // ROOT's Filter expects a valid boolean expression. If the provided
-        // region filter string only contains whitespace, ROOT would attempt to
-        // JIT-compile it as a function returning void, leading to a runtime
-        // static assertion failure. Guard against such cases by ensuring the
-        // filter contains non-whitespace characters before applying it.
+        
+        
+        
+        
+        
         auto has_filter =
             region_filter.find_first_not_of(" \t\n\r") != std::string::npos;
         if (has_filter) {

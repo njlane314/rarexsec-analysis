@@ -105,7 +105,7 @@ private:
     inline static AnalysisDataLoader* loader_ = nullptr;
 };
 
-} // namespace analysis
+} 
 
-#endif // HEATMAPPLUGIN_H
+#endif 
 

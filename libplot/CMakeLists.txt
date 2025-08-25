@@ -2,7 +2,7 @@ add_library(libplot
   SystematicBreakdownPlot.cpp
 )
 
-# Ensure position independent code so libplot can be linked into shared plugins
+
 set_target_properties(libplot PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(libplot
