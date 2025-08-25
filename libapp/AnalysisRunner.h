@@ -152,20 +152,26 @@ class AnalysisRunner {
                                     "--> Conditioning sample (", sample_index,
                                     "/", sample_total, "):", sample_key.str());
 
-                auto region_df = sample_def.nominal_node_.Filter(
-                    region_handle.selection().str());
+                auto region_df = sample_def.nominal_node_;
+                auto selection_expr = region_handle.selection().str();
+                if (!selection_expr.empty()) {
+                    region_df = region_df.Filter(selection_expr);
+                }
 
                 analysis::log::info("AnalysisRunner::run",
                                     "Configuring systematic variations...");
                 std::map<SampleVariation, SampleDataset> variation_datasets;
                 for (auto &[variation_type, variation_node] :
                      sample_def.variation_nodes_) {
+                    auto variation_df = variation_node;
+                    if (!selection_expr.empty()) {
+                        variation_df = variation_df.Filter(selection_expr);
+                    }
                     variation_datasets.emplace(
                         variation_type,
                         SampleDataset{sample_def.sample_origin_,
                                       AnalysisRole::kVariation,
-                                      variation_node.Filter(
-                                          region_handle.selection().str())});
+                                      variation_df});
                 }
 
                 SampleDataset nominal_dataset{sample_def.sample_origin_,
