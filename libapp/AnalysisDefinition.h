@@ -16,6 +16,8 @@
 #include "RegionAnalysis.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
+#include "DynamicBinning.h"
+
 
 namespace analysis {
 enum class DynamicBinningStrategy;
