@@ -37,7 +37,7 @@
           "name": "n_pfps_gen2",
           "branch": "n_pfps_gen2",
           "label": "Number of Gen2 PFPs",
-          "stratum": "backtracked_pdg_codes",
+          "stratum": "inclusive_strange_channels",
           "bins": {
             "mode": "dynamic",
             "min": 0.0,
@@ -67,7 +67,7 @@
         {
           "variable": "n_pfps_gen2",
           "region": "NUMU_CC_SEL",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
@@ -76,8 +76,7 @@
           "selection_cuts": true
         }
       ]
-    }
-    ,
+    },
     {
       "path": "build/SelectionEfficiencyPlugin.so",
       "efficiency_plots": [
