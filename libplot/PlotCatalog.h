@@ -144,11 +144,18 @@ public:
         hist->GetYaxis()->SetTitle(y_res.binning_.getTexLabel().c_str());
 
         std::string filter = selection.str();
+        // Guard against filter strings that contain only whitespace. ROOT's
+        // `Filter` expects a valid boolean expression; passing a string of
+        // whitespace triggers a static assertion during just-in-time
+        // compilation, as it attempts to compile a function returning `void`.
+        // Detect such cases up front and skip applying the filter entirely.
+        bool has_filter =
+            filter.find_first_not_of(" \t\n\r") != std::string::npos;
 
         for (auto& kv : loader_.getSampleFrames()) {
             auto& sample = kv.second;
             auto df = sample.nominal_node_;
-            if (!filter.empty()) {
+            if (has_filter) {
                 df = df.Filter(filter);
             }
             for (auto const& c : x_cuts) {
