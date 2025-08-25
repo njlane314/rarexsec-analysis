@@ -194,10 +194,19 @@ protected:
       h_leg->SetFillStyle(stratum.fill_style);
       h_leg->SetLineColor(kBlack);
       h_leg->SetLineWidth(1.5);
+
+      // ROOT's TLatex does not render the "#emptyset" command, so
+      // explicitly replace it with the Unicode symbol to ensure the
+      // legend displays the empty-set correctly.
+      std::string tex_label = stratum.tex_label;
+      if (tex_label == "#emptyset") {
+        tex_label = "\xE2\x88\x85"; // UTF-8 encoding of \u2205
+      }
+
       std::string legend_label = annotate_numbers_
-                                     ? std::string(stratum.tex_label) + " : " +
+                                     ? tex_label + " : " +
                                            format_double(hist.getSum(), 2)
-                                     : stratum.tex_label;
+                                     : tex_label;
       legend_->AddEntry(h_leg, legend_label.c_str(), "f");
     }
 
