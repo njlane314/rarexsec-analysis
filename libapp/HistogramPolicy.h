@@ -65,7 +65,11 @@ struct TH1DStorage {
 
     double sumErr() const {
         int n = size();
-        if (n == 0 || shifts.cols() == 0) return 0;
+        if (n == 0 || shifts.size() == 0) return 0;
+        if (shifts.cols() == 1) {
+            double var = shifts.col(0).squaredNorm();
+            return var > 0 ? std::sqrt(var) : 0;
+        }
         Eigen::VectorXd ones = Eigen::VectorXd::Ones(n);
         double var = (shifts.transpose() * ones).squaredNorm();
         return var > 0 ? std::sqrt(var) : 0;
@@ -76,7 +80,12 @@ struct TH1DStorage {
         TMatrixDSym out(n);
         out.Zero();
         if (shifts.size() == 0) return out;
-        Eigen::MatrixXd cov = shifts * shifts.transpose();
+        Eigen::MatrixXd cov;
+        if (shifts.cols() == 1) {
+            cov = shifts.col(0).array().square().matrix().asDiagonal();
+        } else {
+            cov = shifts * shifts.transpose();
+        }
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j <= i; ++j) {
                 double val = cov(i, j);

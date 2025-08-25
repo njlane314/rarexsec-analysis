@@ -45,11 +45,12 @@ public:
     {
         std::vector<double> counts;
         int n = hist.GetNbinsX();
-        Eigen::MatrixXd sh = Eigen::MatrixXd::Zero(n, n);
+        Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(n);
         for (int i = 1; i <= n; ++i) {
             counts.push_back(hist.GetBinContent(i));
-            sh(i - 1, i - 1) = hist.GetBinError(i);
+            sh_vec(i - 1) = hist.GetBinError(i);
         }
+        Eigen::MatrixXd sh = sh_vec;
         return BinnedHistogram(bn, counts, sh, nm, ti, cl, ht, tx);
     }
 
@@ -76,7 +77,13 @@ public:
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < n; ++j)
                 cov_e(i, j) = cov_to_add(i, j);
-        Eigen::MatrixXd cov = shifts * shifts.transpose() + cov_e;
+        Eigen::MatrixXd base_cov;
+        if (shifts.cols() == 1) {
+            base_cov = shifts.col(0).array().square().matrix().asDiagonal();
+        } else {
+            base_cov = shifts * shifts.transpose();
+        }
+        Eigen::MatrixXd cov = base_cov + cov_e;
         Eigen::LLT<Eigen::MatrixXd> llt(cov);
         shifts = llt.matrixL();
     }
@@ -101,7 +108,7 @@ public:
         }
         auto tmp = *this;
         int n = getNumberOfBins();
-        tmp.shifts = Eigen::MatrixXd::Zero(n, n);
+        tmp.shifts = Eigen::VectorXd::Zero(n);
         for (int i = 0; i < n; ++i) {
             tmp.counts[i] *= o.counts[i];
             double v1 = this->counts[i];
@@ -111,7 +118,7 @@ public:
             double rel1 = v1 != 0 ? e1 / v1 : 0;
             double rel2 = v2 != 0 ? e2 / v2 : 0;
             double err = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
-            tmp.shifts(i, i) = err;
+            tmp.shifts(i) = err;
         }
         return tmp;
     }
@@ -149,7 +156,7 @@ public:
             double e2 = o.getBinError(i);
             errs(i) = std::sqrt(e1 * e1 + e2 * e2);
         }
-        tmp.shifts = errs.asDiagonal();
+        tmp.shifts = errs;
         return tmp;
     }
 
@@ -160,7 +167,7 @@ public:
         }
         auto tmp = *this;
         int n = getNumberOfBins();
-        tmp.shifts = Eigen::MatrixXd::Zero(n, n);
+        tmp.shifts = Eigen::VectorXd::Zero(n);
         for (int i = 0; i < n; ++i) {
             if (o.counts[i] != 0) {
                 tmp.counts[i] /= o.counts[i];
@@ -171,10 +178,10 @@ public:
                 double rel1 = v1 != 0 ? e1 / v1 : 0;
                 double rel2 = v2 != 0 ? e2 / v2 : 0;
                 double err = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
-                tmp.shifts(i, i) = err;
+                tmp.shifts(i) = err;
             } else {
                 tmp.counts[i] = 0;
-                tmp.shifts(i, i) = 0;
+                tmp.shifts(i) = 0;
             }
         }
         return tmp;
@@ -205,7 +212,7 @@ public:
             double e2 = o.getBinError(i);
             errs(i) = std::sqrt(e1 * e1 + e2 * e2);
         }
-        tmp.shifts = errs.asDiagonal();
+        tmp.shifts = errs;
         return tmp;
     }
 
