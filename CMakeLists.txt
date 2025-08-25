@@ -32,7 +32,7 @@ add_subdirectory(libhist)
 add_subdirectory(libplot)
 add_subdirectory(libsyst)
 add_subdirectory(libapp)
-add_subdirectory(libplug)  
+add_subdirectory(libplug)
 
 set(ANALYSIS_EXECUTABLES
     analyse
@@ -56,3 +56,6 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
             dl
     )
 endforeach()
+
+enable_testing()
+add_subdirectory(tests)
