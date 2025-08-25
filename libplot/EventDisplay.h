@@ -8,6 +8,7 @@
 #include "TLegend.h"
 #include "TPad.h"
 #include "TStyle.h"
+#include "TSystem.h"
 #include <algorithm>
 #include <array>
 #include <set>
@@ -26,6 +27,7 @@ class EventDisplay {
         : loader_(loader), image_size_(image_size),
           output_directory_(output_directory) {
         gROOT->SetBatch(kTRUE);
+        gSystem->mkdir(output_directory_.c_str(), true);
     }
 
     void visualiseEvent(const EventIdentifier &sample_event,
@@ -70,7 +72,7 @@ class EventDisplay {
 
         std::string pdf_path = output_directory_ + "/" + pdf_file;
         TCanvas opener("opener", "", 1, 1);
-        opener.Print((pdf_path + "[").c_str());
+        opener.Print((pdf_path + "[").c_str(), "pdf");
 
         for (auto const &sample_event : sample_events) {
             auto [run_id, subrun_id, event_num] = sample_event;
@@ -105,7 +107,7 @@ class EventDisplay {
             }
         }
 
-        opener.Print((pdf_path + "]").c_str());
+        opener.Print((pdf_path + "]").c_str(), "pdf");
     }
 
   private:
@@ -131,7 +133,7 @@ class EventDisplay {
         canvas_det.SetLogz();
         hist_det->Draw("COL");
         if (pdf_path) {
-            canvas_det.Print(pdf_path->c_str());
+            canvas_det.Print(pdf_path->c_str(), "pdf");
         } else {
             canvas_det.Print(
                 (output_directory_ + "/detector_" + tag + ".png").c_str());
@@ -184,7 +186,7 @@ class EventDisplay {
         }
         legend.Draw();
         if (pdf_path) {
-            canvas_sem.Print(pdf_path->c_str());
+            canvas_sem.Print(pdf_path->c_str(), "pdf");
         } else {
             canvas_sem.Print(
                 (output_directory_ + "/semantic_" + tag + ".png").c_str());
