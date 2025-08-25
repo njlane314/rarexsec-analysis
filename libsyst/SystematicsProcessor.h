@@ -106,7 +106,7 @@ public:
         int n_bins = result.total_mc_hist_.getNumberOfBins();
         if (n_bins > 0) {
             result.total_covariance_.ResizeTo(n_bins, n_bins);
-            result.total_covariance_ = result.total_mc_hist_.covariance();
+            result.total_covariance_ = result.total_mc_hist_.hist.covariance();
             log::debug(
                 "SystematicsProcessor::processSystematics",
                 "Combining covariance matrices"
@@ -137,7 +137,7 @@ public:
                 }
             }
             result.nominal_with_band_ = result.total_mc_hist_;
-            result.nominal_with_band_.shifts.resize(n_bins, 0);
+            result.nominal_with_band_.hist.shifts.resize(n_bins, 0);
             result.nominal_with_band_.addCovariance(result.total_covariance_);
         }
         log::debug(
