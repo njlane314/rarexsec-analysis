@@ -54,6 +54,7 @@ public:
 
         vars.insert(recoEventVariables().begin(), recoEventVariables().end());
         vars.insert(recoTrackVariables().begin(), recoTrackVariables().end());
+        vars.insert(processedEventVariables().begin(), processedEventVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
@@ -108,8 +109,7 @@ private:
             "reco_neutrino_vertex_sce_z", "num_slices",
             "slice_num_hits", "selection_pass", "slice_id",
             "optical_filter_pe_beam", "optical_filter_pe_veto",
-            "num_pfps", "num_tracks", "num_showers", "event_total_hits",
-            "quality_event", "n_pfps_gen2", "n_pfps_gen3"
+            "num_pfps", "num_tracks", "num_showers", "event_total_hits"
         };
         return v;
     }
@@ -121,6 +121,16 @@ private:
             "track_end_x", "track_end_y", "track_end_z",
             "track_theta", "track_phi",
             "track_calo_energy_u", "track_calo_energy_v", "track_calo_energy_y"
+        };
+        return v;
+    }
+
+    static const std::vector<std::string>& processedEventVariables() {
+        static const std::vector<std::string> v = {
+            "in_reco_fiducial", "n_pfps_gen2", "n_pfps_gen3", "quality_event",
+            "n_muons", "has_muon", "base_event_weight", "nominal_event_weight",
+            "in_fiducial", "mc_n_strange", "mc_n_pion", "mc_n_proton",
+            "genie_int_mode", "incl_channel", "excl_channel"
         };
         return v;
     }
