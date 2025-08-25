@@ -18,8 +18,9 @@ These components form the backbone for extending the analysis to rare channels.
 
 ### 1. Preselection and Charged-Current Refinement
 - Tune fiducial and kinematic clauses for the quality and $ν_{\mu}$ CC rules.
-- Expose the refined rules to `numu_preselection_plugins.json` and
-  `numu_plugins.json` for region configuration.
+- Expose the refined rules to `numu_empty_plugins.json`,
+  `numu_quality_pre_plugins.json`, and `numu_plugins.json` for region
+  configuration.
 
 ### 2. Snapshot for External Machine Learning
 - After the initial selection, record a reduced data set containing event
