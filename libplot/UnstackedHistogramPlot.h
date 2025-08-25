@@ -22,15 +22,9 @@
 #include "HistogramPlotterBase.h"
 #include "RegionAnalysis.h"
 #include "StratifierRegistry.h"
+#include "HistogramCut.h"
 
 namespace analysis {
-
-enum class CutDirection { GreaterThan, LessThan };
-
-struct Cut {
-  double threshold;
-  CutDirection direction;
-};
 
 class UnstackedHistogramPlot : public HistogramPlotterBase {
 public:
