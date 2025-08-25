@@ -9,4 +9,5 @@ target_include_directories(libdata
 target_link_libraries(libdata
   INTERFACE
     libutils
+    nlohmann_json::nlohmann_json
 )
