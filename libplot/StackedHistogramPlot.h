@@ -147,14 +147,14 @@ protected:
 
     const auto &orig_edges = variable_result_.binning_.getEdges();
     std::vector<double> adjusted_edges = orig_edges;
-    if (adjusted_edges.size() >= 3) {
-      double uf_width = adjusted_edges[1] - adjusted_edges[0];
-      double of_width =
-          adjusted_edges.back() - adjusted_edges[adjusted_edges.size() - 2];
-      double factor = 1.2;
-      adjusted_edges[0] = adjusted_edges[1] - uf_width * factor;
+    if (adjusted_edges.size() >= 4) {
+      double first_width = adjusted_edges[2] - adjusted_edges[1];
+      double last_width =
+          adjusted_edges[adjusted_edges.size() - 2] -
+          adjusted_edges[adjusted_edges.size() - 3];
+      adjusted_edges[0] = adjusted_edges[1] - first_width;
       adjusted_edges.back() =
-          adjusted_edges[adjusted_edges.size() - 2] + of_width * factor;
+          adjusted_edges[adjusted_edges.size() - 2] + last_width;
     }
 
     std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
@@ -327,22 +327,18 @@ protected:
                                      -1, -1, of_label.str().c_str());
       double line_min = use_log_y_ ? 0.1 : 0.0;
       double line_max = max_y * (use_log_y_ ? 10 : 1.3);
-      TLine *uf_edge = new TLine(orig_edges[1], line_min, orig_edges[1], line_max);
+      double tick_max = line_min + (line_max - line_min) * 0.05;
+      TLine *uf_edge = new TLine(orig_edges[1], line_min, orig_edges[1], tick_max);
       uf_edge->SetLineColor(kGray + 2);
       uf_edge->SetLineWidth(2);
       uf_edge->Draw("same");
       cut_visuals_.push_back(uf_edge);
       TLine *of_edge = new TLine(orig_edges[orig_edges.size() - 2], line_min,
-                                 orig_edges[orig_edges.size() - 2], line_max);
+                                 orig_edges[orig_edges.size() - 2], tick_max);
       of_edge->SetLineColor(kGray + 2);
       of_edge->SetLineWidth(2);
       of_edge->Draw("same");
       cut_visuals_.push_back(of_edge);
-      TLatex *of_marker =
-          new TLatex(orig_edges[orig_edges.size() - 2], line_min, ">");
-      of_marker->SetTextAlign(21);
-      of_marker->Draw("same");
-      cut_visuals_.push_back(of_marker);
     }
 
     drawWatermark(p_main, total_mc_events);
