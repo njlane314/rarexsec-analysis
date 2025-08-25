@@ -164,7 +164,7 @@ public:
                     processor->contributeTo(result);
                 }
 
-                systematics_processor_.processSystematics(result);
+                //systematics_processor_.processSystematics(result);
 
                 result.printSummary();
                 region_analysis.addFinalVariable(var_key, std::move(result));
