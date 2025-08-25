@@ -165,6 +165,10 @@ private:
 
         std::sort(xw.begin(), xw.end(), [](const auto& a, const auto& b){ return a.first < b.first; });
 
+        double xmin = xw.front().first;
+        double xmax = xw.back().first;
+        log::info("DynamicBinning::finalize_edges", "Resolved data range for", original_bdef.getVariable(), ":", xmin, "to", xmax);
+
         double neff_total = (sumw*sumw) / std::max(sumw2, std::numeric_limits<double>::min());
         int target_bins = static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0)));
         if (target_bins < 1) target_bins = 1;
