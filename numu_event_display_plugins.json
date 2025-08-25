@@ -1,0 +1,59 @@
+{
+  "plugins": [
+    {
+      "path": "build/RegionsPlugin.so",
+      "regions": [
+        {
+          "region_key": "NUMU_EMPTY",
+          "label": "Muon Neutrino No Selection",
+          "selection_rule": "NONE",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
+        },
+        {
+          "region_key": "NUMU_QUALITY_PRE",
+          "label": "Muon Neutrino Quality Preselection",
+          "selection_rule": "QUALITY",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
+        },
+        {
+          "region_key": "NUMU_CC_SEL",
+          "label": "Muon Neutrino CC Selection",
+          "selection_rule": "NUMU_CC",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
+        }
+      ]
+    },
+    {
+      "path": "build/EventDisplayPlugin.so",
+      "event_displays": [
+        {
+          "sample": "mc_inclusive_run1_fhc",
+          "region": "NUMU_EMPTY",
+          "n_events": 5,
+          "pdf_name": "numu_empty_event_displays.pdf",
+          "image_size": 800,
+          "output_directory": "plots"
+        },
+        {
+          "sample": "mc_inclusive_run1_fhc",
+          "region": "NUMU_QUALITY_PRE",
+          "n_events": 5,
+          "pdf_name": "numu_quality_pre_event_displays.pdf",
+          "image_size": 800,
+          "output_directory": "plots"
+        },
+        {
+          "sample": "mc_inclusive_run1_fhc",
+          "region": "NUMU_CC_SEL",
+          "n_events": 5,
+          "pdf_name": "numu_cc_sel_event_displays.pdf",
+          "image_size": 800,
+          "output_directory": "plots"
+        }
+      ]
+    }
+  ]
+}
