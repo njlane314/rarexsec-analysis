@@ -57,7 +57,7 @@ An analysis framework for rare cross-section measurements.
       "n_events": 5,
       "pdf_name": "event_displays.pdf",
       "image_size": 800,
-      "output_directory": "plots"
+      "output_directory": "./plots"
     }
   ]
 }
@@ -73,7 +73,7 @@ An analysis framework for rare cross-section measurements.
       "channel_column": "incl_channel",
       "signal_group": "inclusive_strange_channels",
       "variable": "some_discriminant",
-      "output_directory": "plots",
+      "output_directory": "./plots",
       "plot_name": "roc_curve"
     }
   ]
