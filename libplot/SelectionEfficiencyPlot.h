@@ -38,7 +38,7 @@ private:
         for (int i = 0; i < n; ++i) {
             frame.GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
         }
-        frame.Draw("AXIS");
+        frame.DrawClone("AXIS");
 
         TGraphErrors eff_graph(n);
         TGraphErrors pur_graph(n);
@@ -49,23 +49,29 @@ private:
             pur_graph.SetPoint(i, x, purities_[i]);
             pur_graph.SetPointError(i, 0.0, purity_errors_[i]);
         }
-        eff_graph.SetLineColor(kBlue+1);
-        eff_graph.SetMarkerColor(kBlue+1);
+        eff_graph.SetLineColor(kBlue + 1);
+        eff_graph.SetMarkerColor(kBlue + 1);
         eff_graph.SetMarkerStyle(20);
-        pur_graph.SetLineColor(kRed+1);
-        pur_graph.SetMarkerColor(kRed+1);
+        pur_graph.SetLineColor(kRed + 1);
+        pur_graph.SetMarkerColor(kRed + 1);
         pur_graph.SetMarkerStyle(21);
 
-        eff_graph.Draw("P SAME");
-        pur_graph.Draw("P SAME");
+        eff_graph.DrawClone("P SAME");
+        pur_graph.DrawClone("P SAME");
 
         TLegend legend(0.6, 0.75, 0.88, 0.88);
         legend.SetBorderSize(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(42);
-        legend.AddEntry(&eff_graph, "Signal Efficiency", "lep");
-        legend.AddEntry(&pur_graph, "Signal Purity", "lep");
-        legend.Draw();
+        auto* eff_entry = legend.AddEntry((TObject*)nullptr, "Signal Efficiency", "lep");
+        eff_entry->SetLineColor(kBlue + 1);
+        eff_entry->SetMarkerColor(kBlue + 1);
+        eff_entry->SetMarkerStyle(20);
+        auto* pur_entry = legend.AddEntry((TObject*)nullptr, "Signal Purity", "lep");
+        pur_entry->SetLineColor(kRed + 1);
+        pur_entry->SetMarkerColor(kRed + 1);
+        pur_entry->SetMarkerStyle(21);
+        legend.DrawClone();
     }
 
     std::vector<std::string> stages_;
