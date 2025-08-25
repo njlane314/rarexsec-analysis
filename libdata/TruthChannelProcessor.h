@@ -24,11 +24,17 @@ public:
         return c == SampleOrigin::kData ? 0 : 1;
       });
 
-      auto excl_df = incl_df.Define("excl_channel", [c = st]() {
+      auto incl_alias_df = incl_df.Define("inclusive_strange_channels",
+                                         "incl_channel");
+
+      auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() {
         return c == SampleOrigin::kData ? 0 : 1;
       });
 
-      return next_ ? next_->process(excl_df, st) : excl_df;
+      auto excl_alias_df =
+          excl_df.Define("exclusive_strange_channels", "excl_channel");
+
+      return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
     }
 
     auto fid_df =
@@ -115,7 +121,10 @@ public:
                        {"in_fiducial", "neutrino_pdg", "interaction_ccnc",
                         "mc_n_strange", "mc_n_pion", "mc_n_proton"});
 
-    auto excl_chan_df = incl_chan_df.Define(
+    auto incl_alias_df =
+        incl_chan_df.Define("inclusive_strange_channels", "incl_channel");
+
+    auto excl_chan_df = incl_alias_df.Define(
         "excl_channel",
         [](bool fv, int nu, int cc, int s, int kp, int km, int k0, int lam,
            int sp, int s0, int sm) {
@@ -159,7 +168,10 @@ public:
          "count_lambda", "count_sigma_plus", "count_sigma_zero",
          "count_sigma_minus"});
 
-    return next_ ? next_->process(excl_chan_df, st) : excl_chan_df;
+    auto excl_alias_df =
+        excl_chan_df.Define("exclusive_strange_channels", "excl_channel");
+
+    return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
   }
 };
 
