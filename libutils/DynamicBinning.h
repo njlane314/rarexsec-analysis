@@ -20,7 +20,9 @@ public:
     static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes,
                                        const BinningDefinition& original_bdef,
                                        const std::string& weight_col = "nominal_event_weight",
-                                       double min_neff_per_bin = 400.0)
+                                       double min_neff_per_bin = 400.0,
+                                       double quantile_low = 0.0,
+                                       double quantile_high = 1.0)
     {
         if (nodes.empty()) {
             log::warn("DynamicBinning::calculate", "Cannot calculate bins: RNode vector is empty.");
@@ -31,36 +33,36 @@ public:
         std::string typeName = nodes.front().GetColumnType(branch);
 
         if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
-            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
-            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName == "int" || typeName == "Int_t") {
-            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName == "unsigned int" || typeName == "UInt_t") {
-            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
-            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos
                    || typeName.find("ROOT::RVec<double>") != std::string::npos
                    || typeName.find("vector<double>") != std::string::npos) {
-            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos
                    || typeName.find("ROOT::RVec<float>") != std::string::npos
                    || typeName.find("vector<float>") != std::string::npos) {
-            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos
                    || typeName.find("ROOT::RVec<int>") != std::string::npos
                    || typeName.find("vector<int>") != std::string::npos) {
-            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos
                    || typeName.find("ROOT::RVec<unsigned int>") != std::string::npos
                    || typeName.find("vector<unsigned int>") != std::string::npos) {
-            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos
                    || typeName.find("ROOT::RVec<long long>") != std::string::npos
                    || typeName.find("vector<long long>") != std::string::npos
                    || typeName.find("vector<Long64_t>") != std::string::npos) {
-            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin);
+            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high);
         } else {
             log::fatal("DynamicBinning::calculate", "Unsupported type for dynamic binning:", typeName);
             return original_bdef;
@@ -72,7 +74,9 @@ private:
     static BinningDefinition calculate_scalar(std::vector<ROOT::RDF::RNode> nodes,
                                               const BinningDefinition& original_bdef,
                                               const std::string& weight_col,
-                                              double min_neff_per_bin)
+                                              double min_neff_per_bin,
+                                              double quantile_low,
+                                              double quantile_high)
     {
         std::vector<std::pair<double,double>> xw;
         xw.reserve(262144);
@@ -105,14 +109,16 @@ private:
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, quantile_low, quantile_high);
     }
 
     template<typename T>
     static BinningDefinition calculate_vector(std::vector<ROOT::RDF::RNode> nodes,
                                               const BinningDefinition& original_bdef,
                                               const std::string& weight_col,
-                                              double min_neff_per_bin)
+                                              double min_neff_per_bin,
+                                              double quantile_low,
+                                              double quantile_high)
     {
         std::vector<std::pair<double,double>> xw;
         xw.reserve(262144);
@@ -150,20 +156,79 @@ private:
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, quantile_low, quantile_high);
     }
 
     static BinningDefinition finalize_edges(std::vector<std::pair<double,double>>& xw,
                                             double sumw,
                                             double sumw2,
                                             const BinningDefinition& original_bdef,
-                                            double min_neff_per_bin)
+                                            double min_neff_per_bin,
+                                            double quantile_low,
+                                            double quantile_high)
     {
-        if (xw.size() < 2 || sumw <= 0.0) {
-            return BinningDefinition({0.0, 1.0}, original_bdef.getVariable(), original_bdef.getTexLabel(), {}, original_bdef.getStratifierKey().str());
+        const auto& domain_edges = original_bdef.getEdges();
+        double domain_min = domain_edges.front();
+        double domain_max = domain_edges.back();
+
+        size_t before_filter = xw.size();
+        xw.erase(std::remove_if(xw.begin(), xw.end(), [&](const auto& p){
+            double x = p.first;
+            double w = p.second;
+            return !std::isfinite(x) || !std::isfinite(w) || w <= 0.0 || x < domain_min || x > domain_max;
+        }), xw.end());
+        size_t removed_invalid = before_filter - xw.size();
+        if (removed_invalid > 0) {
+            log::info("DynamicBinning::finalize_edges", "Discarded", removed_invalid, "entries outside domain or non-finite");
+        }
+
+        if (xw.size() < 2) {
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(), {}, original_bdef.getStratifierKey().str());
         }
 
         std::sort(xw.begin(), xw.end(), [](const auto& a, const auto& b){ return a.first < b.first; });
+
+        // recompute sums after filtering
+        sumw = 0.0;
+        sumw2 = 0.0;
+        for (const auto& p : xw) {
+            sumw += p.second;
+            sumw2 += p.second * p.second;
+        }
+
+        if (quantile_low > 0.0 || quantile_high < 1.0) {
+            double lower_thresh = quantile_low * sumw;
+            double upper_thresh = quantile_high * sumw;
+            double cum = 0.0;
+            size_t start = 0;
+            while (start < xw.size() && cum + xw[start].second <= lower_thresh) {
+                cum += xw[start].second;
+                ++start;
+            }
+            cum = sumw;
+            size_t end = xw.size();
+            while (end > start && cum - xw[end-1].second >= upper_thresh) {
+                cum -= xw[end-1].second;
+                --end;
+            }
+            size_t removed_trim = start + (xw.size() - end);
+            if (removed_trim > 0) {
+                log::info("DynamicBinning::finalize_edges", "Trimmed", removed_trim, "entries outside quantiles", quantile_low, quantile_high);
+            }
+            xw.erase(xw.begin() + end, xw.end());
+            xw.erase(xw.begin(), xw.begin() + start);
+
+            sumw = 0.0;
+            sumw2 = 0.0;
+            for (const auto& p : xw) {
+                sumw += p.second;
+                sumw2 += p.second * p.second;
+            }
+        }
+
+        if (xw.size() < 2 || sumw <= 0.0) {
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(), {}, original_bdef.getStratifierKey().str());
+        }
 
         double xmin = xw.front().first;
         double xmax = xw.back().first;
