@@ -300,6 +300,42 @@ private:
         edges.front() = domain_min;
         edges.back()  = domain_max;
 
+        // Merge neighbouring bins until each contains at least the desired
+        // effective number of events.  This guards against sparsely
+        // populated bins in the tails when the target binning yields too many
+        // bins for a low-statistics sample.
+        if (min_neff_per_bin > 0.0 && edges.size() > 2) {
+            bool merged = true;
+            while (merged && edges.size() > 2) {
+                merged = false;
+                size_t nbins = edges.size() - 1;
+                std::vector<double> sw(nbins, 0.0), sw2(nbins, 0.0);
+                size_t bin = 0;
+                for (const auto& p : in_range) {
+                    double x = p.first;
+                    double w = p.second;
+                    while (bin < nbins - 1 && x >= edges[bin + 1]) {
+                        ++bin;
+                    }
+                    sw[bin] += w;
+                    sw2[bin] += w * w;
+                }
+                for (size_t i = 0; i < nbins; ++i) {
+                    double neff = (sw[i] * sw[i]) /
+                                   std::max(sw2[i], std::numeric_limits<double>::min());
+                    if (neff < min_neff_per_bin) {
+                        if (i < nbins - 1) {
+                            edges.erase(edges.begin() + i + 1);
+                        } else {
+                            edges.erase(edges.begin() + i);
+                        }
+                        merged = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         // Optionally append explicit underflow/overflow bins with a width
         // matching the first and last in-domain bins so they are visible on plots
         if (include_out_of_range_bins) {
