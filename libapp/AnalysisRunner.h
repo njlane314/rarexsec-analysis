@@ -41,7 +41,7 @@ public:
       , systematics_processor_(sys_proc)
       , histogram_booker_(std::move(booker))
     {
-        plugin_manager.loadPlugins(plgn_cfg);
+        plugin_manager.loadPlugins(plgn_cfg, &data_loader_);
     }
 
     RegionAnalysisMap run() {

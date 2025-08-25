@@ -11,6 +11,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AnalysisLogger.h"
+#include "AnalysisDataLoader.h"
 #include "IAnalysisPlugin.h"
 
 namespace analysis {
@@ -19,13 +20,21 @@ class AnalysisPluginManager {
 public:
     using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
 
-    void loadPlugins(const nlohmann::json& jobj) {
+    void loadPlugins(const nlohmann::json& jobj,
+                     AnalysisDataLoader*      loader = nullptr) {
         if (!jobj.contains("plugins")) return;
         for (auto const& p : jobj.at("plugins")) {
             std::string path = p.at("path");
             log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
             void* handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle) throw std::runtime_error(dlerror());
+
+            if (loader) {
+                using CtxFn = void (*)(AnalysisDataLoader*);
+                if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
+                    setctx(loader);
+                }
+            }
 
             using FactoryFn = IAnalysisPlugin* (*)(const nlohmann::json&);
             auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
