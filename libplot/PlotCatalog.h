@@ -143,14 +143,95 @@ class PlotCatalog {
             }
 
             bool has_w = df.HasColumn("nominal_event_weight");
-            auto xs = df.Take<double>(x_res.binning_.getVariable()).GetValue();
-            auto ys = df.Take<double>(y_res.binning_.getVariable()).GetValue();
-            std::vector<double> ws(xs.size(), 1.0);
+            const auto &x_col = x_res.binning_.getVariable();
+            const auto &y_col = y_res.binning_.getVariable();
+
+            auto x_type = df.GetColumnType(x_col);
+            auto y_type = df.GetColumnType(y_col);
+            bool x_is_vec = x_type.find("vector") != std::string::npos ||
+                            x_type.find("RVec") != std::string::npos;
+            bool y_is_vec = y_type.find("vector") != std::string::npos ||
+                            y_type.find("RVec") != std::string::npos;
+
+            std::vector<double> ws;
+            size_t n_events = df.Count().GetValue();
             if (has_w) {
-                ws = df.Take<double>("nominal_event_weight").GetValue();
+                auto w_type = df.GetColumnType("nominal_event_weight");
+                if (w_type.find("float") != std::string::npos) {
+                    auto wv = df.Take<float>("nominal_event_weight").GetValue();
+                    ws.assign(wv.begin(), wv.end());
+                } else {
+                    ws = df.Take<double>("nominal_event_weight").GetValue();
+                }
+            } else {
+                ws.assign(n_events, 1.0);
             }
-            for (size_t i = 0; i < xs.size(); ++i) {
-                hist->Fill(xs[i], ys[i], ws[i]);
+
+            auto get_scalar = [&](const std::string &col,
+                                  const std::string &type) {
+                std::vector<double> vals;
+                if (type.find("float") != std::string::npos) {
+                    auto v = df.Take<float>(col).GetValue();
+                    vals.assign(v.begin(), v.end());
+                } else if (type.find("int") != std::string::npos ||
+                           type.find("unsigned") != std::string::npos) {
+                    auto v = df.Take<int>(col).GetValue();
+                    vals.assign(v.begin(), v.end());
+                } else {
+                    vals = df.Take<double>(col).GetValue();
+                }
+                return vals;
+            };
+
+            auto get_vector = [&](const std::string &col,
+                                  const std::string &type) {
+                std::vector<std::vector<double>> vals;
+                if (type.find("float") != std::string::npos) {
+                    auto v = df.Take<std::vector<float>>(col).GetValue();
+                    for (auto &inner : v)
+                        vals.emplace_back(inner.begin(), inner.end());
+                } else if (type.find("int") != std::string::npos ||
+                           type.find("unsigned") != std::string::npos) {
+                    auto v = df.Take<std::vector<int>>(col).GetValue();
+                    for (auto &inner : v)
+                        vals.emplace_back(inner.begin(), inner.end());
+                } else {
+                    vals = df.Take<std::vector<double>>(col).GetValue();
+                }
+                return vals;
+            };
+
+            if (!x_is_vec && !y_is_vec) {
+                auto xs = get_scalar(x_col, x_type);
+                auto ys = get_scalar(y_col, y_type);
+                for (size_t i = 0; i < xs.size(); ++i) {
+                    hist->Fill(xs[i], ys[i], ws[i]);
+                }
+            } else if (x_is_vec && !y_is_vec) {
+                auto xs = get_vector(x_col, x_type);
+                auto ys = get_scalar(y_col, y_type);
+                for (size_t i = 0; i < xs.size(); ++i) {
+                    for (double xv : xs[i]) {
+                        hist->Fill(xv, ys[i], ws[i]);
+                    }
+                }
+            } else if (!x_is_vec && y_is_vec) {
+                auto xs = get_scalar(x_col, x_type);
+                auto ys = get_vector(y_col, y_type);
+                for (size_t i = 0; i < ys.size(); ++i) {
+                    for (double yv : ys[i]) {
+                        hist->Fill(xs[i], yv, ws[i]);
+                    }
+                }
+            } else {
+                auto xs = get_vector(x_col, x_type);
+                auto ys = get_vector(y_col, y_type);
+                for (size_t i = 0; i < xs.size(); ++i) {
+                    size_t lim = std::min(xs[i].size(), ys[i].size());
+                    for (size_t j = 0; j < lim; ++j) {
+                        hist->Fill(xs[i][j], ys[i][j], ws[i]);
+                    }
+                }
             }
         }
 

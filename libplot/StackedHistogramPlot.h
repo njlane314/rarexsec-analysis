@@ -272,7 +272,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             total_mc_hist_->SetFillColor(kBlack);
             total_mc_hist_->SetFillStyle(3004);
             total_mc_hist_->SetMarkerSize(0);
+            total_mc_hist_->SetLineColor(kBlack);
+            total_mc_hist_->SetLineWidth(1);
             total_mc_hist_->Draw("E2 SAME");
+            total_mc_hist_->Draw("E1 SAME");
         }
 
         for (const auto &cut : cuts_) {
