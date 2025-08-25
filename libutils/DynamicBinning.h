@@ -26,8 +26,6 @@ public:
                                        const BinningDefinition& original_bdef,
                                        const std::string& weight_col = "nominal_event_weight",
                                        double min_neff_per_bin = 400.0,
-                                       double quantile_low = 0.0,
-                                       double quantile_high = 1.0,
                                        bool include_out_of_range_bins = false,
                                        DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight)
     {
@@ -40,36 +38,36 @@ public:
         std::string typeName = nodes.front().GetColumnType(branch);
 
         if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
-            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
-            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "int" || typeName == "Int_t") {
-            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "unsigned int" || typeName == "UInt_t") {
-            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
-            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos
                    || typeName.find("ROOT::RVec<double>") != std::string::npos
                    || typeName.find("vector<double>") != std::string::npos) {
-            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos
                    || typeName.find("ROOT::RVec<float>") != std::string::npos
                    || typeName.find("vector<float>") != std::string::npos) {
-            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos
                    || typeName.find("ROOT::RVec<int>") != std::string::npos
                    || typeName.find("vector<int>") != std::string::npos) {
-            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos
                    || typeName.find("ROOT::RVec<unsigned int>") != std::string::npos
                    || typeName.find("vector<unsigned int>") != std::string::npos) {
-            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos
                    || typeName.find("ROOT::RVec<long long>") != std::string::npos
                    || typeName.find("vector<long long>") != std::string::npos
                    || typeName.find("vector<Long64_t>") != std::string::npos) {
-            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_out_of_range_bins, strategy);
         } else {
             log::fatal("DynamicBinning::calculate", "Unsupported type for dynamic binning:", typeName);
             return original_bdef;
@@ -82,8 +80,6 @@ private:
                                               const BinningDefinition& original_bdef,
                                               const std::string& weight_col,
                                               double min_neff_per_bin,
-                                              double quantile_low,
-                                              double quantile_high,
                                               bool include_out_of_range_bins,
                                               DynamicBinningStrategy strategy)
     {
@@ -118,7 +114,7 @@ private:
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
     }
 
     template<typename T>
@@ -126,8 +122,6 @@ private:
                                               const BinningDefinition& original_bdef,
                                               const std::string& weight_col,
                                               double min_neff_per_bin,
-                                              double quantile_low,
-                                              double quantile_high,
                                               bool include_out_of_range_bins,
                                               DynamicBinningStrategy strategy)
     {
@@ -167,18 +161,16 @@ private:
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, quantile_low, quantile_high, include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
     }
 
     static BinningDefinition finalize_edges(std::vector<std::pair<double,double>>& xw,
                                             double sumw,
                                             double sumw2,
-                                            const BinningDefinition& original_bdef,
+        const BinningDefinition& original_bdef,
                                             double min_neff_per_bin,
-                                            double quantile_low,
-                                            double quantile_high,
                                             bool include_out_of_range_bins,
-        DynamicBinningStrategy strategy)
+                                            DynamicBinningStrategy strategy)
     {
         const auto& domain_edges = original_bdef.getEdges();
         double domain_min = domain_edges.front();
