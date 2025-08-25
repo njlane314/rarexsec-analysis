@@ -12,25 +12,22 @@
 namespace analysis {
 
 class IAnalysisPlugin {
-public:
+  public:
     virtual ~IAnalysisPlugin() = default;
 
-    virtual void onInitialisation(
-                            AnalysisDefinition& def,
-                            const SelectionRegistry& sel_reg) = 0;
+    virtual void onInitialisation(AnalysisDefinition &def,
+                                  const SelectionRegistry &sel_reg) = 0;
 
-    virtual void onPreSampleProcessing(
-                            const SampleKey& sample_key,
-                            const RegionKey& region_key,
-                            const RunConfig& region) = 0;
+    virtual void onPreSampleProcessing(const SampleKey &sample_key,
+                                       const RegionKey &region_key,
+                                       const RunConfig &region) = 0;
 
-    virtual void onPostSampleProcessing(
-                            const SampleKey& sample_key,
-                            const RegionKey& region_key,
-                            const RegionAnalysisMap& results) = 0;
+    virtual void onPostSampleProcessing(const SampleKey &sample_key,
+                                        const RegionKey &region_key,
+                                        const RegionAnalysisMap &results) = 0;
 
-    virtual void onFinalisation(const RegionAnalysisMap& results) = 0;
+    virtual void onFinalisation(const RegionAnalysisMap &results) = 0;
 };
 
-}
+} // namespace analysis
 #endif

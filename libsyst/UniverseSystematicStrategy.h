@@ -13,132 +13,109 @@
 namespace analysis {
 
 class UniverseSystematicStrategy : public SystematicStrategy {
-public:
-    UniverseSystematicStrategy(
-        UniverseDef   universe_def
-    )
-      : identifier_(std::move(universe_def.name_))
-      , vector_name_(std::move(universe_def.vector_name_))
-      , n_universes_(universe_def.n_universes_)
-    {}
+  public:
+    UniverseSystematicStrategy(UniverseDef universe_def)
+        : identifier_(std::move(universe_def.name_)),
+          vector_name_(std::move(universe_def.vector_name_)),
+          n_universes_(universe_def.n_universes_) {}
 
-    const std::string& getName() const override {
-        return identifier_;
-    }
+    const std::string &getName() const override { return identifier_; }
 
-    void bookVariations(
-        const SampleKey&   sample_key,
-        ROOT::RDF::RNode& rnode,
-        const BinningDefinition& binning,
-        const ROOT::RDF::TH1DModel& model,
-        SystematicFutures& futures
-    ) override {
-        log::debug(
-            "UniverseSystematicStrategy::bookVariations",
-            identifier_,
-            "sample",
-            sample_key.str(),
-            "universes",
-            n_universes_
-        );
+    void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode,
+                        const BinningDefinition &binning,
+                        const ROOT::RDF::TH1DModel &model,
+                        SystematicFutures &futures) override {
+        log::debug("UniverseSystematicStrategy::bookVariations", identifier_,
+                   "sample", sample_key.str(), "universes", n_universes_);
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
             std::string new_col_name = vector_name_ + "_u" + std::to_string(u);
 
-            auto d_with_weight = rnode.Define(new_col_name,
-                [u, vec_name = this->vector_name_](const ROOT::RVec<unsigned short>& weights) {
-                    if (u < weights.size()) {
-                        return static_cast<double>(weights[u]);
-                    }
-                    return 1.0;
-                },
-                {vector_name_}
-            );
+            auto d_with_weight =
+                rnode.Define(new_col_name,
+                             [u, vec_name = this->vector_name_](
+                                 const ROOT::RVec<unsigned short> &weights) {
+                                 if (u < weights.size()) {
+                                     return static_cast<double>(weights[u]);
+                                 }
+                                 return 1.0;
+                             },
+                             {vector_name_});
 
-            futures.variations[uni_key][sample_key] = d_with_weight.Histo1D(model, binning.getVariable(), new_col_name);
+            futures.variations[uni_key][sample_key] = d_with_weight.Histo1D(
+                model, binning.getVariable(), new_col_name);
         }
     }
 
-    TMatrixDSym computeCovariance(
-        VariableResult&  result,
-        SystematicFutures&     futures
-    ) override {
-        const auto& nominal_hist = result.total_mc_hist_;
-        const auto& binning = result.binning_;
+    TMatrixDSym computeCovariance(VariableResult &result,
+                                  SystematicFutures &futures) override {
+        const auto &nominal_hist = result.total_mc_hist_;
+        const auto &binning = result.binning_;
         int n = nominal_hist.getNumberOfBins();
         TMatrixDSym cov(n);
         cov.Zero();
 
         std::vector<BinnedHistogram> varied_hists;
-        log::debug(
-            "UniverseSystematicStrategy::computeCovariance",
-            identifier_,
-            "processing",
-            n_universes_,
-            "universes"
-        );
+        log::debug("UniverseSystematicStrategy::computeCovariance", identifier_,
+                   "processing", n_universes_, "universes");
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
             if (!futures.variations.count(uni_key)) {
-                log::warn(
-                    "UniverseSystematicStrategy::computeCovariance",
-                    "Missing universe",
-                    u,
-                    "for",
-                    identifier_
-                );
+                log::warn("UniverseSystematicStrategy::computeCovariance",
+                          "Missing universe", u, "for", identifier_);
                 continue;
             }
 
             Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
             Eigen::MatrixXd shifts_mat = shifts;
-            BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), shifts_mat);
-            for(auto& [sample_key, future] : futures.variations.at(uni_key)) {
+            BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0),
+                                       shifts_mat);
+            for (auto &[sample_key, future] : futures.variations.at(uni_key)) {
                 if (future.GetPtr())
-                    h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
+                    h_universe = h_universe + BinnedHistogram::createFromTH1D(
+                                                  binning, *future.GetPtr());
             }
             varied_hists.push_back(h_universe);
         }
 
-        result.universe_projected_hists_[SystematicKey{identifier_}] = varied_hists;
+        result.universe_projected_hists_[SystematicKey{identifier_}] =
+            varied_hists;
 
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j <= i; ++j) {
                 double sum = 0;
-                for (const auto& hist : varied_hists) {
-                    double di = hist.getBinContent(i) - nominal_hist.getBinContent(i);
-                    double dj = hist.getBinContent(j) - nominal_hist.getBinContent(j);
+                for (const auto &hist : varied_hists) {
+                    double di =
+                        hist.getBinContent(i) - nominal_hist.getBinContent(i);
+                    double dj =
+                        hist.getBinContent(j) - nominal_hist.getBinContent(j);
                     sum += di * dj;
                 }
-                double val = varied_hists.empty() ? 0 : sum / varied_hists.size();
+                double val =
+                    varied_hists.empty() ? 0 : sum / varied_hists.size();
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
         }
-        log::debug(
-            "UniverseSystematicStrategy::computeCovariance",
-            identifier_,
-            "covariance calculated with",
-            varied_hists.size(),
-            "universes"
-        );
+        log::debug("UniverseSystematicStrategy::computeCovariance", identifier_,
+                   "covariance calculated with", varied_hists.size(),
+                   "universes");
         return cov;
     }
 
-    std::map<SystematicKey, BinnedHistogram> getVariedHistograms(
-        const BinningDefinition&,
-        SystematicFutures&
-    ) override {
+    std::map<SystematicKey, BinnedHistogram>
+    getVariedHistograms(const BinningDefinition &,
+                        SystematicFutures &) override {
         std::map<SystematicKey, BinnedHistogram> out;
         return out;
     }
 
-private:
-    std::string   identifier_;
-    std::string   vector_name_;
-    unsigned      n_universes_;
+  private:
+    std::string identifier_;
+    std::string vector_name_;
+    unsigned n_universes_;
 };
 
-}
+} // namespace analysis
 
 #endif

@@ -6,10 +6,10 @@ namespace analysis {
 enum class CutDirection { GreaterThan, LessThan };
 
 struct Cut {
-  double threshold;
-  CutDirection direction;
+    double threshold;
+    CutDirection direction;
 };
 
-} 
+} // namespace analysis
 
-#endif 
+#endif

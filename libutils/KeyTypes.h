@@ -15,16 +15,16 @@ struct StratifierKeyTag {};
 struct StratumKeyTag {};
 struct SelectionKeyTag {};
 
-using RegionKey     = AnalysisKey<RegionKeyTag>;
-using VariableKey   = AnalysisKey<VariableKeyTag>;
-using SampleKey     = AnalysisKey<SampleKeyTag>;
-using VariationKey  = AnalysisKey<VariationKeyTag>;
-using ChannelKey    = AnalysisKey<ChannelKeyTag>;
+using RegionKey = AnalysisKey<RegionKeyTag>;
+using VariableKey = AnalysisKey<VariableKeyTag>;
+using SampleKey = AnalysisKey<SampleKeyTag>;
+using VariationKey = AnalysisKey<VariationKeyTag>;
+using ChannelKey = AnalysisKey<ChannelKeyTag>;
 using SystematicKey = AnalysisKey<SystematicKeyTag>;
 using StratifierKey = AnalysisKey<StratifierKeyTag>;
-using StratumKey    = AnalysisKey<StratumKeyTag>;
-using SelectionKey  = AnalysisKey<SelectionKeyTag>;
+using StratumKey = AnalysisKey<StratumKeyTag>;
+using SelectionKey = AnalysisKey<SelectionKeyTag>;
 
-}
+} // namespace analysis
 
 #endif

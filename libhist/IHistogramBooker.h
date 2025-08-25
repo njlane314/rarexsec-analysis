@@ -7,23 +7,20 @@
 namespace analysis {
 
 class IHistogramBooker {
-public:
+  public:
     virtual ~IHistogramBooker() = default;
 
-    virtual ROOT::RDF::RResultPtr<TH1D> bookNominalHist(
-        const BinningDefinition& binning,
-        const SampleDataset& dataset,
-        const ROOT::RDF::TH1DModel& model
-    ) = 0;
+    virtual ROOT::RDF::RResultPtr<TH1D>
+    bookNominalHist(const BinningDefinition &binning,
+                    const SampleDataset &dataset,
+                    const ROOT::RDF::TH1DModel &model) = 0;
 
-    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>> bookStratifiedHists(
-        const BinningDefinition& binning,
-        const SampleDataset& dataset,
-        const ROOT::RDF::TH1DModel& model
-    ) = 0;
+    virtual std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>>
+    bookStratifiedHists(const BinningDefinition &binning,
+                        const SampleDataset &dataset,
+                        const ROOT::RDF::TH1DModel &model) = 0;
 };
 
-}
+} // namespace analysis
 
 #endif
-

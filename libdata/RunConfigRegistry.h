@@ -10,7 +10,7 @@
 namespace analysis {
 
 class RunConfigRegistry {
-public:
+  public:
     void addConfig(RunConfig rc) {
         auto key = rc.label();
         if (configs_.count(key)) {
@@ -19,7 +19,8 @@ public:
         configs_.emplace(std::move(key), std::move(rc));
     }
 
-    const RunConfig& get(const std::string& beam, const std::string& period) const {
+    const RunConfig &get(const std::string &beam,
+                         const std::string &period) const {
         auto key = beam + ":" + period;
         auto it = configs_.find(key);
         if (it == configs_.end()) {
@@ -28,14 +29,14 @@ public:
         return it->second;
     }
 
-    const std::map<std::string, RunConfig>& all() const noexcept {
+    const std::map<std::string, RunConfig> &all() const noexcept {
         return configs_;
     }
 
-private:
+  private:
     std::map<std::string, RunConfig> configs_;
 };
 
-} 
+} // namespace analysis
 
 #endif

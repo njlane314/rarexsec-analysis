@@ -14,7 +14,7 @@
 namespace analysis {
 
 class SelectionEfficiencyPlot : public HistogramPlotterBase {
-public:
+  public:
     SelectionEfficiencyPlot(std::string plot_name,
                             std::vector<std::string> stages,
                             std::vector<double> efficiencies,
@@ -22,15 +22,15 @@ public:
                             std::vector<double> purities,
                             std::vector<double> purity_errors,
                             std::string output_directory = "plots")
-      : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
-        stages_(std::move(stages)),
-        efficiencies_(std::move(efficiencies)),
-        efficiency_errors_(std::move(efficiency_errors)),
-        purities_(std::move(purities)),
-        purity_errors_(std::move(purity_errors)) {}
+        : HistogramPlotterBase(std::move(plot_name),
+                               std::move(output_directory)),
+          stages_(std::move(stages)), efficiencies_(std::move(efficiencies)),
+          efficiency_errors_(std::move(efficiency_errors)),
+          purities_(std::move(purities)),
+          purity_errors_(std::move(purity_errors)) {}
 
-private:
-    void draw(TCanvas& canvas) override {
+  private:
+    void draw(TCanvas &canvas) override {
         canvas.cd();
         int n = stages_.size();
         TH1F frame("frame", "", n, 0, n);
@@ -64,11 +64,13 @@ private:
         legend.SetBorderSize(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(42);
-        auto* eff_entry = legend.AddEntry((TObject*)nullptr, "Signal Efficiency", "lep");
+        auto *eff_entry =
+            legend.AddEntry((TObject *)nullptr, "Signal Efficiency", "lep");
         eff_entry->SetLineColor(kBlue + 1);
         eff_entry->SetMarkerColor(kBlue + 1);
         eff_entry->SetMarkerStyle(20);
-        auto* pur_entry = legend.AddEntry((TObject*)nullptr, "Signal Purity", "lep");
+        auto *pur_entry =
+            legend.AddEntry((TObject *)nullptr, "Signal Purity", "lep");
         pur_entry->SetLineColor(kRed + 1);
         pur_entry->SetMarkerColor(kRed + 1);
         pur_entry->SetMarkerStyle(21);
@@ -76,12 +78,12 @@ private:
     }
 
     std::vector<std::string> stages_;
-    std::vector<double>       efficiencies_;
-    std::vector<double>       efficiency_errors_;
-    std::vector<double>       purities_;
-    std::vector<double>       purity_errors_;
+    std::vector<double> efficiencies_;
+    std::vector<double> efficiency_errors_;
+    std::vector<double> purities_;
+    std::vector<double> purity_errors_;
 };
 
-}
+} // namespace analysis
 
 #endif

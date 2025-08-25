@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include <TMatrixDSym.h>
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
+#include <TMatrixDSym.h>
 
 #include "AnalysisTypes.h"
 #include "BinnedHistogram.h"
@@ -20,20 +20,15 @@
 namespace analysis {
 
 struct SystematicFutures {
-    std::unordered_map<
-        SystematicKey,
-        std::map<
-            SampleKey,
-            ROOT::RDF::RResultPtr<TH1D>
-        >
-    > variations;
+    std::unordered_map<SystematicKey,
+                       std::map<SampleKey, ROOT::RDF::RResultPtr<TH1D>>>
+        variations;
 };
-
 
 struct UniverseDef {
     std::string name_;
     std::string vector_name_;
-    unsigned    n_universes_;
+    unsigned n_universes_;
 };
 
 struct KnobDef {
@@ -43,34 +38,25 @@ struct KnobDef {
 };
 
 class SystematicStrategy {
-public:
+  public:
     virtual ~SystematicStrategy() = default;
 
-    virtual const std::string&
-    getName() const = 0;
+    virtual const std::string &getName() const = 0;
 
-    virtual void
-    bookVariations(
-        const SampleKey&        sample_key,
-        ROOT::RDF::RNode&       rnode,
-        const BinningDefinition& binning,
-        const ROOT::RDF::TH1DModel& model,
-        SystematicFutures&      futures
-    ) = 0;
+    virtual void bookVariations(const SampleKey &sample_key,
+                                ROOT::RDF::RNode &rnode,
+                                const BinningDefinition &binning,
+                                const ROOT::RDF::TH1DModel &model,
+                                SystematicFutures &futures) = 0;
 
-    virtual TMatrixDSym
-    computeCovariance(
-        VariableResult&  result,
-        SystematicFutures&     futures
-    ) = 0;
+    virtual TMatrixDSym computeCovariance(VariableResult &result,
+                                          SystematicFutures &futures) = 0;
 
     virtual std::map<SystematicKey, BinnedHistogram>
-    getVariedHistograms(
-        const BinningDefinition& bin,
-        SystematicFutures& futures
-    ) = 0;
+    getVariedHistograms(const BinningDefinition &bin,
+                        SystematicFutures &futures) = 0;
 };
 
-}
+} // namespace analysis
 
 #endif
