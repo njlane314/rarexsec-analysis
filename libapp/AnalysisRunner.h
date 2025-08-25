@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "AdaptiveBinningCalculator.h"
+#include "DynamicBinning.h"
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisLogger.h"
@@ -61,15 +61,12 @@ public:
                     log::fatal("AnalysisRunner::run", "Cannot perform dynamic binning: No Monte Carlo samples were found!");
                 }
 
-                BinningDefinition new_bins = AdaptiveBinningCalculator::calculate(
+                BinningDefinition new_bins = DynamicBinning::calculate(
                     mc_nodes,
                     var_handle.binning(),
                     "nominal_event_weight",
                     50.0
                 );
-
-                log::info("AnalysisRunner::run", "  → Optimal bin count resolved:", new_bins.getBinNumber());
-
                 analysis_definition_.setBinning(var_handle.key_, std::move(new_bins));
             }
         }
