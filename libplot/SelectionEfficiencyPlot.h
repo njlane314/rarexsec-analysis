@@ -7,6 +7,7 @@
 #include "TGraphErrors.h"
 #include "TH1F.h"
 #include "TLegend.h"
+#include "TLegendEntry.h"
 
 #include "HistogramPlotterBase.h"
 
