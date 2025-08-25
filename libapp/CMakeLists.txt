@@ -11,4 +11,6 @@ target_link_libraries(libapp
     libdata
     libutils
     libhist
+    Eigen3::Eigen
+    ${ROOT_LIBRARIES}
 )

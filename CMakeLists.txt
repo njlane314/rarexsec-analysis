@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(RareXSec LANGUAGES CXX)
 
+enable_testing()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Werror -g)
@@ -33,6 +35,8 @@ add_subdirectory(libplot)
 add_subdirectory(libsyst)
 add_subdirectory(libapp)
 add_subdirectory(libplug)
+add_subdirectory(tests)
+
 
 set(ANALYSIS_EXECUTABLES
     analyse
@@ -43,7 +47,7 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
     target_link_libraries(${exe}
         PRIVATE
             libapp
-            libplug  
+            libplug
             libdata
             libhist
             libplot
@@ -57,5 +61,3 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
     )
 endforeach()
 
-enable_testing()
-add_subdirectory(tests)
