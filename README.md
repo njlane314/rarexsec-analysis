@@ -68,3 +68,27 @@ equal-weight quantile binning.
 }
 ```
 
+### ROC Curve Plugin
+
+Generate signal efficiency versus background rejection plots by sweeping a
+threshold on a given variable. The plugin requires the column containing the
+channel information, a signal group definition, and the variable to threshold
+on:
+
+```json
+{
+  "path": "build/RocCurvePlugin.so",
+  "roc_curves": [
+    {
+      "region": "REGION_KEY",
+      "selection_rule": "NUMU_CC",
+      "channel_column": "incl_channel",
+      "signal_group": "inclusive_strange_channels",
+      "variable": "some_discriminant",
+      "output_directory": "plots",
+      "plot_name": "roc_curve"
+    }
+  ]
+}
+```
+
