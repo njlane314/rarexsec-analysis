@@ -40,8 +40,8 @@ public:
             "&& sub == " + std::to_string(subrun_id) +
             "&& evt == " + std::to_string(event_num);
 
-        auto& sample = loader_.getSampleFrames().at(sample_key);
-        auto df = sample.nominalNode;
+        auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
+        auto df = sample.nominal_node_;
         df = df.Filter(filter_expr);
 
         auto det_u = df.Take<std::vector<float>>("event_detector_image_u").GetValue().at(0);
@@ -54,29 +54,78 @@ public:
 
         for (auto const& plane : planes_) {
             plotPlane(run_id,
-                       subrun_id,
-                       event_num,
-                       plane,
-                       det_u,
-                       det_v,
-                       det_w,
-                       sem_u,
-                       sem_v,
-                       sem_w);
+                      subrun_id,
+                      event_num,
+                      plane,
+                      det_u,
+                      det_v,
+                      det_w,
+                      sem_u,
+                      sem_v,
+                      sem_w,
+                      nullptr);
         }
+    }
+
+    void visualiseEvents(const std::vector<EventIdentifier>& sample_events,
+                         const std::string& sample_key,
+                         const std::string& pdf_file)
+    {
+        if (sample_events.empty()) return;
+
+        std::string pdf_path = output_directory_ + "/" + pdf_file;
+        TCanvas opener("opener", "", 1, 1);
+        opener.Print((pdf_path + "[").c_str());
+
+        for (auto const& sample_event : sample_events) {
+            auto [run_id, subrun_id, event_num] = sample_event;
+            std::string filter_expr =
+                "run == " + std::to_string(run_id) +
+                "&& sub == " + std::to_string(subrun_id) +
+                "&& evt == " + std::to_string(event_num);
+
+            auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
+            auto df = sample.nominal_node_;
+            df = df.Filter(filter_expr);
+
+            auto det_u = df.Take<std::vector<float>>("event_detector_image_u").GetValue().at(0);
+            auto det_v = df.Take<std::vector<float>>("event_detector_image_v").GetValue().at(0);
+            auto det_w = df.Take<std::vector<float>>("event_detector_image_w").GetValue().at(0);
+
+            auto sem_u = df.Take<std::vector<int>>("semantic_image_u").GetValue().at(0);
+            auto sem_v = df.Take<std::vector<int>>("semantic_image_v").GetValue().at(0);
+            auto sem_w = df.Take<std::vector<int>>("semantic_image_w").GetValue().at(0);
+
+            for (auto const& plane : planes_) {
+                plotPlane(run_id,
+                          subrun_id,
+                          event_num,
+                          plane,
+                          det_u,
+                          det_v,
+                          det_w,
+                          sem_u,
+                          sem_v,
+                          sem_w,
+                          &pdf_path);
+            }
+        }
+
+        opener.Print((pdf_path + "]").c_str());
     }
 
 private:
     void plotPlane(int run_id,
-                    int subrun_id,
-                    int event_num,
-                    const std::string& plane,
-                    const std::vector<float>& det_u,
-                    const std::vector<float>& det_v,
-                    const std::vector<float>& det_w,
-                    const std::vector<int>& sem_u,
-                    const std::vector<int>& sem_v,
-                    const std::vector<int>& sem_w)
+                   int subrun_id,
+                   int event_num,
+                   const std::string& plane,
+                   const std::vector<float>& det_u,
+                   const std::vector<float>& det_v,
+                   const std::vector<float>& det_w,
+                   const std::vector<int>& sem_u,
+                   const std::vector<int>& sem_v,
+                   const std::vector<int>& sem_w,
+                   const std::string* pdf_path)
     {
         const auto& det_data =
             (plane == "U" ? det_u : (plane == "V" ? det_v : det_w));
@@ -93,7 +142,11 @@ private:
         gStyle->SetTitleY(0.96);
         canvas_det.SetLogz();
         hist_det->Draw("COL");
-        canvas_det.Print((output_directory_ + "/detector_" + tag + ".png").c_str());
+        if (pdf_path) {
+            canvas_det.Print(pdf_path->c_str());
+        } else {
+            canvas_det.Print((output_directory_ + "/detector_" + tag + ".png").c_str());
+        }
         delete hist_det;
 
         TH2F* hist_sem = this->makeSemanticHist(tag, sem_data);
@@ -143,7 +196,11 @@ private:
             }
         }
         legend.Draw();
-        canvas_sem.Print((output_directory_ + "/semantic_" + tag + ".png").c_str());
+        if (pdf_path) {
+            canvas_sem.Print(pdf_path->c_str());
+        } else {
+            canvas_sem.Print((output_directory_ + "/semantic_" + tag + ".png").c_str());
+        }
         delete hist_sem;
     }
 

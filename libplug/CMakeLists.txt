@@ -35,8 +35,9 @@ endfunction()
 add_plugin(RegionsPlugin       RegionsPlugin.cpp           "")
 add_plugin(VariablesPlugin        VariablesPlugin.cpp         "")
 add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cpp  libplot)
+add_plugin(EventDisplayPlugin     EventDisplayPlugin.cpp      libplot)
 
-foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin)
+foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin)
   set_target_properties(${_p} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
   )

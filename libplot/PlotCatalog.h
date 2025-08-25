@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <random>
+#include <numeric>
 
 #include "TSystem.h"
 
@@ -11,6 +13,7 @@
 #include "AnalysisResult.h"
 #include "EventDisplay.h"
 #include "StackedHistogramPlot.h"
+#include "Selection.h"
 
 namespace analysis {
 
@@ -69,6 +72,55 @@ public:
             output_directory_
         );
         vis.visualiseEvent(sample_event, sample_key);
+    }
+
+    void generateRandomEventDisplays(
+        const std::string& sample_key,
+        const Selection&   sel,
+        int                n_events,
+        const std::string& pdf_name) const
+    {
+        generateRandomEventDisplays(sample_key, sel.str(), n_events, pdf_name);
+    }
+
+    void generateRandomEventDisplays(
+        const std::string& sample_key,
+        const std::string& region_filter,
+        int                n_events,
+        const std::string& pdf_name) const
+    {
+        auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
+        auto df = sample.nominal_node_;
+        if (!region_filter.empty()) {
+            df = df.Filter(region_filter);
+        }
+
+        auto runs = df.Take<int>("run").GetValue();
+        auto subs = df.Take<int>("sub").GetValue();
+        auto evts = df.Take<int>("evt").GetValue();
+
+        size_t total = runs.size();
+        if (total == 0 || n_events <= 0) return;
+
+        n_events = std::min<int>(n_events, static_cast<int>(total));
+
+        std::vector<size_t> indices(total);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::shuffle(indices.begin(), indices.end(), std::mt19937{std::random_device{}()});
+
+        std::vector<EventIdentifier> events;
+        events.reserve(n_events);
+        for (int i = 0; i < n_events; ++i) {
+            size_t idx = indices[i];
+            events.emplace_back(runs[idx], subs[idx], evts[idx]);
+        }
+
+        EventDisplay vis(
+            loader_,
+            image_size_,
+            output_directory_
+        );
+        vis.visualiseEvents(events, sample_key, pdf_name);
     }
 
 private:
