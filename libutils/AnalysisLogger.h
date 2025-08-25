@@ -1,12 +1,13 @@
 #ifndef ANALYSIS_LOGGER_H
 #define ANALYSIS_LOGGER_H
 
-#include <chrono>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <mutex>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace analysis {
 
@@ -19,7 +20,9 @@ class AnalysisLogger {
         return instance;
     }
 
-    void setLevel(LogLevel level) { level_ = level; }
+    void setLevel(LogLevel level) {
+        logger_->set_level(toSpd(level));
+    }
 
     template <typename... Args>
     void debug(const std::string &context, const Args &...args) {
@@ -44,83 +47,55 @@ class AnalysisLogger {
     template <typename... Args>
     void fatal(const std::string &context, const Args &...args) {
         log(LogLevel::FATAL, context, args...);
-        std::exit(EXIT_FAILURE);
     }
 
   private:
-    AnalysisLogger() = default;
+    AnalysisLogger() {
+        logger_ = spdlog::stderr_color_mt("analysis");
+        logger_->set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
+    }
     ~AnalysisLogger() = default;
     AnalysisLogger(const AnalysisLogger &) = delete;
     AnalysisLogger &operator=(const AnalysisLogger &) = delete;
 
-    template <typename T, typename... Args>
-    void printArgs(std::ostream &os, const T &first,
-                   const Args &...rest) const {
-        os << first;
-        if constexpr (sizeof...(rest) > 0) {
-            os << " ";
-            printArgs(os, rest...);
-        }
-    }
-
-    void printArgs(std::ostream &) const {}
-
     template <typename... Args>
     void log(LogLevel level, const std::string &context, const Args &...args) {
-        if (level >= level_) {
-            std::lock_guard<std::mutex> lock(mutex_);
-            auto now = std::chrono::system_clock::now();
-            auto t = std::chrono::system_clock::to_time_t(now);
-            const char *reset = "\033[0m";
-            const char *timeColour = "\033[90m";
-            const char *levelColour = levelToColour(level);
-            std::string levelStr = levelToString(level);
-            std::cout << timeColour << "["
-                      << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S")
-                      << "]" << reset << " ";
-            std::cout << "[" << levelColour << levelStr << reset << "] ";
-            const char *bracketColour = "\033[30m";
-            std::cout << bracketColour << "[" << reset << context
-                      << bracketColour << "]" << reset << " ";
-            printArgs(std::cout, args...);
-            std::cout << reset << std::endl;
+        std::ostringstream oss;
+        ((oss << args << ' '), ...);
+        std::string msg = oss.str();
+        if (!msg.empty()) {
+            msg.pop_back();
+        }
+
+        std::string combined = "[" + context + "]";
+        if (!msg.empty()) {
+            combined += " " + msg;
+        }
+
+        logger_->log(toSpd(level), combined);
+
+        if (level == LogLevel::FATAL) {
+            throw std::runtime_error(combined);
         }
     }
 
-    const char *levelToString(LogLevel level) const {
+    spdlog::level::level_enum toSpd(LogLevel level) const {
         switch (level) {
         case LogLevel::DEBUG:
-            return "DEBUG";
+            return spdlog::level::debug;
         case LogLevel::INFO:
-            return "INFO";
+            return spdlog::level::info;
         case LogLevel::WARN:
-            return "WARN";
+            return spdlog::level::warn;
         case LogLevel::ERROR:
-            return "ERROR";
+            return spdlog::level::err;
         case LogLevel::FATAL:
-            return "FATAL";
+            return spdlog::level::critical;
         }
-        return "UNKNOWN";
+        return spdlog::level::info;
     }
 
-    const char *levelToColour(LogLevel level) const {
-        switch (level) {
-        case LogLevel::DEBUG:
-            return "\033[38;5;33m";
-        case LogLevel::INFO:
-            return "\033[38;5;40m";
-        case LogLevel::WARN:
-            return "\033[38;5;214m";
-        case LogLevel::ERROR:
-            return "\033[38;5;196m";
-        case LogLevel::FATAL:
-            return "\033[38;5;201m";
-        }
-        return "\033[0m";
-    }
-
-    LogLevel level_ = LogLevel::DEBUG;
-    mutable std::mutex mutex_;
+    std::shared_ptr<spdlog::logger> logger_;
 };
 
 namespace log {

@@ -8,4 +8,5 @@ target_include_directories(libutils
 
 target_link_libraries(libutils
   INTERFACE
+    spdlog::spdlog_header_only
 )

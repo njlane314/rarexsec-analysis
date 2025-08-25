@@ -13,6 +13,7 @@ include(${ROOT_USE_FILE})
 find_package(TBB COMPONENTS tbb REQUIRED)
 find_package(Torch REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 set(NLOHMANN_JSON_INCLUDE_DIR "/cvmfs/larsoft.opensciencegrid.org/products/nlohmann_json/v3_11_2/include")
 include_directories(SYSTEM ${NLOHMANN_JSON_INCLUDE_DIR})
