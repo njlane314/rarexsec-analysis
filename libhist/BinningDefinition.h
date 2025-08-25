@@ -39,7 +39,9 @@ class BinningDefinition {
         return selec_keys_;
     }
     const StratifierKey &getStratifierKey() const { return strat_key_; }
-    size_t getBinNumber() const { return edges_.size() - 1; }
+    size_t getBinNumber() const {
+        return edges_.size() > 1 ? edges_.size() - 1 : 0;
+    }
 
     ROOT::RDF::TH1DModel toTH1DModel() const {
         return ROOT::RDF::TH1DModel(getVariable().c_str(),
