@@ -29,6 +29,11 @@ An analysis framework for rare cross-section measurements.
     source ../.setup.sh
     ./plot_analysis ../config.json
     ```
+5.  **Run test**
+    ```bash
+    cd build
+    ctest --output-on-failure
+    ```
 
 ```json
 {
