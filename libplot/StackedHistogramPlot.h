@@ -304,6 +304,18 @@ protected:
     frame->GetXaxis()->SetTitleOffset(1.0);
     frame->GetYaxis()->SetTitleOffset(1.0);
 
+    const auto &edges = variable_result_.binning_.getEdges();
+    mc_stack_->GetXaxis()->SetLimits(edges.front(), edges.back());
+    if (edges.size() >= 3) {
+      std::ostringstream uf_label, of_label;
+      uf_label << "<" << edges[1];
+      of_label << ">" << edges[edges.size() - 2];
+      frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
+                                     uf_label.str().c_str());
+      frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1, -1,
+                                     -1, -1, -1, of_label.str().c_str());
+    }
+
     drawWatermark(p_main, total_mc_events);
 
     p_main->RedrawAxis();
