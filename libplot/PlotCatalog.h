@@ -15,6 +15,8 @@
 #include "EventDisplay.h"
 #include "StackedHistogramPlot.h"
 #include "UnstackedHistogramPlot.h"
+#include "HeatmapPlot.h"
+#include "HistogramCut.h"
 #include "Selection.h"
 
 namespace analysis {
@@ -104,6 +106,79 @@ public:
             y_axis_label,
             area_normalise
         );
+        plot.drawAndSave();
+    }
+
+    void generateHeatmapPlot(
+        const RegionAnalysisMap& phase_space,
+        const std::string&       x_variable,
+        const std::string&       y_variable,
+        const std::string&       region,
+        const Selection&         selection,
+        const std::vector<Cut>&  x_cuts = {},
+        const std::vector<Cut>&  y_cuts = {}) const
+    {
+        const auto& x_res = this->fetchResult(phase_space, x_variable, region);
+        const auto& y_res = this->fetchResult(phase_space, y_variable, region);
+
+        auto sanitise = [&](std::string s) {
+            for (auto& c : s)
+                if (c == '.' || c == '/' || c == ' ')
+                    c = '_';
+            return s;
+        };
+        std::string name =
+            "heatmap_" + sanitise(x_variable) + "_vs_" +
+            sanitise(y_variable) + "_" +
+            sanitise(region.empty() ? "default" : region);
+
+        auto x_edges = x_res.binning_.getEdges();
+        auto y_edges = y_res.binning_.getEdges();
+
+        TH2F* hist = new TH2F(
+            name.c_str(), name.c_str(),
+            x_edges.size() - 1, x_edges.data(),
+            y_edges.size() - 1, y_edges.data()
+        );
+        hist->GetXaxis()->SetTitle(x_res.binning_.getTexLabel().c_str());
+        hist->GetYaxis()->SetTitle(y_res.binning_.getTexLabel().c_str());
+
+        std::string filter = selection.str();
+
+        for (auto& kv : loader_.getSampleFrames()) {
+            auto& sample = kv.second;
+            auto df = sample.nominal_node_;
+            if (!filter.empty()) {
+                df = df.Filter(filter);
+            }
+            for (auto const& c : x_cuts) {
+                std::string expr =
+                    x_res.binning_.getVariable() +
+                    (c.direction == CutDirection::GreaterThan ? ">" : "<") +
+                    std::to_string(c.threshold);
+                df = df.Filter(expr);
+            }
+            for (auto const& c : y_cuts) {
+                std::string expr =
+                    y_res.binning_.getVariable() +
+                    (c.direction == CutDirection::GreaterThan ? ">" : "<") +
+                    std::to_string(c.threshold);
+                df = df.Filter(expr);
+            }
+
+            bool has_w = df.HasColumn("nominal_event_weight");
+            auto xs = df.Take<double>(x_res.binning_.getVariable()).GetValue();
+            auto ys = df.Take<double>(y_res.binning_.getVariable()).GetValue();
+            std::vector<double> ws(xs.size(), 1.0);
+            if (has_w) {
+                ws = df.Take<double>("nominal_event_weight").GetValue();
+            }
+            for (size_t i = 0; i < xs.size(); ++i) {
+                hist->Fill(xs[i], ys[i], ws[i]);
+            }
+        }
+
+        HeatmapPlot plot(std::move(name), hist, output_directory_);
         plot.drawAndSave();
     }
 

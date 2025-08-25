@@ -78,6 +78,17 @@
       ]
     },
     {
+      "path": "build/HeatmapPlugin.so",
+      "heatmaps": [
+        {
+          "x": "pfp track length",
+          "y": "n_pfps_gen2",
+          "region": "NUMU_CC_SEL",
+          "output_directory": "plots"
+        }
+      ]
+    },
+    {
       "path": "build/SelectionEfficiencyPlugin.so",
       "efficiency_plots": [
         {
