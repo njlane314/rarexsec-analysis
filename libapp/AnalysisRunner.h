@@ -201,8 +201,12 @@ public:
                 for (auto& [_, processor] : sample_processors) {
                     processor->contributeTo(result);
                 }
-                
-                //systematics_processor_.processSystematics(result);
+
+                analysis::log::info(
+                    "AnalysisRunner::run",
+                    "Computing systematic covariances"
+                );
+                systematics_processor_.processSystematics(result);
 
                 result.printSummary();
                 region_analysis.addFinalVariable(var_key, std::move(result));

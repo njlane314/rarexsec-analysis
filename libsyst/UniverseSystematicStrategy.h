@@ -33,6 +33,14 @@ public:
         const ROOT::RDF::TH1DModel& model,
         SystematicFutures& futures
     ) override {
+        log::debug(
+            "UniverseSystematicStrategy::bookVariations",
+            identifier_,
+            "sample",
+            sample_key.str(),
+            "universes",
+            n_universes_
+        );
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
             std::string new_col_name = vector_name_ + "_u" + std::to_string(u);
@@ -62,9 +70,25 @@ public:
         cov.Zero();
 
         std::vector<BinnedHistogram> varied_hists;
+        log::debug(
+            "UniverseSystematicStrategy::computeCovariance",
+            identifier_,
+            "processing",
+            n_universes_,
+            "universes"
+        );
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
-            if (!futures.variations.count(uni_key)) continue;
+            if (!futures.variations.count(uni_key)) {
+                log::warn(
+                    "UniverseSystematicStrategy::computeCovariance",
+                    "Missing universe",
+                    u,
+                    "for",
+                    identifier_
+                );
+                continue;
+            }
 
             Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
             Eigen::MatrixXd shifts_mat = shifts;
@@ -91,6 +115,13 @@ public:
                 cov(j, i) = val;
             }
         }
+        log::debug(
+            "UniverseSystematicStrategy::computeCovariance",
+            identifier_,
+            "covariance calculated with",
+            varied_hists.size(),
+            "universes"
+        );
         return cov;
     }
 
