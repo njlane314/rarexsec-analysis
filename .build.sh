@@ -1,5 +1,3 @@
-#!/bin/bash
-
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 BUILD_DIR="${REPO_ROOT}/build"

@@ -75,6 +75,6 @@ private:
     std::vector<PlotConfig> plots_;
 };
 
-} // namespace analysis
+} 
 
 #endif

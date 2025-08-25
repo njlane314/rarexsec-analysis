@@ -220,7 +220,7 @@ private:
 
         std::sort(in_range.begin(), in_range.end(), [](const auto& a, const auto& b){ return a.first < b.first; });
 
-        // recompute sums after filtering
+        
         sumw = 0.0;
         sumw2 = 0.0;
         for (const auto& p : in_range) {
@@ -296,14 +296,14 @@ private:
             edges.push_back(xmax);
         }
 
-        // enforce the user-specified domain for the main histogram axis
+        
         edges.front() = domain_min;
         edges.back()  = domain_max;
 
-        // Merge neighbouring bins until each contains at least the desired
-        // effective number of events.  This guards against sparsely
-        // populated bins in the tails when the target binning yields too many
-        // bins for a low-statistics sample.
+        
+        
+        
+        
         if (min_neff_per_bin > 0.0 && edges.size() > 2) {
             bool merged = true;
             while (merged && edges.size() > 2) {
@@ -336,8 +336,8 @@ private:
             }
         }
 
-        // Optionally append explicit underflow/overflow bins with a width
-        // matching the first and last in-domain bins so they are visible on plots
+        
+        
         if (include_out_of_range_bins) {
             double first_width = edges.size() > 1 ? (edges[1] - edges[0]) : (domain_max - domain_min);
             double last_width  = edges.size() > 1 ? (edges[edges.size()-1] - edges[edges.size()-2]) : (domain_max - domain_min);

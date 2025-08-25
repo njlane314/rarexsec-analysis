@@ -31,6 +31,6 @@ private:
     TLegend* legend_;
 };
 
-} // namespace analysis
+} 
 
 #endif

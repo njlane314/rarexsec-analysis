@@ -24,7 +24,7 @@ public:
             auto region_key = region_cfg.at("region_key").get<std::string>();
             auto label      = region_cfg.at("label").get<std::string>();
 
-            // Optional configuration parameters for metadata used in plots
+            
             bool blinded = region_cfg.value("blinded", true);
             std::string beam_cfg = region_cfg.value("beam_config", std::string{});
             std::vector<std::string> runs =

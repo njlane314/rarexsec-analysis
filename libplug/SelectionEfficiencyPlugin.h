@@ -24,7 +24,7 @@ public:
         std::string signal_group;
         std::string output_directory{"plots"};
         std::string plot_name{"selection_efficiency"};
-        std::vector<std::string> clauses; // filled during initialisation
+        std::vector<std::string> clauses; 
     };
 
     explicit SelectionEfficiencyPlugin(const nlohmann::json& cfg) {
@@ -48,7 +48,7 @@ public:
             try {
                 auto rule = sel_reg.getRule(pc.selection_rule);
                 pc.clauses = rule.clauses;
-                // ensure region exists
+                
                 def.region(RegionKey{pc.region});
             } catch (const std::exception& e) {
                 log::error("SelectionEfficiencyPlugin::onInitialisation", e.what());
