@@ -100,6 +100,20 @@
           "plot_name": "selection_efficiency"
         }
       ]
+    },
+    {
+      "path": "build/RocCurvePlugin.so",
+      "roc_curves": [
+        {
+          "region": "NUMU_CC_SEL",
+          "selection_rule": "NUMU_CC",
+          "channel_column": "incl_channel",
+          "signal_group": "inclusive_strange_channels",
+          "variable": "pfp track length",
+          "output_directory": "plots",
+          "plot_name": "roc_curve"
+        }
+      ]
     }
   ]
 }
