@@ -8,8 +8,6 @@
 #include <vector>
 #include <filesystem>
 
-#include "TSystem.h"
-
 #include "AnalysisDataLoader.h"
 #include "AnalysisTypes.h"
 #include "EventDisplay.h"
@@ -27,12 +25,9 @@ class PlotCatalog {
     PlotCatalog(AnalysisDataLoader &loader, int image_size,
                 const std::string &output_directory = "./plots")
         : loader_(loader), image_size_(image_size) {
-        auto p = std::filesystem::path(output_directory);
-        if (!p.is_absolute()) {
-            p = std::filesystem::path{"."} / p;
-        }
+        auto p = std::filesystem::absolute(output_directory);
         output_directory_ = p.lexically_normal().string();
-        gSystem->mkdir(output_directory_.c_str(), true);
+        std::filesystem::create_directories(output_directory_);
     }
 
     void generateStackedPlot(const RegionAnalysisMap &phase_space,
