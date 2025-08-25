@@ -31,6 +31,8 @@ public:
     void onPostSampleProcessing(const SampleKey&, const RegionKey&, const RegionAnalysisMap&) override {}
     void onFinalisation(const RegionAnalysisMap&) override;
 
+    static void setLoader(AnalysisDataLoader* loader);
+
 private:
     std::vector<DisplayConfig> configs_;
     static AnalysisDataLoader* loader_;
