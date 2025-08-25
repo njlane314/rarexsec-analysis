@@ -21,10 +21,6 @@
 int main(int argc, char *argv[]) {
   analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
-  std::cout
-      << "\033[1;36m-- RareXSec Cross-Section Analysis Pipeline\033[0m\n";
-  std::cout << "\033[90m-- ============================================================\033[0m\n";
-
   if (argc != 3) {
     analysis::log::fatal("analyse::main",
                          "Invocation error. Expected:", argv[0],

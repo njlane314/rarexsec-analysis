@@ -163,7 +163,7 @@ public:
                 for (auto& [_, processor] : sample_processors) {
                     processor->contributeTo(result);
                 }
-
+                
                 //systematics_processor_.processSystematics(result);
 
                 result.printSummary();
