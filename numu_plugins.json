@@ -8,7 +8,9 @@
           "label": "Muon Neutrino CC Selection",
           "selection_rule": "NUMU_CC",
           "beam_config": "numi_fhc",
-          "runs": ["run1"]
+          "runs": [
+            "run1"
+          ]
         }
       ]
     },
@@ -26,7 +28,9 @@
             "max": 3000.0,
             "include_out_of_range_bins": true
           },
-          "regions": [ "NUMU_CC_SEL" ]
+          "regions": [
+            "NUMU_CC_SEL"
+          ]
         }
       ]
     },
@@ -42,19 +46,6 @@
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows"
-        }
-      ]
-    },
-    {
-      "path": "build/EventDisplayPlugin.so",
-      "event_displays": [
-        {
-          "sample": "mc_inclusive_run1_fhc",
-          "region": "NUMU_CC_SEL",
-          "n_events": 5,
-          "pdf_name": "numu_cc_displays.pdf",
-          "image_size": 800,
-          "output_directory": "plots"
         }
       ]
     }

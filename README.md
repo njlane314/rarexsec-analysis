@@ -20,7 +20,7 @@ An analysis framework for rare cross-section measurements.
 3.  **Run CMake and build:**
     ```bash
     cmake ..
-    make -jN 
+    make -jN
     ```
 
 4.  **Setup the environment and run the analysis:**
@@ -30,8 +30,19 @@ An analysis framework for rare cross-section measurements.
     ./plot_analysis ../config.json
     ```
 
+```json
+{
+  "path": "build/EventDisplayPlugin.so",
+  "event_displays": [
+    {
+      "sample": "sample",
+      "region": "REGION_KEY",
+      "n_events": 5,
+      "pdf_name": "event_displays.pdf",
+      "image_size": 800,
+      "output_directory": "plots"
+    }
+  ]
+}
+```
 
-
-
-    prod_strange_resample_fhc_run1_fhc_reco2_reco2
-    New_NuMI_Flux_Run_1_FHC_Pandora_Reco2_reco2_reco2
