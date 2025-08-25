@@ -12,27 +12,26 @@
 namespace analysis {
 
 class HeatmapPlot : public HistogramPlotterBase {
-public:
-    HeatmapPlot(std::string plot_name,
-                TH2F* hist,
+  public:
+    HeatmapPlot(std::string plot_name, TH2F *hist,
                 std::string output_directory = "plots")
-        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
+        : HistogramPlotterBase(std::move(plot_name),
+                               std::move(output_directory)),
           hist_(hist) {}
 
     ~HeatmapPlot() override { delete hist_; }
 
-private:
-    void draw(TCanvas& canvas) override {
+  private:
+    void draw(TCanvas &canvas) override {
         canvas.cd();
         gStyle->SetOptStat(0);
         canvas.SetLogz();
         hist_->Draw("COLZ");
     }
 
-    TH2F* hist_;
+    TH2F *hist_;
 };
 
-} 
+} // namespace analysis
 
-#endif 
-
+#endif

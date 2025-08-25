@@ -4,33 +4,33 @@
 #include <string>
 #include <vector>
 
-#include "THStack.h"
 #include "TH1D.h"
+#include "THStack.h"
 #include "TLegend.h"
 
-#include "HistogramPlotterBase.h"
 #include "AnalysisTypes.h"
+#include "HistogramPlotterBase.h"
 
 namespace analysis {
 
 class SystematicBreakdownPlot : public HistogramPlotterBase {
-public:
+  public:
     SystematicBreakdownPlot(std::string plot_name,
-                            const VariableResult& var_result,
+                            const VariableResult &var_result,
                             bool normalise = false,
                             std::string output_directory = "plots");
     ~SystematicBreakdownPlot() override;
 
-private:
-    void draw(TCanvas& canvas) override;
+  private:
+    void draw(TCanvas &canvas) override;
 
-    const VariableResult& variable_result_;
+    const VariableResult &variable_result_;
     bool normalise_;
-    THStack* stack_;
-    std::vector<TH1D*> histograms_;
-    TLegend* legend_;
+    THStack *stack_;
+    std::vector<TH1D *> histograms_;
+    TLegend *legend_;
 };
 
-} 
+} // namespace analysis
 
 #endif

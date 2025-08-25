@@ -7,32 +7,29 @@
 
 namespace analysis {
 
-SystematicBreakdownPlot::SystematicBreakdownPlot(std::string plot_name,
-                                                 const VariableResult& var_result,
-                                                 bool normalise,
-                                                 std::string output_directory)
+SystematicBreakdownPlot::SystematicBreakdownPlot(
+    std::string plot_name, const VariableResult &var_result, bool normalise,
+    std::string output_directory)
     : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
-      variable_result_(var_result),
-      normalise_(normalise),
-      stack_(nullptr),
+      variable_result_(var_result), normalise_(normalise), stack_(nullptr),
       legend_(nullptr) {}
 
 SystematicBreakdownPlot::~SystematicBreakdownPlot() {
     delete stack_;
     delete legend_;
-    for (auto* h : histograms_) {
+    for (auto *h : histograms_) {
         delete h;
     }
 }
 
-void SystematicBreakdownPlot::draw(TCanvas& canvas) {
+void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     canvas.cd();
 
-    const auto& edges = variable_result_.binning_.getEdges();
+    const auto &edges = variable_result_.binning_.getEdges();
     const int nbins = variable_result_.binning_.getBinNumber();
 
     std::vector<double> bin_totals(nbins, 0.0);
-    for (const auto& [key, cov] : variable_result_.covariance_matrices_) {
+    for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
         for (int i = 0; i < nbins; ++i) {
             bin_totals[i] += cov(i, i);
         }
@@ -45,8 +42,8 @@ void SystematicBreakdownPlot::draw(TCanvas& canvas) {
     legend_->SetTextFont(42);
 
     int color = kRed + 1;
-    for (const auto& [key, cov] : variable_result_.covariance_matrices_) {
-        TH1D* hist = new TH1D(key.str().c_str(), "", nbins, edges.data());
+    for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
+        TH1D *hist = new TH1D(key.str().c_str(), "", nbins, edges.data());
         for (int i = 0; i < nbins; ++i) {
             double val = cov(i, i);
             if (normalise_ && bin_totals[i] > 0.0) {
@@ -63,10 +60,11 @@ void SystematicBreakdownPlot::draw(TCanvas& canvas) {
     }
 
     stack_->Draw("hist");
-    stack_->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
-    stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution" : "Variance");
+    stack_->GetXaxis()->SetTitle(
+        variable_result_.binning_.getTexLabel().c_str());
+    stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution"
+                                            : "Variance");
     legend_->Draw();
 }
 
-} 
-
+} // namespace analysis

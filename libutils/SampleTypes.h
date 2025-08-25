@@ -13,11 +13,7 @@ enum class SampleOrigin : unsigned int {
     kDirt
 };
 
-enum class AnalysisRole {
-    kData,
-    kNominal,
-    kVariation
-};
+enum class AnalysisRole { kData, kNominal, kVariation };
 
 enum class SampleVariation : unsigned int {
     kUnknown = 0,
@@ -35,20 +31,31 @@ enum class SampleVariation : unsigned int {
 
 inline std::string variationToKey(SampleVariation var) {
     switch (var) {
-        case SampleVariation::kCV: return "CV";
-        case SampleVariation::kLYAttenuation: return "LYAttenuation";
-        case SampleVariation::kLYDown: return "LYDown";
-        case SampleVariation::kLYRayleigh: return "LYRayleigh";
-        case SampleVariation::kRecomb2: return "Recomb2";
-        case SampleVariation::kSCE: return "SCE";
-        case SampleVariation::kWireModX: return "WireModX";
-        case SampleVariation::kWireModYZ: return "WireModYZ";
-        case SampleVariation::kWireModAngleXZ: return "WireModAngleXZ";
-        case SampleVariation::kWireModAngleYZ: return "WireModAngleYZ";
-        default: return "Unknown";
+    case SampleVariation::kCV:
+        return "CV";
+    case SampleVariation::kLYAttenuation:
+        return "LYAttenuation";
+    case SampleVariation::kLYDown:
+        return "LYDown";
+    case SampleVariation::kLYRayleigh:
+        return "LYRayleigh";
+    case SampleVariation::kRecomb2:
+        return "Recomb2";
+    case SampleVariation::kSCE:
+        return "SCE";
+    case SampleVariation::kWireModX:
+        return "WireModX";
+    case SampleVariation::kWireModYZ:
+        return "WireModYZ";
+    case SampleVariation::kWireModAngleXZ:
+        return "WireModAngleXZ";
+    case SampleVariation::kWireModAngleYZ:
+        return "WireModAngleYZ";
+    default:
+        return "Unknown";
     }
 }
 
-}
+} // namespace analysis
 
 #endif

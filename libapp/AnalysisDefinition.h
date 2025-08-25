@@ -11,13 +11,12 @@
 
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
+#include "DynamicBinning.h"
 #include "EventVariableRegistry.h"
 #include "KeyTypes.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
-#include "DynamicBinning.h"
-
 
 namespace analysis {
 enum class DynamicBinningStrategy;
@@ -26,17 +25,18 @@ enum class DynamicBinningStrategy;
 namespace analysis {
 
 class VariableHandle {
-public:
-    VariableHandle(const VariableKey& k,
-                 const std::map<VariableKey, std::string>& exprs,
-                 const std::map<VariableKey, std::string>& lbls,
-                 const std::map<VariableKey, BinningDefinition>& bdefs,
-                 const std::map<VariableKey, std::string>& strats)
-        : key_(k), expressions_(exprs), labels_(lbls), binnings_(bdefs), stratifiers_(strats) {}
+  public:
+    VariableHandle(const VariableKey &k,
+                   const std::map<VariableKey, std::string> &exprs,
+                   const std::map<VariableKey, std::string> &lbls,
+                   const std::map<VariableKey, BinningDefinition> &bdefs,
+                   const std::map<VariableKey, std::string> &strats)
+        : key_(k), expressions_(exprs), labels_(lbls), binnings_(bdefs),
+          stratifiers_(strats) {}
 
-    const std::string& expression() const { return expressions_.at(key_); }
-    const std::string& label() const { return labels_.at(key_); }
-    const BinningDefinition& binning() const { return binnings_.at(key_); }
+    const std::string &expression() const { return expressions_.at(key_); }
+    const std::string &label() const { return labels_.at(key_); }
+    const BinningDefinition &binning() const { return binnings_.at(key_); }
 
     std::string stratifier() const {
         auto it = stratifiers_.find(key_);
@@ -45,30 +45,32 @@ public:
 
     const VariableKey key_;
 
-private:
-    const std::map<VariableKey, std::string>& expressions_;
-    const std::map<VariableKey, std::string>& labels_;
-    const std::map<VariableKey, BinningDefinition>& binnings_;
-    const std::map<VariableKey, std::string>& stratifiers_;
+  private:
+    const std::map<VariableKey, std::string> &expressions_;
+    const std::map<VariableKey, std::string> &labels_;
+    const std::map<VariableKey, BinningDefinition> &binnings_;
+    const std::map<VariableKey, std::string> &stratifiers_;
 };
 
 class RegionHandle {
-public:
-    RegionHandle(const RegionKey& k,
-               const std::map<RegionKey, std::string>& names,
-               const std::map<RegionKey, Selection>& sels,
-               const std::map<RegionKey, std::unique_ptr<RegionAnalysis>>& analyses,
-               const std::map<RegionKey, std::vector<VariableKey>>& vars)
-        : key_(k), names_(names), selections_(sels), analyses_(analyses), variables_(vars) {}
+  public:
+    RegionHandle(
+        const RegionKey &k, const std::map<RegionKey, std::string> &names,
+        const std::map<RegionKey, Selection> &sels,
+        const std::map<RegionKey, std::unique_ptr<RegionAnalysis>> &analyses,
+        const std::map<RegionKey, std::vector<VariableKey>> &vars)
+        : key_(k), names_(names), selections_(sels), analyses_(analyses),
+          variables_(vars) {}
 
-    const std::string& name() const { return names_.at(key_); }
-    const Selection& selection() const { return selections_.at(key_); }
+    const std::string &name() const { return names_.at(key_); }
+    const Selection &selection() const { return selections_.at(key_); }
 
-    std::unique_ptr<RegionAnalysis>& analysis() const {
-        return const_cast<std::unique_ptr<RegionAnalysis>&>(analyses_.at(key_));
+    std::unique_ptr<RegionAnalysis> &analysis() const {
+        return const_cast<std::unique_ptr<RegionAnalysis> &>(
+            analyses_.at(key_));
     }
 
-    const std::vector<VariableKey>& vars() const {
+    const std::vector<VariableKey> &vars() const {
         auto it = variables_.find(key_);
         static const std::vector<VariableKey> empty;
         return it != variables_.end() ? it->second : empty;
@@ -76,34 +78,30 @@ public:
 
     const RegionKey key_;
 
-private:
-    const std::map<RegionKey, std::string>& names_;
-    const std::map<RegionKey, Selection>& selections_;
-    const std::map<RegionKey, std::unique_ptr<RegionAnalysis>>& analyses_;
-    const std::map<RegionKey, std::vector<VariableKey>>& variables_;
+  private:
+    const std::map<RegionKey, std::string> &names_;
+    const std::map<RegionKey, Selection> &selections_;
+    const std::map<RegionKey, std::unique_ptr<RegionAnalysis>> &analyses_;
+    const std::map<RegionKey, std::vector<VariableKey>> &variables_;
 };
 
 class AnalysisDefinition {
-public:
-    AnalysisDefinition(const SelectionRegistry& sel_reg,
-                       const EventVariableRegistry& var_reg)
-      : sel_reg_(sel_reg), var_reg_(var_reg)
-    {}
+  public:
+    AnalysisDefinition(const SelectionRegistry &sel_reg,
+                       const EventVariableRegistry &var_reg)
+        : sel_reg_(sel_reg), var_reg_(var_reg) {}
 
-    AnalysisDefinition& addVariable(const std::string& key,
-                                    const std::string& expr,
-                                    const std::string& lbl,
-                                    const BinningDefinition& bdef,
-                                    const std::string& strat,
-                                    bool is_dynamic = false,
-                                    bool include_out_of_range_bins = false,
-                                    DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight)
-    {
+    AnalysisDefinition &addVariable(
+        const std::string &key, const std::string &expr, const std::string &lbl,
+        const BinningDefinition &bdef, const std::string &strat,
+        bool is_dynamic = false, bool include_out_of_range_bins = false,
+        DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
         VariableKey var_key{key};
         if (variable_expressions_.count(var_key))
             log::fatal("AnalysisDefinition", "duplicate variable:", key);
 
-        auto valid = EventVariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
+        auto valid =
+            EventVariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
         if (std::find(valid.begin(), valid.end(), expr) == valid.end())
             log::fatal("AnalysisDefinition", "unknown expression:", expr);
 
@@ -118,14 +116,12 @@ public:
         return *this;
     }
 
-    AnalysisDefinition& addRegion(const std::string& key,
-                                  const std::string& region_name,
-                                  std::string sel_rule_key,
-                                  double pot = 0.0,
+    AnalysisDefinition &addRegion(const std::string &key,
+                                  const std::string &region_name,
+                                  std::string sel_rule_key, double pot = 0.0,
                                   bool blinded = true,
                                   std::string beam_config = "",
-                                  std::vector<std::string> runs = {})
-    {
+                                  std::vector<std::string> runs = {}) {
         RegionKey region_key{key};
         if (region_analyses_.count(region_key))
             log::fatal("AnalysisDefinition", "duplicate region:", key);
@@ -135,22 +131,19 @@ public:
         region_selections_[region_key] = std::move(sel);
 
         auto region_analysis = std::make_unique<RegionAnalysis>(
-            region_key, region_name, pot, blinded,
-            std::move(beam_config), std::move(runs)
-        );
+            region_key, region_name, pot, blinded, std::move(beam_config),
+            std::move(runs));
 
         region_analyses_[region_key] = std::move(region_analysis);
         return *this;
     }
 
-    AnalysisDefinition& addRegionExpr(const std::string& key,
-                                     const std::string& label,
-                                     std::string raw_expr,
-                                     double pot = 0.0,
-                                     bool blinded = true,
-                                     std::string beam_config = "",
-                                     std::vector<std::string> runs = {})
-    {
+    AnalysisDefinition &addRegionExpr(const std::string &key,
+                                      const std::string &label,
+                                      std::string raw_expr, double pot = 0.0,
+                                      bool blinded = true,
+                                      std::string beam_config = "",
+                                      std::vector<std::string> runs = {}) {
         RegionKey region_key{key};
         if (region_analyses_.count(region_key))
             log::fatal("AnalysisDefinition", "duplicate region: " + key);
@@ -159,15 +152,15 @@ public:
         region_selections_[region_key] = Selection(std::move(raw_expr));
 
         auto region_analysis = std::make_unique<RegionAnalysis>(
-            region_key, label, pot, blinded,
-            std::move(beam_config), std::move(runs)
-        );
+            region_key, label, pot, blinded, std::move(beam_config),
+            std::move(runs));
 
         region_analyses_[region_key] = std::move(region_analysis);
         return *this;
     }
 
-    void addVariableToRegion(const std::string& reg_key, const std::string& var_key) {
+    void addVariableToRegion(const std::string &reg_key,
+                             const std::string &var_key) {
         RegionKey region_key{reg_key};
         VariableKey variable_key{var_key};
 
@@ -180,85 +173,120 @@ public:
         region_variables_[region_key].emplace_back(variable_key);
     }
 
-    bool isDynamic(const VariableKey& key) const {
+    bool isDynamic(const VariableKey &key) const {
         auto it = is_dynamic_.find(key);
         return it != is_dynamic_.end() && it->second;
     }
 
-    bool includeOutOfRangeBins(const VariableKey& key) const {
+    bool includeOutOfRangeBins(const VariableKey &key) const {
         auto it = include_out_of_range_.find(key);
         return it != include_out_of_range_.end() && it->second;
     }
 
-    DynamicBinningStrategy dynamicBinningStrategy(const VariableKey& key) const {
+    DynamicBinningStrategy
+    dynamicBinningStrategy(const VariableKey &key) const {
         auto it = dynamic_strategy_.find(key);
-        return it != dynamic_strategy_.end() ? it->second : DynamicBinningStrategy::EqualWeight;
+        return it != dynamic_strategy_.end()
+                   ? it->second
+                   : DynamicBinningStrategy::EqualWeight;
     }
 
-    void setBinning(const VariableKey& key, BinningDefinition&& bdef) {
+    void setBinning(const VariableKey &key, BinningDefinition &&bdef) {
         variable_binning_[key] = std::move(bdef);
     }
 
-    VariableHandle variable(const VariableKey& key) const {
+    VariableHandle variable(const VariableKey &key) const {
         return VariableHandle{key, variable_expressions_, variable_labels_,
-                           variable_binning_, variable_stratifiers_};
+                              variable_binning_, variable_stratifiers_};
     }
 
-    RegionHandle region(const RegionKey& key) const {
+    RegionHandle region(const RegionKey &key) const {
         return RegionHandle{key, region_names_, region_selections_,
-                         region_analyses_, region_variables_};
+                            region_analyses_, region_variables_};
     }
 
     class VariableIterator {
-    public:
+      public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = VariableHandle;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = value_type *;
+        using reference = value_type &;
 
-        VariableIterator(std::map<VariableKey, std::string>::const_iterator it, const AnalysisDefinition& def)
+        VariableIterator(std::map<VariableKey, std::string>::const_iterator it,
+                         const AnalysisDefinition &def)
             : it_(it), def_(def) {}
 
         VariableHandle operator*() const {
-            return VariableHandle{it_->first, def_.variable_expressions_, def_.variable_labels_, def_.variable_binning_, def_.variable_stratifiers_};
+            return VariableHandle{it_->first, def_.variable_expressions_,
+                                  def_.variable_labels_, def_.variable_binning_,
+                                  def_.variable_stratifiers_};
         }
 
-        VariableIterator& operator++() { ++it_; return *this; }
-        VariableIterator operator++(int) { auto tmp = *this; ++(*this); return tmp; }
+        VariableIterator &operator++() {
+            ++it_;
+            return *this;
+        }
+        VariableIterator operator++(int) {
+            auto tmp = *this;
+            ++(*this);
+            return tmp;
+        }
 
-        friend bool operator==(const VariableIterator& a, const VariableIterator& b) { return a.it_ == b.it_; }
-        friend bool operator!=(const VariableIterator& a, const VariableIterator& b) { return !(a == b); }
+        friend bool operator==(const VariableIterator &a,
+                               const VariableIterator &b) {
+            return a.it_ == b.it_;
+        }
+        friend bool operator!=(const VariableIterator &a,
+                               const VariableIterator &b) {
+            return !(a == b);
+        }
 
-    private:
+      private:
         std::map<VariableKey, std::string>::const_iterator it_;
-        const AnalysisDefinition& def_;
+        const AnalysisDefinition &def_;
     };
 
     class RegionIterator {
-    public:
+      public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = RegionHandle;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = value_type *;
+        using reference = value_type &;
 
-        RegionIterator(std::map<RegionKey, std::string>::const_iterator it, const AnalysisDefinition& def)
+        RegionIterator(std::map<RegionKey, std::string>::const_iterator it,
+                       const AnalysisDefinition &def)
             : it_(it), def_(def) {}
 
         RegionHandle operator*() const {
-            return RegionHandle{it_->first, def_.region_names_, def_.region_selections_, def_.region_analyses_, def_.region_variables_};
+            return RegionHandle{it_->first, def_.region_names_,
+                                def_.region_selections_, def_.region_analyses_,
+                                def_.region_variables_};
         }
 
-        RegionIterator& operator++() { ++it_; return *this; }
-        RegionIterator operator++(int) { auto tmp = *this; ++(*this); return tmp; }
+        RegionIterator &operator++() {
+            ++it_;
+            return *this;
+        }
+        RegionIterator operator++(int) {
+            auto tmp = *this;
+            ++(*this);
+            return tmp;
+        }
 
-        friend bool operator==(const RegionIterator& a, const RegionIterator& b) { return a.it_ == b.it_; }
-        friend bool operator!=(const RegionIterator& a, const RegionIterator& b) { return !(a == b); }
+        friend bool operator==(const RegionIterator &a,
+                               const RegionIterator &b) {
+            return a.it_ == b.it_;
+        }
+        friend bool operator!=(const RegionIterator &a,
+                               const RegionIterator &b) {
+            return !(a == b);
+        }
 
-    private:
+      private:
         std::map<RegionKey, std::string>::const_iterator it_;
-        const AnalysisDefinition& def_;
+        const AnalysisDefinition &def_;
     };
 
     struct VariableRange {
@@ -285,9 +313,9 @@ public:
                 RegionIterator{region_names_.end(), *this}};
     }
 
-private:
-    const SelectionRegistry& sel_reg_;
-    const EventVariableRegistry& var_reg_;
+  private:
+    const SelectionRegistry &sel_reg_;
+    const EventVariableRegistry &var_reg_;
 
     std::map<VariableKey, std::string> variable_expressions_;
     std::map<VariableKey, std::string> variable_labels_;
@@ -306,6 +334,6 @@ private:
     friend class RegionIterator;
 };
 
-}
+} // namespace analysis
 
 #endif

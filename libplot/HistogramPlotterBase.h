@@ -1,42 +1,42 @@
 #ifndef HISTOGRAM_PLOTTER_BASE_H
 #define HISTOGRAM_PLOTTER_BASE_H
 
+#include "BinnedHistogram.h"
+#include "TCanvas.h"
+#include "TColor.h"
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TSystem.h"
 #include <string>
 #include <sys/stat.h>
-#include "TCanvas.h"
-#include "TStyle.h"
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TColor.h"
-#include "BinnedHistogram.h"
 
 namespace analysis {
 
 class HistogramPlotterBase {
-public:
+  public:
     HistogramPlotterBase(std::string plot_name,
                          std::string output_directory = "plots")
-      : plot_name_(std::move(plot_name)),
-        output_directory_(std::move(output_directory))
-    {
+        : plot_name_(std::move(plot_name)),
+          output_directory_(std::move(output_directory)) {
         gSystem->mkdir(output_directory_.c_str(), true);
     }
 
     virtual ~HistogramPlotterBase() = default;
 
-    virtual void draw(TCanvas& canvas) = 0;
+    virtual void draw(TCanvas &canvas) = 0;
 
-    void drawAndSave(const std::string& format = "png") {
+    void drawAndSave(const std::string &format = "png") {
         this->setGlobalStyle();
         TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
         this->draw(canvas);
-        canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
+        canvas.SaveAs(
+            (output_directory_ + "/" + plot_name_ + "." + format).c_str());
     }
 
-protected:
+  protected:
     virtual void setGlobalStyle() const {
         const int font_style = 42;
-        TStyle* style = new TStyle("PlotterStyle", "Plotter Style");
+        TStyle *style = new TStyle("PlotterStyle", "Plotter Style");
         style->SetTitleFont(font_style, "X");
         style->SetTitleFont(font_style, "Y");
         style->SetTitleFont(font_style, "Z");
@@ -76,6 +76,6 @@ protected:
     std::string output_directory_;
 };
 
-}
+} // namespace analysis
 
 #endif

@@ -4,36 +4,34 @@
 #include <cmath>
 #include <vector>
 
-#include <Eigen/Dense>
 #include "TH1D.h"
+#include <Eigen/Dense>
 
 #include "HistogramUncertainty.h"
 
 namespace analysis {
 
 struct TH1DRenderer {
-    mutable TH1D* hist = nullptr;
-    Color_t                     color = kBlack;
-    int                         hatch = 0;
-    TString                     tex;
+    mutable TH1D *hist = nullptr;
+    Color_t color = kBlack;
+    int hatch = 0;
+    TString tex;
 
-    void style(Color_t c, int h, const TString& t) {
+    void style(Color_t c, int h, const TString &t) {
         color = c;
         hatch = h;
-        tex   = t;
+        tex = t;
     }
 
-    void sync(const HistogramUncertainty& s) const {
+    void sync(const HistogramUncertainty &s) const {
         if (!hist) {
             static int hist_counter = 0;
             TString unique_name = TString::Format("_h_%d", hist_counter++);
 
-            hist = new TH1D(
-                unique_name,
-                (";" + s.binning.getTexLabel() + ";Events").c_str(),
-                s.binning.getBinNumber(),
-                s.binning.getEdges().data()
-            );
+            hist =
+                new TH1D(unique_name,
+                         (";" + s.binning.getTexLabel() + ";Events").c_str(),
+                         s.binning.getBinNumber(), s.binning.getEdges().data());
             hist->SetDirectory(nullptr);
         }
         for (std::size_t i = 0; i < s.size(); ++i) {
@@ -43,15 +41,16 @@ struct TH1DRenderer {
         hist->SetLineColor(color);
         hist->SetMarkerColor(color);
         hist->SetFillStyle(hatch);
-        if (hatch) hist->SetFillColor(color);
+        if (hatch)
+            hist->SetFillColor(color);
     }
 
-    const TH1D* get(const HistogramUncertainty& s) const {
+    const TH1D *get(const HistogramUncertainty &s) const {
         sync(s);
         return hist;
     }
 };
 
-}
+} // namespace analysis
 
 #endif
