@@ -8,14 +8,18 @@
           "label": "Muon Neutrino No Selection",
           "selection_rule": "NONE",
           "beam_config": "numi_fhc",
-          "runs": ["run1"]
+          "runs": [
+            "run1"
+          ]
         },
         {
           "region_key": "NUMU_QUALITY_PRE",
           "label": "Muon Neutrino Quality Preselection",
           "selection_rule": "QUALITY",
           "beam_config": "numi_fhc",
-          "runs": ["run1"]
+          "runs": [
+            "run1"
+          ]
         }
       ]
     },
@@ -34,13 +38,16 @@
             "include_out_of_range_bins": true,
             "strategy": "freedman_diaconis"
           },
-          "regions": ["NUMU_EMPTY", "NUMU_QUALITY_PRE"]
+          "regions": [
+            "NUMU_EMPTY",
+            "NUMU_QUALITY_PRE"
+          ]
         },
         {
           "name": "n_pfps_gen2",
           "branch": "n_pfps_gen2",
           "label": "Number of Gen2 PFPs",
-          "stratum": "backtracked_pdg_codes",
+          "stratum": "inclusive_strange_channels",
           "bins": {
             "mode": "dynamic",
             "min": 0.0,
@@ -48,13 +55,16 @@
             "include_out_of_range_bins": true,
             "strategy": "freedman_diaconis"
           },
-          "regions": ["NUMU_EMPTY", "NUMU_QUALITY_PRE"]
+          "regions": [
+            "NUMU_EMPTY",
+            "NUMU_QUALITY_PRE"
+          ]
         },
         {
           "name": "n_muons",
           "branch": "n_muons",
           "label": "Number of Muons",
-          "stratum": "backtracked_pdg_codes",
+          "stratum": "inclusive_strange_channels",
           "bins": {
             "mode": "dynamic",
             "min": 0.0,
@@ -62,13 +72,16 @@
             "include_out_of_range_bins": true,
             "strategy": "freedman_diaconis"
           },
-          "regions": ["NUMU_EMPTY", "NUMU_QUALITY_PRE"]
+          "regions": [
+            "NUMU_EMPTY",
+            "NUMU_QUALITY_PRE"
+          ]
         },
         {
           "name": "neutrino energy",
           "branch": "neutrino_energy",
           "label": "True Neutrino Energy [GeV]",
-          "stratum": "backtracked_pdg_codes",
+          "stratum": "inclusive_strange_channels",
           "bins": {
             "mode": "dynamic",
             "min": 0.0,
@@ -76,7 +89,9 @@
             "include_out_of_range_bins": true,
             "strategy": "freedman_diaconis"
           },
-          "regions": ["NUMU_QUALITY_PRE"]
+          "regions": [
+            "NUMU_QUALITY_PRE"
+          ]
         }
       ]
     },
@@ -106,59 +121,71 @@
         {
           "variable": "n_pfps_gen2",
           "region": "NUMU_EMPTY",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
           "cuts": [
-            {"threshold": 1.0, "direction": "GreaterThan"}
+            {
+              "threshold": 1.0,
+              "direction": "GreaterThan"
+            }
           ]
         },
         {
           "variable": "n_pfps_gen2",
           "region": "NUMU_QUALITY_PRE",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
           "cuts": [
-            {"threshold": 1.0, "direction": "GreaterThan"}
+            {
+              "threshold": 1.0,
+              "direction": "GreaterThan"
+            }
           ]
         },
         {
           "variable": "n_muons",
           "region": "NUMU_EMPTY",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
           "cuts": [
-            {"threshold": 0.0, "direction": "GreaterThan"}
+            {
+              "threshold": 0.0,
+              "direction": "GreaterThan"
+            }
           ]
         },
         {
           "variable": "n_muons",
           "region": "NUMU_QUALITY_PRE",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
           "cuts": [
-            {"threshold": 0.0, "direction": "GreaterThan"}
+            {
+              "threshold": 0.0,
+              "direction": "GreaterThan"
+            }
           ]
         },
         {
           "variable": "neutrino energy",
           "region": "NUMU_QUALITY_PRE",
-          "category_column": "backtracked_pdg_codes",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
