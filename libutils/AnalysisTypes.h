@@ -3,6 +3,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <algorithm>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -70,6 +71,15 @@ struct VariableResult {
             if (cov.GetNrows() > 0) {
                 std::cout << "|   - " << std::left << std::setw(46) << key.str()
                           << " |" << std::endl;
+                for (int i = 0; i < cov.GetNrows(); ++i) {
+                    std::cout << "|       " << std::setw(8) << "";
+                    for (int j = 0; j < cov.GetNcols(); ++j) {
+                        std::cout << std::setw(10) << cov(i, j);
+                    }
+                    std::cout << std::string(
+                                    std::max(0, 46 - 10 * cov.GetNcols()), ' ')
+                              << "|" << std::endl;
+                }
             }
         }
         std::cout
