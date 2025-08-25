@@ -36,9 +36,11 @@ add_plugin(RegionsPlugin       RegionsPlugin.cpp           "")
 add_plugin(VariablesPlugin        VariablesPlugin.cpp         "")
 add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cpp  libplot)
 add_plugin(EventDisplayPlugin     EventDisplayPlugin.cpp      libplot)
+add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.cpp libplot)
 add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.cpp libplot)
 
-foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin)
+foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin SelectionEfficiencyPlugin)
+
   set_target_properties(${_p} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
   )
