@@ -73,8 +73,6 @@ public:
                     var_handle.binning(),
                     "nominal_event_weight",
                     400.0,
-                    0.0,
-                    1.0,
                     include_oob,
                     strategy
                 );
