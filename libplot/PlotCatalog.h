@@ -136,7 +136,15 @@ public:
     {
         auto& sample = loader_.getSampleFrames().at(SampleKey{sample_key});
         auto df = sample.nominal_node_;
-        if (!region_filter.empty()) {
+
+        // ROOT's Filter expects a valid boolean expression. If the provided
+        // region filter string only contains whitespace, ROOT would attempt to
+        // JIT-compile it as a function returning void, leading to a runtime
+        // static assertion failure. Guard against such cases by ensuring the
+        // filter contains non-whitespace characters before applying it.
+        auto has_filter =
+            region_filter.find_first_not_of(" \t\n\r") != std::string::npos;
+        if (has_filter) {
             df = df.Filter(region_filter);
         }
 
