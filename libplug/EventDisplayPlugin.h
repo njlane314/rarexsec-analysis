@@ -43,11 +43,10 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             dc.image_size = ed.value("image_size", 800);
             dc.output_directory =
                 ed.value("output_directory", std::string{"./plots/event_displays"});
-            auto p = std::filesystem::path(dc.output_directory);
-            if (!p.is_absolute()) {
-                dc.output_directory =
-                    (std::filesystem::path{"."} / p).lexically_normal().string();
-            }
+            dc.output_directory =
+                std::filesystem::absolute(dc.output_directory)
+                    .lexically_normal()
+                    .string();
             configs_.push_back(std::move(dc));
         }
     }

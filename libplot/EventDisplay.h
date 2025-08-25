@@ -8,10 +8,10 @@
 #include "TLegend.h"
 #include "TPad.h"
 #include "TStyle.h"
-#include "TSystem.h"
 #include "TROOT.h"
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <set>
 #include <string>
 #include <tuple>
@@ -28,7 +28,7 @@ class EventDisplay {
         : loader_(loader), image_size_(image_size),
           output_directory_(output_directory) {
         gROOT->SetBatch(kTRUE);
-        gSystem->mkdir(output_directory_.c_str(), true);
+        std::filesystem::create_directories(output_directory_);
     }
 
     void visualiseEvent(const EventIdentifier &sample_event,
