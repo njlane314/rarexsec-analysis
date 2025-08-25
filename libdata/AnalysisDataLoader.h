@@ -17,7 +17,7 @@
 #include "RunConfigRegistry.h"
 #include "SampleDefinition.h"
 #include "Selection.h"
-#include "BlipTruthProcessor.h"
+#include "BlipProcessor.h"
 #include "TruthChannelProcessor.h"
 #include "WeightProcessor.h"
 
@@ -138,7 +138,7 @@ private:
                 auto pipeline = chainEventProcessors(
                     std::make_unique<WeightProcessor>(sample_json, total_pot_),
                     std::make_unique<TruthChannelProcessor>(),
-                    std::make_unique<BlipTruthProcessor>(),
+                    std::make_unique<BlipProcessor>(),
                     std::make_unique<MuonSelectionProcessor>(),
                     std::make_unique<ReconstructionProcessor>()
                 );

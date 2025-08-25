@@ -123,7 +123,7 @@ private:
             "blip_inCylinder", "blip_X", "blip_Y", "blip_Z",
             "blip_SigmaYZ", "blip_dX", "blip_dYZ", "blip_Charge",
             "blip_LeadG4ID", "blip_pdg", "blip_process", "blip_process_code", "blip_vx",
-            "blip_vy", "blip_vz", "blip_E", "blip_mass", "blip_trkid"
+            "blip_vy", "blip_vz", "blip_E", "blip_mass", "blip_trkid", "blip_distance_to_vertex"
         };
         return v;
     }
