@@ -32,6 +32,22 @@
           "regions": [
             "NUMU_CC_SEL"
           ]
+        },
+        {
+          "name": "n_pfps_gen2",
+          "branch": "n_pfps_gen2",
+          "label": "Number of Gen2 PFPs",
+          "stratum": "backtracked_pdg_codes",
+          "bins": {
+            "mode": "dynamic",
+            "min": 0.0,
+            "max": 10.0,
+            "include_out_of_range_bins": true,
+            "strategy": "freedman_diaconis"
+          },
+          "regions": [
+            "NUMU_CC_SEL"
+          ]
         }
       ]
     },
@@ -47,6 +63,17 @@
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows"
+        },
+        {
+          "variable": "n_pfps_gen2",
+          "region": "NUMU_CC_SEL",
+          "category_column": "backtracked_pdg_codes",
+          "output_directory": "plots",
+          "overlay_signal": true,
+          "annotate_numbers": true,
+          "log_y": true,
+          "y_axis_label": "Particle Flows",
+          "selection_cuts": true
         }
       ]
     }
