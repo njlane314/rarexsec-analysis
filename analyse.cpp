@@ -57,6 +57,9 @@ int main(int argc, char *argv[]) {
                             config_data.at("run_configurations").size(),
                             "beamlines.");
 
+        analysis::RunConfigRegistry rc_reg;
+        analysis::RunConfigLoader::loadRunConfigurations(argv[1], rc_reg);
+
         for (auto const &[beam, run_configs] :
              config_data.at("run_configurations").items()) {
 
@@ -64,9 +67,6 @@ int main(int argc, char *argv[]) {
             for (auto const &[period, period_details] : run_configs.items()) {
                 periods.push_back(period);
             }
-
-            analysis::RunConfigRegistry rc_reg;
-            analysis::RunConfigLoader::loadRunConfigurations(argv[1], rc_reg);
 
             analysis::EventVariableRegistry ev_reg;
             analysis::SelectionRegistry sel_reg;

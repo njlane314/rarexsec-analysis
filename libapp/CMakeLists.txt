@@ -12,5 +12,7 @@ target_link_libraries(libapp
     libutils
     libhist
     Eigen3::Eigen
+    nlohmann_json::nlohmann_json
     ${ROOT_LIBRARIES}
 )
+

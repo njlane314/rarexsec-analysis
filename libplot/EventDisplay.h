@@ -167,7 +167,7 @@ class EventDisplay {
         canvas_det.SetLogz();
         hist_det->Draw("COL");
         if (pdf_path) {
-            canvas_det.Print(pdf_path->c_str());
+            canvas_det.Print(pdf_path->c_str(), "pdf");
         } else {
             canvas_det.Print(
                 (output_directory_ + "/detector_" + tag + ".png").c_str());
@@ -220,7 +220,7 @@ class EventDisplay {
         }
         legend.Draw();
         if (pdf_path) {
-            canvas_sem.Print(pdf_path->c_str());
+            canvas_sem.Print(pdf_path->c_str(), "pdf");
         } else {
             canvas_sem.Print(
                 (output_directory_ + "/semantic_" + tag + ".png").c_str());
