@@ -8,6 +8,7 @@
 #include <sstream>
 #include <tuple>
 #include <vector>
+#include <locale>
 
 #include "TArrow.h"
 #include "TCanvas.h"
@@ -65,6 +66,7 @@ private:
 
     auto format_double = [](double val, int precision) {
       std::stringstream stream;
+      stream.imbue(std::locale(""));
       stream << std::fixed << std::setprecision(precision) << val;
       return stream.str();
     };
@@ -152,7 +154,9 @@ protected:
 
     std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
     for (auto const &[key, hist] : variable_result_.strat_hists_) {
-      mc_hists.emplace_back(key, hist);
+      if (hist.getSum() > 0) {
+        mc_hists.emplace_back(key, hist);
+      }
     }
 
     std::sort(mc_hists.begin(), mc_hists.end(),
@@ -177,6 +181,7 @@ protected:
 
     auto format_double = [](double val, int precision) {
       std::stringstream stream;
+      stream.imbue(std::locale(""));
       stream << std::fixed << std::setprecision(precision) << val;
       return stream.str();
     };
