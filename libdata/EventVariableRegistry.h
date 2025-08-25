@@ -20,7 +20,7 @@ class EventVariableRegistry {
         static const KnobVariations m = {
             {"RPA", {"knobRPAup", "knobRPAdn"}},
             {"CCMEC", {"knobCCMECup", "knobCCMECdn"}},
-            {"AxFFCCQE", {"knobAxFFCCQEup", "knobCCMECdn"}},
+            {"AxFFCCQE", {"knobAxFFCCQEup", "knobAxFFCCQEdn"}},
             {"VecFFCCQE", {"knobVecFFCCQEup", "knobVecFFCCQEdn"}},
             {"DecayAngMEC", {"knobDecayAngMECup", "knobDecayAngMECdn"}},
             {"ThetaDelta2Npi",
