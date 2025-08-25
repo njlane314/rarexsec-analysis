@@ -108,7 +108,8 @@ private:
             "reco_neutrino_vertex_sce_z", "num_slices",
             "slice_num_hits", "selection_pass", "slice_id",
             "optical_filter_pe_beam", "optical_filter_pe_veto",
-            "num_pfps", "num_tracks", "num_showers", "event_total_hits"
+            "num_pfps", "num_tracks", "num_showers", "event_total_hits",
+            "quality_event", "n_pfps_gen2", "n_pfps_gen3"
         };
         return v;
     }
