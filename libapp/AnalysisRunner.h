@@ -67,6 +67,7 @@ public:
                 // For weighted counts: n_eff = (sum w_i)^2 / (sum w_i^2), and rel_stat_err ≈ 1/sqrt(n_eff).
                 // Hence min_neff_per_bin = 400 (~5% stats; total ≈ sqrt(0.10^2 + 0.05^2) ≈ 11.2%).
                 bool include_oob = analysis_definition_.includeOutOfRangeBins(var_handle.key_);
+                auto strategy = analysis_definition_.dynamicBinningStrategy(var_handle.key_);
                 BinningDefinition new_bins = DynamicBinning::calculate(
                     mc_nodes,
                     var_handle.binning(),
@@ -74,7 +75,8 @@ public:
                     400.0,
                     0.0,
                     1.0,
-                    include_oob
+                    include_oob,
+                    strategy
                 );
 
                 log::info("AnalysisRunner::run", "--> Optimal bin count resolved:", new_bins.getBinNumber());
