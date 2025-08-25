@@ -4,9 +4,9 @@
       "path": "build/RegionsPlugin.so",
       "regions": [
         {
-          "region_key": "NUMU_CC_SEL",
-          "label": "Muon Neutrino CC Selection",
-          "selection_rule": "NUMU_CC",
+          "region_key": "NUMU_EMPTY",
+          "label": "Muon Neutrino No Selection",
+          "selection_rule": "NONE",
           "beam_config": "numi_fhc",
           "runs": [
             "run1"
@@ -30,7 +30,7 @@
             "strategy": "freedman_diaconis"
           },
           "regions": [
-            "NUMU_CC_SEL"
+            "NUMU_EMPTY"
           ]
         },
         {
@@ -46,7 +46,23 @@
             "strategy": "freedman_diaconis"
           },
           "regions": [
-            "NUMU_CC_SEL"
+            "NUMU_EMPTY"
+          ]
+        },
+        {
+          "name": "n_muons",
+          "branch": "n_muons",
+          "label": "Number of Muons",
+          "stratum": "inclusive_strange_channels",
+          "bins": {
+            "mode": "dynamic",
+            "min": 0.0,
+            "max": 5.0,
+            "include_out_of_range_bins": true,
+            "strategy": "freedman_diaconis"
+          },
+          "regions": [
+            "NUMU_EMPTY"
           ]
         }
       ]
@@ -56,7 +72,7 @@
       "plots": [
         {
           "variable": "pfp track length",
-          "region": "NUMU_CC_SEL",
+          "region": "NUMU_EMPTY",
           "category_column": "backtracked_pdg_codes",
           "output_directory": "plots",
           "overlay_signal": true,
@@ -66,69 +82,38 @@
         },
         {
           "variable": "n_pfps_gen2",
-          "region": "NUMU_CC_SEL",
+          "region": "NUMU_EMPTY",
           "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
-          "selection_cuts": true
-        }
-      ]
-    },
-    {
-      "path": "build/HeatmapPlugin.so",
-      "heatmaps": [
+          "cuts": [
+            {
+              "threshold": 1.0,
+              "direction": "GreaterThan"
+            }
+          ]
+        },
         {
-          "x": "pfp track length",
-          "y": "n_pfps_gen2",
-          "region": "NUMU_CC_SEL",
-          "output_directory": "plots"
-        }
-      ]
-    },
-    {
-      "path": "build/SelectionEfficiencyPlugin.so",
-      "efficiency_plots": [
-        {
-          "region": "NUMU_CC_SEL",
-          "selection_rule": "NUMU_CC",
-          "channel_column": "incl_channel",
-          "signal_group": "inclusive_strange_channels",
+          "variable": "n_muons",
+          "region": "NUMU_EMPTY",
+          "category_column": "inclusive_strange_channels",
           "output_directory": "plots",
-          "plot_name": "selection_efficiency"
-        }
-      ]
-    },
-    {
-      "path": "build/RocCurvePlugin.so",
-      "roc_curves": [
-        {
-          "region": "NUMU_CC_SEL",
-          "selection_rule": "NUMU_CC",
-          "channel_column": "incl_channel",
-          "signal_group": "inclusive_strange_channels",
-          "variable": "pfp track length",
-          "output_directory": "plots",
-          "plot_name": "roc_curve"
-        }
-      ]
-    },
-    {
-      "path": "build/SnapshotPlugin.so",
-      "snapshots": [
-        {
-          "selection_rule": "NUMU_CC",
-          "output_directory": "snapshots",
-          "columns": [
-            "nominal_event_weight",
-            "incl_channel",
-            "detector_image",
-            "semantic_mask"
+          "overlay_signal": true,
+          "annotate_numbers": true,
+          "log_y": true,
+          "y_axis_label": "Particle Flows",
+          "cuts": [
+            {
+              "threshold": 0.0,
+              "direction": "GreaterThan"
+            }
           ]
         }
       ]
     }
   ]
 }
+

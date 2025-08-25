@@ -37,6 +37,7 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
+
 set(ANALYSIS_EXECUTABLES
     analyse
 )
@@ -59,3 +60,4 @@ foreach(exe ${ANALYSIS_EXECUTABLES})
             dl
     )
 endforeach()
+
