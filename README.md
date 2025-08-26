@@ -1,40 +1,33 @@
 # rarexsec_analysis
 
-An analysis framework for rare cross-section measurements.
+Framework for rare cross-section measurements.
 
-## Build Instructions
+## Build
+```bash
+source .container.sh
+source .setup.sh
+source .build.sh
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repo-url>
-    cd rarexsec_analysis
-    ```
+## Configure
+```bash
+python configurate.py
+```
+Generates `config.json` by processing the sample definitions in `samples.json` and hadding inputs as needed.
+`samples.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
 
-2.  **Create a build directory:**
-    It's good practice to build the project in a separate directory to keep the source tree clean.
-    ```bash
-    mkdir build
-    cd build
-    ```
+## Run
+```bash
+./build/analyse config.json [plugins.json]
+```
+Runs the analysis using `config.json` and optional plugin definitions.
 
-3.  **Run CMake and build:**
-    ```bash
-    cmake ..
-    make -jN
-    ```
+## Test
+```bash
+ctest --output-on-failure
+```
 
-4.  **Setup the environment and run the analysis:**
-    After the build is complete, you need to source the setup script and then you can run the executable.
-    ```bash
-    source ../.setup.sh
-    ./plot_analysis ../config.json
-    ```
-5.  **Run test**
-    ```bash
-    cd build
-    ctest --output-on-failure
-    ```
-
+## Example JSON plugins
 ```json
 {
   "bins": {
@@ -78,4 +71,3 @@ An analysis framework for rare cross-section measurements.
   ]
 }
 ```
-
