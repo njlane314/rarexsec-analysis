@@ -2,6 +2,7 @@
 #define ANALYSIS_RUNNER_H
 
 #include <algorithm>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -9,6 +10,7 @@
 #include <string>
 
 #include <nlohmann/json.hpp>
+#include "TFile.h"
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
@@ -29,17 +31,18 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
-    // Receive a pre-existing AnalysisDataLoader by reference so that the loader
-    // can outlive this runner.  Plugins may retain pointers to the loader for
-    // use during finalisation.
     AnalysisRunner(AnalysisDataLoader &ldr, const SelectionRegistry &sel_reg,
                    const EventVariableRegistry &var_reg,
                    std::unique_ptr<IHistogramBooker> booker,
                    SystematicsProcessor &sys_proc,
-                   const nlohmann::json &plgn_cfg)
+                   const nlohmann::json &plgn_cfg,
+                   bool serialise_results = false,
+                   std::string serialisation_dir = "variable_results")
         : analysis_definition_(sel_reg, var_reg), data_loader_(ldr),
           selection_registry_(sel_reg), systematics_processor_(sys_proc),
-          histogram_booker_(std::move(booker)) {
+          histogram_booker_(std::move(booker)),
+          serialise_results_(serialise_results),
+          serialisation_directory_(std::move(serialisation_dir)) {
         plugin_manager.loadPlugins(plgn_cfg, &data_loader_);
     }
 
@@ -240,6 +243,14 @@ class AnalysisRunner {
                 //systematics_processor_.processSystematics(result);
 
                 result.printSummary();
+
+                if (serialise_results_) {
+                    serialiseVariableResult(region_handle.key_, var_key, result);
+                    result.raw_detvar_hists_.clear();
+                    result.variation_hists_.clear();
+                    result.universe_projected_hists_.clear();
+                }
+
                 region_analysis.addFinalVariable(var_key, std::move(result));
 
                 analysis::log::info("AnalysisRunner::run",
@@ -264,12 +275,61 @@ class AnalysisRunner {
     }
 
   private:
+    void serialiseVariableResult(const RegionKey &region,
+                                 const VariableKey &variable,
+                                 const VariableResult &result) const {
+        namespace fs = std::filesystem;
+        fs::path region_dir = fs::path(serialisation_directory_) / region.str();
+        fs::create_directories(region_dir);
+        fs::path file_path = region_dir / (variable.str() + ".root");
+
+        TFile outfile(file_path.c_str(), "RECREATE");
+        auto write_hist = [&](const std::string &name,
+                              const BinnedHistogram &hist) {
+            if (const TH1D *h = hist.get()) {
+                h->Write(name.c_str());
+            }
+        };
+
+        write_hist("data", result.data_hist_);
+        write_hist("total_mc", result.total_mc_hist_);
+        for (const auto &[key, hist] : result.strat_hists_) {
+            write_hist("strat_" + key.str(), hist);
+        }
+        for (const auto &[sample_key, var_map] : result.raw_detvar_hists_) {
+            for (const auto &[variation, hist] : var_map) {
+                write_hist("detvar_" + sample_key.str() + "_" +
+                               variationToKey(variation),
+                           hist);
+            }
+        }
+        for (const auto &[key, hist] : result.variation_hists_) {
+            write_hist("variation_" + key.str(), hist);
+        }
+        for (const auto &[key, vec] : result.universe_projected_hists_) {
+            for (size_t i = 0; i < vec.size(); ++i) {
+                write_hist("universe_" + key.str() + "_" +
+                               std::to_string(i),
+                           vec[i]);
+            }
+        }
+        for (const auto &[key, mat] : result.covariance_matrices_) {
+            mat.Write(("covariance_" + key.str()).c_str());
+        }
+        result.total_covariance_.Write("total_covariance");
+        result.total_correlation_.Write("total_correlation");
+        write_hist("nominal_with_band", result.nominal_with_band_);
+        outfile.Close();
+    }
+
     AnalysisPluginManager plugin_manager;
     AnalysisDefinition analysis_definition_;
     AnalysisDataLoader &data_loader_;
     const SelectionRegistry &selection_registry_;
     SystematicsProcessor &systematics_processor_;
     std::unique_ptr<IHistogramBooker> histogram_booker_;
+    bool serialise_results_{false};
+    std::string serialisation_directory_{"variable_results"};
 };
 
 } // namespace analysis
