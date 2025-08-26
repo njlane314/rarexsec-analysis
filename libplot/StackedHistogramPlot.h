@@ -246,10 +246,8 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h = (TH1D *)hist.get()->Clone();
             if (adjusted_edges.size() == orig_edges.size()) {
-                TH1D *rebinned = (TH1D *)h->Rebin(adjusted_edges.size() - 1, "",
-                                                  adjusted_edges.data());
-                delete h;
-                h = rebinned;
+                h->GetXaxis()->Set(adjusted_edges.size() - 1,
+                                   adjusted_edges.data());
             }
             const auto &stratum = registry.getStratumProperties(
                 category_column_, std::stoi(key.str()));
