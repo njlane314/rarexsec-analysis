@@ -48,6 +48,38 @@
           "regions": [
             "NUMU_CC_SEL"
           ]
+        },
+        {
+          "name": "muon_track_length",
+          "branch": "muon_track_length",
+          "label": "Muon Track Length [cm]",
+          "stratum": "inclusive_strange_channels",
+          "bins": {
+            "mode": "dynamic",
+            "min": 0.0,
+            "max": 1000.0,
+            "include_out_of_range_bins": true,
+            "strategy": "freedman_diaconis"
+          },
+          "regions": [
+            "NUMU_CC_SEL"
+          ]
+        },
+        {
+          "name": "muon_track_costheta",
+          "branch": "muon_track_costheta",
+          "label": "Muon cos#theta",
+          "stratum": "inclusive_strange_channels",
+          "bins": {
+            "mode": "dynamic",
+            "min": -1.0,
+            "max": 1.0,
+            "include_out_of_range_bins": true,
+            "strategy": "freedman_diaconis"
+          },
+          "regions": [
+            "NUMU_CC_SEL"
+          ]
         }
       ]
     },
@@ -83,6 +115,12 @@
         {
           "x": "track_length",
           "y": "n_pfps_gen2",
+          "region": "NUMU_CC_SEL",
+          "output_directory": "plots"
+        },
+        {
+          "x": "muon_track_costheta",
+          "y": "muon_track_length",
           "region": "NUMU_CC_SEL",
           "output_directory": "plots"
         }
