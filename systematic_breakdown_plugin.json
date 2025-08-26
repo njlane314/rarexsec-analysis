@@ -16,7 +16,7 @@
       "path": "build/SystematicBreakdownPlugin.so",
       "plots": [
         {
-          "variable": "n_muons",
+          "variable": "neutrino energy",
           "region": "NUMU_CC_SEL",
           "output_directory": "plots",
           "fractional": true
