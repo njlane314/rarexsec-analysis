@@ -18,14 +18,14 @@
       "path": "build/VariablesPlugin.so",
       "variables": [
         {
-          "name": "pfp track length",
+          "name": "track_length",
           "branch": "track_length",
           "label": "Track Length [cm]",
           "stratum": "backtracked_pdg_codes",
           "bins": {
             "mode": "dynamic",
             "min": 0.0,
-            "max": 3000.0,
+            "max": 1000.0,
             "include_out_of_range_bins": true,
             "strategy": "freedman_diaconis"
           },
@@ -55,14 +55,14 @@
       "path": "build/StackedHistogramPlugin.so",
       "plots": [
         {
-          "variable": "pfp track length",
+          "variable": "track_length",
           "region": "NUMU_CC_SEL",
           "category_column": "backtracked_pdg_codes",
           "output_directory": "plots",
           "overlay_signal": true,
           "annotate_numbers": true,
           "log_y": true,
-          "y_axis_label": "Particle Flows"
+          "y_axis_label": "Particle Flows/bin"
         },
         {
           "variable": "n_pfps_gen2",
@@ -73,7 +73,7 @@
           "annotate_numbers": true,
           "log_y": true,
           "y_axis_label": "Particle Flows",
-          "selection_cuts": true
+          "selection_cuts": false
         }
       ]
     },
@@ -81,7 +81,7 @@
       "path": "build/HeatmapPlugin.so",
       "heatmaps": [
         {
-          "x": "pfp track length",
+          "x": "track_length",
           "y": "n_pfps_gen2",
           "region": "NUMU_CC_SEL",
           "output_directory": "plots"
@@ -109,7 +109,7 @@
           "selection_rule": "NUMU_CC",
           "channel_column": "incl_channel",
           "signal_group": "inclusive_strange_channels",
-          "variable": "pfp track length",
+          "variable": "track_length",
           "output_directory": "plots",
           "plot_name": "roc_curve"
         }
