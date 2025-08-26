@@ -159,38 +159,21 @@ class EventDisplay {
                           std::to_string(event_num);
 
         TH2F *hist_det = this->makeDetectorHist(tag, det_data);
-        TCanvas canvas_det(("cdet_" + tag).c_str(), "", image_size_,
-                           image_size_);
-        gStyle->SetTitleY(0.96);
-        canvas_det.SetLogz();
-        hist_det->Draw("COL");
-        auto out_det = (out_dir / ("detector_" + tag + ".pdf")).string();
-        canvas_det.Print(out_det.c_str());
-        delete hist_det;
-
         TH2F *hist_sem = this->makeSemanticHist(tag, sem_data);
-        TCanvas canvas_sem(("csem_" + tag).c_str(), "", image_size_,
-                           image_size_ / 1.5);
-        canvas_sem.cd();
 
-        TPad pad1("p1", "", 0, 0, 1, 0.85);
-        pad1.SetTopMargin(0.01);
-        pad1.SetBottomMargin(0.12);
-        pad1.SetLeftMargin(0.12);
-        pad1.SetRightMargin(0.05);
-        pad1.Draw();
-        pad1.cd();
+        TCanvas canvas(("c_" + tag).c_str(), "", image_size_,
+                       static_cast<int>(image_size_ * 1.5));
+        canvas.Divide(1, 2);
+
+        canvas.cd(1);
+        gPad->SetLogz();
+        hist_det->Draw("COL");
+
+        canvas.cd(2);
         hist_sem->Draw("COL");
 
-        canvas_sem.cd();
-        TPad pad2("p2", "", 0, 0.85, 1, 1);
-        pad2.SetTopMargin(0.05);
-        pad2.SetBottomMargin(0.01);
-        pad2.Draw();
-        pad2.cd();
-
         std::set<int> labels(sem_data.begin(), sem_data.end());
-        TLegend legend(0.1, 0.0, 0.9, 1.0);
+        TLegend legend(0.1, 0.7, 0.9, 0.95);
         legend.SetBorderSize(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(42);
@@ -213,8 +196,11 @@ class EventDisplay {
             }
         }
         legend.Draw();
-        auto out_sem = (out_dir / ("semantic_" + tag + ".pdf")).string();
-        canvas_sem.Print(out_sem.c_str());
+
+        auto out_file = (out_dir / (tag + ".pdf")).string();
+        canvas.SaveAs(out_file.c_str());
+
+        delete hist_det;
         delete hist_sem;
     }
 
