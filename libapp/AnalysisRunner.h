@@ -120,7 +120,7 @@ class AnalysisRunner {
                 ++sample_index;
 
                 if (accounted_runs.insert(run_config->label()).second) {
-                    region_analysis.setProtonsOnTarget(region_analysis.protonsOnTarget() + run_config->nominal_pot);
+                    region_analysis.addProtonsOnTarget(run_config->nominal_pot);
                 }
                 plugin_manager.notifyPreSampleProcessing(sample_key, region_handle.key_, *run_config);
 
