@@ -29,6 +29,9 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
+    // Receive a pre-existing AnalysisDataLoader by reference so that the loader
+    // can outlive this runner.  Plugins may retain pointers to the loader for
+    // use during finalisation.
     AnalysisRunner(AnalysisDataLoader &ldr, const SelectionRegistry &sel_reg,
                    const EventVariableRegistry &var_reg,
                    std::unique_ptr<IHistogramBooker> booker,
