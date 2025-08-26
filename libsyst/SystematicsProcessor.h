@@ -1,6 +1,7 @@
 #ifndef SYSTEMATICS_PROCESSOR_H
 #define SYSTEMATICS_PROCESSOR_H
 
+#include <cmath>
 #include <map>
 #include <memory>
 #include <string>
@@ -58,11 +59,21 @@ class SystematicsProcessor {
     void processSystematics(VariableResult &result) {
         log::debug("SystematicsProcessor::processSystematics",
                    "Commencing covariance calculations");
+        auto sanitize = [](TMatrixDSym &m) {
+            for (int i = 0; i < m.GetNrows(); ++i) {
+                for (int j = 0; j < m.GetNcols(); ++j) {
+                    if (!std::isfinite(m(i, j))) {
+                        m(i, j) = 0.0;
+                    }
+                }
+            }
+        };
         for (const auto &strategy : systematic_strategies_) {
             SystematicKey key{strategy->getName()};
             log::debug("SystematicsProcessor::processSystematics",
                        "Computing covariance for", key.str());
             auto cov = strategy->computeCovariance(result, systematic_futures_);
+            sanitize(cov);
             log::debug("SystematicsProcessor::processSystematics", key.str(),
                        "matrix size", cov.GetNrows(), "x", cov.GetNcols());
             result.covariance_matrices_.insert_or_assign(key, cov);
@@ -74,8 +85,10 @@ class SystematicsProcessor {
             result.total_covariance_ = result.total_mc_hist_.hist.covariance();
             log::debug("SystematicsProcessor::processSystematics",
                        "Combining covariance matrices");
-            for (const auto &[name, cov] : result.covariance_matrices_) {
-                if (cov.GetNrows() == n_bins) {
+            for (const auto &[name, cov_matrix] : result.covariance_matrices_) {
+                if (cov_matrix.GetNrows() == n_bins) {
+                    TMatrixDSym cov = cov_matrix;
+                    sanitize(cov);
                     log::debug("SystematicsProcessor::processSystematics",
                                "Adding matrix", name.str());
                     result.total_covariance_ += cov;
@@ -83,10 +96,11 @@ class SystematicsProcessor {
                     log::warn("SystematicsProcessor::processSystematics",
                               "Skipping systematic", name.str(),
                               "due to incompatible matrix size (",
-                              cov.GetNrows(), "x", cov.GetNcols(),
+                              cov_matrix.GetNrows(), "x", cov_matrix.GetNcols(),
                               "vs expected", n_bins, "x", n_bins, ")");
                 }
             }
+            sanitize(result.total_covariance_);
             result.nominal_with_band_ = result.total_mc_hist_;
             result.nominal_with_band_.hist.shifts.resize(n_bins, 0);
             result.nominal_with_band_.addCovariance(result.total_covariance_);
