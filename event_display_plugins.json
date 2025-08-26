@@ -33,7 +33,6 @@
           "sample": "mc_inclusive_run1_fhc",
           "region": "NUMU_EMPTY",
           "n_events": 5,
-          "pdf_name": "numu_empty_event_displays.pdf",
           "image_size": 800,
           "output_directory": "./plots/event_displays"
         },
@@ -41,7 +40,6 @@
           "sample": "mc_inclusive_run1_fhc",
           "region": "NUMU_QUALITY_PRE",
           "n_events": 5,
-          "pdf_name": "numu_quality_pre_event_displays.pdf",
           "image_size": 800,
           "output_directory": "./plots/event_displays"
         },
@@ -49,7 +47,6 @@
           "sample": "mc_inclusive_run1_fhc",
           "region": "NUMU_CC_SEL",
           "n_events": 5,
-          "pdf_name": "numu_cc_sel_event_displays.pdf",
           "image_size": 800,
           "output_directory": "./plots/event_displays"
         }

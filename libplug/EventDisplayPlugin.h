@@ -22,7 +22,6 @@ class EventDisplayPlugin : public IAnalysisPlugin {
         std::string region;
         Selection selection;
         int n_events{1};
-        std::string pdf_name{"event_displays.pdf"};
         int image_size{800};
         std::filesystem::path output_directory{"./plots/event_displays"};
     };
@@ -38,8 +37,6 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             dc.sample = ed.at("sample").get<std::string>();
             dc.region = ed.value("region", std::string{});
             dc.n_events = ed.value("n_events", 1);
-            dc.pdf_name =
-                ed.value("pdf_name", std::string{"event_displays.pdf"});
             dc.image_size = ed.value("image_size", 800);
             dc.output_directory = ed.value(
                 "output_directory", std::string{"./plots/event_displays"});
@@ -79,9 +76,9 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             PlotCatalog catalog(*loader_, cfg.image_size,
                                 cfg.output_directory.string());
             auto produced = catalog.generateRandomEventDisplays(
-                cfg.sample, cfg.selection, cfg.n_events, cfg.pdf_name);
+                cfg.sample, cfg.selection, cfg.n_events);
             if (produced > 0) {
-                auto full_path = (cfg.output_directory / cfg.pdf_name).string();
+                auto full_path = (cfg.output_directory / cfg.sample).string();
                 log::info("EventDisplayPlugin::onFinalisation", "Saved",
                           produced, "event displays to", full_path);
             } else {
