@@ -4,6 +4,7 @@
 #include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
 #include "SystematicStrategy.h"
+#include <cmath>
 
 namespace analysis {
 
@@ -56,7 +57,15 @@ class DetectorSystematicStrategy : public SystematicStrategy {
                       "No detector variation CV histogram found. Skipping.");
             return total_detvar_cov;
         }
-        const auto &h_det_cv = it_cv->second;
+        auto h_det_cv = it_cv->second;
+        int n_cv_bins = h_det_cv.getNumberOfBins();
+        for (int i = 0; i < n_cv_bins; ++i) {
+            double cv = h_det_cv.getBinContent(i);
+            if (!std::isfinite(cv) || cv == 0.0) {
+                h_det_cv.hist.counts[i] = 0.0;
+                h_det_cv.hist.shifts.row(i).setZero();
+            }
+        }
 
         for (const auto &[var_key, h_det_k] : total_detvar_hists) {
             if (var_key == SampleVariation::kCV)
@@ -66,6 +75,13 @@ class DetectorSystematicStrategy : public SystematicStrategy {
                        "Projecting variation", variationToKey(var_key));
 
             auto transfer_ratio = h_det_k / h_det_cv;
+            int n_tr_bins = transfer_ratio.getNumberOfBins();
+            for (int i = 0; i < n_tr_bins; ++i) {
+                if (!std::isfinite(transfer_ratio.getBinContent(i))) {
+                    transfer_ratio.hist.counts[i] = 0.0;
+                    transfer_ratio.hist.shifts.row(i).setZero();
+                }
+            }
             auto h_proj_k = transfer_ratio * nominal_hist;
             auto delta = h_proj_k - nominal_hist;
 

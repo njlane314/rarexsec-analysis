@@ -1,0 +1,27 @@
+{
+  "plugins": [
+    {
+      "path": "build/RegionsPlugin.so",
+      "regions": [
+        {
+          "region_key": "NUMU_CC_SEL",
+          "label": "Muon Neutrino CC Selection",
+          "selection_rule": "NUMU_CC",
+          "beam_config": "numi_fhc",
+          "runs": ["run1"]
+        }
+      ]
+    },
+    {
+      "path": "build/SystematicBreakdownPlugin.so",
+      "plots": [
+        {
+          "variable": "n_muons",
+          "region": "NUMU_CC_SEL",
+          "output_directory": "plots",
+          "fractional": true
+        }
+      ]
+    }
+  ]
+}
