@@ -88,8 +88,12 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         std::string runs_str;
         if (!region_analysis_.runNumbers().empty()) {
             for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
+                std::string run_label = region_analysis_.runNumbers()[i];
+                if (run_label.rfind("run", 0) == 0) {
+                    run_label = run_label.substr(3);
+                }
                 runs_str +=
-                    region_analysis_.runNumbers()[i] +
+                    run_label +
                     (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
             }
         } else {
@@ -101,7 +105,7 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         std::string line4 =
             "#it{Analysis Region}: " + region_analysis_.regionLabel();
         std::string line5 =
-            "Total Simulated Events: " + format_double(total_mc_events, 2);
+            "Total Simulated Entries: " + format_double(total_mc_events, 2);
 
         TLatex watermark;
         watermark.SetNDC();
@@ -321,11 +325,11 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 
         mc_stack_->GetXaxis()->SetLimits(adjusted_edges.front(),
                                          adjusted_edges.back());
-        frame->GetXaxis()->SetNdivisions(510);
+        frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
         if (orig_edges.size() >= 3) {
             std::ostringstream uf_label, of_label;
-            uf_label << "<" << orig_edges[1];
+            uf_label << orig_edges[1];
             of_label << ">" << orig_edges[orig_edges.size() - 2];
             frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
                                            uf_label.str().c_str());

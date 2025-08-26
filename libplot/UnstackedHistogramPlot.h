@@ -89,8 +89,12 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
         std::string runs_str;
         if (!region_analysis_.runNumbers().empty()) {
             for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
+                std::string run_label = region_analysis_.runNumbers()[i];
+                if (run_label.rfind("run", 0) == 0) {
+                    run_label = run_label.substr(3);
+                }
                 runs_str +=
-                    region_analysis_.runNumbers()[i] +
+                    run_label +
                     (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
             }
         } else {
@@ -102,7 +106,7 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
         std::string line4 =
             "#it{Analysis Region}: " + region_analysis_.regionLabel();
         std::string line5 =
-            "Total Simulated Events: " + format_double(total_mc_events, 2);
+            "Total Simulated Entries: " + format_double(total_mc_events, 2);
 
         TLatex watermark;
         watermark.SetNDC();
@@ -263,6 +267,8 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
             const auto &edges = variable_result_.binning_.getEdges();
             hists_[0]->GetXaxis()->SetLimits(edges.front(), edges.back());
+            hists_[0]->GetXaxis()->SetNdivisions(520);
+            hists_[0]->GetXaxis()->SetTickLength(0.02);
             if (edges.size() >= 3) {
                 std::ostringstream uf_label, of_label;
                 uf_label << "<" << edges[1];
