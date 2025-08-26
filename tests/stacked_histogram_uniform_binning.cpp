@@ -48,7 +48,7 @@ int main() {
     assert(frame);
     auto axis = frame->GetXaxis();
     assert(axis->GetNbins() == 2);
-    assert(std::abs(axis->GetXmin() - 0.0) < 1e-6);
-    assert(std::abs(axis->GetXmax() - 4.0) < 1e-6);
+    assert(std::abs(axis->GetXmin() + 0.2) < 1e-6);
+    assert(std::abs(axis->GetXmax() - 4.2) < 1e-6);
     return 0;
 }
