@@ -1,4 +1,7 @@
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+if git -C "${REPO_ROOT}" remote get-url origin >/dev/null 2>&1; then
+    git -C "${REPO_ROOT}" pull --ff-only || { return 1; }
+fi
 
 BUILD_DIR="${REPO_ROOT}/build"
 
