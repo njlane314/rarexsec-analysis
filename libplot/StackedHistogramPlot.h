@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <iomanip>
-#include <locale>
 #include <map>
 #include <numeric>
 #include <sstream>
@@ -58,15 +57,23 @@ class StackedHistogramPlot : public HistogramPlotterBase {
     void addCut(const Cut &cut) { cuts_.push_back(cut); }
 
   private:
+    static std::string formatWithCommas(double val, int precision = -1) {
+        std::stringstream stream;
+        if (precision >= 0) {
+            stream << std::fixed << std::setprecision(precision);
+        }
+        stream << val;
+        std::string s = stream.str();
+        std::size_t pos = s.find('.');
+        for (int i = (pos == std::string::npos ? s.size() : pos) - 3; i > 0;
+             i -= 3) {
+            s.insert(i, ",");
+        }
+        return s;
+    }
+
     void drawWatermark(TPad *pad, double total_mc_events) const {
         pad->cd();
-
-        auto format_double = [](double val, int precision) {
-            std::stringstream stream;
-            stream.imbue(std::locale(""));
-            stream << std::fixed << std::setprecision(precision) << val;
-            return stream.str();
-        };
 
         std::string line1 = "#bf{#muBooNE Simulation, Preliminary}";
 
@@ -96,6 +103,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
                 if (run_label.rfind("run", 0) == 0) {
                     run_label = run_label.substr(3);
                 }
+                try {
+                    run_label = formatWithCommas(std::stod(run_label), 0);
+                } catch (...) {
+                }
                 runs_str +=
                     run_label +
                     (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
@@ -109,7 +120,7 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         std::string line4 =
             "#it{Analysis Region}: " + region_analysis_.regionLabel();
         std::string line5 =
-            "Total Simulated Entries: " + format_double(total_mc_events, 2);
+            "#it{Total Entries}: " + formatWithCommas(total_mc_events, 2);
 
         TLatex watermark;
         watermark.SetNDC();
@@ -202,13 +213,6 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         int n_cols = (n_entries > 4) ? 3 : 2;
         legend_->SetNColumns(n_cols);
 
-        auto format_double = [](double val, int precision) {
-            std::stringstream stream;
-            stream.imbue(std::locale(""));
-            stream << std::fixed << std::setprecision(precision) << val;
-            return stream.str();
-        };
-
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h_leg = new TH1D();
             const auto &stratum = registry.getStratumProperties(
@@ -225,7 +229,7 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 
             std::string legend_label =
                 annotate_numbers_
-                    ? tex_label + " : " + format_double(hist.getSum(), 2)
+                    ? tex_label + " : " + formatWithCommas(hist.getSum(), 2)
                     : tex_label;
             legend_->AddEntry(h_leg, legend_label.c_str(), "f");
         }
@@ -341,8 +345,9 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         frame->GetXaxis()->SetTickLength(0.02);
         if (orig_edges.size() >= 3) {
             std::ostringstream uf_label, of_label;
-            uf_label << orig_edges[1];
-            of_label << ">" << orig_edges[orig_edges.size() - 2];
+            uf_label << "<" << formatWithCommas(orig_edges[1]);
+            of_label << ">"
+                     << formatWithCommas(orig_edges[orig_edges.size() - 2]);
             frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
                                            uf_label.str().c_str());
             frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1,

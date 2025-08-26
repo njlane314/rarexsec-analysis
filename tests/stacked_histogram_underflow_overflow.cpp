@@ -47,5 +47,8 @@ int main() {
     assert(frame->GetNbinsX() == 5);
     assert(std::abs(frame->GetBinContent(1) - 5.0) < 1e-6);
     assert(std::abs(frame->GetBinContent(5) - 6.0) < 1e-6);
+    auto xaxis = frame->GetXaxis();
+    assert(std::string(xaxis->GetBinLabel(1)) == "<0");
+    assert(std::string(xaxis->GetBinLabel(xaxis->GetNbins())) == ">3");
     return 0;
 }
