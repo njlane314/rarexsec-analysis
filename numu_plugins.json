@@ -97,7 +97,8 @@
           "channel_column": "incl_channel",
           "signal_group": "inclusive_strange_channels",
           "output_directory": "plots",
-          "plot_name": "selection_efficiency"
+          "plot_name": "selection_efficiency",
+          "log_y": false
         }
       ]
     },

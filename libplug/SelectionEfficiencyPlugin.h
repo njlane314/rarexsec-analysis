@@ -24,6 +24,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         std::string signal_group;
         std::string output_directory{"plots"};
         std::string plot_name{"selection_efficiency"};
+        bool use_log_y{false};
         std::vector<std::string> clauses;
     };
 
@@ -43,6 +44,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 p.value("output_directory", std::string{"plots"});
             pc.plot_name =
                 p.value("plot_name", std::string{"selection_efficiency"});
+            pc.use_log_y = p.value("log_y", false);
             plots_.push_back(std::move(pc));
         }
     }
@@ -162,9 +164,10 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 pur_errors.push_back(pur_err);
             }
 
-            SelectionEfficiencyPlot plot(
-                pc.plot_name + "_" + pc.region, stage_labels, efficiencies,
-                eff_errors, purities, pur_errors, pc.output_directory);
+            SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region,
+                                         stage_labels, efficiencies, eff_errors,
+                                         purities, pur_errors,
+                                         pc.output_directory, pc.use_log_y);
             plot.drawAndSave("pdf");
         }
     }
