@@ -19,118 +19,83 @@ enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis };
 
 class DynamicBinning {
   public:
-    static BinningDefinition calculate(
-        std::vector<ROOT::RDF::RNode> nodes,
-        const BinningDefinition &original_bdef,
-        const std::string &weight_col = "nominal_event_weight",
-        double min_neff_per_bin = 400.0, bool include_out_of_range_bins = false,
-        DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
+    static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &original_bdef,
+                                       const std::string &weight_col = "nominal_event_weight",
+                                       double min_neff_per_bin = 400.0, bool include_out_of_range_bins = false,
+                                       DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
         if (nodes.empty()) {
-            log::warn("DynamicBinning::calculate",
-                      "Cannot calculate bins: RNode vector is empty.");
+            log::warn("DynamicBinning::calculate", "Cannot calculate bins: RNode vector is empty.");
             return original_bdef;
         }
 
         const std::string &branch = original_bdef.getVariable();
         std::string typeName = nodes.front().GetColumnType(branch);
 
-        if (typeName == "double" || typeName == "Float64_t" ||
-            typeName == "Double_t") {
-            return calculate_scalar<double>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName == "float" || typeName == "Float32_t" ||
-                   typeName == "Float_t") {
-            return calculate_scalar<float>(std::move(nodes), original_bdef,
-                                           weight_col, min_neff_per_bin,
+        if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
+            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                            include_out_of_range_bins, strategy);
+        } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
+            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                            include_out_of_range_bins, strategy);
         } else if (typeName == "int" || typeName == "Int_t") {
-            return calculate_scalar<int>(std::move(nodes), original_bdef,
-                                         weight_col, min_neff_per_bin,
+            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                          include_out_of_range_bins, strategy);
         } else if (typeName == "unsigned int" || typeName == "UInt_t") {
-            return calculate_scalar<unsigned int>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName == "unsigned long" || typeName == "ULong64_t" ||
-                   typeName == "unsigned long long") {
-            return calculate_scalar<unsigned long long>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName == "long" || typeName == "Long64_t" ||
-                   typeName == "long long") {
-            return calculate_scalar<long long>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<double>") !=
-                       std::string::npos ||
+            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                                  include_out_of_range_bins, strategy);
+        } else if (typeName == "unsigned long" || typeName == "ULong64_t" || typeName == "unsigned long long") {
+            return calculate_scalar<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                                        include_out_of_range_bins, strategy);
+        } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
+            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                               include_out_of_range_bins, strategy);
+        } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos ||
                    typeName.find("ROOT::RVec<double>") != std::string::npos ||
                    typeName.find("vector<double>") != std::string::npos) {
-            return calculate_vector<double>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<float>") !=
-                       std::string::npos ||
+            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                            include_out_of_range_bins, strategy);
+        } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos ||
                    typeName.find("ROOT::RVec<float>") != std::string::npos ||
                    typeName.find("vector<float>") != std::string::npos) {
-            return calculate_vector<float>(std::move(nodes), original_bdef,
-                                           weight_col, min_neff_per_bin,
+            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                            include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<int>") !=
-                       std::string::npos ||
+        } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos ||
                    typeName.find("ROOT::RVec<int>") != std::string::npos ||
                    typeName.find("vector<int>") != std::string::npos) {
-            return calculate_vector<int>(std::move(nodes), original_bdef,
-                                         weight_col, min_neff_per_bin,
+            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                          include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") !=
-                       std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned int>") !=
-                       std::string::npos ||
+        } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos ||
+                   typeName.find("ROOT::RVec<unsigned int>") != std::string::npos ||
                    typeName.find("vector<unsigned int>") != std::string::npos) {
-            return calculate_vector<unsigned int>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<unsigned long>") !=
-                       std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned long>") !=
-                       std::string::npos ||
-                   typeName.find("vector<unsigned long>") !=
-                       std::string::npos ||
+            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                                  include_out_of_range_bins, strategy);
+        } else if (typeName.find("ROOT::VecOps::RVec<unsigned long>") != std::string::npos ||
+                   typeName.find("ROOT::RVec<unsigned long>") != std::string::npos ||
+                   typeName.find("vector<unsigned long>") != std::string::npos ||
                    typeName.find("vector<ULong64_t>") != std::string::npos ||
-                   typeName.find("ROOT::VecOps::RVec<unsigned long long>") !=
-                       std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned long long>") !=
-                       std::string::npos ||
-                   typeName.find("vector<unsigned long long>") !=
-                       std::string::npos) {
-            return calculate_vector<unsigned long long>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<long long>") !=
-                       std::string::npos ||
-                   typeName.find("ROOT::RVec<long long>") !=
-                       std::string::npos ||
+                   typeName.find("ROOT::VecOps::RVec<unsigned long long>") != std::string::npos ||
+                   typeName.find("ROOT::RVec<unsigned long long>") != std::string::npos ||
+                   typeName.find("vector<unsigned long long>") != std::string::npos) {
+            return calculate_vector<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                                        include_out_of_range_bins, strategy);
+        } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos ||
+                   typeName.find("ROOT::RVec<long long>") != std::string::npos ||
                    typeName.find("vector<long long>") != std::string::npos ||
                    typeName.find("vector<Long64_t>") != std::string::npos) {
-            return calculate_vector<long long>(
-                std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                include_out_of_range_bins, strategy);
+            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                               include_out_of_range_bins, strategy);
         } else {
-            log::fatal("DynamicBinning::calculate",
-                       "Unsupported type for dynamic binning:", typeName);
+            log::fatal("DynamicBinning::calculate", "Unsupported type for dynamic binning:", typeName);
             return original_bdef;
         }
     }
 
   private:
     template <typename T>
-    static BinningDefinition
-    calculate_scalar(std::vector<ROOT::RDF::RNode> nodes,
-                     const BinningDefinition &original_bdef,
-                     const std::string &weight_col, double min_neff_per_bin,
-                     bool include_out_of_range_bins,
-                     DynamicBinningStrategy strategy) {
+    static BinningDefinition calculate_scalar(std::vector<ROOT::RDF::RNode> nodes,
+                                              const BinningDefinition &original_bdef, const std::string &weight_col,
+                                              double min_neff_per_bin, bool include_out_of_range_bins,
+                                              DynamicBinningStrategy strategy) {
         std::vector<std::pair<double, double>> xw;
         xw.reserve(262144);
         double sumw = 0.0;
@@ -162,17 +127,14 @@ class DynamicBinning {
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                              include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
     }
 
     template <typename T>
-    static BinningDefinition
-    calculate_vector(std::vector<ROOT::RDF::RNode> nodes,
-                     const BinningDefinition &original_bdef,
-                     const std::string &weight_col, double min_neff_per_bin,
-                     bool include_out_of_range_bins,
-                     DynamicBinningStrategy strategy) {
+    static BinningDefinition calculate_vector(std::vector<ROOT::RDF::RNode> nodes,
+                                              const BinningDefinition &original_bdef, const std::string &weight_col,
+                                              double min_neff_per_bin, bool include_out_of_range_bins,
+                                              DynamicBinningStrategy strategy) {
         std::vector<std::pair<double, double>> xw;
         xw.reserve(262144);
         double sumw = 0.0;
@@ -210,15 +172,12 @@ class DynamicBinning {
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                              include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
     }
 
-    static BinningDefinition
-    finalize_edges(std::vector<std::pair<double, double>> &xw, double sumw,
-                   double sumw2, const BinningDefinition &original_bdef,
-                   double min_neff_per_bin, bool include_out_of_range_bins,
-                   DynamicBinningStrategy strategy) {
+    static BinningDefinition finalize_edges(std::vector<std::pair<double, double>> &xw, double sumw, double sumw2,
+                                            const BinningDefinition &original_bdef, double min_neff_per_bin,
+                                            bool include_out_of_range_bins, DynamicBinningStrategy strategy) {
         const auto &domain_edges = original_bdef.getEdges();
         double domain_min = domain_edges.front();
         double domain_max = domain_edges.back();
@@ -228,14 +187,12 @@ class DynamicBinning {
                                 [&](const auto &p) {
                                     double x = p.first;
                                     double w = p.second;
-                                    return !std::isfinite(x) ||
-                                           !std::isfinite(w) || w <= 0.0;
+                                    return !std::isfinite(x) || !std::isfinite(w) || w <= 0.0;
                                 }),
                  xw.end());
         size_t removed_invalid = before_filter - xw.size();
         if (removed_invalid > 0) {
-            log::info("DynamicBinning::finalize_edges", "Discarded",
-                      removed_invalid,
+            log::info("DynamicBinning::finalize_edges", "Discarded", removed_invalid,
                       "entries with non-finite values or non-positive weights");
         }
 
@@ -253,22 +210,16 @@ class DynamicBinning {
             }
         }
         if (n_underflow > 0 || n_overflow > 0) {
-            log::info(
-                "DynamicBinning::finalize_edges", "Found", n_underflow,
-                "entries below domain and", n_overflow,
-                "entries above domain; they will fill underflow/overflow bins");
+            log::info("DynamicBinning::finalize_edges", "Found", n_underflow, "entries below domain and", n_overflow,
+                      "entries above domain; they will fill underflow/overflow bins");
         }
 
         if (in_range.size() < 2) {
-            return BinningDefinition({domain_min, domain_max},
-                                     original_bdef.getVariable(),
-                                     original_bdef.getTexLabel(), {},
-                                     original_bdef.getStratifierKey().str());
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
+                                     {}, original_bdef.getStratifierKey().str());
         }
 
-        std::sort(
-            in_range.begin(), in_range.end(),
-            [](const auto &a, const auto &b) { return a.first < b.first; });
+        std::sort(in_range.begin(), in_range.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
 
         sumw = 0.0;
         sumw2 = 0.0;
@@ -278,17 +229,14 @@ class DynamicBinning {
         }
 
         if (sumw <= 0.0) {
-            return BinningDefinition({domain_min, domain_max},
-                                     original_bdef.getVariable(),
-                                     original_bdef.getTexLabel(), {},
-                                     original_bdef.getStratifierKey().str());
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
+                                     {}, original_bdef.getStratifierKey().str());
         }
 
         double xmin = domain_min;
         double xmax = domain_max;
-        log::info("DynamicBinning::finalize_edges",
-                  "Using fixed data range for", original_bdef.getVariable(),
-                  ":", xmin, "to", xmax);
+        log::info("DynamicBinning::finalize_edges", "Using fixed data range for", original_bdef.getVariable(), ":",
+                  xmin, "to", xmax);
 
         std::vector<double> edges;
 
@@ -311,13 +259,11 @@ class DynamicBinning {
                 iqr = xmax - xmin;
             }
             size_t n = in_range.size();
-            double bin_width =
-                2.0 * iqr * std::pow(static_cast<double>(n), -1.0 / 3.0);
+            double bin_width = 2.0 * iqr * std::pow(static_cast<double>(n), -1.0 / 3.0);
             if (!(bin_width > 0.0)) {
                 bin_width = xmax - xmin;
             }
-            int target_bins =
-                static_cast<int>(std::ceil((xmax - xmin) / bin_width));
+            int target_bins = static_cast<int>(std::ceil((xmax - xmin) / bin_width));
             if (target_bins < 1)
                 target_bins = 1;
 
@@ -328,11 +274,8 @@ class DynamicBinning {
             }
             edges.push_back(xmax);
         } else {
-            double neff_total =
-                (sumw * sumw) /
-                std::max(sumw2, std::numeric_limits<double>::min());
-            int target_bins = static_cast<int>(
-                std::floor(neff_total / std::max(min_neff_per_bin, 1.0)));
+            double neff_total = (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
+            int target_bins = static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0)));
             if (target_bins < 1)
                 target_bins = 1;
 
@@ -344,11 +287,8 @@ class DynamicBinning {
                 double cum = 0.0;
                 size_t idx = 0;
                 for (int k = 1; k < target_bins; ++k) {
-                    double thresh = (static_cast<double>(k) /
-                                     static_cast<double>(target_bins)) *
-                                    W;
-                    while (idx < in_range.size() &&
-                           cum + in_range[idx].second < thresh) {
+                    double thresh = (static_cast<double>(k) / static_cast<double>(target_bins)) * W;
+                    while (idx < in_range.size() && cum + in_range[idx].second < thresh) {
                         cum += in_range[idx].second;
                         ++idx;
                     }
@@ -381,9 +321,7 @@ class DynamicBinning {
                     sw2[bin] += w * w;
                 }
                 for (size_t i = 0; i < nbins; ++i) {
-                    double neff =
-                        (sw[i] * sw[i]) /
-                        std::max(sw2[i], std::numeric_limits<double>::min());
+                    double neff = (sw[i] * sw[i]) / std::max(sw2[i], std::numeric_limits<double>::min());
                     if (neff < min_neff_per_bin) {
                         if (i < nbins - 1) {
                             edges.erase(edges.begin() + i + 1);
@@ -398,20 +336,15 @@ class DynamicBinning {
         }
 
         if (include_out_of_range_bins) {
-            double first_width = edges.size() > 1 ? (edges[1] - edges[0])
-                                                  : (domain_max - domain_min);
+            double first_width = edges.size() > 1 ? (edges[1] - edges[0]) : (domain_max - domain_min);
             double last_width =
-                edges.size() > 1
-                    ? (edges[edges.size() - 1] - edges[edges.size() - 2])
-                    : (domain_max - domain_min);
+                edges.size() > 1 ? (edges[edges.size() - 1] - edges[edges.size() - 2]) : (domain_max - domain_min);
             double underflow_width = 0.5 * first_width;
             double overflow_width = 0.5 * last_width;
             edges.insert(edges.begin(), domain_min - underflow_width);
             edges.push_back(domain_max + overflow_width);
-            log::info("DynamicBinning::finalize_edges",
-                      "Added underflow/overflow bins spanning",
-                      domain_min - underflow_width, "to",
-                      domain_max + overflow_width);
+            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning",
+                      domain_min - underflow_width, "to", domain_max + overflow_width);
         }
 
         auto last = std::unique(edges.begin(), edges.end());
@@ -423,13 +356,11 @@ class DynamicBinning {
 
         for (size_t i = 1; i < edges.size(); ++i) {
             if (!(edges[i] > edges[i - 1])) {
-                edges[i] = std::nextafter(
-                    edges[i - 1], std::numeric_limits<double>::infinity());
+                edges[i] = std::nextafter(edges[i - 1], std::numeric_limits<double>::infinity());
             }
         }
 
-        return BinningDefinition(edges, original_bdef.getVariable(),
-                                 original_bdef.getTexLabel(), {},
+        return BinningDefinition(edges, original_bdef.getVariable(), original_bdef.getTexLabel(), {},
                                  original_bdef.getStratifierKey().str());
     }
 };
