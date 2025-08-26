@@ -102,7 +102,7 @@ class StratifierRegistry {
              {2112, "neutron", "n", kGray + 1, 1001},
              {321, "kaon", R"(K^{#pm})", kMagenta - 9, 1001},
              {3222, "sigma", R"(#Sigma^{#pm})", kRed - 9, 1001},
-             {0, "none", R"(#emptyset)", kGray + 2, 1001},
+             {0, "none", "Cosmic", kGray + 2, 1001},
              {-1, "other", "Other", kBlack, 3005}},
             [](const ROOT::RVec<int> &pdg_codes, int key) {
                 if (key == 0) {
@@ -147,7 +147,7 @@ class StratifierRegistry {
                          {11, "electron", R"(e^{#pm})", kCyan - 3, 1001},
                          {2112, "neutron", "n", kGray + 1, 1001},
                          {321, "kaon", R"(K^{#pm})", kMagenta - 9, 1001},
-                         {0, "none", R"(\emptyset)", kGray + 2, 1001},
+                         {0, "none", "Cosmic", kGray + 2, 1001},
                          {-1, "other", "Other", kBlack, 3005}},
                         [](const ROOT::RVec<int> &pdg_codes, int key) {
                             if (key == 0) {
@@ -187,7 +187,7 @@ class StratifierRegistry {
              {5, "electron", R"(e processes)", kCyan - 3, 1001},
              {6, "muon", R"(#mu processes)", kBlue, 1001},
              {7, "hadron", R"(hadron ion.)", kOrange - 3, 1001},
-             {0, "none", R"(\emptyset)", kGray + 2, 1001},
+             {0, "none", "Cosmic", kGray + 2, 1001},
              {-1, "other", "Other", kBlack, 3005}},
             [](const ROOT::RVec<int> &proc_codes, int key) {
                 if (key == 0) {
