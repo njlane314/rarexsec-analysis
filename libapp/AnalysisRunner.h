@@ -173,8 +173,7 @@ class AnalysisRunner {
                     variation_datasets.emplace(
                         variation_type,
                         SampleDataset{sample_def.sample_origin_,
-                                      AnalysisRole::kVariation,
-                                      variation_df});
+                                      AnalysisRole::kVariation, variation_df});
                 }
 
                 SampleDataset nominal_dataset{sample_def.sample_origin_,
@@ -237,7 +236,8 @@ class AnalysisRunner {
 
                 analysis::log::info("AnalysisRunner::run",
                                     "Computing systematic covariances");
-                //systematics_processor_.processSystematics(result);
+                systematics_processor_.processSystematics(result);
+                systematics_processor_.clearFutures();
 
                 result.printSummary();
                 region_analysis.addFinalVariable(var_key, std::move(result));
