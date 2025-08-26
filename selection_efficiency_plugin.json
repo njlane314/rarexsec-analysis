@@ -24,7 +24,7 @@
           "signal_group": "inclusive_strange_channels",
           "output_directory": "plots",
           "plot_name": "selection_efficiency_inclusive",
-          "log_y": false
+          "log_y": true
         },
         {
           "region": "QUALITY_NUMU_CC_SEL",
@@ -33,7 +33,7 @@
           "signal_group": "exclusive_strange_channels",
           "output_directory": "plots",
           "plot_name": "selection_efficiency_exclusive",
-          "log_y": false
+          "log_y": true
         }
       ]
     }
