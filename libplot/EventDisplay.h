@@ -60,26 +60,33 @@ class EventDisplay {
         auto det_v = det_v_vec[0];
         auto det_w = det_w_vec[0];
 
-        auto sem_u_vec =
-            df.Take<std::vector<int>>("semantic_image_u").GetValue();
-        auto sem_v_vec =
-            df.Take<std::vector<int>>("semantic_image_v").GetValue();
-        auto sem_w_vec =
-            df.Take<std::vector<int>>("semantic_image_w").GetValue();
+        std::vector<int> sem_u, sem_v, sem_w;
+        bool has_semantics = df.HasColumn("semantic_image_u") &&
+                             df.HasColumn("semantic_image_v") &&
+                             df.HasColumn("semantic_image_w");
+        if (has_semantics) {
+            auto sem_u_vec =
+                df.Take<std::vector<int>>("semantic_image_u").GetValue();
+            auto sem_v_vec =
+                df.Take<std::vector<int>>("semantic_image_v").GetValue();
+            auto sem_w_vec =
+                df.Take<std::vector<int>>("semantic_image_w").GetValue();
 
-        if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
-            return;
-
-        auto sem_u = sem_u_vec[0];
-        auto sem_v = sem_v_vec[0];
-        auto sem_w = sem_w_vec[0];
+            if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty()) {
+                has_semantics = false;
+            } else {
+                sem_u = sem_u_vec[0];
+                sem_v = sem_v_vec[0];
+                sem_w = sem_w_vec[0];
+            }
+        }
 
         std::filesystem::path sample_dir = output_directory_ / sample_key;
         std::filesystem::create_directories(sample_dir);
 
         for (auto const &plane : planes_) {
             plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v, det_w,
-                      sem_u, sem_v, sem_w, sample_dir);
+                      sem_u, sem_v, sem_w, sample_dir, has_semantics);
         }
     }
 
@@ -117,26 +124,34 @@ class EventDisplay {
             if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
                 continue;
 
-            auto sem_u_vec =
-                df.Take<std::vector<int>>("semantic_image_u").GetValue();
-            auto sem_v_vec =
-                df.Take<std::vector<int>>("semantic_image_v").GetValue();
-            auto sem_w_vec =
-                df.Take<std::vector<int>>("semantic_image_w").GetValue();
+            std::vector<int> sem_u, sem_v, sem_w;
+            bool has_semantics = df.HasColumn("semantic_image_u") &&
+                                 df.HasColumn("semantic_image_v") &&
+                                 df.HasColumn("semantic_image_w");
+            if (has_semantics) {
+                auto sem_u_vec =
+                    df.Take<std::vector<int>>("semantic_image_u").GetValue();
+                auto sem_v_vec =
+                    df.Take<std::vector<int>>("semantic_image_v").GetValue();
+                auto sem_w_vec =
+                    df.Take<std::vector<int>>("semantic_image_w").GetValue();
 
-            if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
-                continue;
+                if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty()) {
+                    has_semantics = false;
+                } else {
+                    sem_u = sem_u_vec[0];
+                    sem_v = sem_v_vec[0];
+                    sem_w = sem_w_vec[0];
+                }
+            }
 
             auto det_u = det_u_vec[0];
             auto det_v = det_v_vec[0];
             auto det_w = det_w_vec[0];
-            auto sem_u = sem_u_vec[0];
-            auto sem_v = sem_v_vec[0];
-            auto sem_w = sem_w_vec[0];
 
             for (auto const &plane : planes_) {
                 plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v,
-                          det_w, sem_u, sem_v, sem_w, sample_dir);
+                          det_w, sem_u, sem_v, sem_w, sample_dir, has_semantics);
             }
         }
     }
@@ -148,7 +163,8 @@ class EventDisplay {
                    const std::vector<float> &det_w,
                    const std::vector<int> &sem_u, const std::vector<int> &sem_v,
                    const std::vector<int> &sem_w,
-                   const std::filesystem::path &out_dir) {
+                   const std::filesystem::path &out_dir,
+                   bool has_semantics) {
         const auto &det_data =
             (plane == "U" ? det_u : (plane == "V" ? det_v : det_w));
         const auto &sem_data =
@@ -159,63 +175,49 @@ class EventDisplay {
                           std::to_string(event_num);
 
         TH2F *hist_det = this->makeDetectorHist(tag, det_data);
-        TCanvas canvas_det(("cdet_" + tag).c_str(), "", image_size_,
+        TCanvas det_canvas(("c_d_" + tag).c_str(), "", image_size_,
                            image_size_);
-        gStyle->SetTitleY(0.96);
-        canvas_det.SetLogz();
+        det_canvas.SetLogz();
         hist_det->Draw("COL");
-        auto out_det = (out_dir / ("detector_" + tag + ".pdf")).string();
-        canvas_det.Print(out_det.c_str());
+        auto det_file = (out_dir / (tag + "_detector.pdf")).string();
+        det_canvas.SaveAs(det_file.c_str());
         delete hist_det;
 
-        TH2F *hist_sem = this->makeSemanticHist(tag, sem_data);
-        TCanvas canvas_sem(("csem_" + tag).c_str(), "", image_size_,
-                           image_size_ / 1.5);
-        canvas_sem.cd();
+        if (has_semantics && !sem_data.empty()) {
+            TH2F *hist_sem = this->makeSemanticHist(tag, sem_data);
+            TCanvas sem_canvas(("c_s_" + tag).c_str(), "", image_size_,
+                               image_size_);
+            hist_sem->Draw("COL");
 
-        TPad pad1("p1", "", 0, 0, 1, 0.85);
-        pad1.SetTopMargin(0.01);
-        pad1.SetBottomMargin(0.12);
-        pad1.SetLeftMargin(0.12);
-        pad1.SetRightMargin(0.05);
-        pad1.Draw();
-        pad1.cd();
-        hist_sem->Draw("COL");
+            std::set<int> labels(sem_data.begin(), sem_data.end());
+            TLegend legend(0.1, 0.7, 0.9, 0.95);
+            legend.SetBorderSize(0);
+            legend.SetFillStyle(0);
+            legend.SetTextFont(42);
+            legend.SetNColumns(labels.size() > 4 ? 3 : 2);
 
-        canvas_sem.cd();
-        TPad pad2("p2", "", 0, 0.85, 1, 1);
-        pad2.SetTopMargin(0.05);
-        pad2.SetBottomMargin(0.01);
-        pad2.Draw();
-        pad2.cd();
+            static const std::array<std::string, 10> names_ = {
+                "Empty",       "Cosmic",      "Muon",   "Proton",       "Pion",
+                "ChargedKaon", "NeutralKaon", "Lambda", "ChargedSigma", "Other"};
 
-        std::set<int> labels(sem_data.begin(), sem_data.end());
-        TLegend legend(0.1, 0.0, 0.9, 1.0);
-        legend.SetBorderSize(0);
-        legend.SetFillStyle(0);
-        legend.SetTextFont(42);
-        legend.SetNColumns(labels.size() > 4 ? 3 : 2);
+            static const std::array<int, 10> cols_ = {
+                kWhite,   kGray + 1, kRed,    kBlue,   kGreen + 1,
+                kMagenta, kCyan,     kOrange, kViolet, kTeal};
 
-        static const std::array<std::string, 10> names_ = {
-            "Empty",       "Cosmic",      "Muon",   "Proton",       "Pion",
-            "ChargedKaon", "NeutralKaon", "Lambda", "ChargedSigma", "Other"};
-
-        static const std::array<int, 10> cols_ = {
-            kWhite,   kGray + 1, kRed,    kBlue,   kGreen + 1,
-            kMagenta, kCyan,     kOrange, kViolet, kTeal};
-
-        for (auto label : labels) {
-            if (label > 0 && label < 10) {
-                TH1F h("", "", 1, 0, 1);
-                h.SetFillColor(cols_[label]);
-                h.SetLineColor(kBlack);
-                legend.AddEntry(&h, names_[label].c_str(), "f");
+            for (auto label : labels) {
+                if (label > 0 && label < 10) {
+                    TH1F h("", "", 1, 0, 1);
+                    h.SetFillColor(cols_[label]);
+                    h.SetLineColor(kBlack);
+                    legend.AddEntry(&h, names_[label].c_str(), "f");
+                }
             }
+            legend.Draw();
+
+            auto sem_file = (out_dir / (tag + "_semantic.pdf")).string();
+            sem_canvas.SaveAs(sem_file.c_str());
+            delete hist_sem;
         }
-        legend.Draw();
-        auto out_sem = (out_dir / ("semantic_" + tag + ".pdf")).string();
-        canvas_sem.Print(out_sem.c_str());
-        delete hist_sem;
     }
 
     TH2F *makeDetectorHist(const std::string &tag,
