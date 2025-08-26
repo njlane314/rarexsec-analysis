@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 
 #include <TMatrixDSym.h>
 
@@ -14,10 +15,12 @@ namespace analysis {
 
 class UniverseSystematicStrategy : public SystematicStrategy {
   public:
-    UniverseSystematicStrategy(UniverseDef universe_def)
+    UniverseSystematicStrategy(UniverseDef universe_def,
+                               bool store_universe_hists = false)
         : identifier_(std::move(universe_def.name_)),
           vector_name_(std::move(universe_def.vector_name_)),
-          n_universes_(universe_def.n_universes_) {}
+          n_universes_(universe_def.n_universes_),
+          store_universe_hists_(store_universe_hists) {}
 
     const std::string &getName() const override { return identifier_; }
 
@@ -55,9 +58,10 @@ class UniverseSystematicStrategy : public SystematicStrategy {
         TMatrixDSym cov(n);
         cov.Zero();
 
-        std::vector<BinnedHistogram> varied_hists;
+        std::vector<BinnedHistogram> stored_hists;
         log::debug("UniverseSystematicStrategy::computeCovariance", identifier_,
                    "processing", n_universes_, "universes");
+        unsigned processed_universes = 0;
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
             if (!futures.variations.count(uni_key)) {
@@ -75,34 +79,40 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                     h_universe = h_universe + BinnedHistogram::createFromTH1D(
                                                   binning, *future.GetPtr());
             }
-            varied_hists.push_back(h_universe);
+
+            for (int i = 0; i < n; ++i) {
+                double di =
+                    h_universe.getBinContent(i) - nominal_hist.getBinContent(i);
+                for (int j = 0; j <= i; ++j) {
+                    double dj = h_universe.getBinContent(j) -
+                                nominal_hist.getBinContent(j);
+                    cov(i, j) += di * dj;
+                }
+            }
+
+            ++processed_universes;
+            if (store_universe_hists_) {
+                stored_hists.push_back(std::move(h_universe));
+            }
         }
 
-        result.universe_projected_hists_[SystematicKey{identifier_}] =
-            varied_hists;
-
+        double n_universes = static_cast<double>(processed_universes);
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j <= i; ++j) {
-                double sum = 0;
-                for (const auto &hist : varied_hists) {
-                    double di =
-                        hist.getBinContent(i) - nominal_hist.getBinContent(i);
-                    double dj =
-                        hist.getBinContent(j) - nominal_hist.getBinContent(j);
-                    sum += di * dj;
-                }
-                // The variations represent different universes whose mean is
-                // taken to be the nominal prediction.  The covariance of this
-                // mean scales with the square of the number of universes
-                // sampled.  Therefore divide by N^2 rather than the usual N.
-                double n_universes = static_cast<double>(varied_hists.size());
-                double val = n_universes == 0 ? 0 : sum / (n_universes * n_universes);
+                double val =
+                    n_universes == 0 ? 0 : cov(i, j) / (n_universes * n_universes);
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
         }
+
+        if (store_universe_hists_ && !stored_hists.empty()) {
+            result.universe_projected_hists_[SystematicKey{identifier_}] =
+                std::move(stored_hists);
+        }
+
         log::debug("UniverseSystematicStrategy::computeCovariance", identifier_,
-                   "covariance calculated with", varied_hists.size(),
+                   "covariance calculated with", processed_universes,
                    "universes");
         return cov;
     }
@@ -118,6 +128,7 @@ class UniverseSystematicStrategy : public SystematicStrategy {
     std::string identifier_;
     std::string vector_name_;
     unsigned n_universes_;
+    bool store_universe_hists_;
 };
 
 } // namespace analysis
