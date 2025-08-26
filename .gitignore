@@ -33,3 +33,4 @@ plots/*
 *.root
 
 dataset/*
+CMakeFiles/
