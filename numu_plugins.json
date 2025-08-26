@@ -110,8 +110,8 @@
       ]
     },
     {
-      "path": "build/HeatmapPlugin.so",
-      "heatmaps": [
+      "path": "build/OccupancyMatrixPlugin.so",
+      "occupancy_matrix_plots": [
         {
           "x": "track_length",
           "y": "n_pfps_gen2",

@@ -1,5 +1,5 @@
-#ifndef HEATMAPPLUGIN_H
-#define HEATMAPPLUGIN_H
+#ifndef OCCUPANCYMATRIXPLUGIN_H
+#define OCCUPANCYMATRIXPLUGIN_H
 
 #include <stdexcept>
 #include <string>
@@ -15,7 +15,7 @@
 
 namespace analysis {
 
-class HeatmapPlugin : public IAnalysisPlugin {
+class OccupancyMatrixPlugin : public IAnalysisPlugin {
   public:
     struct PlotConfig {
         std::string x_variable;
@@ -27,10 +27,12 @@ class HeatmapPlugin : public IAnalysisPlugin {
         std::vector<Cut> y_cuts;
     };
 
-    explicit HeatmapPlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("heatmaps") || !cfg.at("heatmaps").is_array())
-            throw std::runtime_error("HeatmapPlugin missing heatmaps");
-        for (auto const &p : cfg.at("heatmaps")) {
+    explicit OccupancyMatrixPlugin(const nlohmann::json &cfg) {
+        if (!cfg.contains("occupancy_matrix_plots") ||
+            !cfg.at("occupancy_matrix_plots").is_array())
+            throw std::runtime_error(
+                "OccupancyMatrixPlugin missing occupancy_matrix_plots");
+        for (auto const &p : cfg.at("occupancy_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();
             pc.y_variable = p.at("y").get<std::string>();
@@ -66,7 +68,7 @@ class HeatmapPlugin : public IAnalysisPlugin {
                 RegionKey rkey{pc.region};
                 pc.selection = def.region(rkey).selection();
             } catch (const std::exception &) {
-                log::error("HeatmapPlugin::onInitialisation",
+                log::error("OccupancyMatrixPlugin::onInitialisation",
                            "Unknown region:", pc.region);
             }
         }
@@ -78,7 +80,7 @@ class HeatmapPlugin : public IAnalysisPlugin {
 
     void onFinalisation(const RegionAnalysisMap &region_map) override {
         if (!loader_) {
-            log::error("HeatmapPlugin::onFinalisation",
+            log::error("OccupancyMatrixPlugin::onFinalisation",
                        "No AnalysisDataLoader context provided");
             return;
         }
@@ -87,7 +89,7 @@ class HeatmapPlugin : public IAnalysisPlugin {
             auto it = region_map.find(rkey);
             if (it == region_map.end()) {
                 log::error(
-                    "HeatmapPlugin::onFinalisation",
+                    "OccupancyMatrixPlugin::onFinalisation",
                     "Could not find analysis region for key:", rkey.str());
                 continue;
             }
@@ -95,14 +97,14 @@ class HeatmapPlugin : public IAnalysisPlugin {
             VariableKey y_key{pc.y_variable};
             if (!it->second.hasFinalVariable(x_key) ||
                 !it->second.hasFinalVariable(y_key)) {
-                log::error("HeatmapPlugin::onFinalisation",
+                log::error("OccupancyMatrixPlugin::onFinalisation",
                            "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
-            catalog.generateHeatmapPlot(region_map, pc.x_variable,
-                                        pc.y_variable, pc.region, pc.selection,
-                                        pc.x_cuts, pc.y_cuts);
+            catalog.generateOccupancyMatrixPlot(
+                region_map, pc.x_variable, pc.y_variable, pc.region,
+                pc.selection, pc.x_cuts, pc.y_cuts);
         }
     }
 

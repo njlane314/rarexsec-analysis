@@ -11,7 +11,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisTypes.h"
 #include "EventDisplay.h"
-#include "HeatmapPlot.h"
+#include "OccupancyMatrixPlot.h"
 #include "HistogramCut.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
@@ -82,13 +82,13 @@ class PlotCatalog {
         plot.drawAndSave();
     }
 
-    void generateHeatmapPlot(const RegionAnalysisMap &phase_space,
-                             const std::string &x_variable,
-                             const std::string &y_variable,
-                             const std::string &region,
-                             const Selection &selection,
-                             const std::vector<Cut> &x_cuts = {},
-                             const std::vector<Cut> &y_cuts = {}) const {
+    void generateOccupancyMatrixPlot(const RegionAnalysisMap &phase_space,
+                                     const std::string &x_variable,
+                                     const std::string &y_variable,
+                                     const std::string &region,
+                                     const Selection &selection,
+                                     const std::vector<Cut> &x_cuts = {},
+                                     const std::vector<Cut> &y_cuts = {}) const {
         const auto &x_res = this->fetchResult(phase_space, x_variable, region);
         const auto &y_res = this->fetchResult(phase_space, y_variable, region);
 
@@ -98,8 +98,8 @@ class PlotCatalog {
                     c = '_';
             return s;
         };
-        std::string name = "heatmap_" + sanitise(x_variable) + "_vs_" +
-                           sanitise(y_variable) + "_" +
+        std::string name = "occupancy_matrix_" + sanitise(x_variable) +
+                           "_vs_" + sanitise(y_variable) + "_" +
                            sanitise(region.empty() ? "default" : region);
 
         auto x_edges = x_res.binning_.getEdges();
@@ -230,7 +230,8 @@ class PlotCatalog {
             }
         }
 
-        HeatmapPlot plot(std::move(name), hist, output_directory_.string());
+        OccupancyMatrixPlot plot(std::move(name), hist,
+                                 output_directory_.string());
         plot.drawAndSave();
     }
 
