@@ -1,6 +1,8 @@
 #ifndef MUON_SELECTION_PROCESSOR_H
 #define MUON_SELECTION_PROCESSOR_H
 
+#include <cmath>
+
 #include "ROOT/RVec.hxx"
 
 #include "IEventProcessor.h"
@@ -58,8 +60,36 @@ class MuonSelectionProcessor : public IEventProcessor {
             {"track_shower_scores", "track_length", "track_distance_to_vertex",
              "trk_rr_dedx_avg"});
 
+        auto mu_len_df = mask_df.Define(
+            "muon_track_length",
+            [](const ROOT::RVec<float> &lengths,
+               const ROOT::RVec<bool> &mask) {
+                ROOT::RVec<float> out;
+                out.reserve(lengths.size());
+                for (size_t i = 0; i < lengths.size(); ++i) {
+                    if (mask[i])
+                        out.push_back(lengths[i]);
+                }
+                return out;
+            },
+            {"track_length", "muon_mask"});
+
+        auto mu_cos_df = mu_len_df.Define(
+            "muon_track_costheta",
+            [](const ROOT::RVec<float> &theta,
+               const ROOT::RVec<bool> &mask) {
+                ROOT::RVec<float> out;
+                out.reserve(theta.size());
+                for (size_t i = 0; i < theta.size(); ++i) {
+                    if (mask[i])
+                        out.push_back(std::cos(theta[i]));
+                }
+                return out;
+            },
+            {"track_theta", "muon_mask"});
+
         auto count_df =
-            mask_df.Define("n_muons", "ROOT::VecOps::Sum(muon_mask)");
+            mu_cos_df.Define("n_muons", "ROOT::VecOps::Sum(muon_mask)");
 
         auto has_df = count_df.Define("has_muon", "n_muons > 0");
 

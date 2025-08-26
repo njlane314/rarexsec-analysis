@@ -189,6 +189,7 @@ class EventVariableRegistry {
             "in_reco_fiducial",  "n_pfps_gen2",
             "n_pfps_gen3",       "quality_event",
             "n_muons",           "has_muon",
+            "muon_track_length", "muon_track_costheta",
             "base_event_weight", "nominal_event_weight",
             "in_fiducial",       "mc_n_strange",
             "mc_n_pion",         "mc_n_proton",
