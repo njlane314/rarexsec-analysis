@@ -234,7 +234,7 @@ class AnalysisRunner {
 
                 analysis::log::info("AnalysisRunner::run",
                                     "Computing systematic covariances");
-                systematics_processor_.processSystematics(result);
+                //systematics_processor_.processSystematics(result);
 
                 result.printSummary();
                 region_analysis.addFinalVariable(var_key, std::move(result));

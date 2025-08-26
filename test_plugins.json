@@ -1,0 +1,47 @@
+{
+    "plugins": [
+      {
+        "path": "build/RegionsPlugin.so",
+        "regions": [
+          {
+            "region_key": "NUMU_CC_SEL",
+            "label": "Muon Neutrino CC Selection",
+            "selection_rule": "NUMU_CC",
+            "beam_config": "numi_fhc",
+            "runs": [
+              "run1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "build/SelectionEfficiencyPlugin.so",
+        "efficiency_plots": [
+          {
+            "region": "NUMU_CC_SEL",
+            "selection_rule": "NUMU_CC",
+            "channel_column": "incl_channel",
+            "signal_group": "inclusive_strange_channels",
+            "output_directory": "plots",
+            "plot_name": "selection_efficiency",
+            "log_y": true
+          }
+        ]
+      },
+      {
+        "path": "build/RocCurvePlugin.so",
+        "roc_curves": [
+          {
+            "region": "NUMU_CC_SEL",
+            "selection_rule": "NUMU_CC",
+            "channel_column": "incl_channel",
+            "signal_group": "inclusive_strange_channels",
+            "variable": "track_length",
+            "output_directory": "plots",
+            "plot_name": "roc_curve"
+          }
+        ]
+      }
+    ]
+  }
+  

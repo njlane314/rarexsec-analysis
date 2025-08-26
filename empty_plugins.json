@@ -1,0 +1,85 @@
+{
+  "plugins": [
+    {
+      "path": "build/RegionsPlugin.so",
+      "regions": [
+        {
+          "region_key": "NUMU_EMPTY",
+          "label": "Empty Selection",
+          "selection_rule": "NONE",
+          "beam_config": "numi_fhc",
+          "runs": [
+            "run1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "build/VariablesPlugin.so",
+      "variables": [
+        {
+          "name": "track_length",
+          "branch": "track_length",
+          "label": "Track Length [cm]",
+          "stratum": "backtracked_pdg_codes",
+          "bins": {
+            "n": 100,
+            "min": 0.0,
+            "max": 1000.0,
+            "include_out_of_range_bins": false
+          },
+          "regions": [
+            "NUMU_EMPTY"
+          ]
+        },
+        {
+          "name": "optical_filter_pe_beam",
+          "branch": "optical_filter_pe_beam",
+          "label": "Optical Filter [pe]",
+          "stratum": "inclusive_strange_channels",
+          "bins": {
+            "n": 100,
+            "min": 0.0,
+            "max": 1000.0,
+            "include_out_of_range_bins": false
+          },
+          "regions": [
+            "NUMU_EMPTY"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "build/StackedHistogramPlugin.so",
+      "plots": [
+        {
+          "variable": "track_length",
+          "region": "NUMU_EMPTY",
+          "category_column": "backtracked_pdg_codes",
+          "output_directory": "plots",
+          "overlay_signal": false,
+          "annotate_numbers": true,
+          "log_y": true,
+          "y_axis_label": "Particle Flows/bin"
+        },
+        {
+          "variable": "optical_filter_pe_beam",
+          "region": "NUMU_EMPTY",
+          "category_column": "inclusive_strange_channels",
+          "output_directory": "plots",
+          "overlay_signal": true,
+          "annotate_numbers": true,
+          "log_y": true,
+          "y_axis_label": "Particle Flows",
+          "cuts": [
+            {
+              "threshold": 20.0,
+              "direction": "GreaterThan"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
