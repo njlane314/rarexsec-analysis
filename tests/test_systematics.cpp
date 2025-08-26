@@ -84,5 +84,8 @@ int main() {
     assert(std::abs(result.nominal_with_band_.getBinError(1) -
                     std::sqrt(1.55)) < 1e-6);
 
+    // By default no per-universe histograms should be stored
+    assert(result.universe_projected_hists_.empty());
+
     return 0;
 }

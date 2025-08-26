@@ -22,9 +22,11 @@ namespace analysis {
 class SystematicsProcessor {
   public:
     SystematicsProcessor(std::vector<KnobDef> knob_definitions,
-                         std::vector<UniverseDef> universe_definitions)
+                         std::vector<UniverseDef> universe_definitions,
+                         bool store_universe_hists = false)
         : knob_definitions_(std::move(knob_definitions)),
-          universe_definitions_(std::move(universe_definitions)) {
+          universe_definitions_(std::move(universe_definitions)),
+          store_universe_hists_(store_universe_hists) {
         systematic_strategies_.emplace_back(
             std::make_unique<DetectorSystematicStrategy>());
         for (const auto &knob : knob_definitions_) {
@@ -33,7 +35,8 @@ class SystematicsProcessor {
         }
         for (const auto &universe : universe_definitions_) {
             systematic_strategies_.emplace_back(
-                std::make_unique<UniverseSystematicStrategy>(universe));
+                std::make_unique<UniverseSystematicStrategy>(universe,
+                                                             store_universe_hists_));
         }
 
         log::debug("SystematicsProcessor", "Initialised with",
@@ -115,6 +118,7 @@ class SystematicsProcessor {
     std::vector<std::unique_ptr<SystematicStrategy>> systematic_strategies_;
     std::vector<KnobDef> knob_definitions_;
     std::vector<UniverseDef> universe_definitions_;
+    bool store_universe_hists_;
     SystematicFutures systematic_futures_;
 };
 
