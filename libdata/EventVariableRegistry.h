@@ -12,33 +12,27 @@ namespace analysis {
 
 class EventVariableRegistry {
   public:
-    using KnobVariations =
-        std::unordered_map<std::string, std::pair<std::string, std::string>>;
+    using KnobVariations = std::unordered_map<std::string, std::pair<std::string, std::string>>;
     using MultiUniverseVars = std::unordered_map<std::string, unsigned>;
 
     static const KnobVariations &knobVariations() {
-        static const KnobVariations m = {
-            {"RPA", {"knobRPAup", "knobRPAdn"}},
-            {"CCMEC", {"knobCCMECup", "knobCCMECdn"}},
-            {"AxFFCCQE", {"knobAxFFCCQEup", "knobAxFFCCQEdn"}},
-            {"VecFFCCQE", {"knobVecFFCCQEup", "knobVecFFCCQEdn"}},
-            {"DecayAngMEC", {"knobDecayAngMECup", "knobDecayAngMECdn"}},
-            {"ThetaDelta2Npi",
-             {"knobThetaDelta2Npiup", "knobThetaDelta2Npidn"}},
-            {"ThetaDelta2NRad",
-             {"knobThetaDelta2NRadup", "knobThetaDelta2NRaddn"}},
-            {"NormCCCOH", {"knobNormCCCOHup", "knobNormCCCOHdn"}},
-            {"NormNCCOH", {"knobNormNCCOHup", "knobNormNCCOHdn"}},
-            {"xsr_scc_Fv3", {"knobxsr_scc_Fv3up", "knobxsr_scc_Fv3dn"}},
-            {"xsr_scc_Fa3", {"knobxsr_scc_Fa3up", "knobxsr_scc_Fa3dn"}}};
+        static const KnobVariations m = {{"RPA", {"knobRPAup", "knobRPAdn"}},
+                                         {"CCMEC", {"knobCCMECup", "knobCCMECdn"}},
+                                         {"AxFFCCQE", {"knobAxFFCCQEup", "knobAxFFCCQEdn"}},
+                                         {"VecFFCCQE", {"knobVecFFCCQEup", "knobVecFFCCQEdn"}},
+                                         {"DecayAngMEC", {"knobDecayAngMECup", "knobDecayAngMECdn"}},
+                                         {"ThetaDelta2Npi", {"knobThetaDelta2Npiup", "knobThetaDelta2Npidn"}},
+                                         {"ThetaDelta2NRad", {"knobThetaDelta2NRadup", "knobThetaDelta2NRaddn"}},
+                                         {"NormCCCOH", {"knobNormCCCOHup", "knobNormCCCOHdn"}},
+                                         {"NormNCCOH", {"knobNormNCCOHup", "knobNormNCCOHdn"}},
+                                         {"xsr_scc_Fv3", {"knobxsr_scc_Fv3up", "knobxsr_scc_Fv3dn"}},
+                                         {"xsr_scc_Fa3", {"knobxsr_scc_Fa3up", "knobxsr_scc_Fa3dn"}}};
         return m;
     }
 
     static const MultiUniverseVars &multiUniverseVariations() {
-        static const MultiUniverseVars m = {{"weightsGenie", 500},
-                                            {"weightsFlux", 500},
-                                            {"weightsReint", 500},
-                                            {"weightsPPFX", 500}};
+        static const MultiUniverseVars m = {
+            {"weightsGenie", 500}, {"weightsFlux", 500}, {"weightsReint", 500}, {"weightsPPFX", 500}};
         return m;
     }
 
@@ -48,14 +42,13 @@ class EventVariableRegistry {
     }
 
     static std::vector<std::string> eventVariables(SampleOrigin type) {
-        std::unordered_set<std::string> vars{baseVariables().begin(),
-                                             baseVariables().end()};
+        std::unordered_set<std::string> vars{baseVariables().begin(), baseVariables().end()};
 
         vars.insert(recoEventVariables().begin(), recoEventVariables().end());
         vars.insert(recoTrackVariables().begin(), recoTrackVariables().end());
-        vars.insert(processedEventVariables().begin(),
-                    processedEventVariables().end());
+        vars.insert(processedEventVariables().begin(), processedEventVariables().end());
         vars.insert(blipVariables().begin(), blipVariables().end());
+        vars.insert(imageVariables().begin(), imageVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
@@ -82,43 +75,42 @@ class EventVariableRegistry {
     }
 
     static const std::vector<std::string> &truthVariables() {
-        static const std::vector<std::string> v = {
-            "neutrino_pdg",
-            "interaction_ccnc",
-            "interaction_mode",
-            "interaction_type",
-            "neutrino_energy",
-            "lepton_energy",
-            "count_mu_minus",
-            "count_mu_plus",
-            "count_e_minus",
-            "count_e_plus",
-            "count_pi_zero",
-            "count_pi_plus",
-            "count_pi_minus",
-            "count_proton",
-            "count_neutron",
-            "count_kaon_zero",
-            "count_kaon_plus",
-            "count_kaon_minus",
-            "count_lambda",
-            "count_sigma_zero",
-            "count_sigma_plus",
-            "count_sigma_minus",
-            "neutrino_vertex_x",
-            "neutrino_vertex_y",
-            "neutrino_vertex_z",
-            "neutrino_vertex_time",
-            "neutrino_completeness_from_pfp",
-            "neutrino_purity_from_pfp",
-            "target_nucleus_pdg",
-            "hit_nucleon_pdg",
-            "kinematic_W",
-            "kinematic_X",
-            "kinematic_Y",
-            "kinematic_Q_squared",
-            "backtracked_pdg_codes",
-            "blip_pdg"};
+        static const std::vector<std::string> v = {"neutrino_pdg",
+                                                   "interaction_ccnc",
+                                                   "interaction_mode",
+                                                   "interaction_type",
+                                                   "neutrino_energy",
+                                                   "lepton_energy",
+                                                   "count_mu_minus",
+                                                   "count_mu_plus",
+                                                   "count_e_minus",
+                                                   "count_e_plus",
+                                                   "count_pi_zero",
+                                                   "count_pi_plus",
+                                                   "count_pi_minus",
+                                                   "count_proton",
+                                                   "count_neutron",
+                                                   "count_kaon_zero",
+                                                   "count_kaon_plus",
+                                                   "count_kaon_minus",
+                                                   "count_lambda",
+                                                   "count_sigma_zero",
+                                                   "count_sigma_plus",
+                                                   "count_sigma_minus",
+                                                   "neutrino_vertex_x",
+                                                   "neutrino_vertex_y",
+                                                   "neutrino_vertex_z",
+                                                   "neutrino_vertex_time",
+                                                   "neutrino_completeness_from_pfp",
+                                                   "neutrino_purity_from_pfp",
+                                                   "target_nucleus_pdg",
+                                                   "hit_nucleon_pdg",
+                                                   "kinematic_W",
+                                                   "kinematic_X",
+                                                   "kinematic_Y",
+                                                   "kinematic_Q_squared",
+                                                   "backtracked_pdg_codes",
+                                                   "blip_pdg"};
         return v;
     }
 
@@ -172,29 +164,54 @@ class EventVariableRegistry {
         return v;
     }
 
+    static const std::vector<std::string> &imageVariables() {
+        static const std::vector<std::string> v = {"reco_neutrino_vertex_x",
+                                                   "reco_neutrino_vertex_y",
+                                                   "reco_neutrino_vertex_z",
+                                                   "detector_image_u",
+                                                   "detector_image_v",
+                                                   "detector_image_w",
+                                                   "semantic_image_u",
+                                                   "semantic_image_v",
+                                                   "semantic_image_w",
+                                                   "event_detector_image_u",
+                                                   "event_detector_image_v",
+                                                   "event_detector_image_w",
+                                                   "event_semantic_image_u",
+                                                   "event_semantic_image_v",
+                                                   "event_semantic_image_w",
+                                                   "event_adc_u",
+                                                   "event_adc_v",
+                                                   "event_adc_w",
+                                                   "slice_semantic_counts_u",
+                                                   "slice_semantic_counts_v",
+                                                   "slice_semantic_counts_w",
+                                                   "event_semantic_counts_u",
+                                                   "event_semantic_counts_v",
+                                                   "event_semantic_counts_w",
+                                                   "is_vtx_in_image_u",
+                                                   "is_vtx_in_image_v",
+                                                   "is_vtx_in_image_w"};
+        return v;
+    }
+
     static const std::vector<std::string> &recoTrackVariables() {
-        static const std::vector<std::string> v = {
-            "track_length",        "track_distance_to_vertex",
-            "track_start_x",       "track_start_y",
-            "track_start_z",       "track_end_x",
-            "track_end_y",         "track_end_z",
-            "track_theta",         "track_phi",
-            "track_calo_energy_u", "track_calo_energy_v",
-            "track_calo_energy_y"};
+        static const std::vector<std::string> v = {"track_length",        "track_distance_to_vertex",
+                                                   "track_start_x",       "track_start_y",
+                                                   "track_start_z",       "track_end_x",
+                                                   "track_end_y",         "track_end_z",
+                                                   "track_theta",         "track_phi",
+                                                   "track_calo_energy_u", "track_calo_energy_v",
+                                                   "track_calo_energy_y"};
         return v;
     }
 
     static const std::vector<std::string> &processedEventVariables() {
         static const std::vector<std::string> v = {
-            "in_reco_fiducial",  "n_pfps_gen2",
-            "n_pfps_gen3",       "quality_event",
-            "n_muons",           "has_muon",
-            "muon_track_length", "muon_track_costheta",
-            "base_event_weight", "nominal_event_weight",
-            "in_fiducial",       "mc_n_strange",
-            "mc_n_pion",         "mc_n_proton",
-            "genie_int_mode",    "incl_channel",
-            "excl_channel"};
+            "in_reco_fiducial", "n_pfps_gen2",       "n_pfps_gen3",         "quality_event",     "n_muons",
+            "has_muon",         "muon_track_length", "muon_track_costheta", "base_event_weight", "nominal_event_weight",
+            "in_fiducial",      "mc_n_strange",      "mc_n_pion",           "mc_n_proton",       "genie_int_mode",
+            "incl_channel",     "excl_channel"};
         return v;
     }
 };
