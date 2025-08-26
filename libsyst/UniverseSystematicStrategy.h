@@ -29,21 +29,15 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                    "sample", sample_key.str(), "universes", n_universes_);
         for (unsigned u = 0; u < n_universes_; ++u) {
             SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
-            std::string new_col_name = vector_name_ + "_u" + std::to_string(u);
+            auto weight = [u](const ROOT::RVec<unsigned short> &weights) {
+                if (u < weights.size()) {
+                    return static_cast<double>(weights[u]);
+                }
+                return 1.0;
+            };
 
-            auto d_with_weight =
-                rnode.Define(new_col_name,
-                             [u, vec_name = this->vector_name_](
-                                 const ROOT::RVec<unsigned short> &weights) {
-                                 if (u < weights.size()) {
-                                     return static_cast<double>(weights[u]);
-                                 }
-                                 return 1.0;
-                             },
-                             {vector_name_});
-
-            futures.variations[uni_key][sample_key] = d_with_weight.Histo1D(
-                model, binning.getVariable(), new_col_name);
+            futures.variations[uni_key][sample_key] = rnode.Histo1D(
+                model, binning.getVariable(), weight, {vector_name_});
         }
     }
 
