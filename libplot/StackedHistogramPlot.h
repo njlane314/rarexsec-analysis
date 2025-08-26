@@ -266,6 +266,9 @@ class StackedHistogramPlot : public HistogramPlotterBase {
                                       : 0.0;
                 double total_err =
                     std::sqrt(stat_err * stat_err + syst_err * syst_err);
+                log::info("StackedHistogramPlot::draw", "Bin", i,
+                          "stat_err =", stat_err, "syst_err =", syst_err,
+                          "total_err =", total_err);
                 total_mc_hist_->SetBinError(i, total_err);
             }
 
