@@ -1,5 +1,5 @@
-#ifndef HEATMAP_PLOT_H
-#define HEATMAP_PLOT_H
+#ifndef OCCUPANCY_MATRIX_PLOT_H
+#define OCCUPANCY_MATRIX_PLOT_H
 
 #include <string>
 
@@ -11,15 +11,15 @@
 
 namespace analysis {
 
-class HeatmapPlot : public HistogramPlotterBase {
+class OccupancyMatrixPlot : public HistogramPlotterBase {
   public:
-    HeatmapPlot(std::string plot_name, TH2F *hist,
-                std::string output_directory = "plots")
+    OccupancyMatrixPlot(std::string plot_name, TH2F *hist,
+                        std::string output_directory = "plots")
         : HistogramPlotterBase(std::move(plot_name),
                                std::move(output_directory)),
           hist_(hist) {}
 
-    ~HeatmapPlot() override { delete hist_; }
+    ~OccupancyMatrixPlot() override { delete hist_; }
 
   private:
     void draw(TCanvas &canvas) override {
@@ -33,8 +33,6 @@ class HeatmapPlot : public HistogramPlotterBase {
         canvas.SetRightMargin(0.15);
 
         hist_->SetTitle("");
-        hist_->GetXaxis()->CenterTitle();
-        hist_->GetYaxis()->CenterTitle();
         hist_->GetZaxis()->SetTitleOffset(1.2);
 
         hist_->Draw("COLZ");
