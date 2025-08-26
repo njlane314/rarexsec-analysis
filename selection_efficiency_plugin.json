@@ -4,9 +4,9 @@
       "path": "build/RegionsPlugin.so",
       "regions": [
         {
-          "region_key": "QUALITY_NUMU_CC_SEL",
-          "label": "Quality and NuMu CC Selection",
-          "selection_rule": "QUALITY_NUMU_CC",
+          "region_key": "ALL_EVENTS",
+          "label": "All Events",
+          "selection_rule": "ALL_EVENTS",
           "beam_config": "numi_fhc",
           "runs": [
             "run1"
@@ -18,21 +18,39 @@
       "path": "build/SelectionEfficiencyPlugin.so",
       "efficiency_plots": [
         {
-          "region": "QUALITY_NUMU_CC_SEL",
-          "selection_rule": "QUALITY_NUMU_CC",
+          "region": "ALL_EVENTS",
+          "selection_rule": "QUALITY_BREAKDOWN",
           "channel_column": "incl_channel",
           "signal_group": "inclusive_strange_channels",
           "output_directory": "plots",
-          "plot_name": "selection_efficiency_inclusive",
+          "plot_name": "quality_preselection_efficiency_inclusive",
           "log_y": true
         },
         {
-          "region": "QUALITY_NUMU_CC_SEL",
-          "selection_rule": "QUALITY_NUMU_CC",
+          "region": "ALL_EVENTS",
+          "selection_rule": "QUALITY_BREAKDOWN",
           "channel_column": "excl_channel",
           "signal_group": "exclusive_strange_channels",
           "output_directory": "plots",
-          "plot_name": "selection_efficiency_exclusive",
+          "plot_name": "quality_preselection_efficiency_exclusive",
+          "log_y": true
+        },
+        {
+          "region": "ALL_EVENTS",
+          "selection_rule": "QUALITY_NUMU_CC_BREAKDOWN",
+          "channel_column": "incl_channel",
+          "signal_group": "inclusive_strange_channels",
+          "output_directory": "plots",
+          "plot_name": "quality_numu_cc_selection_efficiency_inclusive",
+          "log_y": true
+        },
+        {
+          "region": "ALL_EVENTS",
+          "selection_rule": "QUALITY_NUMU_CC_BREAKDOWN",
+          "channel_column": "excl_channel",
+          "signal_group": "exclusive_strange_channels",
+          "output_directory": "plots",
+          "plot_name": "quality_numu_cc_selection_efficiency_exclusive",
           "log_y": true
         }
       ]
