@@ -1,6 +1,7 @@
 #include "SystematicBreakdownPlot.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "TCanvas.h"
 #include "TColor.h"
@@ -30,8 +31,12 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
 
     std::vector<double> bin_totals(nbins, 0.0);
     for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
-        for (int i = 0; i < nbins; ++i) {
-            bin_totals[i] += cov(i, i);
+        const int n = cov.GetNrows();
+        for (int i = 0; i < nbins && i < n; ++i) {
+            double val = cov(i, i);
+            if (std::isfinite(val)) {
+                bin_totals[i] += val;
+            }
         }
     }
 
@@ -44,12 +49,17 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     int color = kRed + 1;
     for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
         TH1D *hist = new TH1D(key.str().c_str(), "", nbins, edges.data());
-        for (int i = 0; i < nbins; ++i) {
+        const int n = cov.GetNrows();
+        for (int i = 0; i < nbins && i < n; ++i) {
             double val = cov(i, i);
-            if (normalise_ && bin_totals[i] > 0.0) {
-                val /= bin_totals[i];
+            if (std::isfinite(val)) {
+                if (normalise_ && bin_totals[i] > 0.0) {
+                    val /= bin_totals[i];
+                }
+                hist->SetBinContent(i + 1, val);
+            } else {
+                hist->SetBinContent(i + 1, 0.0);
             }
-            hist->SetBinContent(i + 1, val);
         }
         hist->SetFillColor(color);
         hist->SetLineColor(kBlack);
