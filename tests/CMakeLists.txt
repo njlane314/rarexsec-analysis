@@ -14,9 +14,9 @@ add_executable(histogram_uncertainty_tests histogram_uncertainty_tests.cpp)
 
                     add_test(NAME test_systematics COMMAND test_systematics)
 
-                        add_executable(
-                            stacked_histogram_uniform_binning
-                                stacked_histogram_uniform_binning.cpp)
+        add_executable(
+            stacked_histogram_uniform_binning
+                stacked_histogram_uniform_binning.cpp)
 
                             target_link_libraries(
                                 stacked_histogram_uniform_binning PRIVATE libapp
@@ -27,3 +27,15 @@ add_executable(histogram_uncertainty_tests histogram_uncertainty_tests.cpp)
                                     NAME stacked_histogram_uniform_binning
                                         COMMAND
                                             stacked_histogram_uniform_binning)
+
+add_executable(
+    stacked_histogram_underflow_overflow
+    stacked_histogram_underflow_overflow.cpp)
+
+target_link_libraries(
+    stacked_histogram_underflow_overflow PRIVATE libapp libhist libplot
+                                               libutils Eigen3::Eigen
+                                               ${ROOT_LIBRARIES})
+
+add_test(NAME stacked_histogram_underflow_overflow
+         COMMAND stacked_histogram_underflow_overflow)
