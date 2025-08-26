@@ -24,8 +24,19 @@ class HeatmapPlot : public HistogramPlotterBase {
   private:
     void draw(TCanvas &canvas) override {
         canvas.cd();
+
         gStyle->SetOptStat(0);
+        gStyle->SetNumberContours(255);
+
         canvas.SetLogz();
+        canvas.SetLeftMargin(0.15);
+        canvas.SetRightMargin(0.15);
+
+        hist_->SetTitle("");
+        hist_->GetXaxis()->CenterTitle();
+        hist_->GetYaxis()->CenterTitle();
+        hist_->GetZaxis()->SetTitleOffset(1.2);
+
         hist_->Draw("COLZ");
     }
 
