@@ -30,6 +30,9 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
         bool use_log_y = false;
         std::string y_axis_label = "Events";
         bool selection_cuts = false;
+        int n_bins{-1};
+        double min{0.0};
+        double max{0.0};
     };
 
     explicit StackedHistogramPlugin(const nlohmann::json &cfg) {
@@ -47,6 +50,9 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
             pc.use_log_y = p.value("log_y", false);
             pc.y_axis_label = p.value("y_axis_label", "Events");
             pc.selection_cuts = p.value("selection_cuts", false);
+            pc.n_bins = p.value("n_bins", -1);
+            pc.min = p.value("min", 0.0);
+            pc.max = p.value("max", 0.0);
             if (p.contains("cuts")) {
                 for (auto const &c : p.at("cuts")) {
                     auto dir =
@@ -125,7 +131,7 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
                 "stack_" + pc.variable + "_" + pc.region, variable_result,
                 region_analysis, pc.category_column, pc.output_directory,
                 pc.overlay_signal, cuts, pc.annotate_numbers, pc.use_log_y,
-                pc.y_axis_label);
+                pc.y_axis_label, pc.n_bins, pc.min, pc.max);
             plot.drawAndSave("pdf");
         }
     }

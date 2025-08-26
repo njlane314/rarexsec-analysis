@@ -33,14 +33,18 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         const RegionAnalysis &region_info, std::string category_column,
         std::string output_directory = "plots", bool overlay_signal = true,
         std::vector<Cut> cut_list = {}, bool annotate_numbers = true,
-        bool use_log_y = false, std::string y_axis_label = "Events")
+        bool use_log_y = false, std::string y_axis_label = "Events",
+        int uniform_bins = -1, double uniform_min = 0.0,
+        double uniform_max = 0.0)
         : HistogramPlotterBase(std::move(plot_name),
                                std::move(output_directory)),
           variable_result_(var_result), region_analysis_(region_info),
           category_column_(std::move(category_column)),
           overlay_signal_(overlay_signal), cuts_(cut_list),
           annotate_numbers_(annotate_numbers), use_log_y_(use_log_y),
-          y_axis_label_(std::move(y_axis_label)) {}
+          y_axis_label_(std::move(y_axis_label)),
+          use_uniform_binning_(uniform_bins > 0), uniform_bins_(uniform_bins),
+          uniform_min_(uniform_min), uniform_max_(uniform_max) {}
 
     ~StackedHistogramPlot() override {
         delete total_mc_hist_;
@@ -146,7 +150,17 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         mc_stack_ = new THStack("mc_stack", "");
         StratifierRegistry registry;
 
-        const auto &orig_edges = variable_result_.binning_.getEdges();
+        std::vector<double> orig_edges;
+        if (use_uniform_binning_ && uniform_max_ > uniform_min_) {
+            orig_edges.resize(uniform_bins_ + 1);
+            double width = (uniform_max_ - uniform_min_) / uniform_bins_;
+            for (int i = 0; i <= uniform_bins_; ++i) {
+                orig_edges[i] = uniform_min_ + width * i;
+            }
+        } else {
+            orig_edges = variable_result_.binning_.getEdges();
+        }
+
         std::vector<double> adjusted_edges = orig_edges;
         if (adjusted_edges.size() >= 4) {
             double interior_range =
@@ -381,6 +395,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
     bool annotate_numbers_;
     bool use_log_y_;
     std::string y_axis_label_;
+    bool use_uniform_binning_;
+    int uniform_bins_;
+    double uniform_min_;
+    double uniform_max_;
     TH1D *total_mc_hist_ = nullptr;
     THStack *mc_stack_ = nullptr;
     TLegend *legend_ = nullptr;
