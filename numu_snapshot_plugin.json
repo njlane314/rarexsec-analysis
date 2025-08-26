@@ -1,0 +1,33 @@
+{
+    "plugins": [
+        {
+            "path": "build/RegionsPlugin.so",
+            "regions": [
+                {
+                    "region_key": "NUMU_CC_SEL",
+                    "label": "Muon Neutrino CC Selection",
+                    "selection_rule": "NUMU_CC",
+                    "beam_config": "numi_fhc",
+                    "runs": [
+                        "run1"
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "build/SnapshotPlugin.so",
+            "snapshots": [
+                {
+                    "selection_rule": "NUMU_CC",
+                    "output_directory": "snapshots",
+                    "columns": [
+                        "nominal_event_weight",
+                        "incl_channel",
+                        "detector_image",
+                        "semantic_mask"
+                    ]
+                }
+            ]
+        }
+    ]
+}
