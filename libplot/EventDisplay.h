@@ -197,7 +197,7 @@ class EventDisplay {
         }
         legend.Draw();
 
-        auto out_file = (out_dir / (tag + ".pdf")).string();
+        auto out_file = (out_dir / (tag + ".png")).string();
         canvas.SaveAs(out_file.c_str());
 
         delete hist_det;
