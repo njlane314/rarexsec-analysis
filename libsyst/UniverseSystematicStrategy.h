@@ -39,8 +39,17 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                 return 1.0;
             };
 
-            futures.variations[uni_key][sample_key] = rnode.Histo1D(
-                model, binning.getVariable(), weight, {vector_name_});
+            // ROOT's RDataFrame does not provide an overload of Histo1D that
+            // takes a custom weight functor together with a branch name for the
+            // variable to be histogrammed.  Instead we first "Define" a new
+            // temporary column holding the weight for this universe and then
+            // pass the name of that column to Histo1D as the weight.
+
+            auto uni_weight_name = "_uni_w_" + std::to_string(u);
+            auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
+
+            futures.variations[uni_key][sample_key] =
+                node.Histo1D(model, binning.getVariable(), uni_weight_name);
         }
     }
 
