@@ -1,0 +1,41 @@
+{
+  "plugins": [
+    {
+      "path": "build/RegionsPlugin.so",
+      "regions": [
+        {
+          "region_key": "QUALITY_NUMU_CC_SEL",
+          "label": "Quality and NuMu CC Selection",
+          "selection_rule": "QUALITY_NUMU_CC",
+          "beam_config": "numi_fhc",
+          "runs": [
+            "run1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "build/SelectionEfficiencyPlugin.so",
+      "efficiency_plots": [
+        {
+          "region": "QUALITY_NUMU_CC_SEL",
+          "selection_rule": "QUALITY_NUMU_CC",
+          "channel_column": "incl_channel",
+          "signal_group": "inclusive_strange_channels",
+          "output_directory": "plots",
+          "plot_name": "selection_efficiency_inclusive",
+          "log_y": false
+        },
+        {
+          "region": "QUALITY_NUMU_CC_SEL",
+          "selection_rule": "QUALITY_NUMU_CC",
+          "channel_column": "excl_channel",
+          "signal_group": "exclusive_strange_channels",
+          "output_directory": "plots",
+          "plot_name": "selection_efficiency_exclusive",
+          "log_y": false
+        }
+      ]
+    }
+  ]
+}

@@ -58,6 +58,10 @@ class SelectionRegistry {
         rules_.emplace("NUMU_CC",
                        SelectionRule{"NuMu CC Selection",
                                      {"has_muon", "n_pfps_gen2 > 1"}});
+        rules_.emplace(
+            "QUALITY_NUMU_CC",
+            SelectionRule{"Quality + NuMu CC Selection",
+                          {"quality_event", "has_muon", "n_pfps_gen2 > 1"}});
         rules_.emplace("ALL_EVENTS", SelectionRule{"All Events", {}});
         rules_.emplace("NONE", SelectionRule{"No Preselection", {}});
     }
