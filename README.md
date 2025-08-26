@@ -55,7 +55,6 @@ An analysis framework for rare cross-section measurements.
       "sample": "sample",
       "region": "REGION_KEY",
       "n_events": 5,
-      "pdf_name": "event_displays.pdf",
       "image_size": 800,
       "output_directory": "./plots"
     }

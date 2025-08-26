@@ -74,22 +74,22 @@ class EventDisplay {
         auto sem_v = sem_v_vec[0];
         auto sem_w = sem_w_vec[0];
 
+        std::filesystem::path sample_dir = output_directory_ / sample_key;
+        std::filesystem::create_directories(sample_dir);
+
         for (auto const &plane : planes_) {
             plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v, det_w,
-                      sem_u, sem_v, sem_w, nullptr);
+                      sem_u, sem_v, sem_w, sample_dir);
         }
     }
 
     void visualiseEvents(const std::vector<EventIdentifier> &sample_events,
-                         const std::string &sample_key,
-                         const std::string &pdf_file) {
+                         const std::string &sample_key) {
         if (sample_events.empty())
             return;
 
-        std::filesystem::path pdf_path = output_directory_ / pdf_file;
-        auto pdf_path_str = pdf_path.string();
-        TCanvas opener("opener", "", 1, 1);
-        bool opened = false;
+        std::filesystem::path sample_dir = output_directory_ / sample_key;
+        std::filesystem::create_directories(sample_dir);
 
         for (auto const &sample_event : sample_events) {
             auto [run_id, subrun_id, event_num] = sample_event;
@@ -127,11 +127,6 @@ class EventDisplay {
             if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
                 continue;
 
-            if (!opened) {
-                opener.Print((pdf_path_str + "[").c_str());
-                opened = true;
-            }
-
             auto det_u = det_u_vec[0];
             auto det_v = det_v_vec[0];
             auto det_w = det_w_vec[0];
@@ -141,12 +136,9 @@ class EventDisplay {
 
             for (auto const &plane : planes_) {
                 plotPlane(run_id, subrun_id, event_num, plane, det_u, det_v,
-                          det_w, sem_u, sem_v, sem_w, &pdf_path_str);
+                          det_w, sem_u, sem_v, sem_w, sample_dir);
             }
         }
-
-        if (opened)
-            opener.Print((pdf_path_str + "]").c_str());
     }
 
   private:
@@ -155,7 +147,8 @@ class EventDisplay {
                    const std::vector<float> &det_v,
                    const std::vector<float> &det_w,
                    const std::vector<int> &sem_u, const std::vector<int> &sem_v,
-                   const std::vector<int> &sem_w, const std::string *pdf_path) {
+                   const std::vector<int> &sem_w,
+                   const std::filesystem::path &out_dir) {
         const auto &det_data =
             (plane == "U" ? det_u : (plane == "V" ? det_v : det_w));
         const auto &sem_data =
@@ -171,13 +164,8 @@ class EventDisplay {
         gStyle->SetTitleY(0.96);
         canvas_det.SetLogz();
         hist_det->Draw("COL");
-        if (pdf_path) {
-            canvas_det.Print(pdf_path->c_str(), "pdf");
-        } else {
-            auto out =
-                (output_directory_ / ("detector_" + tag + ".png")).string();
-            canvas_det.Print(out.c_str());
-        }
+        auto out_det = (out_dir / ("detector_" + tag + ".pdf")).string();
+        canvas_det.Print(out_det.c_str());
         delete hist_det;
 
         TH2F *hist_sem = this->makeSemanticHist(tag, sem_data);
@@ -225,13 +213,8 @@ class EventDisplay {
             }
         }
         legend.Draw();
-        if (pdf_path) {
-            canvas_sem.Print(pdf_path->c_str(), "pdf");
-        } else {
-            auto out =
-                (output_directory_ / ("semantic_" + tag + ".png")).string();
-            canvas_sem.Print(out.c_str());
-        }
+        auto out_sem = (out_dir / ("semantic_" + tag + ".pdf")).string();
+        canvas_sem.Print(out_sem.c_str());
         delete hist_sem;
     }
 
