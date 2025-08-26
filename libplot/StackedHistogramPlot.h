@@ -176,14 +176,16 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             orig_edges = variable_result_.binning_.getEdges();
         }
 
-        std::vector<double> adjusted_edges = orig_edges;
-        if (adjusted_edges.size() >= 4) {
-            double interior_range =
-                adjusted_edges[adjusted_edges.size() - 2] - adjusted_edges[1];
+        double left_edge = orig_edges.empty() ? 0.0 : orig_edges.front();
+        double right_edge =
+            orig_edges.empty() ? 0.0 : orig_edges[orig_edges.size() - 1];
+        double min_edge = left_edge;
+        double max_edge = right_edge;
+        if (orig_edges.size() >= 2) {
+            double interior_range = right_edge - left_edge;
             double edge_width = interior_range * 0.05;
-            adjusted_edges[0] = adjusted_edges[1] - edge_width;
-            adjusted_edges.back() =
-                adjusted_edges[adjusted_edges.size() - 2] + edge_width;
+            min_edge -= edge_width;
+            max_edge += edge_width;
         }
 
         std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
@@ -249,9 +251,13 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h = (TH1D *)hist.get()->Clone();
-            if (adjusted_edges.size() == orig_edges.size()) {
-                h->GetXaxis()->Set(adjusted_edges.size() - 1,
-                                   adjusted_edges.data());
+            if (use_uniform_binning_ && uniform_max_ > uniform_min_) {
+                TH1D *h_tmp = (TH1D *)h->Rebin(
+                    orig_edges.size() - 1,
+                    (std::string(h->GetName()) + "_rebin").c_str(),
+                    orig_edges.data());
+                delete h;
+                h = h_tmp;
             }
             const auto &stratum = registry.getStratumProperties(
                 category_column_, std::stoi(key.str()));
@@ -339,15 +345,13 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
 
-        mc_stack_->GetXaxis()->SetLimits(adjusted_edges.front(),
-                                         adjusted_edges.back());
+        mc_stack_->GetXaxis()->SetLimits(min_edge, max_edge);
         frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
-        if (orig_edges.size() >= 3) {
+        if (orig_edges.size() >= 2) {
             std::ostringstream uf_label, of_label;
-            uf_label << "<" << formatWithCommas(orig_edges[1]);
-            of_label << ">"
-                     << formatWithCommas(orig_edges[orig_edges.size() - 2]);
+            uf_label << "<" << formatWithCommas(left_edge);
+            of_label << ">" << formatWithCommas(right_edge);
             frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
                                            uf_label.str().c_str());
             frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1,
@@ -357,29 +361,26 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             double line_max = max_y * (use_log_y_ ? 10 : 1.3);
             double tick_max = line_min + (line_max - line_min) * 0.05;
             TLine *uf_edge =
-                new TLine(orig_edges[1], line_min, orig_edges[1], tick_max);
+                new TLine(left_edge, line_min, left_edge, tick_max);
             uf_edge->SetLineColorAlpha(kGray + 2, 0.4);
             uf_edge->SetLineWidth(2);
             uf_edge->Draw("same");
             cut_visuals_.push_back(uf_edge);
             TLine *of_edge =
-                new TLine(orig_edges[orig_edges.size() - 2], line_min,
-                          orig_edges[orig_edges.size() - 2], tick_max);
+                new TLine(right_edge, line_min, right_edge, tick_max);
             of_edge->SetLineColorAlpha(kGray + 2, 0.4);
             of_edge->SetLineWidth(2);
             of_edge->Draw("same");
             cut_visuals_.push_back(of_edge);
 
-            TBox *uf_box = new TBox(adjusted_edges.front(), line_min,
-                                    orig_edges[1], line_max);
+            TBox *uf_box = new TBox(min_edge, line_min, left_edge, line_max);
             uf_box->SetFillStyle(3345);
             uf_box->SetFillColorAlpha(kGray + 1, 0.15);
             uf_box->SetLineColorAlpha(kGray + 1, 0.0);
             uf_box->Draw("same");
             cut_visuals_.push_back(uf_box);
 
-            TBox *of_box = new TBox(orig_edges[orig_edges.size() - 2], line_min,
-                                    adjusted_edges.back(), line_max);
+            TBox *of_box = new TBox(right_edge, line_min, max_edge, line_max);
             of_box->SetFillStyle(3345);
             of_box->SetFillColorAlpha(kGray + 1, 0.15);
             of_box->SetLineColorAlpha(kGray + 1, 0.0);
