@@ -109,6 +109,8 @@ class SystematicsProcessor {
                    "Covariance calculation complete");
     }
 
+    void clearFutures() { systematic_futures_.variations.clear(); }
+
   private:
     std::vector<std::unique_ptr<SystematicStrategy>> systematic_strategies_;
     std::vector<KnobDef> knob_definitions_;
