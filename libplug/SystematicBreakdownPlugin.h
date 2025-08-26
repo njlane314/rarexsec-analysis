@@ -31,19 +31,15 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
             PlotConfig pc;
             pc.variable = p.at("variable").get<std::string>();
             pc.region = p.at("region").get<std::string>();
-            pc.output_directory =
-                p.value("output_directory", std::string("plots"));
+            pc.output_directory = p.value("output_directory", std::string("plots"));
             pc.fractional = p.value("fractional", false);
             plots_.push_back(std::move(pc));
         }
     }
 
-    void onInitialisation(AnalysisDefinition &,
-                          const SelectionRegistry &) override {}
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
+    void onInitialisation(AnalysisDefinition &, const SelectionRegistry &) override {}
+    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
+    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
     void onFinalisation(const RegionAnalysisMap &region_map) override {
         gSystem->mkdir("plots", true);
@@ -52,27 +48,23 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
             auto it = region_map.find(rkey);
 
             if (it == region_map.end()) {
-                log::error(
-                    "SystematicBreakdownPlugin::onFinalisation",
-                    "Could not find analysis region for key:", rkey.str());
+                log::error("SystematicBreakdownPlugin::onFinalisation",
+                           "Could not find analysis region for key:", rkey.str());
                 continue;
             }
 
             VariableKey vkey{pc.variable};
             if (!it->second.hasFinalVariable(vkey)) {
-                log::error("SystematicBreakdownPlugin::onFinalisation",
-                           "Could not find variable", vkey.str(), "in region",
-                           rkey.str());
+                log::error("SystematicBreakdownPlugin::onFinalisation", "Could not find variable", vkey.str(),
+                           "in region", rkey.str());
                 continue;
             }
 
             const auto &region_analysis = it->second;
-            const auto &variable_result =
-                region_analysis.getFinalVariable(vkey);
+            const auto &variable_result = region_analysis.getFinalVariable(vkey);
 
-            SystematicBreakdownPlot plot(
-                "syst_breakdown_" + pc.variable + "_" + pc.region,
-                variable_result, pc.fractional, pc.output_directory);
+            SystematicBreakdownPlot plot("syst_breakdown_" + pc.variable + "_" + pc.region, variable_result,
+                                         pc.fractional, pc.output_directory);
             plot.drawAndSave("pdf");
         }
     }

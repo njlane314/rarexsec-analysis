@@ -20,29 +20,25 @@ class AnalysisPluginManager {
   public:
     using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
 
-    void loadPlugins(const nlohmann::json &jobj,
-                     AnalysisDataLoader *loader = nullptr) {
+    void loadPlugins(const nlohmann::json &jobj, AnalysisDataLoader *loader = nullptr) {
         if (!jobj.contains("plugins"))
             return;
         for (auto const &p : jobj.at("plugins")) {
             std::string path = p.at("path");
-            log::info("AnalysisPluginManager::loadPlugins",
-                      "Loading plugin from:", path);
+            log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
             void *handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle)
                 throw std::runtime_error(dlerror());
 
             if (loader) {
                 using CtxFn = void (*)(AnalysisDataLoader *);
-                if (auto setctx = reinterpret_cast<CtxFn>(
-                        dlsym(handle, "setPluginContext"))) {
+                if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
                     setctx(loader);
                 }
             }
 
             using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &);
-            auto create =
-                reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
+            auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
             if (!create)
                 throw std::runtime_error(dlerror());
 
@@ -52,21 +48,17 @@ class AnalysisPluginManager {
         }
     }
 
-    void notifyInitialisation(AnalysisDefinition &def,
-                              const SelectionRegistry &selec_reg) {
+    void notifyInitialisation(AnalysisDefinition &def, const SelectionRegistry &selec_reg) {
         for (auto &pl : plugins_)
             pl->onInitialisation(def, selec_reg);
     }
 
-    void notifyPreSampleProcessing(const SampleKey &skey, const RegionKey &rkey,
-                                   const RunConfig &reg) {
+    void notifyPreSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RunConfig &reg) {
         for (auto &pl : plugins_)
             pl->onPreSampleProcessing(skey, rkey, reg);
     }
 
-    void notifyPostSampleProcessing(const SampleKey &skey,
-                                    const RegionKey &rkey,
-                                    const RegionAnalysisMap &res) {
+    void notifyPostSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RegionAnalysisMap &res) {
         for (auto &pl : plugins_)
             pl->onPostSampleProcessing(skey, rkey, res);
     }

@@ -25,14 +25,12 @@ class SnapshotPlugin : public IAnalysisPlugin {
 
     explicit SnapshotPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("snapshots") || !cfg.at("snapshots").is_array()) {
-            throw std::runtime_error(
-                "SnapshotPlugin missing snapshots configuration");
+            throw std::runtime_error("SnapshotPlugin missing snapshots configuration");
         }
         for (auto const &scfg : cfg.at("snapshots")) {
             SnapshotConfig sc;
             sc.selection_rule = scfg.at("selection_rule").get<std::string>();
-            sc.output_directory =
-                scfg.value("output_directory", std::string{"snapshots"});
+            sc.output_directory = scfg.value("output_directory", std::string{"snapshots"});
             if (scfg.contains("columns")) {
                 sc.columns = scfg.at("columns").get<std::vector<std::string>>();
             }
@@ -40,27 +38,22 @@ class SnapshotPlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &,
-                          const SelectionRegistry &sel_reg) override {
+    void onInitialisation(AnalysisDefinition &, const SelectionRegistry &sel_reg) override {
         for (auto &cfg : configs_) {
             try {
                 cfg.selection = sel_reg.get(cfg.selection_rule);
             } catch (const std::exception &) {
-                log::error("SnapshotPlugin::onInitialisation",
-                           "Unknown selection rule:", cfg.selection_rule);
+                log::error("SnapshotPlugin::onInitialisation", "Unknown selection rule:", cfg.selection_rule);
             }
         }
     }
 
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
+    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
+    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
     void onFinalisation(const RegionAnalysisMap &) override {
         if (!loader_) {
-            log::error("SnapshotPlugin::onFinalisation",
-                       "No AnalysisDataLoader context provided");
+            log::error("SnapshotPlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;
         }
         const std::string beam = loader_->getBeam();
@@ -73,11 +66,9 @@ class SnapshotPlugin : public IAnalysisPlugin {
         }
         for (const auto &cfg : configs_) {
             std::filesystem::create_directories(cfg.output_directory);
-            std::string file = cfg.output_directory + "/" + beam + "_" +
-                               period_tag + "_" + cfg.selection_rule +
-                               "_snapshot.root";
-            log::info("SnapshotPlugin::onFinalisation",
-                      "Creating snapshot:", file);
+            std::string file =
+                cfg.output_directory + "/" + beam + "_" + period_tag + "_" + cfg.selection_rule + "_snapshot.root";
+            log::info("SnapshotPlugin::onFinalisation", "Creating snapshot:", file);
             loader_->snapshot(cfg.selection, file, cfg.columns);
         }
     }
