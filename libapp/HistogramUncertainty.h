@@ -132,7 +132,20 @@ inline void HistogramUncertainty::addCovariance(const TMatrixDSym &cov_to_add) {
     }
     Eigen::MatrixXd cov = base_cov + cov_e;
     Eigen::LLT<Eigen::MatrixXd> llt(cov);
-    shifts = llt.matrixL();
+    if (llt.info() == Eigen::NumericalIssue) {
+        // The covariance matrix is not positive definite. Project it to the
+        // nearest positive semidefinite matrix by removing negative
+        // eigenvalues before performing the decomposition. This prevents NaN
+        // entries in the resulting uncertainty shifts.
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(cov);
+        Eigen::VectorXd evals = es.eigenvalues().cwiseMax(0.0);
+        Eigen::MatrixXd cov_psd = es.eigenvectors() * evals.asDiagonal() *
+                                  es.eigenvectors().transpose();
+        Eigen::LLT<Eigen::MatrixXd> llt_psd(cov_psd);
+        shifts = llt_psd.matrixL();
+    } else {
+        shifts = llt.matrixL();
+    }
 }
 
 inline HistogramUncertainty HistogramUncertainty::operator+(double s) const {
