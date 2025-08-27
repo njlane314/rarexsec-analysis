@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "ROOT/RDataFrame.hxx"
@@ -27,14 +28,10 @@ class AnalysisDataLoader {
   public:
     using SampleFrameMap = std::map<SampleKey, SampleDefinition>;
 
-    AnalysisDataLoader(const RunConfigRegistry &rnreg,
-                       EventVariableRegistry varreg, const std::string &bm,
-                       std::vector<std::string> prds,
-                       const std::string &ntuple_base_dir, bool bld = true)
-        : run_registry_(rnreg), var_registry_(std::move(varreg)),
-          ntuple_base_directory_(ntuple_base_dir), beam_(bm),
-          periods_(std::move(prds)), blind_(bld), total_pot_(0.0),
-          total_triggers_(0) {
+    AnalysisDataLoader(const RunConfigRegistry &rnreg, EventVariableRegistry varreg, const std::string &bm,
+                       std::vector<std::string> prds, const std::string &ntuple_base_dir, bool bld = true)
+        : run_registry_(rnreg), var_registry_(std::move(varreg)), ntuple_base_directory_(ntuple_base_dir), beam_(bm),
+          periods_(std::move(prds)), blind_(bld), total_pot_(0.0), total_triggers_(0) {
         this->loadAll();
     }
 
@@ -42,24 +39,16 @@ class AnalysisDataLoader {
     double getTotalPot() const noexcept { return total_pot_; }
     long getTotalTriggers() const noexcept { return total_triggers_; }
     const std::string &getBeam() const noexcept { return beam_; }
-    const std::vector<std::string> &getPeriods() const noexcept {
-        return periods_;
-    }
+    const std::vector<std::string> &getPeriods() const noexcept { return periods_; }
     const RunConfig *getRunConfigForSample(const SampleKey &sk) const {
-        for (const auto &period : periods_) {
-            const auto &rc = run_registry_.get(beam_, period);
-            for (const auto &sample_json : rc.samples) {
-                if (sample_json.at("sample_key").get<std::string>() ==
-                    sk.str()) {
-                    return &rc;
-                }
-            }
+        auto it = run_config_cache_.find(sk);
+        if (it != run_config_cache_.end()) {
+            return it->second;
         }
         return nullptr;
     }
 
-    void snapshot(const std::string &filter_expr,
-                  const std::string &output_file,
+    void snapshot(const std::string &filter_expr, const std::string &output_file,
                   const std::vector<std::string> &columns = {}) const {
         bool first = true;
         ROOT::RDF::RSnapshotOptions opts;
@@ -80,15 +69,12 @@ class AnalysisDataLoader {
     }
 
     void printAllBranches() {
-        log::debug("AnalysisDataLoader::printAllBranches",
-                   "Available branches in loaded samples:");
+        log::debug("AnalysisDataLoader::printAllBranches", "Available branches in loaded samples:");
         for (auto &[sample_key, sample_def] : frames_) {
-            log::debug("AnalysisDataLoader::printAllBranches",
-                       "--- Sample:", sample_key.str(), "---");
+            log::debug("AnalysisDataLoader::printAllBranches", "--- Sample:", sample_key.str(), "---");
             auto branches = sample_def.nominal_node_.GetColumnNames();
             for (const auto &branch : branches) {
-                log::debug("AnalysisDataLoader::printAllBranches", "  - ",
-                           branch);
+                log::debug("AnalysisDataLoader::printAllBranches", "  - ", branch);
             }
         }
     }
@@ -104,11 +90,10 @@ class AnalysisDataLoader {
     double total_pot_;
     long total_triggers_;
     std::vector<std::unique_ptr<IEventProcessor>> processors_;
+    std::unordered_map<SampleKey, const RunConfig *> run_config_cache_;
 
     template <typename Head, typename... Tail>
-    std::unique_ptr<IEventProcessor>
-    chainEventProcessors(std::unique_ptr<Head> head,
-                         std::unique_ptr<Tail>... tail) {
+    std::unique_ptr<IEventProcessor> chainEventProcessors(std::unique_ptr<Head> head, std::unique_ptr<Tail>... tail) {
         if constexpr (sizeof...(tail) == 0) {
             return head;
         } else {
@@ -124,24 +109,19 @@ class AnalysisDataLoader {
             total_pot_ += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
             for (auto &sample_json : rc.samples) {
-                if (sample_json.contains("active") &&
-                    !sample_json.at("active").get<bool>()) {
+                if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
                     log::info("AnalysisDataLoader::loadAll",
-                              "Skipping inactive sample: ",
-                              sample_json.at("sample_key").get<std::string>());
+                              "Skipping inactive sample: ", sample_json.at("sample_key").get<std::string>());
                     continue;
                 }
                 auto pipeline = chainEventProcessors(
                     std::make_unique<WeightProcessor>(sample_json, total_pot_),
-                    std::make_unique<TruthChannelProcessor>(),
-                    std::make_unique<BlipProcessor>(),
-                    std::make_unique<MuonSelectionProcessor>(),
-                    std::make_unique<ReconstructionProcessor>());
+                    std::make_unique<TruthChannelProcessor>(), std::make_unique<BlipProcessor>(),
+                    std::make_unique<MuonSelectionProcessor>(), std::make_unique<ReconstructionProcessor>());
                 processors_.push_back(std::move(pipeline));
                 auto &proc = *processors_.back();
-                SampleDefinition sample{sample_json, rc.samples,
-                                        ntuple_base_directory_, var_registry_,
-                                        proc};
+                SampleDefinition sample{sample_json, rc.samples, ntuple_base_directory_, var_registry_, proc};
+                run_config_cache_.emplace(sample.sample_key_, &rc);
                 frames_.emplace(sample.sample_key_, std::move(sample));
             }
         }
