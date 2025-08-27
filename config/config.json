@@ -1,0 +1,45 @@
+{
+  "analysis_configs": {
+    "ntuple_base_directory": "/exp/uboone/data/users/nlane/ntuples",
+    "run_configurations": {
+      "numi_fhc": {
+        "run1": {
+          "nominal_pot": 1e+20,
+          "nominal_triggers": 1000000.0,
+          "samples": [
+            {
+              "sample_key": "mc_inclusive_run1_fhc",
+              "sample_type": "mc",
+              "active": true,
+              "exclusion_truth_filters": ["mc_strangeness_run1_fhc"],
+              "relative_path": "mc_inclusive_run1_fhc.root",
+              "pot": 1.8820753949013836e+21,
+              "triggers": 570553
+            },
+            {
+              "sample_key": "mc_strangeness_run1_fhc",
+              "sample_type": "mc",
+              "active": true,
+              "truth_filter": "(mc_n_strange > 0)",
+              "relative_path": "mc_strangeness_run1_fhc.root",
+              "pot": 1.0093508017259402e+23,
+              "triggers": 116808
+            }
+          ]
+        }
+      }
+    },
+    "plugins": [
+      {
+        "path": "build/SelectionEfficiencyPlugin.so"
+      }
+    ]
+  },
+  "plot_configs": {
+    "plugins": [
+      {
+        "path": "build/SelectionEfficiencyPlugin.so"
+      }
+    ]
+  }
+}

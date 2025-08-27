@@ -1,7 +1,0 @@
-{
-  "plugins": [
-    {
-      "path": "build/SelectionEfficiencyPlugin.so"
-    }
-  ]
-}

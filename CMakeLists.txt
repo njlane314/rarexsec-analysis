@@ -39,6 +39,7 @@ add_subdirectory(tests)
 
 set(ANALYSIS_EXECUTABLES
     analyse
+    plot
 )
 
 foreach(exe ${ANALYSIS_EXECUTABLES})

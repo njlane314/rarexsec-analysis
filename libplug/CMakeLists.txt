@@ -32,5 +32,3 @@ function(add_plugin NAME SRC EXTRA_LIBS)
     POSITION_INDEPENDENT_CODE ON
   )
 endfunction()
-
-
