@@ -11,7 +11,7 @@ source .build.sh
 
 ## Configure
 ```bash
-python configurate.py
+python scripts/configurate.py
 ```
 Generates `config.json` by processing the sample definitions in `samples.json` and hadding inputs as needed.
 `samples.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
