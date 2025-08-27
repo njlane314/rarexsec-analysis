@@ -11,16 +11,16 @@ source .build.sh
 
 ## Configure
 ```bash
-python scripts/configurate.py
+python scripts/generate_analysis_config.py
 ```
-Generates `config/config.json` by processing the sample definitions in `config/samples.json` and hadding inputs as needed.
-`config/samples.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
+Generates `config/analysis_config.json` by processing the sample definitions in `config/sample_definitions.json` and hadding inputs as needed.
+`config/sample_definitions.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
 
 ## Run
 ```bash
-./build/analyse config/config.json [config/plugins/<plugin>.json]
+./build/analyse config/analysis_config.json [config/plugins/<plugin>.json]
 ```
-Runs the analysis using `config/config.json` and optional plugin definitions from `config/plugins/`.
+Runs the analysis using `config/analysis_config.json` and optional plugin definitions from `config/plugins/`.
 
 ## Test
 ```bash
