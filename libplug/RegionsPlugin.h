@@ -56,6 +56,6 @@ class RegionsPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -15,11 +15,8 @@
 using namespace analysis;
 
 int main() {
-    // Binning with explicit underflow and overflow bins
     std::vector<double> edges{-1.0, 0.0, 1.0, 2.0, 3.0, 4.0};
     BinningDefinition binning(edges, "x", "x", {});
-
-    // Include counts for underflow and overflow
     std::vector<double> counts{5.0, 1.0, 2.0, 3.0, 6.0};
     Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(counts.size());
     Eigen::MatrixXd shifts = sh_vec;

@@ -13,12 +13,12 @@ namespace analysis {
 
 struct TH1DRenderer {
     mutable TH1D *hist = nullptr;
-    Color_t color = kBlack;
+    Color_t colour = kBlack;
     int hatch = 0;
     TString tex;
 
     void style(Color_t c, int h, const TString &t) {
-        color = c;
+        colour = c;
         hatch = h;
         tex = t;
     }
@@ -38,11 +38,11 @@ struct TH1DRenderer {
             hist->SetBinContent(i + 1, s.counts[i]);
             hist->SetBinError(i + 1, s.err(i));
         }
-        hist->SetLineColor(color);
-        hist->SetMarkerColor(color);
+        hist->SetLineColor(colour);
+        hist->SetMarkerColor(colour);
         hist->SetFillStyle(hatch);
         if (hatch)
-            hist->SetFillColor(color);
+            hist->SetFillColor(colour);
     }
 
     const TH1D *get(const HistogramUncertainty &s) const {
@@ -51,6 +51,6 @@ struct TH1DRenderer {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

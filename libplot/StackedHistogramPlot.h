@@ -305,12 +305,6 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
-
-        // Extend the axis range by directly modifying the frame histogram.
-        // Calling SetLimits on the THStack axis can distort the positions of
-        // the bins when variable-width binning is used.  Adjusting the frame
-        // histogram instead keeps the bins in their original locations while
-        // allowing underflow and overflow bins to remain visible.
         frame->GetXaxis()->SetLimits(min_edge, max_edge);
         frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
@@ -374,6 +368,6 @@ class StackedHistogramPlot : public HistogramPlotterBase {
     std::vector<TObject *> cut_visuals_;
 };
 
-} // namespace analysis
+}
 
 #endif

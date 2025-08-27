@@ -115,6 +115,6 @@ class DetectorSystematicStrategy : public SystematicStrategy {
     std::string identifier_;
 };
 
-} // namespace analysis
+}
 
 #endif

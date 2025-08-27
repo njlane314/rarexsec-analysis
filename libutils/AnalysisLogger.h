@@ -144,8 +144,8 @@ template <typename... Args>
 inline void fatal(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().fatal(ctx, args...);
 }
-} // namespace log
+}
 
-} // namespace analysis
+}
 
 #endif

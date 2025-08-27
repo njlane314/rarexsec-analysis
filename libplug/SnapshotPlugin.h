@@ -17,10 +17,10 @@ namespace analysis {
 class SnapshotPlugin : public IAnalysisPlugin {
   public:
     struct SnapshotConfig {
-        std::string selection_rule; // key in SelectionRegistry
-        Selection selection;        // resolved selection
+        std::string selection_rule;
+        Selection selection;
         std::string output_directory{"snapshots"};
-        std::vector<std::string> columns; // columns to persist
+        std::vector<std::string> columns;
     };
 
     explicit SnapshotPlugin(const nlohmann::json &cfg) {
@@ -80,6 +80,6 @@ class SnapshotPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-} // namespace analysis
+}
 
 #endif

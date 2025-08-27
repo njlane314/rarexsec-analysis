@@ -10,6 +10,6 @@ struct Cut {
     CutDirection direction;
 };
 
-} // namespace analysis
+}
 
 #endif

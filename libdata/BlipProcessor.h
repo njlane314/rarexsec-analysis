@@ -70,6 +70,6 @@ class BlipProcessor : public IEventProcessor {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

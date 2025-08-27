@@ -122,6 +122,6 @@ class SystematicsProcessor {
     SystematicFutures systematic_futures_;
 };
 
-} // namespace analysis
+}
 
 #endif

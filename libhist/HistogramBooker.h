@@ -48,6 +48,6 @@ class HistogramBooker : public IHistogramBooker {
     StratifierManager stratifier_manager_;
 };
 
-} // namespace analysis
+}
 
 #endif

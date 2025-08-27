@@ -41,6 +41,6 @@ class OccupancyMatrixPlot : public HistogramPlotterBase {
     TH2F *hist_;
 };
 
-} // namespace analysis
+}
 
 #endif
