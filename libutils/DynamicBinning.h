@@ -15,7 +15,7 @@
 
 namespace analysis {
 
-enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis };
+enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis, Scott, Sturges, Rice, Sqrt };
 
 class DynamicBinning {
   public:
@@ -240,7 +240,20 @@ class DynamicBinning {
 
         std::vector<double> edges;
 
-        if (strategy == DynamicBinningStrategy::FreedmanDiaconis) {
+        double neff_total = (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
+
+        auto add_uniform_edges = [&](int target_bins) {
+            edges.reserve(static_cast<size_t>(target_bins) + 1);
+            double bin_width = (xmax - xmin) / static_cast<double>(target_bins);
+            edges.push_back(xmin);
+            for (int k = 1; k < target_bins; ++k) {
+                edges.push_back(xmin + k * bin_width);
+            }
+            edges.push_back(xmax);
+        };
+
+        switch (strategy) {
+        case DynamicBinningStrategy::FreedmanDiaconis: {
             auto quant = [&](double q) {
                 double target = q * sumw;
                 double cum = 0.0;
@@ -263,21 +276,47 @@ class DynamicBinning {
             if (!(bin_width > 0.0)) {
                 bin_width = xmax - xmin;
             }
-            int target_bins = static_cast<int>(std::ceil((xmax - xmin) / bin_width));
-            if (target_bins < 1)
-                target_bins = 1;
-
-            edges.reserve(static_cast<size_t>(target_bins) + 1);
-            edges.push_back(xmin);
-            for (int k = 1; k < target_bins; ++k) {
-                edges.push_back(xmin + k * bin_width);
+            int target_bins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_width)));
+            add_uniform_edges(target_bins);
+            break;
+        }
+        case DynamicBinningStrategy::Scott: {
+            double sumwx = 0.0;
+            for (const auto &p : in_range) {
+                sumwx += p.first * p.second;
             }
-            edges.push_back(xmax);
-        } else {
-            double neff_total = (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
-            int target_bins = static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0)));
-            if (target_bins < 1)
-                target_bins = 1;
+            double mean = sumwx / sumw;
+            double swvar = 0.0;
+            for (const auto &p : in_range) {
+                double diff = p.first - mean;
+                swvar += p.second * diff * diff;
+            }
+            double sigma = std::sqrt(swvar / sumw);
+            double bin_width = 3.5 * sigma * std::pow(neff_total, -1.0 / 3.0);
+            if (!(bin_width > 0.0)) {
+                bin_width = xmax - xmin;
+            }
+            int target_bins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_width)));
+            add_uniform_edges(target_bins);
+            break;
+        }
+        case DynamicBinningStrategy::Sturges: {
+            int target_bins = std::max(1, static_cast<int>(std::ceil(std::log2(neff_total) + 1.0)));
+            add_uniform_edges(target_bins);
+            break;
+        }
+        case DynamicBinningStrategy::Rice: {
+            int target_bins = std::max(1, static_cast<int>(std::ceil(2.0 * std::cbrt(neff_total))));
+            add_uniform_edges(target_bins);
+            break;
+        }
+        case DynamicBinningStrategy::Sqrt: {
+            int target_bins = std::max(1, static_cast<int>(std::ceil(std::sqrt(neff_total))));
+            add_uniform_edges(target_bins);
+            break;
+        }
+        default: {
+            int target_bins = std::max(1, static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0))));
 
             edges.reserve(static_cast<size_t>(target_bins) + 3);
             edges.push_back(xmin);
@@ -299,6 +338,8 @@ class DynamicBinning {
             }
 
             edges.push_back(xmax);
+            break;
+        }
         }
 
         edges.front() = domain_min;

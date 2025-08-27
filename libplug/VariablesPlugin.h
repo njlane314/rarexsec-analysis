@@ -4,6 +4,7 @@
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "AnalysisDefinition.h"
@@ -18,8 +19,7 @@ class VariablesPlugin : public IAnalysisPlugin {
   public:
     explicit VariablesPlugin(const nlohmann::json &cfg) : config_(cfg) {}
 
-    void onInitialisation(AnalysisDefinition &def,
-                          const SelectionRegistry &) override {
+    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("VariablesPlugin::onInitialisation", "Defining variables...");
         if (!config_.contains("variables"))
             return;
@@ -32,33 +32,30 @@ class VariablesPlugin : public IAnalysisPlugin {
             auto strat = var_cfg.at("stratum").get<std::string>();
 
             const auto &bins_cfg = var_cfg.at("bins");
-            if (bins_cfg.is_string() &&
-                bins_cfg.get<std::string>() == "dynamic") {
+            if (bins_cfg.is_string() && bins_cfg.get<std::string>() == "dynamic") {
                 BinningDefinition placeholder_bins(
-                    {-std::numeric_limits<double>::infinity(),
-                     std::numeric_limits<double>::infinity()},
-                    branch, label, {}, strat);
-                def.addVariable(name, branch, label, placeholder_bins, strat,
-                                true, false);
-            } else if (bins_cfg.is_object() && bins_cfg.contains("mode") &&
-                       bins_cfg.at("mode") == "dynamic") {
-                double domain_min = bins_cfg.value(
-                    "min", -std::numeric_limits<double>::infinity());
-                double domain_max = bins_cfg.value(
-                    "max", std::numeric_limits<double>::infinity());
-                bool include_oob =
-                    bins_cfg.value("include_out_of_range_bins", true);
-                std::string strat_mode =
-                    bins_cfg.value("strategy", std::string("equal_weight"));
-                DynamicBinningStrategy strategy =
-                    DynamicBinningStrategy::EqualWeight;
-                if (strat_mode == "freedman_diaconis") {
-                    strategy = DynamicBinningStrategy::FreedmanDiaconis;
+                    {-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, branch, label,
+                    {}, strat);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, false);
+            } else if (bins_cfg.is_object() && bins_cfg.contains("mode") && bins_cfg.at("mode") == "dynamic") {
+                double domain_min = bins_cfg.value("min", -std::numeric_limits<double>::infinity());
+                double domain_max = bins_cfg.value("max", std::numeric_limits<double>::infinity());
+                bool include_oob = bins_cfg.value("include_out_of_range_bins", true);
+                std::string strat_mode = bins_cfg.value("strategy", std::string("equal_weight"));
+                static const std::unordered_map<std::string, DynamicBinningStrategy> strategy_map = {
+                    {"equal_weight", DynamicBinningStrategy::EqualWeight},
+                    {"freedman_diaconis", DynamicBinningStrategy::FreedmanDiaconis},
+                    {"scott", DynamicBinningStrategy::Scott},
+                    {"sturges", DynamicBinningStrategy::Sturges},
+                    {"rice", DynamicBinningStrategy::Rice},
+                    {"sqrt", DynamicBinningStrategy::Sqrt}};
+                DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight;
+                auto it = strategy_map.find(strat_mode);
+                if (it != strategy_map.end()) {
+                    strategy = it->second;
                 }
-                BinningDefinition placeholder_bins({domain_min, domain_max},
-                                                   branch, label, {}, strat);
-                def.addVariable(name, branch, label, placeholder_bins, strat,
-                                true, include_oob, strategy);
+                BinningDefinition placeholder_bins({domain_min, domain_max}, branch, label, {}, strat);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob, strategy);
             } else {
                 std::vector<double> edges;
                 if (bins_cfg.is_array()) {
@@ -76,17 +73,14 @@ class VariablesPlugin : public IAnalysisPlugin {
 
             if (var_cfg.contains("regions")) {
                 for (auto const &region_name : var_cfg.at("regions")) {
-                    def.addVariableToRegion(region_name.get<std::string>(),
-                                            name);
+                    def.addVariableToRegion(region_name.get<std::string>(), name);
                 }
             }
         }
     }
 
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
+    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
+    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
     void onFinalisation(const RegionAnalysisMap &) override {}
 
   private:
