@@ -3,10 +3,11 @@
 Framework for rare cross-section measurements.
 
 ## Build
+
+Compile the project inside the standard MicroBooNE Apptainer container:
+
 ```bash
-source .container.sh
-source .setup.sh
-source .build.sh
+scripts/run_in_apptainer.sh bash -lc "source .build.sh"
 ```
 
 ## Configure
@@ -18,13 +19,13 @@ Generates `config.json` by processing the sample definitions in `samples.json` a
 
 ## Run
 ```bash
-./build/analyse config.json [plugins.json]
+scripts/run_in_apptainer.sh ./build/analyse config.json [plugins.json]
 ```
 Runs the analysis using `config.json` and optional plugin definitions.
 
 ## Test
 ```bash
-ctest --output-on-failure
+scripts/run_in_apptainer.sh ctest --output-on-failure
 ```
 
 ## Example JSON plugins
@@ -64,7 +65,7 @@ bins: `equal_weight`, `freedman_diaconis`, `scott`, `sturges`, `rice`, or
         "signal_group" : "inclusive_strange_channels",
         "variable" : "some_discriminant",
         "output_directory" : "./plots",
-        "plot_name" : "roc_curve"
+        "plot_name" : "roc_curve",
     } ]
 }
 ```
