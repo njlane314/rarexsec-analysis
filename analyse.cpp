@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-        nlohmann::json cfg = loadJsonFile(argv[1]);
+        nlohmann::json cfg = analysis::loadJsonFile(argv[1]);
         auto result = runAnalysis(cfg.at("analysis_configs"));
         result.saveToFile(argv[2]);
     } catch (const std::exception &e) {
