@@ -22,7 +22,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         std::string selection_rule;
         std::string channel_column;
         std::string signal_group;
-        std::string output_directory{"plots"};
+        std::string output_directory{"./plots"};
         std::string plot_name{"selection_efficiency"};
         bool use_log_y{false};
         std::vector<std::string> clauses;
@@ -39,7 +39,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             pc.selection_rule = p.value("selection_rule", std::string{});
             pc.channel_column = p.at("channel_column").get<std::string>();
             pc.signal_group = p.at("signal_group").get<std::string>();
-            pc.output_directory = p.value("output_directory", std::string{"plots"});
+            pc.output_directory = p.value("output_directory", std::string{"./plots"});
             pc.plot_name = p.value("plot_name", std::string{"selection_efficiency"});
             pc.use_log_y = p.value("log_y", false);
             pc.initial_label = p.value("initial_label", std::string{"All Events"});
