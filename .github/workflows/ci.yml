@@ -12,10 +12,23 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libeigen3-dev libtbb-dev nlohmann-json3-dev libtorch-dev root-system
+          sudo apt-get install -y build-essential cmake wget curl unzip libeigen3-dev libtbb-dev nlohmann-json3-dev
+          curl -L https://root.cern/download/root_v6.30.04.Linux-ubuntu22-x86_64-gcc12.2.tar.gz -o root.tar.gz
+          tar -xf root.tar.gz
+          echo "ROOT_DIR=$GITHUB_WORKSPACE/root" >> $GITHUB_ENV
+          curl -L https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.2.2%2Bcpu.zip -o libtorch.zip
+          unzip libtorch.zip
+          echo "CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/libtorch:\$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$GITHUB_WORKSPACE/libtorch/lib:\$LD_LIBRARY_PATH" >> $GITHUB_ENV
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          source $ROOT_DIR/bin/thisroot.sh
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
-        run: cmake --build build -j$(nproc)
+        run: |
+          source $ROOT_DIR/bin/thisroot.sh
+          cmake --build build -j$(nproc)
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          source $ROOT_DIR/bin/thisroot.sh
+          ctest --test-dir build --output-on-failure
