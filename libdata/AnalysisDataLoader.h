@@ -28,10 +28,12 @@ class AnalysisDataLoader {
   public:
     using SampleFrameMap = std::map<SampleKey, SampleDefinition>;
 
-    AnalysisDataLoader(const RunConfigRegistry &rnreg, EventVariableRegistry varreg, const std::string &bm,
-                       std::vector<std::string> prds, const std::string &ntuple_base_dir, bool bld = true)
-        : run_registry_(rnreg), var_registry_(std::move(varreg)), ntuple_base_directory_(ntuple_base_dir), beam_(bm),
-          periods_(std::move(prds)), blind_(bld), total_pot_(0.0), total_triggers_(0) {
+    AnalysisDataLoader(const RunConfigRegistry &run_config_registry, EventVariableRegistry variable_registry,
+                       const std::string &beam_mode, std::vector<std::string> periods,
+                       const std::string &ntuple_base_dir, bool blind = true)
+        : run_registry_(run_config_registry), var_registry_(std::move(variable_registry)),
+          ntuple_base_directory_(ntuple_base_dir), beam_(beam_mode), periods_(std::move(periods)), blind_(blind),
+          total_pot_(0.0), total_triggers_(0) {
         this->loadAll();
     }
 

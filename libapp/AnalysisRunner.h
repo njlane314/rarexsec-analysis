@@ -44,7 +44,7 @@ class AnalysisRunner {
     }
 
     RegionAnalysisMap run() {
-        analysis::log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
+        log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
         plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
 
         for (const auto &var_handle : analysis_definition_.variables()) {
@@ -81,15 +81,15 @@ class AnalysisRunner {
         size_t region_index = 0;
         for (const auto &region_handle : regions) {
             ++region_index;
-            analysis::log::info("AnalysisRunner::run", "Engaging region protocol (", region_index, "/", region_count,
-                                "):", region_handle.key_.str());
+            log::info("AnalysisRunner::run", "Engaging region protocol (", region_index, "/", region_count,
+                      "):", region_handle.key_.str());
 
             RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
             std::unordered_map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
-            std::unordered_map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
+            std::unordered_map<SampleKey, ROOT::RDF::RNode> monte_carlo_nodes;
 
-            analysis::log::info("AnalysisRunner::run", "Processing sample ensemble...");
+            log::info("AnalysisRunner::run", "Processing sample ensemble...");
             auto &sample_frames = data_loader_.getSampleFrames();
 
             const std::string region_beam = region_analysis.beamConfig();
@@ -126,8 +126,8 @@ class AnalysisRunner {
                 }
                 plugin_manager.notifyPreSampleProcessing(sample_key, region_handle.key_, *run_config);
 
-                analysis::log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total,
-                                    "):", sample_key.str());
+                log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total,
+                          "):", sample_key.str());
 
                 auto region_df = sample_def.nominal_node_;
                 auto selection_expr = region_handle.selection().str();
@@ -135,7 +135,7 @@ class AnalysisRunner {
                     region_df = region_df.Filter(selection_expr);
                 }
 
-                analysis::log::info("AnalysisRunner::run", "Configuring systematic variations...");
+                log::info("AnalysisRunner::run", "Configuring systematic variations...");
                 std::unordered_map<SampleVariation, SampleDataset> variation_datasets;
                 for (auto &[variation_type, variation_node] : sample_def.variation_nodes_) {
                     auto variation_df = variation_node;
@@ -152,15 +152,15 @@ class AnalysisRunner {
                 if (sample_def.isData()) {
                     sample_processors[sample_key] = std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
                 } else {
-                    mc_rnodes.emplace(sample_key, region_df);
+                    monte_carlo_nodes.emplace(sample_key, region_df);
                     sample_processors[sample_key] =
                         std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
                 }
             }
 
-            analysis::log::info("AnalysisRunner::run", "Sample processing sequence complete.");
+            log::info("AnalysisRunner::run", "Sample processing sequence complete.");
 
-            analysis::log::info("AnalysisRunner::run", "Iterating across observable variables...");
+            log::info("AnalysisRunner::run", "Iterating across observable variables...");
             const auto &vars = region_handle.vars();
             size_t var_total = vars.size();
             size_t var_index = 0;
@@ -173,22 +173,22 @@ class AnalysisRunner {
                 VariableResult result;
                 result.binning_ = binning;
 
-                analysis::log::info("AnalysisRunner::run", "Deploying variable pipeline (", var_index, "/", var_total,
-                                    "):", var_key.str());
-                analysis::log::info("AnalysisRunner::run", "Executing sample processors...");
+                log::info("AnalysisRunner::run", "Deploying variable pipeline (", var_index, "/", var_total,
+                          "):", var_key.str());
+                log::info("AnalysisRunner::run", "Executing sample processors...");
                 tbb::parallel_for_each(sample_processors.begin(), sample_processors.end(),
                                        [&](auto &p) { p.second->book(*histogram_booker_, binning, model); });
 
-                analysis::log::info("AnalysisRunner::run", "Registering systematic variations...");
-                tbb::parallel_for_each(mc_rnodes.begin(), mc_rnodes.end(), [&](auto &p) {
+                log::info("AnalysisRunner::run", "Registering systematic variations...");
+                tbb::parallel_for_each(monte_carlo_nodes.begin(), monte_carlo_nodes.end(), [&](auto &p) {
                     systematics_processor_.bookSystematics(p.first, p.second, binning, model);
                 });
 
-                analysis::log::info("AnalysisRunner::run", "Persisting results...");
+                log::info("AnalysisRunner::run", "Persisting results...");
                 tbb::parallel_for_each(sample_processors.begin(), sample_processors.end(),
                                        [&](auto &p) { p.second->contributeTo(result); });
 
-                analysis::log::info("AnalysisRunner::run", "Computing systematic covariances");
+                log::info("AnalysisRunner::run", "Computing systematic covariances");
                 systematics_processor_.processSystematics(result);
                 systematics_processor_.clearFutures();
 
@@ -203,8 +203,8 @@ class AnalysisRunner {
 
                 region_analysis.addFinalVariable(var_key, std::move(result));
 
-                analysis::log::info("AnalysisRunner::run", "Variable pipeline concluded (", var_index, "/", var_total,
-                                    "):", var_key.str());
+                log::info("AnalysisRunner::run", "Variable pipeline concluded (", var_index, "/", var_total,
+                          "):", var_key.str());
             }
 
             analysis_regions[region_handle.key_] = std::move(region_analysis);
@@ -213,8 +213,8 @@ class AnalysisRunner {
                 plugin_manager.notifyPostSampleProcessing(sample_key, region_handle.key_, analysis_regions);
             }
 
-            analysis::log::info("AnalysisRunner::run", "Region protocol complete (", region_index, "/", region_count,
-                                "):", region_handle.key_.str());
+            log::info("AnalysisRunner::run", "Region protocol complete (", region_index, "/", region_count,
+                      "):", region_handle.key_.str());
         }
 
         plugin_manager.notifyFinalisation(analysis_regions);

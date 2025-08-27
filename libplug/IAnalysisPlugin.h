@@ -20,7 +20,7 @@ class IAnalysisPlugin {
 
     virtual void onPreSampleProcessing(const SampleKey &sample_key,
                                        const RegionKey &region_key,
-                                       const RunConfig &region) = 0;
+                                       const RunConfig &run_config) = 0;
 
     virtual void onPostSampleProcessing(const SampleKey &sample_key,
                                         const RegionKey &region_key,

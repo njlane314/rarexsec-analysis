@@ -1,5 +1,5 @@
-#ifndef ANALYSIS_DISPATCHER_H
-#define ANALYSIS_DISPATCHER_H
+#ifndef ANALYSIS_PLUGIN_MANAGER_H
+#define ANALYSIS_PLUGIN_MANAGER_H
 
 #include <dlfcn.h>
 #include <map>
@@ -39,6 +39,9 @@ class AnalysisPluginManager {
 
             using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &);
             auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
+            if (!create) {
+                create = reinterpret_cast<FactoryFn>(dlsym(handle, "createRegionsPlugin"));
+            }
             if (!create)
                 throw std::runtime_error(dlerror());
 
@@ -53,9 +56,9 @@ class AnalysisPluginManager {
             pl->onInitialisation(def, selec_reg);
     }
 
-    void notifyPreSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RunConfig &reg) {
+    void notifyPreSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RunConfig &run_config) {
         for (auto &pl : plugins_)
-            pl->onPreSampleProcessing(skey, rkey, reg);
+            pl->onPreSampleProcessing(skey, rkey, run_config);
     }
 
     void notifyPostSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RegionAnalysisMap &res) {
