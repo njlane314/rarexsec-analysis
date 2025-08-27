@@ -38,6 +38,13 @@ bool psd(const Eigen::MatrixXd& m) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(m);
     return (es.eigenvalues().array()>=-1e-12).all();
 }
+Eigen::MatrixXd toEigen(const TMatrixDSym& m) {
+    Eigen::MatrixXd out(m.GetNrows(),m.GetNcols());
+    for(int i=0;i<m.GetNrows();++i)
+        for(int j=0;j<m.GetNcols();++j)
+            out(i,j)=m(i,j);
+    return out;
+}
 }
 
 // Processor: check C_total = sum C_s + I and propagated errors sqrt(diag C_total)
@@ -48,7 +55,7 @@ TEST_CASE("systematics processor covariance") {
     std::vector<double> dn{0.8,1.2};
     std::vector<ROOT::RVec<unsigned short>> u{ROOT::RVec<unsigned short>{2,0},ROOT::RVec<unsigned short>{0,2}};
     ROOT::RDataFrame df(x.size());
-    auto rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&up](ULong64_t i){return up[i];},{"rdfentry_"}).Define("knob_dn",[&dn](ULong64_t i){return dn[i];},{"rdfentry_"}).Define("uni_weights",[&u](ULong64_t i){return u[i];},{"rdfentry_"});
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&up](ULong64_t i){return up[i];},{"rdfentry_"}).Define("knob_dn",[&dn](ULong64_t i){return dn[i];},{"rdfentry_"}).Define("uni_weights",[&u](ULong64_t i){return u[i];},{"rdfentry_"});
     KnobDef k{"knob","knob_up","knob_dn"};
     UniverseDef un{"uni","uni_weights",2};
     SystematicsProcessor p({k},{un});
@@ -64,15 +71,15 @@ TEST_CASE("systematics processor covariance") {
     Eigen::MatrixXd uexp=covMatrix({Eigen::Vector2d(1,-1),Eigen::Vector2d(-1,1)});
     // C_d from detector shift Delta=[0.1,-0.1]
     Eigen::MatrixXd dexp=covMatrix({Eigen::Vector2d(0.1,-0.1)});
-    CHECK((r.covariance_matrices_.at(SystematicKey(std::string{"knob"}))-wexp).norm()<1e-6);
-    CHECK((r.covariance_matrices_.at(SystematicKey(std::string{"uni"}))-uexp).norm()<1e-6);
-    CHECK((r.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"}))-dexp).norm()<1e-6);
-    CHECK(psd(r.covariance_matrices_.at(SystematicKey(std::string{"knob"}))));
-    CHECK(psd(r.covariance_matrices_.at(SystematicKey(std::string{"uni"}))));
-    CHECK(psd(r.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"}))));
+    CHECK((toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"knob"})))-wexp).norm()<1e-6);
+    CHECK((toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"uni"})))-uexp).norm()<1e-6);
+    CHECK((toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"})))-dexp).norm()<1e-6);
+    CHECK(psd(toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"knob"})))));
+    CHECK(psd(toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"uni"})))));
+    CHECK(psd(toEigen(r.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"})))));
     Eigen::MatrixXd totalexp=wexp+uexp+dexp+Eigen::MatrixXd::Identity(2,2);
-    CHECK((r.total_covariance_-totalexp).norm()<1e-6);
-    CHECK(psd(r.total_covariance_));
+    CHECK((toEigen(r.total_covariance_)-totalexp).norm()<1e-6);
+    CHECK(psd(toEigen(r.total_covariance_)));
     Eigen::Vector2d err{std::sqrt(totalexp(0,0)),std::sqrt(totalexp(1,1))};
     CHECK((Eigen::Vector2d(r.nominal_with_band_.getBinError(0),r.nominal_with_band_.getBinError(1))-err).norm()<1e-6);
     CHECK(r.universe_projected_hists_.empty());
@@ -84,7 +91,7 @@ TEST_CASE("universe systematic strategy covariance") {
     std::vector<double> x{0.5,1.5};
     std::vector<ROOT::RVec<unsigned short>> u{ROOT::RVec<unsigned short>{2,0},ROOT::RVec<unsigned short>{0,2}};
     ROOT::RDataFrame df(x.size());
-    auto rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("uni_weights",[&u](ULong64_t i){return u[i];},{"rdfentry_"});
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("uni_weights",[&u](ULong64_t i){return u[i];},{"rdfentry_"});
     UniverseSystematicStrategy s(UniverseDef{"uni","uni_weights",2});
     SystematicFutures f;
     SampleKey sk(std::string{"s"});
@@ -93,8 +100,8 @@ TEST_CASE("universe systematic strategy covariance") {
     auto cov=s.computeCovariance(r,f);
     // C = 1/2([1,-1]^T[1,-1] + [-1,1]^T[-1,1])
     Eigen::MatrixXd exp=covMatrix({Eigen::Vector2d(1,-1),Eigen::Vector2d(-1,1)});
-    CHECK((cov-exp).norm()<1e-6);
-    CHECK(psd(cov));
+    CHECK((toEigen(cov)-exp).norm()<1e-6);
+    CHECK(psd(toEigen(cov)));
 }
 
 // Weight shifts: symmetric plus or minus 0.2 produce diagonal covariance
@@ -104,7 +111,7 @@ TEST_CASE("weight systematic strategy covariance") {
     std::vector<double> up{1.2,0.8};
     std::vector<double> dn{0.8,1.2};
     ROOT::RDataFrame df(x.size());
-    auto rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&up](ULong64_t i){return up[i];},{"rdfentry_"}).Define("knob_dn",[&dn](ULong64_t i){return dn[i];},{"rdfentry_"});
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&up](ULong64_t i){return up[i];},{"rdfentry_"}).Define("knob_dn",[&dn](ULong64_t i){return dn[i];},{"rdfentry_"});
     WeightSystematicStrategy s(KnobDef{"k","knob_up","knob_dn"});
     SystematicFutures f;
     SampleKey sk(std::string{"s"});
@@ -113,8 +120,8 @@ TEST_CASE("weight systematic strategy covariance") {
     auto cov=s.computeCovariance(r,f);
     // Average vv^T for v=[0.2,-0.2] gives 0.04 on the diagonal
     Eigen::MatrixXd exp=covMatrix({Eigen::Vector2d(0.2,-0.2),Eigen::Vector2d(-0.2,0.2)});
-    CHECK((cov-exp).norm()<1e-6);
-    CHECK(psd(cov));
+    CHECK((toEigen(cov)-exp).norm()<1e-6);
+    CHECK(psd(toEigen(cov)));
 }
 
 // Detector variation: single shift Delta=[0.1,-0.1] => C=Delta Delta^T
@@ -128,7 +135,7 @@ TEST_CASE("detector systematic strategy covariance") {
     SystematicFutures f;
     auto cov=s.computeCovariance(r,f);
     Eigen::MatrixXd exp=covMatrix({Eigen::Vector2d(0.1,-0.1)});
-    CHECK((cov-exp).norm()<1e-6);
-    CHECK(psd(cov));
+    CHECK((toEigen(cov)-exp).norm()<1e-6);
+    CHECK(psd(toEigen(cov)));
 }
 
