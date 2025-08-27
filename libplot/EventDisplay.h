@@ -56,6 +56,7 @@ class SemanticDisplayPlot : public EventDisplayBase {
         : EventDisplayBase(std::move(tag), image_size, std::move(output_directory)), data_(std::move(data)) {}
 
     void draw(TCanvas &canvas) override {
+        canvas.cd();
         TH2F hist(plot_name_.c_str(), plot_name_.c_str(), image_size_, 0, image_size_, image_size_, 0, image_size_);
         int palette[10];
         for (int i = 0; i < 10; ++i)
