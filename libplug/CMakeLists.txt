@@ -33,20 +33,8 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-add_plugin(RegionsPlugin       RegionsPlugin.cxx           "")
-add_plugin(VariablesPlugin        VariablesPlugin.cxx         "")
-add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cxx  libplot)
-add_plugin(EventDisplayPlugin     EventDisplayPlugin.cxx      libplot)
 add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.cxx libplot)
-add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.cxx libplot)
-add_plugin(OccupancyMatrixPlugin OccupancyMatrixPlugin.cxx libplot)
-add_plugin(SystematicBreakdownPlugin SystematicBreakdownPlugin.cxx libplot)
-add_plugin(RocCurvePlugin        RocCurvePlugin.cxx         libplot)
-add_plugin(SnapshotPlugin        SnapshotPlugin.cxx        "")
 
-foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin SelectionEfficiencyPlugin SystematicBreakdownPlugin RocCurvePlugin OccupancyMatrixPlugin SnapshotPlugin)
-
-  set_target_properties(${_p} PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-  )
-endforeach()
+set_target_properties(SelectionEfficiencyPlugin PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
