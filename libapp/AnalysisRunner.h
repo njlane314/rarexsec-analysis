@@ -19,7 +19,6 @@
 #include "AnalysisPluginManager.h"
 #include "AnalysisTypes.h"
 #include "DataProcessor.h"
-#include "DynamicBinning.h"
 #include "EventVariableRegistry.h"
 #include "IHistogramBooker.h"
 #include "ISampleProcessor.h"
@@ -47,32 +46,7 @@ class AnalysisRunner {
         log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
         plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
 
-        for (const auto &var_handle : analysis_definition_.variables()) {
-            if (analysis_definition_.isDynamic(var_handle.key_)) {
-                log::info("AnalysisRunner::run", "Deriving dynamic bin schema for variable:", var_handle.key_.str());
-
-                std::vector<ROOT::RDF::RNode> mc_nodes;
-                for (auto &[sample_key, sample_def] : data_loader_.getSampleFrames()) {
-                    if (sample_def.isMc()) {
-                        mc_nodes.emplace_back(sample_def.nominal_node_);
-                    }
-                }
-
-                if (mc_nodes.empty()) {
-                    log::fatal("AnalysisRunner::run",
-                               "Cannot perform dynamic binning: No Monte Carlo samples were found!");
-                }
-
-                bool include_oob = analysis_definition_.includeOutOfRangeBins(var_handle.key_);
-                auto strategy = analysis_definition_.dynamicBinningStrategy(var_handle.key_);
-                BinningDefinition new_bins = DynamicBinning::calculate(
-                    mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0, include_oob, strategy);
-
-                log::info("AnalysisRunner::run", "--> Optimal bin count resolved:", new_bins.getBinNumber());
-
-                analysis_definition_.setBinning(var_handle.key_, std::move(new_bins));
-            }
-        }
+        analysis_definition_.resolveDynamicBinning(data_loader_);
 
         RegionAnalysisMap analysis_regions;
 
@@ -273,6 +247,6 @@ class AnalysisRunner {
     std::string serialisation_directory_{"variable_results"};
 };
 
-}
+} // namespace analysis
 
 #endif
