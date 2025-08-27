@@ -16,6 +16,7 @@ target_link_libraries(libplug
 )
 
 function(add_plugin NAME SRC EXTRA_LIBS)
+  set_source_files_properties(${SRC} PROPERTIES LANGUAGE CXX)
   add_library(${NAME} SHARED ${SRC})
   target_compile_definitions(${NAME} PRIVATE BUILD_PLUGIN)
   target_include_directories(${NAME} PRIVATE
@@ -32,6 +33,7 @@ function(add_plugin NAME SRC EXTRA_LIBS)
     POSITION_INDEPENDENT_CODE ON
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
   )
+endfunction()
 
 add_plugin(EventDisplayPlugin EventDisplayPlugin.h "")
 add_plugin(OccupancyMatrixPlugin OccupancyMatrixPlugin.h "")
@@ -43,5 +45,3 @@ add_plugin(StackedHistogramPlugin StackedHistogramPlugin.h "")
 add_plugin(SystematicBreakdownPlugin SystematicBreakdownPlugin.h "")
 add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.h "")
 add_plugin(VariablesPlugin VariablesPlugin.h "")
-
-endfunction()
