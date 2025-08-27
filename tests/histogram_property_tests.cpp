@@ -1,9 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <random>
 
 #include "HistogramUncertainty.h"
 
 using namespace analysis;
+using Catch::Approx;
 
 TEST_CASE("HistogramUncertainty addition is commutative", "[property]") {
     BinningDefinition bn({0.0, 1.0, 2.0}, "", "", {}, "");
