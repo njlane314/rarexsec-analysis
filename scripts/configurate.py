@@ -138,10 +138,10 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
 
 
 def main():
-    DEFINITIONS_PATH = "samples.json"
+    DEFINITIONS_PATH = "config/samples.json"
     XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
-    CONFIG_PATH = "config.json"
-    RUNS_PROCESS = ["run1"] 
+    CONFIG_PATH = "config/config.json"
+    RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
     input_definitions_path = Path(DEFINITIONS_PATH)
@@ -186,6 +186,7 @@ def main():
                             process_sample_entry(detvar_sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, is_detvar=True)
             
     output_path = Path(CONFIG_PATH)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(config, f, indent=4)
 
