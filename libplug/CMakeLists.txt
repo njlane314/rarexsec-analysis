@@ -33,8 +33,4 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.cxx libplot)
 
-set_target_properties(SelectionEfficiencyPlugin PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-)
