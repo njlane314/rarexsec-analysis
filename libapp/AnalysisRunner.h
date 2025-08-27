@@ -8,6 +8,7 @@
 #include <numeric>
 #include <set>
 #include <string>
+#include <unordered_map>
 
 #include "TFile.h"
 #include <nlohmann/json.hpp>
@@ -26,6 +27,7 @@
 #include "MonteCarloProcessor.h"
 #include "SelectionRegistry.h"
 #include "SystematicsProcessor.h"
+#include <tbb/parallel_for_each.h>
 
 namespace analysis {
 
@@ -84,8 +86,8 @@ class AnalysisRunner {
 
             RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
-            std::map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
-            std::map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
+            std::unordered_map<SampleKey, std::unique_ptr<ISampleProcessor>> sample_processors;
+            std::unordered_map<SampleKey, ROOT::RDF::RNode> mc_rnodes;
 
             analysis::log::info("AnalysisRunner::run", "Processing sample ensemble...");
             auto &sample_frames = data_loader_.getSampleFrames();
@@ -134,7 +136,7 @@ class AnalysisRunner {
                 }
 
                 analysis::log::info("AnalysisRunner::run", "Configuring systematic variations...");
-                std::map<SampleVariation, SampleDataset> variation_datasets;
+                std::unordered_map<SampleVariation, SampleDataset> variation_datasets;
                 for (auto &[variation_type, variation_node] : sample_def.variation_nodes_) {
                     auto variation_df = variation_node;
                     if (!selection_expr.empty()) {
@@ -174,19 +176,17 @@ class AnalysisRunner {
                 analysis::log::info("AnalysisRunner::run", "Deploying variable pipeline (", var_index, "/", var_total,
                                     "):", var_key.str());
                 analysis::log::info("AnalysisRunner::run", "Executing sample processors...");
-                for (auto &[_, processor] : sample_processors) {
-                    processor->book(*histogram_booker_, binning, model);
-                }
+                tbb::parallel_for_each(sample_processors.begin(), sample_processors.end(),
+                                       [&](auto &p) { p.second->book(*histogram_booker_, binning, model); });
 
                 analysis::log::info("AnalysisRunner::run", "Registering systematic variations...");
-                for (auto &[sample_key, rnode] : mc_rnodes) {
-                    systematics_processor_.bookSystematics(sample_key, rnode, binning, model);
-                }
+                tbb::parallel_for_each(mc_rnodes.begin(), mc_rnodes.end(), [&](auto &p) {
+                    systematics_processor_.bookSystematics(p.first, p.second, binning, model);
+                });
 
                 analysis::log::info("AnalysisRunner::run", "Persisting results...");
-                for (auto &[_, processor] : sample_processors) {
-                    processor->contributeTo(result);
-                }
+                tbb::parallel_for_each(sample_processors.begin(), sample_processors.end(),
+                                       [&](auto &p) { p.second->contributeTo(result); });
 
                 analysis::log::info("AnalysisRunner::run", "Computing systematic covariances");
                 systematics_processor_.processSystematics(result);

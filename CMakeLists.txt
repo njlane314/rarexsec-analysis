@@ -5,7 +5,7 @@ enable_testing()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra -Werror -g)
+add_compile_options(-Wall -Wextra -Werror -O3)
 
 find_package(ROOT REQUIRED COMPONENTS Core Hist Tree RIO Graf)
 include(${ROOT_USE_FILE})
