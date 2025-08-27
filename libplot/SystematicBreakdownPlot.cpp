@@ -46,7 +46,7 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     legend_->SetFillStyle(0);
     legend_->SetTextFont(42);
 
-    int color = kRed + 1;
+    int colour = kRed + 1;
     for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
         TH1D *hist = new TH1D(key.str().c_str(), "", nbins, edges.data());
         const int n = cov.GetNrows();
@@ -61,12 +61,12 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
                 hist->SetBinContent(i + 1, 0.0);
             }
         }
-        hist->SetFillColor(color);
+        hist->SetFillColor(colour);
         hist->SetLineColor(kBlack);
         stack_->Add(hist);
         legend_->AddEntry(hist, key.str().c_str(), "f");
         histograms_.push_back(hist);
-        ++color;
+        ++colour;
     }
 
     stack_->Draw("hist");
@@ -77,4 +77,4 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     legend_->Draw();
 }
 
-} // namespace analysis
+}

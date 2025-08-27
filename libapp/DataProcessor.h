@@ -28,6 +28,6 @@ class DataProcessor : public ISampleProcessor {
     ROOT::RDF::RResultPtr<TH1D> data_future_;
 };
 
-} // namespace analysis
+}
 
 #endif

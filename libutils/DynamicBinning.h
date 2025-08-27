@@ -406,6 +406,6 @@ class DynamicBinning {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

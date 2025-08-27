@@ -100,6 +100,6 @@ class WeightSystematicStrategy : public SystematicStrategy {
     std::string dn_column_;
 };
 
-} // namespace analysis
+}
 
 #endif

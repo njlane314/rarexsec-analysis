@@ -17,6 +17,6 @@ class ISampleProcessor {
     virtual void contributeTo(VariableResult &result) = 0;
 };
 
-} // namespace analysis
+}
 
 #endif

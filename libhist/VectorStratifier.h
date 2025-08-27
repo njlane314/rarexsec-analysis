@@ -46,6 +46,6 @@ class VectorStratifier : public IHistogramStratifier {
     StratifierRegistry &strat_registry_;
 };
 
-} // namespace analysis
+}
 
 #endif

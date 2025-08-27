@@ -29,7 +29,7 @@ template <class Tag> class AnalysisKey {
     std::string v_;
 };
 
-} // namespace analysis
+}
 
 namespace std {
 template <class Tag> struct hash<analysis::AnalysisKey<Tag>> {
@@ -37,4 +37,4 @@ template <class Tag> struct hash<analysis::AnalysisKey<Tag>> {
         return std::hash<std::string>()(k.str());
     }
 };
-} // namespace std
+}
