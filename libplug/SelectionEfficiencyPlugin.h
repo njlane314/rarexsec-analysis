@@ -1,6 +1,7 @@
 #ifndef SELECTION_EFFICIENCY_PLUGIN_H
 #define SELECTION_EFFICIENCY_PLUGIN_H
 
+#include <cmath>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
