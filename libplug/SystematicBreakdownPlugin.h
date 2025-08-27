@@ -75,4 +75,10 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
 
 }
 
+#ifdef BUILD_PLUGIN
+extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+    return new analysis::SystematicBreakdownPlugin(cfg);
+}
+#endif
+
 #endif

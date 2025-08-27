@@ -117,4 +117,13 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
 
 }
 
+#ifdef BUILD_PLUGIN
+extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+    return new analysis::OccupancyMatrixPlugin(cfg);
+}
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
+    analysis::OccupancyMatrixPlugin::setLoader(loader);
+}
+#endif
+
 #endif

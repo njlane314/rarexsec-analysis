@@ -182,4 +182,13 @@ class RocCurvePlugin : public IAnalysisPlugin {
 
 }
 
+#ifdef BUILD_PLUGIN
+extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+    return new analysis::RocCurvePlugin(cfg);
+}
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
+    analysis::RocCurvePlugin::setLoader(loader);
+}
+#endif
+
 #endif

@@ -17,6 +17,8 @@ target_link_libraries(libplug
 
 function(add_plugin NAME SRC EXTRA_LIBS)
   add_library(${NAME} SHARED ${SRC})
+  set_source_files_properties(${SRC} PROPERTIES LANGUAGE CXX)
+  target_compile_definitions(${NAME} PRIVATE BUILD_PLUGIN)
   target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
   )
@@ -32,16 +34,16 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-add_plugin(RegionsPlugin       RegionsPlugin.cpp           "")
-add_plugin(VariablesPlugin        VariablesPlugin.cpp         "")
-add_plugin(StackedHistogramPlugin StackedHistogramPlugin.cpp  libplot)
-add_plugin(EventDisplayPlugin     EventDisplayPlugin.cpp      libplot)
-add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.cpp libplot)
-add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.cpp libplot)
-add_plugin(OccupancyMatrixPlugin OccupancyMatrixPlugin.cpp libplot)
-add_plugin(SystematicBreakdownPlugin SystematicBreakdownPlugin.cpp libplot)
-add_plugin(RocCurvePlugin        RocCurvePlugin.cpp         libplot)
-add_plugin(SnapshotPlugin        SnapshotPlugin.cpp        "")
+add_plugin(RegionsPlugin       RegionsPlugin.h           "")
+add_plugin(VariablesPlugin        VariablesPlugin.h         "")
+add_plugin(StackedHistogramPlugin StackedHistogramPlugin.h  libplot)
+add_plugin(EventDisplayPlugin     EventDisplayPlugin.h      libplot)
+add_plugin(SelectionEfficiencyPlugin SelectionEfficiencyPlugin.h libplot)
+add_plugin(UnstackedHistogramPlugin UnstackedHistogramPlugin.h libplot)
+add_plugin(OccupancyMatrixPlugin OccupancyMatrixPlugin.h libplot)
+add_plugin(SystematicBreakdownPlugin SystematicBreakdownPlugin.h libplot)
+add_plugin(RocCurvePlugin        RocCurvePlugin.h         libplot)
+add_plugin(SnapshotPlugin        SnapshotPlugin.h        "")
 
 foreach(_p IN ITEMS RegionsPlugin VariablesPlugin StackedHistogramPlugin EventDisplayPlugin UnstackedHistogramPlugin SelectionEfficiencyPlugin SystematicBreakdownPlugin RocCurvePlugin OccupancyMatrixPlugin SnapshotPlugin)
 

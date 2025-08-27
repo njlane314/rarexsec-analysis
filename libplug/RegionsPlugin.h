@@ -58,4 +58,10 @@ class RegionsPlugin : public IAnalysisPlugin {
 
 }
 
+#ifdef BUILD_PLUGIN
+extern "C" analysis::IAnalysisPlugin *createRegionsPlugin(const nlohmann::json &cfg) {
+    return new analysis::RegionsPlugin(cfg);
+}
+#endif
+
 #endif
