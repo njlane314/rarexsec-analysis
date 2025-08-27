@@ -52,7 +52,6 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
                 continue;
             }
 
-            const auto &region_analysis = result.region(rkey);
             const auto &variable_result = result.result(rkey, vkey);
 
             SystematicBreakdownPlot plot("syst_breakdown_" + pc.variable + "_" + pc.region, variable_result,
