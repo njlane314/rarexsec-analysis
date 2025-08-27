@@ -51,19 +51,20 @@ int main(int argc, char *argv[]) {
 
             loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
         }
-
-        std::map<std::string, AnalysisPluginManager::RegionAnalysisMap> beam_regions;
+        std::map<std::string, AnalysisResult> beam_results;
 
         for (auto const &kv : result->regions()) {
-            beam_regions[kv.second.beamConfig()].insert(kv);
+            beam_results[kv.second.beamConfig()].regions().insert(kv);
+        }
+        for (auto &kv : beam_results) {
+            kv.second.build();
         }
 
         for (auto &kv : loaders) {
             AnalysisPluginManager manager;
             manager.loadPlugins(plot_cfg, kv.second.get());
-
-            auto it = beam_regions.find(kv.first);
-            if (it != beam_regions.end()) manager.notifyFinalisation(it->second);
+            auto it = beam_results.find(kv.first);
+            if (it != beam_results.end()) manager.notifyFinalisation(it->second);
         }
     } catch (const std::exception &e) {
         log::fatal("plot::main", "An error occurred:", e.what());

@@ -80,7 +80,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
     void onPostSampleProcessing(const SampleKey &, const RegionKey &,
                                 const RegionAnalysisMap &) override {}
 
-    void onFinalisation(const RegionAnalysisMap &) override {
+    void onFinalisation(const AnalysisResult &) override {
         if (!loader_) {
             log::error("RocCurvePlugin::onFinalisation",
                        "No AnalysisDataLoader context provided");

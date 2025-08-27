@@ -181,8 +181,9 @@ class AnalysisRunner {
                       "):", region_handle.key_.str());
         }
 
-        plugin_manager.notifyFinalisation(analysis_regions);
-        return AnalysisResult(std::move(analysis_regions));
+        AnalysisResult result(std::move(analysis_regions));
+        plugin_manager.notifyFinalisation(result);
+        return result;
     }
 
   private:

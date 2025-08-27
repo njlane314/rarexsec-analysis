@@ -61,7 +61,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
     inline void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
     inline void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
-    inline void onFinalisation(const RegionAnalysisMap &) override {
+    inline void onFinalisation(const AnalysisResult &) override {
         if (!loader_) {
             log::error("EventDisplayPlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;

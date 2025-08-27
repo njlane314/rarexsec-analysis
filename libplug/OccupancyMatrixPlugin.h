@@ -78,7 +78,7 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
     void onPostSampleProcessing(const SampleKey &, const RegionKey &,
                                 const RegionAnalysisMap &) override {}
 
-    void onFinalisation(const RegionAnalysisMap &region_map) override {
+    void onFinalisation(const AnalysisResult &result) override {
         if (!loader_) {
             log::error("OccupancyMatrixPlugin::onFinalisation",
                        "No AnalysisDataLoader context provided");
@@ -86,24 +86,16 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
         }
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
-            auto it = region_map.find(rkey);
-            if (it == region_map.end()) {
-                log::error(
-                    "OccupancyMatrixPlugin::onFinalisation",
-                    "Could not find analysis region for key:", rkey.str());
-                continue;
-            }
             VariableKey x_key{pc.x_variable};
             VariableKey y_key{pc.y_variable};
-            if (!it->second.hasFinalVariable(x_key) ||
-                !it->second.hasFinalVariable(y_key)) {
+            if (!result.hasResult(rkey, x_key) || !result.hasResult(rkey, y_key)) {
                 log::error("OccupancyMatrixPlugin::onFinalisation",
                            "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
             catalog.generateOccupancyMatrixPlot(
-                region_map, pc.x_variable, pc.y_variable, pc.region,
+                result, pc.x_variable, pc.y_variable, pc.region,
                 pc.selection, pc.x_cuts, pc.y_cuts);
         }
     }
