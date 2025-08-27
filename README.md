@@ -13,14 +13,14 @@ source .build.sh
 ```bash
 python scripts/configurate.py
 ```
-Generates `config.json` by processing the sample definitions in `samples.json` and hadding inputs as needed.
-`samples.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
+Generates `config/config.json` by processing the sample definitions in `config/samples.json` and hadding inputs as needed.
+`config/samples.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
 
 ## Run
 ```bash
-./build/analyse config.json [plugins.json]
+./build/analyse config/config.json [config/plugins/<plugin>.json]
 ```
-Runs the analysis using `config.json` and optional plugin definitions.
+Runs the analysis using `config/config.json` and optional plugin definitions from `config/plugins/`.
 
 ## Test
 ```bash
