@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <nlohmann/json.hpp>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -31,9 +30,8 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     };
 
     explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("efficiency_plots") || !cfg.at("efficiency_plots").is_array()) {
-            throw std::runtime_error("SelectionEfficiencyPlugin missing efficiency_plots");
-        }
+        if (!cfg.contains("efficiency_plots") || !cfg.at("efficiency_plots").is_array())
+            return;
         for (auto const &p : cfg.at("efficiency_plots")) {
             PlotConfig pc;
             pc.region = p.at("region").get<std::string>();
