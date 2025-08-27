@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
 
     if (argc != 3) {
         analysis::log::fatal("analyse::main", "Invocation error. Expected:",
-                            argv[0], "<config.json> <plugins.json>");
+                            argv[0], "<config/config.json> <config/plugins/plugins.json>");
         return 1;
     }
 

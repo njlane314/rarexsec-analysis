@@ -138,9 +138,9 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
 
 
 def main():
-    DEFINITIONS_PATH = "samples.json"
+    DEFINITIONS_PATH = "config/samples.json"
     XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
-    CONFIG_PATH = "config.json"
+    CONFIG_PATH = "config/config.json"
     RUNS_PROCESS = ["run1"] 
 
     print("===== PART 1: Loading Configurations =====")
