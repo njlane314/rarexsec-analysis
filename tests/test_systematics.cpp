@@ -1,85 +1,126 @@
-#include <cassert>
+#include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <string>
 #include <vector>
-
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
-
 #include "AnalysisTypes.h"
 #include "BinningDefinition.h"
 #include "SystematicsProcessor.h"
+#include "UniverseSystematicStrategy.h"
+#include "WeightSystematicStrategy.h"
+#include "DetectorSystematicStrategy.h"
 
 using namespace analysis;
 
-int main() {
-    std::vector<double> edges{0.0, 1.0, 2.0};
-    BinningDefinition binning(edges, "x", "x", {});
-
-    std::vector<double> x{0.5, 1.5};
-    std::vector<double> knob_up{1.2, 0.8};
-    std::vector<double> knob_dn{0.8, 1.2};
-    std::vector<ROOT::RVec<unsigned short>> uni_w{
-        ROOT::RVec<unsigned short>{2, 0}, ROOT::RVec<unsigned short>{0, 2}};
-
+TEST_CASE("systematics processor covariance") {
+    std::vector<double> edges{0.0,1.0,2.0};
+    BinningDefinition binning(edges,"x","x",{});
+    std::vector<double> x{0.5,1.5};
+    std::vector<double> knob_up{1.2,0.8};
+    std::vector<double> knob_dn{0.8,1.2};
+    std::vector<ROOT::RVec<unsigned short>> uni_w{ROOT::RVec<unsigned short>{2,0},ROOT::RVec<unsigned short>{0,2}};
     ROOT::RDataFrame df(x.size());
-    ROOT::RDF::RNode rnode =
-        df.Define("x", [&x](ULong64_t i) { return x[i]; }, {"rdfentry_"})
-            .Define("knob_up", [&knob_up](ULong64_t i) { return knob_up[i]; },
-                    {"rdfentry_"})
-            .Define("knob_dn", [&knob_dn](ULong64_t i) { return knob_dn[i]; },
-                    {"rdfentry_"})
-            .Define("uni_weights", [&uni_w](ULong64_t i) { return uni_w[i]; },
-                    {"rdfentry_"});
-
-    KnobDef knob{"knob", "knob_up", "knob_dn"};
-    UniverseDef universe{"uni", "uni_weights", 2};
-    SystematicsProcessor processor({knob}, {universe});
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&knob_up](ULong64_t i){return knob_up[i];},{"rdfentry_"}).Define("knob_dn",[&knob_dn](ULong64_t i){return knob_dn[i];},{"rdfentry_"}).Define("uni_weights",[&uni_w](ULong64_t i){return uni_w[i];},{"rdfentry_"});
+    KnobDef knob{"knob","knob_up","knob_dn"};
+    UniverseDef universe{"uni","uni_weights",2};
+    SystematicsProcessor processor({knob},{universe});
     SampleKey sample_key(std::string{"sample"});
-    processor.bookSystematics(sample_key, rnode, binning,
-                              binning.toTH1DModel());
-
+    processor.bookSystematics(sample_key,rnode,binning,binning.toTH1DModel());
     VariableResult result;
-    result.binning_ = binning;
-    std::vector<double> counts{1.0, 1.0};
-    Eigen::VectorXd sh_vec = Eigen::VectorXd::Ones(2);
-    Eigen::MatrixXd shifts = sh_vec;
-    result.total_mc_hist_ = BinnedHistogram(binning, counts, shifts);
-
-    result.raw_detvar_hists_[sample_key][SampleVariation::kCV] =
-        BinnedHistogram(binning, counts, Eigen::MatrixXd::Zero(2, 1));
-    result.raw_detvar_hists_[sample_key][SampleVariation::kSCE] =
-        BinnedHistogram(binning, {1.1, 0.9}, Eigen::MatrixXd::Zero(2, 1));
-
+    result.binning_=binning;
+    std::vector<double> counts{1.0,1.0};
+    Eigen::VectorXd sh_vec=Eigen::VectorXd::Ones(2);
+    Eigen::MatrixXd shifts=sh_vec;
+    result.total_mc_hist_=BinnedHistogram(binning,counts,shifts);
+    result.raw_detvar_hists_[sample_key][SampleVariation::kCV]=BinnedHistogram(binning,counts,Eigen::MatrixXd::Zero(2,1));
+    result.raw_detvar_hists_[sample_key][SampleVariation::kSCE]=BinnedHistogram(binning,{1.1,0.9},Eigen::MatrixXd::Zero(2,1));
     processor.processSystematics(result);
-
-    auto weight_cov =
-        result.covariance_matrices_.at(SystematicKey(std::string{"knob"}));
-    assert(std::abs(weight_cov(0, 0) - 0.04) < 1e-6);
-    assert(std::abs(weight_cov(1, 1) - 0.04) < 1e-6);
-    assert(std::abs(weight_cov(0, 1) - 0.0) < 1e-6);
-
-    auto uni_cov =
-        result.covariance_matrices_.at(SystematicKey(std::string{"uni"}));
-    assert(std::abs(uni_cov(0, 0) - 0.5) < 1e-6);
-    assert(std::abs(uni_cov(1, 1) - 0.5) < 1e-6);
-    assert(std::abs(uni_cov(0, 1) + 0.5) < 1e-6);
-
-    auto det_cov = result.covariance_matrices_.at(
-        SystematicKey(std::string{"detector_variation"}));
-    assert(std::abs(det_cov(0, 0) - 0.01) < 1e-6);
-    assert(std::abs(det_cov(1, 1) - 0.01) < 1e-6);
-    assert(std::abs(det_cov(0, 1) + 0.01) < 1e-6);
-
-    assert(std::abs(result.total_covariance_(0, 0) - 1.55) < 1e-6);
-    assert(std::abs(result.total_covariance_(1, 1) - 1.55) < 1e-6);
-    assert(std::abs(result.total_covariance_(0, 1) + 0.51) < 1e-6);
-
-    assert(std::abs(result.nominal_with_band_.getBinError(0) -
-                    std::sqrt(1.55)) < 1e-6);
-    assert(std::abs(result.nominal_with_band_.getBinError(1) -
-                    std::sqrt(1.55)) < 1e-6);
-    assert(result.universe_projected_hists_.empty());
-
-    return 0;
+    auto weight_cov=result.covariance_matrices_.at(SystematicKey(std::string{"knob"}));
+    CHECK(std::abs(weight_cov(0,0)-0.04)<1e-6);
+    CHECK(std::abs(weight_cov(1,1)-0.04)<1e-6);
+    CHECK(std::abs(weight_cov(0,1)-0.0)<1e-6);
+    auto uni_cov=result.covariance_matrices_.at(SystematicKey(std::string{"uni"}));
+    CHECK(std::abs(uni_cov(0,0)-0.5)<1e-6);
+    CHECK(std::abs(uni_cov(1,1)-0.5)<1e-6);
+    CHECK(std::abs(uni_cov(0,1)+0.5)<1e-6);
+    auto det_cov=result.covariance_matrices_.at(SystematicKey(std::string{"detector_variation"}));
+    CHECK(std::abs(det_cov(0,0)-0.01)<1e-6);
+    CHECK(std::abs(det_cov(1,1)-0.01)<1e-6);
+    CHECK(std::abs(det_cov(0,1)+0.01)<1e-6);
+    CHECK(std::abs(result.total_covariance_(0,0)-1.55)<1e-6);
+    CHECK(std::abs(result.total_covariance_(1,1)-1.55)<1e-6);
+    CHECK(std::abs(result.total_covariance_(0,1)+0.51)<1e-6);
+    CHECK(std::abs(result.nominal_with_band_.getBinError(0)-std::sqrt(1.55))<1e-6);
+    CHECK(std::abs(result.nominal_with_band_.getBinError(1)-std::sqrt(1.55))<1e-6);
+    CHECK(result.universe_projected_hists_.empty());
 }
+
+TEST_CASE("universe systematic strategy covariance") {
+    std::vector<double> edges{0.0,1.0,2.0};
+    BinningDefinition binning(edges,"x","x",{});
+    std::vector<double> x{0.5,1.5};
+    std::vector<ROOT::RVec<unsigned short>> uni_w{ROOT::RVec<unsigned short>{2,0},ROOT::RVec<unsigned short>{0,2}};
+    ROOT::RDataFrame df(x.size());
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("uni_weights",[&uni_w](ULong64_t i){return uni_w[i];},{"rdfentry_"});
+    UniverseDef universe{"uni","uni_weights",2};
+    UniverseSystematicStrategy strategy(universe);
+    SystematicFutures futures;
+    SampleKey sample_key(std::string{"s"});
+    strategy.bookVariations(sample_key,rnode,binning,binning.toTH1DModel(),futures);
+    VariableResult result;
+    result.binning_=binning;
+    std::vector<double> counts{1.0,1.0};
+    Eigen::VectorXd sh_vec=Eigen::VectorXd::Ones(2);
+    Eigen::MatrixXd shifts=sh_vec;
+    result.total_mc_hist_=BinnedHistogram(binning,counts,shifts);
+    auto cov=strategy.computeCovariance(result,futures);
+    CHECK(std::abs(cov(0,0)-0.5)<1e-6);
+    CHECK(std::abs(cov(1,1)-0.5)<1e-6);
+    CHECK(std::abs(cov(0,1)+0.5)<1e-6);
+}
+
+TEST_CASE("weight systematic strategy covariance") {
+    std::vector<double> edges{0.0,1.0,2.0};
+    BinningDefinition binning(edges,"x","x",{});
+    std::vector<double> x{0.5,1.5};
+    std::vector<double> knob_up{1.2,0.8};
+    std::vector<double> knob_dn{0.8,1.2};
+    ROOT::RDataFrame df(x.size());
+    ROOT::RDF::RNode rnode=df.Define("x",[&x](ULong64_t i){return x[i];},{"rdfentry_"}).Define("knob_up",[&knob_up](ULong64_t i){return knob_up[i];},{"rdfentry_"}).Define("knob_dn",[&knob_dn](ULong64_t i){return knob_dn[i];},{"rdfentry_"});
+    WeightSystematicStrategy strategy(KnobDef{"k","knob_up","knob_dn"});
+    SystematicFutures futures;
+    SampleKey sample_key(std::string{"s"});
+    strategy.bookVariations(sample_key,rnode,binning,binning.toTH1DModel(),futures);
+    VariableResult result;
+    result.binning_=binning;
+    std::vector<double> counts{1.0,1.0};
+    Eigen::VectorXd sh_vec=Eigen::VectorXd::Ones(2);
+    Eigen::MatrixXd shifts=sh_vec;
+    result.total_mc_hist_=BinnedHistogram(binning,counts,shifts);
+    auto cov=strategy.computeCovariance(result,futures);
+    CHECK(std::abs(cov(0,0)-0.04)<1e-6);
+    CHECK(std::abs(cov(1,1)-0.04)<1e-6);
+    CHECK(std::abs(cov(0,1)-0.0)<1e-6);
+}
+
+TEST_CASE("detector systematic strategy covariance") {
+    std::vector<double> edges{0.0,1.0,2.0};
+    BinningDefinition binning(edges,"x","x",{});
+    VariableResult result;
+    result.binning_=binning;
+    std::vector<double> counts{1.0,1.0};
+    Eigen::VectorXd sh_vec=Eigen::VectorXd::Ones(2);
+    Eigen::MatrixXd shifts=sh_vec;
+    result.total_mc_hist_=BinnedHistogram(binning,counts,shifts);
+    SampleKey sk(std::string{"s"});
+    result.raw_detvar_hists_[sk][SampleVariation::kCV]=BinnedHistogram(binning,counts,Eigen::MatrixXd::Zero(2,1));
+    result.raw_detvar_hists_[sk][SampleVariation::kSCE]=BinnedHistogram(binning,{1.1,0.9},Eigen::MatrixXd::Zero(2,1));
+    DetectorSystematicStrategy strategy;
+    SystematicFutures futures;
+    auto cov=strategy.computeCovariance(result,futures);
+    CHECK(std::abs(cov(0,0)-0.01)<1e-6);
+    CHECK(std::abs(cov(1,1)-0.01)<1e-6);
+    CHECK(std::abs(cov(0,1)+0.01)<1e-6);
+}
+
