@@ -1,7 +1,6 @@
 #ifndef SELECTION_EFFICIENCY_PLUGIN_H
 #define SELECTION_EFFICIENCY_PLUGIN_H
 
-#include <cmath>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
@@ -23,22 +22,27 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         std::string selection_rule;
         std::string channel_column;
         std::string signal_group;
-        std::string output_directory;
-        std::string plot_name;
-        bool use_log_y;
+        std::string output_directory{"plots"};
+        std::string plot_name{"selection_efficiency"};
+        bool use_log_y{false};
         std::vector<std::string> clauses;
     };
 
-    explicit SelectionEfficiencyPlugin(const nlohmann::json &) {
-        PlotConfig pc;
-        pc.region = "ALL_EVENTS";
-        pc.selection_rule = "QUALITY_NUMU_CC_BREAKDOWN";
-        pc.channel_column = "incl_channel";
-        pc.signal_group = "inclusive_strange_channels";
-        pc.output_directory = "plots";
-        pc.plot_name = "selection_efficiency";
-        pc.use_log_y = true;
-        plots_.push_back(std::move(pc));
+    explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
+        if (!cfg.contains("efficiency_plots") || !cfg.at("efficiency_plots").is_array()) {
+            throw std::runtime_error("SelectionEfficiencyPlugin missing efficiency_plots");
+        }
+        for (auto const &p : cfg.at("efficiency_plots")) {
+            PlotConfig pc;
+            pc.region = p.at("region").get<std::string>();
+            pc.selection_rule = p.at("selection_rule").get<std::string>();
+            pc.channel_column = p.at("channel_column").get<std::string>();
+            pc.signal_group = p.at("signal_group").get<std::string>();
+            pc.output_directory = p.value("output_directory", std::string{"plots"});
+            pc.plot_name = p.value("plot_name", std::string{"selection_efficiency"});
+            pc.use_log_y = p.value("log_y", false);
+            plots_.push_back(std::move(pc));
+        }
     }
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
@@ -46,7 +50,8 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             try {
                 auto rule = sel_reg.getRule(pc.selection_rule);
                 pc.clauses = rule.clauses;
-                def.addRegion(pc.region, pc.region, "ALL_EVENTS");
+
+                def.region(RegionKey{pc.region});
             } catch (const std::exception &e) {
                 log::error("SelectionEfficiencyPlugin::onInitialisation", e.what());
             }
@@ -61,7 +66,9 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             log::error("SelectionEfficiencyPlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;
         }
+
         StratifierRegistry strat_reg;
+
         for (const auto &pc : plots_) {
             std::vector<int> signal_keys;
             try {
@@ -70,6 +77,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 log::error("SelectionEfficiencyPlugin::onFinalisation", e.what());
                 continue;
             }
+
             auto buildSignalExpr = [&](const std::vector<int> &keys) {
                 std::string expr;
                 for (size_t i = 0; i < keys.size(); ++i) {
@@ -79,9 +87,12 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 }
                 return expr;
             };
+
             std::string signal_expr = buildSignalExpr(signal_keys);
+
             std::vector<std::string> stage_labels{"All Events"};
             stage_labels.insert(stage_labels.end(), pc.clauses.begin(), pc.clauses.end());
+
             std::vector<std::string> cumulative_filters{""};
             std::string current;
             for (const auto &clause : pc.clauses) {
@@ -90,6 +101,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 current += clause;
                 cumulative_filters.push_back(current);
             }
+
             struct CountInfo {
                 double sig = 0.0;
                 double sig_w2 = 0.0;
@@ -97,6 +109,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 double tot_w2 = 0.0;
             };
             std::vector<CountInfo> counts(cumulative_filters.size());
+
             for (const auto &[skey, sample] : loader_->getSampleFrames()) {
                 if (!sample.isMc())
                     continue;
@@ -116,9 +129,11 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                     counts[i].sig_w2 += sig_w2.GetValue();
                 }
             }
+
             double sig0 = counts[0].sig;
             double sig0_w2 = counts[0].sig_w2;
             double Neff0 = sig0_w2 > 0 ? (sig0 * sig0) / sig0_w2 : 0.0;
+
             std::vector<double> efficiencies, eff_errors, purities, pur_errors;
             for (const auto &c : counts) {
                 double eff = sig0 > 0 ? c.sig / sig0 : 0.0;
@@ -131,7 +146,9 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 purities.push_back(pur);
                 pur_errors.push_back(pur_err);
             }
-            SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, efficiencies, eff_errors, purities, pur_errors, pc.output_directory, pc.use_log_y);
+
+            SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, efficiencies, eff_errors,
+                                         purities, pur_errors, pc.output_directory, pc.use_log_y);
             plot.drawAndSave("pdf");
         }
     }
