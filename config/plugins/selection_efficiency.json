@@ -1,0 +1,24 @@
+{
+  "plugins": [
+    {
+      "path": "build/SelectionEfficiencyPlugin.so",
+      "efficiency_plots": [
+        {
+          "region": "CUSTOM",
+          "channel_column": "inclusive_strange_channels",
+          "signal_group": "inclusive_strange_channels",
+          "initial_label": "empty",
+          "log_purity": true,
+          "clauses": [
+            "in_reco_fiducial",
+            "num_slices == 1",
+            "optical_filter_pe_beam > 20",
+            "muon_score > 0.5",
+            "muon_length > 10",
+            "n_pfps_gen2 > 1"
+          ]
+        }
+      ]
+    }
+  ]
+}

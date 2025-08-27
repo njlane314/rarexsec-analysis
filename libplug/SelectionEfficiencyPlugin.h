@@ -24,8 +24,9 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         std::string signal_group;
         std::string output_directory{"plots"};
         std::string plot_name{"selection_efficiency"};
-        bool use_log_y{false};
+        bool log_purity{false};
         std::vector<std::string> clauses;
+        std::string initial_label{"All Events"};
     };
 
     explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
@@ -35,12 +36,16 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         for (auto const &p : cfg.at("efficiency_plots")) {
             PlotConfig pc;
             pc.region = p.at("region").get<std::string>();
-            pc.selection_rule = p.at("selection_rule").get<std::string>();
+            pc.selection_rule = p.value("selection_rule", std::string{});
             pc.channel_column = p.at("channel_column").get<std::string>();
             pc.signal_group = p.at("signal_group").get<std::string>();
             pc.output_directory = p.value("output_directory", std::string{"plots"});
             pc.plot_name = p.value("plot_name", std::string{"selection_efficiency"});
-            pc.use_log_y = p.value("log_y", false);
+            pc.log_purity = p.value("log_purity", false);
+            pc.initial_label = p.value("initial_label", std::string{"All Events"});
+            if (p.contains("clauses") && p.at("clauses").is_array())
+                for (auto const &cl : p.at("clauses"))
+                    pc.clauses.push_back(cl.get<std::string>());
             plots_.push_back(std::move(pc));
         }
     }
@@ -48,8 +53,10 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
         for (auto &pc : plots_) {
             try {
-                auto rule = sel_reg.getRule(pc.selection_rule);
-                pc.clauses = rule.clauses;
+                if (pc.clauses.empty()) {
+                    auto rule = sel_reg.getRule(pc.selection_rule);
+                    pc.clauses = rule.clauses;
+                }
 
                 def.region(RegionKey{pc.region});
             } catch (const std::exception &e) {
@@ -90,7 +97,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
 
             std::string signal_expr = buildSignalExpr(signal_keys);
 
-            std::vector<std::string> stage_labels{"All Events"};
+            std::vector<std::string> stage_labels{pc.initial_label};
             stage_labels.insert(stage_labels.end(), pc.clauses.begin(), pc.clauses.end());
 
             std::vector<std::string> cumulative_filters{""};
@@ -164,7 +171,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             }
 
             SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, efficiencies, eff_errors,
-                                         purities, pur_errors, pc.output_directory, pc.use_log_y);
+                                         purities, pur_errors, pc.output_directory, pc.log_purity);
             plot.drawAndSave("pdf");
         }
     }
