@@ -117,39 +117,23 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             };
             std::vector<CountInfo> counts(cumulative_filters.size());
 
-            for (const auto &[skey, sample] : loader_->getSampleFrames()) {
+            for (auto &[skey, sample] : loader_->getSampleFrames()) {
                 if (!sample.isMc())
                     continue;
                 auto base_df = sample.nominal_node_.Define("w2", "nominal_event_weight*nominal_event_weight");
-                struct RPtrs {
-                    ROOT::RDF::RResultPtr<double> tot_w;
-                    ROOT::RDF::RResultPtr<double> tot_w2;
-                    ROOT::RDF::RResultPtr<double> sig_w;
-                    ROOT::RDF::RResultPtr<double> sig_w2;
-                };
-                std::vector<RPtrs> refs(cumulative_filters.size());
-                std::vector<ROOT::RDF::RResultPtr<double>> results;
-                results.reserve(cumulative_filters.size() * 4);
                 for (size_t i = 0; i < cumulative_filters.size(); ++i) {
                     auto df = base_df;
                     if (!cumulative_filters[i].empty())
                         df = df.Filter(cumulative_filters[i]);
-                    refs[i].tot_w = df.Sum<double>("nominal_event_weight");
-                    refs[i].tot_w2 = df.Sum<double>("w2");
+                    auto tot_w = df.Sum<double>("nominal_event_weight");
+                    auto tot_w2 = df.Sum<double>("w2");
                     auto sig_df = df.Filter(signal_expr);
-                    refs[i].sig_w = sig_df.Sum<double>("nominal_event_weight");
-                    refs[i].sig_w2 = sig_df.Sum<double>("w2");
-                    results.push_back(refs[i].tot_w);
-                    results.push_back(refs[i].tot_w2);
-                    results.push_back(refs[i].sig_w);
-                    results.push_back(refs[i].sig_w2);
-                }
-                ROOT::RDF::RunGraphs(results);
-                for (size_t i = 0; i < cumulative_filters.size(); ++i) {
-                    counts[i].tot += refs[i].tot_w.GetValue();
-                    counts[i].tot_w2 += refs[i].tot_w2.GetValue();
-                    counts[i].sig += refs[i].sig_w.GetValue();
-                    counts[i].sig_w2 += refs[i].sig_w2.GetValue();
+                    auto sig_w = sig_df.Sum<double>("nominal_event_weight");
+                    auto sig_w2 = sig_df.Sum<double>("w2");
+                    counts[i].tot += tot_w.GetValue();
+                    counts[i].tot_w2 += tot_w2.GetValue();
+                    counts[i].sig += sig_w.GetValue();
+                    counts[i].sig_w2 += sig_w2.GetValue();
                 }
             }
 
