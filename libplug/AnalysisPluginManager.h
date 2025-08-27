@@ -81,5 +81,5 @@ class AnalysisPluginManager {
     std::vector<void *> handles_;
 };
 
-} // namespace analysis
+}
 #endif

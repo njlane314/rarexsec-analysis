@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -18,19 +20,19 @@
 #include "StratifierRegistry.h"
 #include "SystematicsProcessor.h"
 
-int main(int argc, char *argv[]) {
-    analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
+namespace fs = std::filesystem;
 
-    if (argc != 3) {
-        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json>");
-        return 1;
+static nlohmann::json loadJsonFile(const std::string &path) {
+    if (!fs::exists(path) || !fs::is_regular_file(path)) {
+        analysis::log::fatal("analyse::loadJsonFile", "File inaccessible:", path);
+        throw std::runtime_error("File inaccessible");
+    }
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        analysis::log::fatal("analyse::loadJsonFile", "Unable to open file:", path);
+        throw std::runtime_error("Unable to open file");
     }
 
-    std::ifstream config_file(argv[1]);
-    if (!config_file.is_open()) {
-        analysis::log::fatal("analyse::main", "Configuration file inaccessible:", argv[1]);
-        return 1;
-    }
     nlohmann::json config_data = nlohmann::json::parse(config_file);
 
     std::ifstream plugins_file(argv[2]);
@@ -53,13 +55,63 @@ int main(int argc, char *argv[]) {
         analysis::RunConfigRegistry run_config_registry;
         analysis::RunConfigLoader::loadRunConfigurations(argv[1], run_config_registry);
 
-        for (auto const &[beam, run_configs] : config_data.at("run_configurations").items()) {
+    return nlohmann::json::parse(file);
+}
 
-            std::vector<std::string> periods;
-            periods.reserve(run_configs.size());
-            for (auto const &[period, period_details] : run_configs.items()) {
-                periods.push_back(period);
-            }
+static analysis::SystematicsProcessor makeSystematicsProcessor(
+    const analysis::EventVariableRegistry &ev_reg) {
+    std::vector<analysis::KnobDef> knob_defs;
+    knob_defs.reserve(ev_reg.knobVariations().size());
+    std::transform(ev_reg.knobVariations().begin(), ev_reg.knobVariations().end(),
+                   std::back_inserter(knob_defs),
+                   [](const auto &kv) {
+                       return analysis::KnobDef{kv.first, kv.second.first, kv.second.second};
+                   });
+
+    std::vector<analysis::UniverseDef> universe_defs;
+    universe_defs.reserve(ev_reg.multiUniverseVariations().size());
+    std::transform(ev_reg.multiUniverseVariations().begin(),
+                   ev_reg.multiUniverseVariations().end(),
+                   std::back_inserter(universe_defs),
+                   [](const auto &kv) {
+                       return analysis::UniverseDef{kv.first, kv.first, kv.second};
+                   });
+
+    return analysis::SystematicsProcessor(knob_defs, universe_defs);
+}
+
+struct AnalysisComponents {
+    analysis::EventVariableRegistry ev_reg;
+    analysis::SelectionRegistry sel_reg;
+    analysis::StratifierRegistry strat_reg;
+    analysis::SystematicsProcessor sys_proc;
+
+    AnalysisComponents() : sys_proc(makeSystematicsProcessor(ev_reg)) {}
+};
+
+static void runBeamline(const std::string &beam, const nlohmann::json &run_configs,
+                        const std::string &ntuple_base_directory,
+                        analysis::RunConfigRegistry &rc_reg,
+                        const nlohmann::json &plugins_config) {
+    std::vector<std::string> periods;
+    periods.reserve(run_configs.size());
+    std::transform(run_configs.items().begin(), run_configs.items().end(),
+                   std::back_inserter(periods),
+                   [](const auto &item) { return item.key(); });
+
+    AnalysisComponents components;
+
+    analysis::AnalysisDataLoader data_loader(rc_reg, components.ev_reg, beam, periods,
+                                             ntuple_base_directory, true);
+
+    auto histogram_booker = std::make_unique<analysis::HistogramBooker>(components.strat_reg);
+
+    analysis::AnalysisRunner runner(data_loader, components.sel_reg, components.ev_reg,
+                                    std::move(histogram_booker), components.sys_proc,
+                                    plugins_config);
+
+    runner.run();
+}
 
             analysis::EventVariableRegistry event_variable_registry;
             analysis::SelectionRegistry selection_registry;
@@ -92,15 +144,19 @@ int main(int argc, char *argv[]) {
             analysis::AnalysisRunner runner(data_loader, selection_registry, event_variable_registry,
                                             std::move(histogram_booker), systematics_processor, plugins_config);
 
-            runner.run();
-        }
 
+    try {
+        nlohmann::json config_data = loadJsonFile(argv[1]);
+        nlohmann::json plugins_config = loadJsonFile(argv[2]);
+
+        runAnalysis(config_data, plugins_config, argv[1]);
     } catch (const std::exception &e) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
     }
 
-    analysis::log::info("analyse::main", "Global analysis routine terminated nominally.");
+    analysis::log::info("analyse::main",
+                         "Global analysis routine terminated nominally.");
     return 0;
 }
 

@@ -66,4 +66,4 @@ class RegionAnalysis {
     std::map<VariableKey, VariableResult> final_variables_;
 };
 
-  } // namespace analysis
+  }

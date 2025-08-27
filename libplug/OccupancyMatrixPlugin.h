@@ -115,6 +115,6 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-} // namespace analysis
+}
 
 #endif

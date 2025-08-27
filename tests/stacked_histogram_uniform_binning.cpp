@@ -16,11 +16,8 @@
 using namespace analysis;
 
 int main() {
-    // Original variable binning with four bins
     std::vector<double> edges{0.0, 1.0, 2.0, 3.0, 4.0};
     BinningDefinition binning(edges, "x", "x", {});
-
-    // Create a simple histogram with counts in each bin
     std::vector<double> counts{1.0, 2.0, 3.0, 4.0};
     Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(counts.size());
     Eigen::MatrixXd shifts = sh_vec;
@@ -32,8 +29,6 @@ int main() {
     result.strat_hists_.emplace(ChannelKey{std::string{"10"}}, hist);
 
     RegionAnalysis region(RegionKey{std::string{"reg"}}, "reg");
-
-    // Request uniform binning with two bins spanning [0,4]
     StackedHistogramPlot plot("test_plot", result, region,
                               "inclusive_strange_channels", "test_plots", true,
                               {}, true, false, "Events", 2, 0.0, 4.0);

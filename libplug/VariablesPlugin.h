@@ -87,6 +87,6 @@ class VariablesPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 };
 
-} // namespace analysis
+}
 
 #endif

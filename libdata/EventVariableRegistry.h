@@ -216,6 +216,6 @@ class EventVariableRegistry {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

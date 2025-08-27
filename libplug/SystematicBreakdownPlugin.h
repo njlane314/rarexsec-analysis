@@ -73,6 +73,6 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
     std::vector<PlotConfig> plots_;
 };
 
-} // namespace analysis
+}
 
 #endif
