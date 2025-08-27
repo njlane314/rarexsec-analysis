@@ -44,6 +44,6 @@ class RocCurvePlot : public HistogramPlotterBase {
     std::vector<double> background_rej_;
 };
 
-} // namespace analysis
+}
 
 #endif

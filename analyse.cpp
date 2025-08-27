@@ -78,12 +78,6 @@ int main(int argc, char *argv[]) {
             }
 
             analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
-
-            // Instantiate the data loader outside of the plugin infrastructure
-            // so that it remains alive for the entire duration of the analysis
-            // run.  Plugins such as EventDisplay rely on this object during
-            // their finalisation stage, so destroying it earlier would leave
-            // them without access to the required event data.
             analysis::AnalysisDataLoader data_loader(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true);
 
             auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);

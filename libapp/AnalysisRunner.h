@@ -273,6 +273,6 @@ class AnalysisRunner {
     std::string serialisation_directory_{"variable_results"};
 };
 
-} // namespace analysis
+}
 
 #endif

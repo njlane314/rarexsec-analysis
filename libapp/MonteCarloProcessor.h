@@ -54,6 +54,6 @@ class MonteCarloProcessor : public ISampleProcessor {
     std::unordered_map<SampleVariation, ROOT::RDF::RResultPtr<TH1D>> variation_futures_;
 };
 
-} // namespace analysis
+}
 
 #endif

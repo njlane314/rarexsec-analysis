@@ -47,12 +47,8 @@ int main() {
     auto corr2 = h3.corrMat();
     double expected_corr = 0.02 / std::sqrt((0.01 + 0.01) * (0.04 + 0.04));
     assert(std::abs(corr2(0, 1) - expected_corr) < 1e-12);
-
-    // Verify default-constructed binning behaves sensibly
     BinningDefinition empty_bn;
     assert(empty_bn.getBinNumber() == 0);
-
-    // Ensure adding a populated histogram to an empty one works
     HistogramUncertainty empty_hist;
     auto h_sum2 = empty_hist + h1;
     assert(h_sum2.size() == h1.size());

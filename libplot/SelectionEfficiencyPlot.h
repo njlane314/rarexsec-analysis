@@ -88,6 +88,6 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
     bool use_log_y_;
 };
 
-} // namespace analysis
+}
 
 #endif

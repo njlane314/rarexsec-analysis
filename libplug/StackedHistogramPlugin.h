@@ -156,6 +156,6 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
     std::map<RegionKey, std::map<std::string, std::vector<Cut>>> region_cuts_;
 };
 
-} // namespace analysis
+}
 
 #endif

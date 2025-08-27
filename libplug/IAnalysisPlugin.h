@@ -29,5 +29,5 @@ class IAnalysisPlugin {
     virtual void onFinalisation(const RegionAnalysisMap &results) = 0;
 };
 
-} // namespace analysis
+}
 #endif

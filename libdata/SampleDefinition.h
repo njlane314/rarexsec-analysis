@@ -177,6 +177,6 @@ class SampleDefinition {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

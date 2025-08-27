@@ -334,6 +334,6 @@ class AnalysisDefinition {
     friend class RegionIterator;
 };
 
-} // namespace analysis
+}
 
 #endif

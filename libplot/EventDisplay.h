@@ -77,6 +77,6 @@ class SemanticDisplayPlot : public EventDisplayBase {
     std::vector<int> data_;
 };
 
-} // namespace analysis
+}
 
 #endif

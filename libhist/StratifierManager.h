@@ -57,6 +57,6 @@ class StratifierManager {
         cache_;
 };
 
-} // namespace analysis
+}
 
 #endif

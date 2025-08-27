@@ -42,6 +42,6 @@ class Selection {
     std::string expr_;
 };
 
-} // namespace analysis
+}
 
 #endif

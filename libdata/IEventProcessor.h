@@ -24,6 +24,6 @@ class IEventProcessor {
     std::unique_ptr<IEventProcessor> next_;
 };
 
-} // namespace analysis
+}
 
 #endif
