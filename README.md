@@ -13,14 +13,15 @@ source .build.sh
 ```bash
 python scripts/generate_analysis_config.py
 ```
-Generates `config/analysis_config.json` by processing the sample definitions in `config/sample_definitions.json` and hadding inputs as needed.
+Generates `config/config.json` with `analysis_configs` and `plot_configs` by processing the sample definitions in `config/sample_definitions.json`.
 `config/sample_definitions.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
 
 ## Run
 ```bash
-./build/analyse config/analysis_config.json [config/plugins/<plugin>.json]
+./build/analyse config/config.json output.root
+./build/plot output.root config/config.json
 ```
-Runs the analysis using `config/analysis_config.json` and optional plugin definitions from `config/plugins/`.
+Runs the analysis with `analysis_configs` and executes plot plug-ins using `plot_configs`.
 
 ## Test
 ```bash

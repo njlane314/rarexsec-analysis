@@ -32,36 +32,28 @@ int main(int argc, char *argv[]) {
             log::fatal("plot::main", "Failed to load analysis result");
             return 1;
         }
-        nlohmann::json plugins_config = loadJsonFile(argv[2]);
+        nlohmann::json cfg = loadJsonFile(argv[2]);
+        auto analysis_cfg = cfg.at("analysis_configs");
+        auto plot_cfg = cfg.at("plot_configs");
         RunConfigRegistry rc_reg;
         EventVariableRegistry ev_reg;
         std::map<std::string, std::unique_ptr<AnalysisDataLoader>> loaders;
-        if (plugins_config.contains("analysis_config")) {
-            std::string cfg_path = plugins_config.at("analysis_config");
-            nlohmann::json config_data = loadJsonFile(cfg_path);
-            RunConfigLoader::loadRunConfigurations(cfg_path, rc_reg);
-            std::string ntuple_base_directory = config_data.at("ntuple_base_directory");
-            for (auto const &[beam, runs] : config_data.at("run_configurations").items()) {
-                std::vector<std::string> periods;
-                for (auto const &p : runs.items()) periods.push_back(p.key());
-                loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
-            }
+        std::string ntuple_base_directory = analysis_cfg.at("ntuple_base_directory");
+        RunConfigLoader::loadRunConfigurations(analysis_cfg, rc_reg);
+        for (auto const &[beam, runs] : analysis_cfg.at("run_configurations").items()) {
+            std::vector<std::string> periods;
+            for (auto const &p : runs.items()) periods.push_back(p.key());
+            loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
         }
         std::map<std::string, AnalysisPluginManager::RegionAnalysisMap> beam_regions;
         for (auto const &kv : result->regions()) {
             beam_regions[kv.second.beamConfig()].insert(kv);
         }
-        if (loaders.empty()) {
+        for (auto &kv : loaders) {
             AnalysisPluginManager manager;
-            manager.loadPlugins(plugins_config, nullptr);
-            manager.notifyFinalisation(result->regions());
-        } else {
-            for (auto &kv : loaders) {
-                AnalysisPluginManager manager;
-                manager.loadPlugins(plugins_config, kv.second.get());
-                auto it = beam_regions.find(kv.first);
-                if (it != beam_regions.end()) manager.notifyFinalisation(it->second);
-            }
+            manager.loadPlugins(plot_cfg, kv.second.get());
+            auto it = beam_regions.find(kv.first);
+            if (it != beam_regions.end()) manager.notifyFinalisation(it->second);
         }
     } catch (const std::exception &e) {
         log::fatal("plot::main", "An error occurred:", e.what());
