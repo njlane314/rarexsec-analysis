@@ -14,4 +14,6 @@ cmake "${REPO_ROOT}" || { cd "${REPO_ROOT}"; return 1; }
 
 make -j"${NUM_CORES}" || { cd "${REPO_ROOT}"; return 1; }
 
+ctest || { cd "${REPO_ROOT}"; return 1; }
+
 cd "${REPO_ROOT}" || { return 0; }
