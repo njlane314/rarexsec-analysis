@@ -13,6 +13,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
+#include "AnalysisResult.h"
 
 namespace analysis {
 
@@ -66,7 +67,7 @@ class AnalysisPluginManager {
             pl->onPostSampleProcessing(skey, rkey, res);
     }
 
-    void notifyFinalisation(const RegionAnalysisMap &res) {
+    void notifyFinalisation(const AnalysisResult &res) {
         for (auto &pl : plugins_)
             pl->onFinalisation(res);
     }

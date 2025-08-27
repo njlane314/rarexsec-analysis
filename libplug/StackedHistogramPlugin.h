@@ -90,30 +90,19 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
     void onPostSampleProcessing(const SampleKey &, const RegionKey &,
                                 const RegionAnalysisMap &) override {}
 
-    void onFinalisation(const RegionAnalysisMap &region_map) override {
+    void onFinalisation(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
-            auto it = region_map.find(rkey);
-
-            if (it == region_map.end()) {
-                log::error(
-                    "StackedHistogramPlugin::onFinalisation",
-                    "Could not find analysis region for key:", rkey.str());
-                continue;
-            }
-
             VariableKey vkey{pc.variable};
-            if (!it->second.hasFinalVariable(vkey)) {
+            if (!result.hasResult(rkey, vkey)) {
                 log::error("StackedHistogramPlugin::onFinalisation",
                            "Could not find variable", vkey.str(), "in region",
                            rkey.str());
                 continue;
             }
-
-            const auto &region_analysis = it->second;
-            const auto &variable_result =
-                region_analysis.getFinalVariable(vkey);
+            const auto &region_analysis = result.region(rkey);
+            const auto &variable_result = result.result(rkey, vkey);
 
             std::vector<Cut> cuts = pc.cut_list;
             if (pc.selection_cuts) {

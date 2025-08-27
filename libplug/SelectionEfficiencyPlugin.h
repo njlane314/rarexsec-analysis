@@ -61,7 +61,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
     void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
-    void onFinalisation(const RegionAnalysisMap &) override {
+    void onFinalisation(const AnalysisResult &) override {
         if (!loader_) {
             log::error("SelectionEfficiencyPlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;

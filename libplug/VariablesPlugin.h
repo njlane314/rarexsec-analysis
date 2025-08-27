@@ -81,7 +81,7 @@ class VariablesPlugin : public IAnalysisPlugin {
 
     void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
     void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-    void onFinalisation(const RegionAnalysisMap &) override {}
+    void onFinalisation(const AnalysisResult &) override {}
 
   private:
     nlohmann::json config_;

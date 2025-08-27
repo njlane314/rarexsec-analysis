@@ -8,6 +8,7 @@
 #include "AnalysisTypes.h"
 #include "RunConfig.h"
 #include "SelectionRegistry.h"
+#include "AnalysisResult.h"
 
 namespace analysis {
 
@@ -26,7 +27,7 @@ class IAnalysisPlugin {
                                         const RegionKey &region_key,
                                         const RegionAnalysisMap &results) = 0;
 
-    virtual void onFinalisation(const RegionAnalysisMap &results) = 0;
+    virtual void onFinalisation(const AnalysisResult &results) = 0;
 };
 
 }
