@@ -1,57 +1,67 @@
-#include <filesystem>
-#include <fstream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
+
 #include <nlohmann/json.hpp>
+
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "AnalysisPluginManager.h"
 #include "AnalysisResult.h"
 #include "EventVariableRegistry.h"
+#include "JsonUtils.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
+
 using namespace analysis;
-namespace fs = std::filesystem;
-static nlohmann::json loadJsonFile(const std::string &path) {
-    if (!fs::exists(path) || !fs::is_regular_file(path)) throw std::runtime_error("File inaccessible");
-    std::ifstream file(path);
-    if (!file.is_open()) throw std::runtime_error("Unable to open file");
-    return nlohmann::json::parse(file);
-}
+
 int main(int argc, char *argv[]) {
     AnalysisLogger::getInstance().setLevel(LogLevel::DEBUG);
+
     if (argc != 3) {
         log::fatal("plot::main", "Invocation error.");
         return 1;
     }
+
     try {
         auto result = AnalysisResult::loadFromFile(argv[1]);
+
         if (!result) {
             log::fatal("plot::main", "Failed to load analysis result");
             return 1;
         }
+
         nlohmann::json cfg = loadJsonFile(argv[2]);
         auto analysis_cfg = cfg.at("analysis_configs");
         auto plot_cfg = cfg.at("plot_configs");
+
         RunConfigRegistry rc_reg;
         EventVariableRegistry ev_reg;
         std::map<std::string, std::unique_ptr<AnalysisDataLoader>> loaders;
+
         std::string ntuple_base_directory = analysis_cfg.at("ntuple_base_directory");
+
         RunConfigLoader::loadRunConfigurations(analysis_cfg, rc_reg);
+
         for (auto const &[beam, runs] : analysis_cfg.at("run_configurations").items()) {
             std::vector<std::string> periods;
+
             for (auto const &p : runs.items()) periods.push_back(p.key());
+
             loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
         }
+
         std::map<std::string, AnalysisPluginManager::RegionAnalysisMap> beam_regions;
+
         for (auto const &kv : result->regions()) {
             beam_regions[kv.second.beamConfig()].insert(kv);
         }
+
         for (auto &kv : loaders) {
             AnalysisPluginManager manager;
             manager.loadPlugins(plot_cfg, kv.second.get());
+
             auto it = beam_regions.find(kv.first);
             if (it != beam_regions.end()) manager.notifyFinalisation(it->second);
         }
@@ -59,6 +69,7 @@ int main(int argc, char *argv[]) {
         log::fatal("plot::main", "An error occurred:", e.what());
         return 1;
     }
+
     log::info("plot::main", "Plotting routine terminated nominally.");
     return 0;
 }
