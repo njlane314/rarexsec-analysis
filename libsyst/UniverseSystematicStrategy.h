@@ -96,8 +96,7 @@ class UniverseSystematicStrategy : public SystematicStrategy {
         double n_universes = static_cast<double>(processed_universes);
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j <= i; ++j) {
-                double val =
-                    n_universes == 0 ? 0 : cov(i, j) / (n_universes * n_universes);
+                double val = n_universes == 0 ? 0 : cov(i, j) / n_universes;
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
