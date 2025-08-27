@@ -89,4 +89,10 @@ class VariablesPlugin : public IAnalysisPlugin {
 
 }
 
+#ifdef BUILD_PLUGIN
+extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+    return new analysis::VariablesPlugin(cfg);
+}
+#endif
+
 #endif
