@@ -6,6 +6,7 @@
 
 #include "TGraphErrors.h"
 #include "TH1F.h"
+#include "TLatex.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
 
@@ -15,17 +16,13 @@ namespace analysis {
 
 class SelectionEfficiencyPlot : public HistogramPlotterBase {
   public:
-    SelectionEfficiencyPlot(
-        std::string plot_name, std::vector<std::string> stages,
-        std::vector<double> efficiencies, std::vector<double> efficiency_errors,
-        std::vector<double> purities, std::vector<double> purity_errors,
-        std::string output_directory = "plots", bool use_log_y = false)
-        : HistogramPlotterBase(std::move(plot_name),
-                               std::move(output_directory)),
-          stages_(std::move(stages)), efficiencies_(std::move(efficiencies)),
-          efficiency_errors_(std::move(efficiency_errors)),
-          purities_(std::move(purities)),
-          purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
+    SelectionEfficiencyPlot(std::string plot_name, std::vector<std::string> stages, std::vector<double> efficiencies,
+                            std::vector<double> efficiency_errors, std::vector<double> purities,
+                            std::vector<double> purity_errors, std::string output_directory = "plots",
+                            bool use_log_y = false)
+        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), stages_(std::move(stages)),
+          efficiencies_(std::move(efficiencies)), efficiency_errors_(std::move(efficiency_errors)),
+          purities_(std::move(purities)), purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
 
   private:
     void draw(TCanvas &canvas) override {
@@ -63,17 +60,29 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
         eff_graph.DrawClone("PL SAME");
         pur_graph.DrawClone("PL SAME");
 
+        TLatex latex;
+        latex.SetTextAlign(23);
+        latex.SetTextFont(42);
+        latex.SetTextSize(0.035);
+        for (int i = 0; i < n; ++i) {
+            double x = i + 0.5;
+            double ye = efficiencies_[i];
+            double yp = purities_[i];
+            latex.SetTextColor(kBlue + 1);
+            latex.DrawLatex(x, ye + 0.02, Form("%.2f", ye));
+            latex.SetTextColor(kRed + 1);
+            latex.DrawLatex(x, yp + 0.02, Form("%.2f", yp));
+        }
+
         TLegend legend(0.6, 0.75, 0.88, 0.88);
         legend.SetBorderSize(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(42);
-        auto *eff_entry =
-            legend.AddEntry((TObject *)nullptr, "Signal Efficiency", "lep");
+        auto *eff_entry = legend.AddEntry((TObject *)nullptr, "Signal Efficiency", "lep");
         eff_entry->SetLineColor(kBlue + 1);
         eff_entry->SetMarkerColor(kBlue + 1);
         eff_entry->SetMarkerStyle(20);
-        auto *pur_entry =
-            legend.AddEntry((TObject *)nullptr, "Signal Purity", "lep");
+        auto *pur_entry = legend.AddEntry((TObject *)nullptr, "Signal Purity", "lep");
         pur_entry->SetLineColor(kRed + 1);
         pur_entry->SetMarkerColor(kRed + 1);
         pur_entry->SetMarkerStyle(21);
@@ -88,6 +97,6 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
     bool use_log_y_;
 };
 
-}
+} // namespace analysis
 
 #endif
