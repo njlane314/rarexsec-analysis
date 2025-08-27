@@ -1,6 +1,8 @@
 #ifndef EVENTDISPLAYPLUGIN_H
 #define EVENTDISPLAYPLUGIN_H
 
+#include <algorithm>
+#include <array>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
@@ -8,9 +10,10 @@
 #include <utility>
 #include <vector>
 
+#include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
+#include "EventDisplay.h"
 #include "IAnalysisPlugin.h"
-#include "PlotCatalog.h"
 #include "Selection.h"
 
 namespace analysis {
@@ -64,14 +67,57 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             return;
         }
         for (auto const &cfg : configs_) {
-            PlotCatalog catalog(*loader_, cfg.image_size, cfg.output_directory.string());
-            auto produced = catalog.generateRandomEventDisplays(cfg.sample, cfg.selection, cfg.n_events);
-            if (produced > 0) {
-                auto full_path = (cfg.output_directory / cfg.sample).string();
-                log::info("EventDisplayPlugin::onFinalisation", "Saved", produced, "event displays to", full_path);
-            } else {
-                log::warn("EventDisplayPlugin::onFinalisation", "No events found for", cfg.sample, "in region",
-                          cfg.region);
+            auto &sample = loader_->getSampleFrames().at(SampleKey{cfg.sample});
+            auto df = sample.nominal_node_;
+
+            std::string filter = cfg.selection.str();
+            bool has_filter = filter.find_first_not_of(" \t\n\r") != std::string::npos;
+            if (has_filter)
+                df = df.Filter(filter);
+
+            auto runs = df.Take<int>("run").GetValue();
+            auto subs = df.Take<int>("sub").GetValue();
+            auto evts = df.Take<int>("evt").GetValue();
+
+            size_t n = std::min<size_t>(cfg.n_events, runs.size());
+            std::filesystem::path out_dir = cfg.output_directory / cfg.sample;
+
+            for (size_t i = 0; i < n; ++i) {
+                int run = runs[i];
+                int sub = subs[i];
+                int evt = evts[i];
+                std::string expr = "run == " + std::to_string(run) + "&& sub == " + std::to_string(sub) +
+                                   "&& evt == " + std::to_string(evt);
+                auto edf = df.Filter(expr);
+
+                auto det_u_vec = edf.Take<std::vector<float>>("event_detector_image_u").GetValue();
+                auto det_v_vec = edf.Take<std::vector<float>>("event_detector_image_v").GetValue();
+                auto det_w_vec = edf.Take<std::vector<float>>("event_detector_image_w").GetValue();
+
+                auto sem_u_vec = edf.Take<std::vector<int>>("semantic_image_u").GetValue();
+                auto sem_v_vec = edf.Take<std::vector<int>>("semantic_image_v").GetValue();
+                auto sem_w_vec = edf.Take<std::vector<int>>("semantic_image_w").GetValue();
+
+                if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
+                    continue;
+                if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
+                    continue;
+
+                std::array<std::string, 3> planes = {"U", "V", "W"};
+                for (size_t p = 0; p < planes.size(); ++p) {
+                    std::string tag = planes[p] + std::string("_") + std::to_string(run) + "_" + std::to_string(sub) +
+                                      "_" + std::to_string(evt);
+                    std::vector<float> det_data = p == 0 ? det_u_vec[0] : (p == 1 ? det_v_vec[0] : det_w_vec[0]);
+                    std::vector<int> sem_data = p == 0 ? sem_u_vec[0] : (p == 1 ? sem_v_vec[0] : sem_w_vec[0]);
+
+                    log::info("EventDisplayPlugin", "Generating", tag, "display");
+
+                    DetectorDisplayPlot det_disp(tag, det_data, cfg.image_size, out_dir.string());
+                    det_disp.drawAndSave();
+
+                    SemanticDisplayPlot sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
+                    sem_disp.drawAndSave();
+                }
             }
         }
     }
