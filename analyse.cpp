@@ -98,7 +98,8 @@ int main(int argc, char *argv[]) {
 
             analysis::AnalysisRunner runner(data_loader, sel_reg, ev_reg,
                                             std::move(histogram_booker),
-                                            sys_proc, plugins_config);
+                                            sys_proc, plugins_config,
+                                            true);
 
             runner.run();
         }
