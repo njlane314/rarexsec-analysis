@@ -12,8 +12,8 @@ target_link_libraries(histogram_uncertainty_tests PRIVATE libapp libhist libutil
 add_test(NAME histogram_uncertainty_tests COMMAND histogram_uncertainty_tests)
 
 add_executable(test_systematics test_systematics.cpp)
-target_link_libraries(test_systematics PRIVATE libapp libhist libutils libsyst Eigen3::Eigen ${ROOT_LIBRARIES})
-add_test(NAME test_systematics COMMAND test_systematics)
+target_link_libraries(test_systematics PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+catch_discover_tests(test_systematics)
 
 add_executable(stacked_histogram_uniform_binning stacked_histogram_uniform_binning.cpp)
 target_link_libraries(stacked_histogram_uniform_binning PRIVATE libapp libhist libplot libutils Eigen3::Eigen ${ROOT_LIBRARIES})
