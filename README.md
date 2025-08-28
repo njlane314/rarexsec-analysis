@@ -1,4 +1,4 @@
-#rarexsec_analysis
+# rarexsec_analysis
 
 Framework for rare cross-section measurements.
 
@@ -30,6 +30,8 @@ ctest --output-on-failure
 ```
 
 ## Example JSON plugins
+The plug-in files contain both the analysis and plot directives for the program.
+
 ```json
 {
     "bins" : {

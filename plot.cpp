@@ -19,8 +19,8 @@ using namespace analysis;
 int main(int argc, char *argv[]) {
     AnalysisLogger::getInstance().setLevel(LogLevel::DEBUG);
 
-    if (argc != 3) {
-        log::fatal("plot::main", "Invocation error.");
+    if (argc != 4) {
+        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json> <input.root>");
         return 1;
     }
 
