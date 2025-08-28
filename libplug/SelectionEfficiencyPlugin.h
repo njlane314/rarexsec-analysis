@@ -30,9 +30,12 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     };
 
     explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("efficiency_plots") || !cfg.at("efficiency_plots").is_array())
+        auto plots_it = cfg.find("efficiency_plots");
+        if (plots_it == cfg.end() || !plots_it->is_array() || plots_it->empty()) {
+            log::info("SelectionEfficiencyPlugin", "No efficiency_plots provided");
             return;
-        for (auto const &p : cfg.at("efficiency_plots")) {
+        }
+        for (auto const &p : *plots_it) {
             PlotConfig pc;
             pc.region = p.at("region").get<std::string>();
             pc.selection_rule = p.value("selection_rule", std::string{});
@@ -156,6 +159,8 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, efficiencies, eff_errors,
                                          purities, pur_errors, pc.output_directory, pc.use_log_y);
             plot.drawAndSave("pdf");
+            log::info("SelectionEfficiencyPlugin::onFinalisation",
+                      pc.output_directory + "/" + pc.plot_name + "_" + pc.region + ".pdf");
         }
     }
 
@@ -166,7 +171,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
