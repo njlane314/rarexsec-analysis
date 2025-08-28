@@ -56,6 +56,14 @@ class RegionAnalysis {
 
     const std::map<VariableKey, VariableResult> &finalVariables() const noexcept { return final_variables_; }
 
+    struct StageCount {
+        double total{};
+        double total_w2{};
+        std::map<std::string, std::map<int, std::pair<double, double>>> schemes;
+    };
+    void setCutFlow(std::vector<StageCount> cf) { cut_flow_ = std::move(cf); }
+    const std::vector<StageCount> &cutFlow() const noexcept { return cut_flow_; }
+
   private:
     RegionKey region_key_{};
     std::string region_label_{};
@@ -64,6 +72,7 @@ class RegionAnalysis {
     std::string beam_config_{};
     std::vector<std::string> run_numbers_{};
     std::map<VariableKey, VariableResult> final_variables_;
+    std::vector<StageCount> cut_flow_;
 };
 
   }
