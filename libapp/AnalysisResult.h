@@ -28,6 +28,7 @@ class AnalysisResult : public TObject {
     RegionAnalysisMap &regions() noexcept { return regions_; }
 
     const RegionAnalysis &region(const RegionKey &r) const { return regions_.at(r); }
+    const std::vector<RegionAnalysis::StageCount> &cutFlow(const RegionKey &r) const { return regions_.at(r).cutFlow(); }
 
     const VariableResult &result(const RegionKey &r, const VariableKey &v) const {
         return variable_results_.at(r).get(v);

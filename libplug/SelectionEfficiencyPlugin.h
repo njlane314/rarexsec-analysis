@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
 #include "SelectionEfficiencyPlot.h"
@@ -70,12 +69,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
     void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
     void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
-    void onFinalisation(const AnalysisResult &) override {
-        if (!loader_) {
-            log::error("SelectionEfficiencyPlugin::onFinalisation", "No AnalysisDataLoader context provided");
-            return;
-        }
-
+    void onFinalisation(const AnalysisResult &res) override {
         StratifierRegistry strat_reg;
 
         for (const auto &pc : plots_) {
@@ -87,69 +81,46 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
                 continue;
             }
 
-            auto buildSignalExpr = [&](const std::vector<int> &keys) {
-                std::string expr;
-                for (size_t i = 0; i < keys.size(); ++i) {
-                    if (i > 0)
-                        expr += " || ";
-                    expr += pc.channel_column + " == " + std::to_string(keys[i]);
-                }
-                return expr;
-            };
-
-            std::string signal_expr = buildSignalExpr(signal_keys);
-
             std::vector<std::string> stage_labels{pc.initial_label};
             stage_labels.insert(stage_labels.end(), pc.clauses.begin(), pc.clauses.end());
 
-            std::vector<std::string> cumulative_filters{""};
-            std::string current;
-            for (const auto &clause : pc.clauses) {
-                if (!current.empty())
-                    current += " && ";
-                current += clause;
-                cumulative_filters.push_back(current);
+            const auto &cf = res.region(RegionKey{pc.region}).cutFlow();
+
+            double sig0 = 0.0;
+            double sig0_w2 = 0.0;
+            if (!cf.empty()) {
+                auto scheme_it = cf[0].schemes.find(pc.channel_column);
+                if (scheme_it != cf[0].schemes.end())
+                    for (int key : signal_keys) {
+                        auto it = scheme_it->second.find(key);
+                        if (it != scheme_it->second.end()) {
+                            sig0 += it->second.first;
+                            sig0_w2 += it->second.second;
+                        }
+                    }
             }
-
-            struct CountInfo {
-                double sig = 0.0;
-                double sig_w2 = 0.0;
-                double tot = 0.0;
-                double tot_w2 = 0.0;
-            };
-            std::vector<CountInfo> counts(cumulative_filters.size());
-
-            for (auto &[skey, sample] : loader_->getSampleFrames()) {
-                if (!sample.isMc())
-                    continue;
-                auto base_df = sample.nominal_node_.Define("w2", "nominal_event_weight*nominal_event_weight");
-                for (size_t i = 0; i < cumulative_filters.size(); ++i) {
-                    auto df = base_df;
-                    if (!cumulative_filters[i].empty())
-                        df = df.Filter(cumulative_filters[i]);
-                    auto tot_w = df.Sum<double>("nominal_event_weight");
-                    auto tot_w2 = df.Sum<double>("w2");
-                    auto sig_df = df.Filter(signal_expr);
-                    auto sig_w = sig_df.Sum<double>("nominal_event_weight");
-                    auto sig_w2 = sig_df.Sum<double>("w2");
-                    counts[i].tot += tot_w.GetValue();
-                    counts[i].tot_w2 += tot_w2.GetValue();
-                    counts[i].sig += sig_w.GetValue();
-                    counts[i].sig_w2 += sig_w2.GetValue();
-                }
-            }
-
-            double sig0 = counts[0].sig;
-            double sig0_w2 = counts[0].sig_w2;
             double Neff0 = sig0_w2 > 0 ? (sig0 * sig0) / sig0_w2 : 0.0;
 
             std::vector<double> efficiencies, eff_errors, purities, pur_errors;
-            for (const auto &c : counts) {
-                double eff = sig0 > 0 ? c.sig / sig0 : 0.0;
-                double eff_err = (Neff0 > 0) ? std::sqrt(eff * (1.0 - eff) / Neff0) : 0.0;
-                double pur = c.tot > 0 ? c.sig / c.tot : 0.0;
-                double Neff_tot = c.tot_w2 > 0 ? (c.tot * c.tot) / c.tot_w2 : 0.0;
-                double pur_err = (Neff_tot > 0) ? std::sqrt(pur * (1.0 - pur) / Neff_tot) : 0.0;
+            for (const auto &sc : cf) {
+                double sig = 0.0;
+                double sig_w2 = 0.0;
+                auto scheme_it = sc.schemes.find(pc.channel_column);
+                if (scheme_it != sc.schemes.end())
+                    for (int key : signal_keys) {
+                        auto it = scheme_it->second.find(key);
+                        if (it != scheme_it->second.end()) {
+                            sig += it->second.first;
+                            sig_w2 += it->second.second;
+                        }
+                    }
+                double eff = sig0 > 0 ? sig / sig0 : 0.0;
+                double eff_err = Neff0 > 0 ? std::sqrt(eff * (1.0 - eff) / Neff0) : 0.0;
+                double tot = sc.total;
+                double tot_w2 = sc.total_w2;
+                double pur = tot > 0 ? sig / tot : 0.0;
+                double Neff_tot = tot_w2 > 0 ? (tot * tot) / tot_w2 : 0.0;
+                double pur_err = Neff_tot > 0 ? std::sqrt(pur * (1.0 - pur) / Neff_tot) : 0.0;
                 efficiencies.push_back(eff);
                 eff_errors.push_back(eff_err);
                 purities.push_back(pur);
@@ -164,11 +135,8 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         }
     }
 
-    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
-
   private:
     std::vector<PlotConfig> plots_;
-    inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
 } // namespace analysis
@@ -176,9 +144,6 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
     return new analysis::SelectionEfficiencyPlugin(cfg);
-}
-extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
-    analysis::SelectionEfficiencyPlugin::setLoader(loader);
 }
 #endif
 
