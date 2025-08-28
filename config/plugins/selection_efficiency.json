@@ -1,7 +1,7 @@
 {
     "plugins": [
       {
-        "path": "build/SelectionEfficiencyPlugin.so",
+        "path": "build/CutFlowPlotPlugin.so",
         "analysis_configs": {
           "efficiency_plots": [
             {
