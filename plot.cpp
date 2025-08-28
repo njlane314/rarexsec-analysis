@@ -17,25 +17,36 @@
 using namespace analysis;
 
 static void runPlotting(const nlohmann::json &config_data, const nlohmann::json &config_plot, const AnalysisResult &res) {
+    ROOT::EnableImplicitMT();
+    analysis::log::info("plot::runPlotting", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
+
+    std::string ntuple_base_directory = config_data.at("ntuple_base_directory");
+    analysis::log::info("plot::runPlotting", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
+
     RunConfigRegistry rc_reg;
+    RunConfigLoader::loadRunConfigurations(config_data, rc_reg);
+
     EventVariableRegistry ev_reg;
     std::map<std::string, std::unique_ptr<AnalysisDataLoader>> loaders;
-    std::string ntuple_base_directory = config_data.at("ntuple_base_directory");
-    RunConfigLoader::loadRunConfigurations(config_data, rc_reg);
-    for (auto const &[beam, runs] : config_data.at("run_configurations").items()) {
+    
+    for (auto const &[beam, config_run] : config_data.at("run_configurations").items()) {
         std::vector<std::string> periods;
-        for (auto const &p : runs.items()) {
+        for (auto const &p : config_run.items()) {
             periods.push_back(p.key());
         }
+
         loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
     }
+
     std::map<std::string, AnalysisResult> beam_results;
     for (auto const &kv : res.regions()) {
         beam_results[kv.second.beamConfig()].regions().insert(kv);
     }
+
     for (auto &kv : beam_results) {
         kv.second.build();
     }
+
     for (auto &kv : loaders) {
         AnalysisPluginManager manager;
         manager.loadPlugins(config_plot, kv.second.get());
@@ -46,23 +57,28 @@ static void runPlotting(const nlohmann::json &config_data, const nlohmann::json 
 
 int main(int argc, char *argv[]) {
     AnalysisLogger::getInstance().setLevel(LogLevel::DEBUG);
+
     if (argc != 4) {
         log::fatal("plot::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json> <input.root>");
         return 1;
     }
+
     try {
         nlohmann::json cfg = loadJsonFile(argv[1]);
         nlohmann::json plg = loadJsonFile(argv[2]);
+
         auto result = AnalysisResult::loadFromFile(argv[3]);
         if (!result) {
-            log::fatal("plot::main", "Failed to load analysis result");
+            log::fatal("plot::main", "Failed to load", argv[3], "analysis result.");
             return 1;
         }
+
         runPlotting(cfg.at("analysis_configs"), plg, *result);
     } catch (const std::exception &e) {
         log::fatal("plot::main", "An error occurred:", e.what());
         return 1;
     }
+
     log::info("plot::main", "Plotting routine terminated nominally.");
     return 0;
 }

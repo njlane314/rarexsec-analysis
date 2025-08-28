@@ -20,10 +20,10 @@
 
 static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data, const nlohmann::json &config_analysis) {
     ROOT::EnableImplicitMT();
-    analysis::log::info("analyse::main", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
+    analysis::log::info("analyse::runAnalysis", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
     std::string ntuple_base_directory = config_data.at("ntuple_base_directory").get<std::string>();
-    analysis::log::info("analyse::main", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
+    analysis::log::info("analyse::runAnalysis", "Configuration loaded for", config_data.at("run_configurations").size(), "beamlines.");
 
     analysis::RunConfigRegistry rc_reg;
     analysis::RunConfigLoader::loadRunConfigurations(config_data, rc_reg);
