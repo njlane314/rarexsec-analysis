@@ -1,8 +1,6 @@
 #ifndef STACKEDHISTOGRAMPLUGIN_H
 #define STACKEDHISTOGRAMPLUGIN_H
 
-#include <map>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -12,12 +10,12 @@
 #include <TSystem.h>
 
 #include "AnalysisLogger.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "StackedHistogramPlot.h"
 
 namespace analysis {
 
-class StackedHistogramPlugin : public IAnalysisPlugin {
+class StackedHistogramPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string variable;
@@ -43,8 +41,7 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
             pc.variable = p.at("variable").get<std::string>();
             pc.region = p.at("region").get<std::string>();
             pc.category_column = p.value("category_column", std::string());
-            pc.output_directory =
-                p.value("output_directory", std::string("plots"));
+            pc.output_directory = p.value("output_directory", std::string("plots"));
             pc.overlay_signal = p.value("overlay_signal", true);
             pc.annotate_numbers = p.value("annotate_numbers", true);
             pc.use_log_y = p.value("log_y", false);
@@ -55,100 +52,42 @@ class StackedHistogramPlugin : public IAnalysisPlugin {
             pc.max = p.value("max", 0.0);
             if (p.contains("cuts")) {
                 for (auto const &c : p.at("cuts")) {
-                    auto dir =
-                        c.at("direction").get<std::string>() == "GreaterThan"
-                            ? CutDirection::GreaterThan
-                            : CutDirection::LessThan;
-                    pc.cut_list.push_back(
-                        {c.at("threshold").get<double>(), dir});
+                    auto dir = c.at("direction").get<std::string>() == "GreaterThan" ? CutDirection::GreaterThan
+                                                                                     : CutDirection::LessThan;
+                    pc.cut_list.push_back({c.at("threshold").get<double>(), dir});
                 }
             }
             plots_.push_back(std::move(pc));
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def,
-                          const SelectionRegistry &) override {
-        for (auto const &pc : plots_) {
-            if (!pc.selection_cuts)
-                continue;
-            RegionKey rkey{pc.region};
-            if (region_cuts_.count(rkey))
-                continue;
-            try {
-                const auto &sel_str = def.region(rkey).selection().str();
-                parseSelectionCuts(rkey, sel_str);
-            } catch (const std::exception &e) {
-                log::error("StackedHistogramPlugin::onInitialisation",
-                           "Could not parse selection for region", rkey.str(),
-                           e.what());
-            }
-        }
-    }
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &result) override {
+    void run(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             VariableKey vkey{pc.variable};
             if (!result.hasResult(rkey, vkey)) {
-                log::error("StackedHistogramPlugin::onFinalisation",
-                           "Could not find variable", vkey.str(), "in region",
+                log::error("StackedHistogramPlugin::run", "Could not find variable", vkey.str(), "in region",
                            rkey.str());
                 continue;
             }
             const auto &region_analysis = result.region(rkey);
             const auto &variable_result = result.result(rkey, vkey);
-
-            std::vector<Cut> cuts = pc.cut_list;
-            if (pc.selection_cuts) {
-                auto r_it = region_cuts_.find(rkey);
-                if (r_it != region_cuts_.end()) {
-                    auto c_it = r_it->second.find(pc.variable);
-                    if (c_it != r_it->second.end()) {
-                        cuts.insert(cuts.end(), c_it->second.begin(),
-                                    c_it->second.end());
-                    }
-                }
-            }
-
-            StackedHistogramPlot plot(
-                "stack_" + pc.variable + "_" + pc.region, variable_result,
-                region_analysis, pc.category_column, pc.output_directory,
-                pc.overlay_signal, cuts, pc.annotate_numbers, pc.use_log_y,
-                pc.y_axis_label, pc.n_bins, pc.min, pc.max);
+            StackedHistogramPlot plot("stack_" + pc.variable + "_" + pc.region, variable_result, region_analysis,
+                                      pc.category_column, pc.output_directory, pc.overlay_signal, pc.cut_list,
+                                      pc.annotate_numbers, pc.use_log_y, pc.y_axis_label, pc.n_bins, pc.min, pc.max);
             plot.drawAndSave("pdf");
         }
     }
 
   private:
-    void parseSelectionCuts(const RegionKey &region, const std::string &expr) {
-        static const std::regex rgx(
-            R"((\w+)\s*([<>])=?\s*(-?\d*\.?\d+(?:[eE][-+]?\d+)?))");
-        auto begin = std::sregex_iterator(expr.begin(), expr.end(), rgx);
-        auto end = std::sregex_iterator();
-        for (auto it = begin; it != end; ++it) {
-            std::string var = (*it)[1];
-            std::string op = (*it)[2];
-            double thr = std::stod((*it)[3]);
-            CutDirection dir =
-                op == ">" ? CutDirection::GreaterThan : CutDirection::LessThan;
-            region_cuts_[region][var].push_back({thr, dir});
-        }
-    }
-
     std::vector<PlotConfig> plots_;
-    std::map<RegionKey, std::map<std::string, std::vector<Cut>>> region_cuts_;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::StackedHistogramPlugin(cfg);
 }
 #endif

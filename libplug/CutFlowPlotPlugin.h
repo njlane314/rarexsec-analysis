@@ -1,22 +1,20 @@
-#ifndef SELECTION_EFFICIENCY_PLUGIN_H
-#define SELECTION_EFFICIENCY_PLUGIN_H
+#ifndef CUTFLOWPLOTPLUGIN_H
+#define CUTFLOWPLOTPLUGIN_H
 
 #include <cmath>
-#include <map>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 #include "AnalysisLogger.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "SelectionEfficiencyPlot.h"
-#include "SelectionRegistry.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
 
-class SelectionEfficiencyPlugin : public IAnalysisPlugin {
+class CutFlowPlotPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string selection_rule;
@@ -30,9 +28,9 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
         std::vector<std::string> clauses;
     };
 
-    explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
+    explicit CutFlowPlotPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::runtime_error("SelectionEfficiencyPlugin missing plots");
+            throw std::runtime_error("CutFlowPlotPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.selection_rule = p.at("selection_rule").get<std::string>();
@@ -43,38 +41,20 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             pc.plot_name = p.at("plot_name").get<std::string>();
             pc.output_directory = p.value("output_directory", std::string("plots"));
             pc.use_log_y = p.value("log_y", false);
-            if (p.contains("clauses")) pc.clauses = p.at("clauses").get<std::vector<std::string>>();
+            if (p.contains("clauses"))
+                pc.clauses = p.at("clauses").get<std::vector<std::string>>();
             plots_.push_back(std::move(pc));
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
-        for (auto &pc : plots_) {
-            try {
-                if (pc.clauses.empty()) {
-                    auto rule = sel_reg.getRule(pc.selection_rule);
-                    pc.clauses = rule.clauses;
-                }
-
-                def.region(RegionKey{pc.region});
-            } catch (const std::exception &e) {
-                log::error("SelectionEfficiencyPlugin::onInitialisation", e.what());
-            }
-        }
-    }
-
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &res) override {
+    void run(const AnalysisResult &res) override {
         StratifierRegistry strat_reg;
-
         for (const auto &pc : plots_) {
             std::vector<int> signal_keys;
             try {
                 signal_keys = strat_reg.getSignalKeys(pc.signal_group);
             } catch (const std::exception &e) {
-                log::error("SelectionEfficiencyPlugin::onFinalisation", e.what());
+                log::error("CutFlowPlotPlugin::run", e.what());
                 continue;
             }
 
@@ -127,8 +107,7 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
             SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, efficiencies, eff_errors,
                                          purities, pur_errors, pc.output_directory, pc.use_log_y);
             plot.drawAndSave("pdf");
-            log::info("SelectionEfficiencyPlugin::onFinalisation",
-                      pc.output_directory + "/" + pc.plot_name + "_" + pc.region + ".pdf");
+            log::info("CutFlowPlotPlugin::run", pc.output_directory + "/" + pc.plot_name + "_" + pc.region + ".pdf");
         }
     }
 
@@ -139,8 +118,8 @@ class SelectionEfficiencyPlugin : public IAnalysisPlugin {
 } // namespace analysis
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
-    return new analysis::SelectionEfficiencyPlugin(cfg);
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
+    return new analysis::CutFlowPlotPlugin(cfg);
 }
 #endif
 
