@@ -38,20 +38,21 @@ static void runPlotting(const nlohmann::json &config_data, const nlohmann::json 
         loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
     }
 
-    std::map<std::string, AnalysisResult> beam_results;
-    for (auto const &kv : res.regions()) {
-        beam_results[kv.second.beamConfig()].regions().insert(kv);
+    auto beam_results = [&res] {
+        std::map<std::string, AnalysisResult> m;
+        for (auto const &kv : res.regions()) m[kv.second.beamConfig()].regions().insert(kv);
+
+        for (auto &[k, v] : m) 
+            v.build();
+        
+        return m;
     }
 
-    for (auto &kv : beam_results) {
-        kv.second.build();
-    }
-
-    for (auto &kv : loaders) {
+    for (auto &[beam, loader] : loaders) {
         AnalysisPluginManager manager;
-        manager.loadPlugins(config_plot, kv.second.get());
-        auto it = beam_results.find(kv.first);
-        if (it != beam_results.end()) manager.notifyFinalisation(it->second);
+        manager.loadPlugins(config_plot, loader.get());
+        auto it = beam_results.find(beam);
+        if (it != beam_results.end()) manager.notifyFinalisation(it->second); 
     }
 }
 

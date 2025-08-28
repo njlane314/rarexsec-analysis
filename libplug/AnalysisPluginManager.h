@@ -12,8 +12,9 @@
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
-#include "IAnalysisPlugin.h"
+
 #include "AnalysisResult.h"
+#include "IAnalysisPlugin.h"
 
 namespace analysis {
 
@@ -38,7 +39,7 @@ class AnalysisPluginManager {
                 }
             }
 
-            using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &);
+            using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &, const nlohmann::json &);
             auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
             if (!create) {
                 create = reinterpret_cast<FactoryFn>(dlsym(handle, "createRegionsPlugin"));
@@ -46,7 +47,7 @@ class AnalysisPluginManager {
             if (!create)
                 throw std::runtime_error(dlerror());
 
-            std::unique_ptr<IAnalysisPlugin> plugin(create(p));
+            std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()), p.value("plot_configs", nlohmann::json::object())));
             plugins_.push_back(std::move(plugin));
             handles_.push_back(handle);
         }

@@ -2,6 +2,7 @@
 #define SELECTION_EFFICIENCY_PLUGIN_H
 
 #include <cmath>
+#include <map>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -16,40 +17,8 @@ namespace analysis {
 
 class SelectionEfficiencyPlugin : public IAnalysisPlugin {
   public:
-    struct PlotConfig {
-        std::string region;
-        std::string selection_rule;
-        std::string channel_column;
-        std::string signal_group;
-        std::string output_directory{"./plots"};
-        std::string plot_name{"selection_efficiency"};
-        bool use_log_y{false};
-        std::vector<std::string> clauses;
-        std::string initial_label{"All Events"};
-    };
-
-    explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
-        auto plots_it = cfg.find("efficiency_plots");
-        if (plots_it == cfg.end() || !plots_it->is_array() || plots_it->empty()) {
-            log::info("SelectionEfficiencyPlugin", "No efficiency_plots provided");
-            return;
-        }
-        for (auto const &p : *plots_it) {
-            PlotConfig pc;
-            pc.region = p.at("region").get<std::string>();
-            pc.selection_rule = p.value("selection_rule", std::string{});
-            pc.channel_column = p.at("channel_column").get<std::string>();
-            pc.signal_group = p.at("signal_group").get<std::string>();
-            pc.output_directory = p.value("output_directory", std::string{"./plots"});
-            pc.plot_name = p.value("plot_name", std::string{"selection_efficiency"});
-            pc.use_log_y = p.value("log_y", false);
-            pc.initial_label = p.value("initial_label", std::string{"All Events"});
-            if (p.contains("clauses") && p.at("clauses").is_array())
-                for (auto const &cl : p.at("clauses"))
-                    pc.clauses.push_back(cl.get<std::string>());
-            plots_.push_back(std::move(pc));
-        }
-    }
+    SelectionEfficiencyPlugin(const nlohmann::json & acfg, const nlohmann::json &pcfg)
+        : config_analysis(acfg), config_plot(pcfg) {}
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
         for (auto &pc : plots_) {
