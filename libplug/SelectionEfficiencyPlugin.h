@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
@@ -17,8 +18,35 @@ namespace analysis {
 
 class SelectionEfficiencyPlugin : public IAnalysisPlugin {
   public:
-    SelectionEfficiencyPlugin(const nlohmann::json & acfg, const nlohmann::json &pcfg)
-        : config_analysis(acfg), config_plot(pcfg) {}
+    struct PlotConfig {
+        std::string selection_rule;
+        std::string region;
+        std::string signal_group;
+        std::string channel_column;
+        std::string initial_label;
+        std::string plot_name;
+        std::string output_directory{"plots"};
+        bool use_log_y{false};
+        std::vector<std::string> clauses;
+    };
+
+    explicit SelectionEfficiencyPlugin(const nlohmann::json &cfg) {
+        if (!cfg.contains("plots") || !cfg.at("plots").is_array())
+            throw std::runtime_error("SelectionEfficiencyPlugin missing plots");
+        for (auto const &p : cfg.at("plots")) {
+            PlotConfig pc;
+            pc.selection_rule = p.at("selection_rule").get<std::string>();
+            pc.region = p.at("region").get<std::string>();
+            pc.signal_group = p.at("signal_group").get<std::string>();
+            pc.channel_column = p.at("channel_column").get<std::string>();
+            pc.initial_label = p.at("initial_label").get<std::string>();
+            pc.plot_name = p.at("plot_name").get<std::string>();
+            pc.output_directory = p.value("output_directory", std::string("plots"));
+            pc.use_log_y = p.value("log_y", false);
+            if (p.contains("clauses")) pc.clauses = p.at("clauses").get<std::vector<std::string>>();
+            plots_.push_back(std::move(pc));
+        }
+    }
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
         for (auto &pc : plots_) {
