@@ -31,33 +31,31 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data, c
     analysis::AnalysisResult combined_res;
     for (auto const &[beam, config_run] : config_data.at("run_configurations").items()) {
         std::vector<std::string> periods;
-
         periods.reserve(config_run.size());
-        for (const auto &item : config_run.items())
+        for (const auto &item : config_run.items()) {
             periods.push_back(item.key());
-        
-            analysis::EventVariableRegistry ev_reg;
-            analysis::SelectionRegistry sel_reg;
-            analysis::StratifierRegistry strat_reg;
-
-            std::vector<analysis::KnobDef> knob_defs;
-            knob_defs.reserve(ev_reg.knobVariations().size());
-            for (const auto &kv : ev_reg.knobVariations())
-                knob_defs.push_back({kv.first, kv.second.first, kv.second.second});
-
-            std::vector<analysis::UniverseDef> universe_defs;
-            universe_defs.reserve(ev_reg.multiUniverseVariations().size());
-            for (const auto &kv : ev_reg.multiUniverseVariations())
-                universe_defs.push_back({kv.first, kv.first, kv.second});
-
-            analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
-            analysis::AnalysisDataLoader data_loader(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true);
-            auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
-            analysis::AnalysisRunner runner(data_loader, sel_reg, ev_reg, std::move(histogram_booker), sys_proc, config_analysis);
-
-            auto res = runner.run(); 
-            for (auto &kv : res.regions)
-                combined_res.regions().insert(kv);
+        }
+        analysis::EventVariableRegistry ev_reg;
+        analysis::SelectionRegistry sel_reg;
+        analysis::StratifierRegistry strat_reg;
+        std::vector<analysis::KnobDef> knob_defs;
+        knob_defs.reserve(ev_reg.knobVariations().size());
+        for (const auto &kv : ev_reg.knobVariations()) {
+            knob_defs.push_back({kv.first, kv.second.first, kv.second.second});
+        }
+        std::vector<analysis::UniverseDef> universe_defs;
+        universe_defs.reserve(ev_reg.multiUniverseVariations().size());
+        for (const auto &kv : ev_reg.multiUniverseVariations()) {
+            universe_defs.push_back({kv.first, kv.first, kv.second});
+        }
+        analysis::SystematicsProcessor sys_proc(knob_defs, universe_defs);
+        analysis::AnalysisDataLoader data_loader(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true);
+        auto histogram_booker = std::make_unique<analysis::HistogramBooker>(strat_reg);
+        analysis::AnalysisRunner runner(data_loader, sel_reg, ev_reg, std::move(histogram_booker), sys_proc, config_analysis);
+        auto res = runner.run();
+        for (auto &kv : res.regions()) {
+            combined_res.regions().insert(kv);
+        }
     }
 
     return combined_res;
@@ -78,7 +76,7 @@ int main(int argc, char *argv[]) {
         plg = analysis::loadJsonFile(argv[2]);
         out_path = argv[3];
         
-        auto result = this->runAnalysis(cfg.at("analysis_configs"), plg);
+        auto result = runAnalysis(cfg.at("analysis_configs"), plg);
         result.saveToFile(out_path);
     } catch (const std::exception &e) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());

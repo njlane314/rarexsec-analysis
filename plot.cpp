@@ -16,61 +16,53 @@
 
 using namespace analysis;
 
+static void runPlotting(const nlohmann::json &config_data, const nlohmann::json &config_plot, const AnalysisResult &res) {
+    RunConfigRegistry rc_reg;
+    EventVariableRegistry ev_reg;
+    std::map<std::string, std::unique_ptr<AnalysisDataLoader>> loaders;
+    std::string ntuple_base_directory = config_data.at("ntuple_base_directory");
+    RunConfigLoader::loadRunConfigurations(config_data, rc_reg);
+    for (auto const &[beam, runs] : config_data.at("run_configurations").items()) {
+        std::vector<std::string> periods;
+        for (auto const &p : runs.items()) {
+            periods.push_back(p.key());
+        }
+        loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
+    }
+    std::map<std::string, AnalysisResult> beam_results;
+    for (auto const &kv : res.regions()) {
+        beam_results[kv.second.beamConfig()].regions().insert(kv);
+    }
+    for (auto &kv : beam_results) {
+        kv.second.build();
+    }
+    for (auto &kv : loaders) {
+        AnalysisPluginManager manager;
+        manager.loadPlugins(config_plot, kv.second.get());
+        auto it = beam_results.find(kv.first);
+        if (it != beam_results.end()) manager.notifyFinalisation(it->second);
+    }
+}
+
 int main(int argc, char *argv[]) {
     AnalysisLogger::getInstance().setLevel(LogLevel::DEBUG);
-
     if (argc != 4) {
-        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json> <input.root>");
+        log::fatal("plot::main", "Invocation error. Expected:", argv[0], "<config.json> <plugins.json> <input.root>");
         return 1;
     }
-
     try {
-        auto result = AnalysisResult::loadFromFile(argv[1]);
-
+        nlohmann::json cfg = loadJsonFile(argv[1]);
+        nlohmann::json plg = loadJsonFile(argv[2]);
+        auto result = AnalysisResult::loadFromFile(argv[3]);
         if (!result) {
             log::fatal("plot::main", "Failed to load analysis result");
             return 1;
         }
-
-        nlohmann::json cfg = loadJsonFile(argv[2]);
-        auto analysis_cfg = cfg.at("analysis_configs");
-        auto plot_cfg = cfg.at("plot_configs");
-
-        RunConfigRegistry rc_reg;
-        EventVariableRegistry ev_reg;
-        std::map<std::string, std::unique_ptr<AnalysisDataLoader>> loaders;
-
-        std::string ntuple_base_directory = analysis_cfg.at("ntuple_base_directory");
-
-        RunConfigLoader::loadRunConfigurations(analysis_cfg, rc_reg);
-
-        for (auto const &[beam, runs] : analysis_cfg.at("run_configurations").items()) {
-            std::vector<std::string> periods;
-
-            for (auto const &p : runs.items()) periods.push_back(p.key());
-
-            loaders.emplace(beam, std::make_unique<AnalysisDataLoader>(rc_reg, ev_reg, beam, periods, ntuple_base_directory, true));
-        }
-        std::map<std::string, AnalysisResult> beam_results;
-
-        for (auto const &kv : result->regions()) {
-            beam_results[kv.second.beamConfig()].regions().insert(kv);
-        }
-        for (auto &kv : beam_results) {
-            kv.second.build();
-        }
-
-        for (auto &kv : loaders) {
-            AnalysisPluginManager manager;
-            manager.loadPlugins(plot_cfg, kv.second.get());
-            auto it = beam_results.find(kv.first);
-            if (it != beam_results.end()) manager.notifyFinalisation(it->second);
-        }
+        runPlotting(cfg.at("analysis_configs"), plg, *result);
     } catch (const std::exception &e) {
         log::fatal("plot::main", "An error occurred:", e.what());
         return 1;
     }
-
     log::info("plot::main", "Plotting routine terminated nominally.");
     return 0;
 }
