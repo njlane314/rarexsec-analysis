@@ -40,7 +40,7 @@ struct AnalysisComponents {
 static analysis::AnalysisResult runBeamline(const std::string &beam, const nlohmann::json &run_configs,
                         const std::string &ntuple_base_directory,
                         analysis::RunConfigRegistry &rc_reg,
-                        const nlohmann::json &config_data) {
+                        const nlohmann::json &plugin_cfg) {
     std::vector<std::string> periods;
     periods.reserve(run_configs.size());
     std::transform(run_configs.items().begin(), run_configs.items().end(), std::back_inserter(periods), [](const auto &item) { return item.key(); });
@@ -48,11 +48,11 @@ static analysis::AnalysisResult runBeamline(const std::string &beam, const nlohm
     AnalysisComponents components;
     analysis::AnalysisDataLoader data_loader(rc_reg, components.ev_reg, beam, periods, ntuple_base_directory, true);
     auto histogram_booker = std::make_unique<analysis::HistogramBooker>(components.strat_reg);
-    analysis::AnalysisRunner runner(data_loader, components.sel_reg, components.ev_reg, std::move(histogram_booker), components.sys_proc, config_data);
+    analysis::AnalysisRunner runner(data_loader, components.sel_reg, components.ev_reg, std::move(histogram_booker), components.sys_proc, plugin_cfg);
     return runner.run();
 }
 
-static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data) {
+static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data, const nlohmann::json &plugin_cfg) {
     ROOT::EnableImplicitMT();
     analysis::log::info("analyse::main", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
@@ -64,7 +64,7 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data) {
 
     analysis::AnalysisResult combined;
     for (auto const &[beam, run_configs] : config_data.at("run_configurations").items()) {
-        auto res = runBeamline(beam, run_configs, ntuple_base_directory, rc_reg, config_data);
+        auto res = runBeamline(beam, run_configs, ntuple_base_directory, rc_reg, plugin_cfg);
         for (auto &kv : res.regions()) combined.regions().insert(kv);
     }
     return combined;
@@ -73,15 +73,24 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &config_data) {
 int main(int argc, char *argv[]) {
     analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
-    if (argc != 3) {
-        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<path/to/config.json> <output.root>");
+    if (argc != 3 && argc != 4) {
+        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<config.json> <output.root> [<plugins.json>]");
         return 1;
     }
 
     try {
         nlohmann::json cfg = analysis::loadJsonFile(argv[1]);
-        auto result = runAnalysis(cfg.at("analysis_configs"));
-        result.saveToFile(argv[2]);
+        nlohmann::json plg;
+        const char *out_path;
+        if (argc == 4) {
+            plg = analysis::loadJsonFile(argv[2]);
+            out_path = argv[3];
+        } else {
+            plg = nlohmann::json::object();
+            out_path = argv[2];
+        }
+        auto result = runAnalysis(cfg.at("analysis_configs"), plg);
+        result.saveToFile(out_path);
     } catch (const std::exception &e) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
