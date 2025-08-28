@@ -19,9 +19,10 @@ Generates `config/config.json` with `analysis_configs` and `plot_configs` by pro
 ## Run
 ```bash
 ./build/analyse config/config.json output.root
+./build/analyse config/config.json config/plugins/selection_efficiency.json output.root
 ./build/plot output.root config/config.json
 ```
-Runs the analysis with `analysis_configs` and executes plot plug-ins using `plot_configs`.
+Runs the analysis with `analysis_configs` and executes plot plug-ins using `plot_configs`. A plug-in configuration file may be supplied as an additional argument to `analyse`.
 
 ## Test
 ```bash
