@@ -15,6 +15,7 @@
 
 #include "AnalysisResult.h"
 #include "IAnalysisPlugin.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -27,6 +28,13 @@ class AnalysisPluginManager {
             return;
         for (auto const &p : jobj.at("plugins")) {
             std::string path = p.at("path");
+
+            if (path.find("VariablesPlugin") != std::string::npos)
+                PluginConfigValidator::validateVariables(p.value("analysis_configs", nlohmann::json::object()));
+
+            if (path.find("RegionsPlugin") != std::string::npos)
+                PluginConfigValidator::validateRegions(p.value("analysis_configs", nlohmann::json::object()));
+
             log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
             void *handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle)
