@@ -1,6 +1,7 @@
 #ifndef ANALYSIS_PLUGIN_MANAGER_H
 #define ANALYSIS_PLUGIN_MANAGER_H
 
+#include <cstdlib>
 #include <dlfcn.h>
 #include <map>
 #include <memory>
@@ -27,12 +28,21 @@ class AnalysisPluginManager {
         if (!jobj.contains("plugins"))
             return;
         for (auto const &p : jobj.at("plugins")) {
-            std::string path = p.at("path");
+            std::string name = p.value("name", std::string());
+            std::string path = p.value("path", std::string());
 
-            if (path.find("VariablesPlugin") != std::string::npos)
+            if (path.empty()) {
+                if (name.empty())
+                    throw std::runtime_error("Plugin requires name or path");
+                path = makePluginPath(name);
+            }
+
+            std::string id = name.empty() ? path : name;
+
+            if (id.find("VariablesPlugin") != std::string::npos)
                 PluginConfigValidator::validateVariables(p.value("analysis_configs", nlohmann::json::object()));
 
-            if (path.find("RegionsPlugin") != std::string::npos)
+            if (id.find("RegionsPlugin") != std::string::npos)
                 PluginConfigValidator::validateRegions(p.value("analysis_configs", nlohmann::json::object()));
 
             log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
@@ -87,6 +97,16 @@ class AnalysisPluginManager {
     }
 
   private:
+    static std::string makeLibraryFilename(const std::string &name) {
+        return name + ".so";
+    }
+
+    static std::string makePluginPath(const std::string &name) {
+        const char *dir = std::getenv("ANALYSIS_PLUGIN_DIR");
+        std::string base = dir ? dir : "build";
+        return base + "/" + makeLibraryFilename(name);
+    }
+
     std::vector<std::unique_ptr<IAnalysisPlugin>> plugins_;
     std::vector<void *> handles_;
 };
