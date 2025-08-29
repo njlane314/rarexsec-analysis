@@ -18,7 +18,7 @@
 #include "AnalysisResult.h"
 #include "AnalysisTypes.h"
 #include "DataProcessor.h"
-#include "EventVariableRegistry.h"
+#include "VariableRegistry.h"
 #include "IHistogramBooker.h"
 #include "ISampleProcessor.h"
 #include "KeyTypes.h"
@@ -32,7 +32,7 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
-    AnalysisRunner(AnalysisDataLoader &ldr, const SelectionRegistry &sel_reg, const EventVariableRegistry &var_reg,
+    AnalysisRunner(AnalysisDataLoader &ldr, const SelectionRegistry &sel_reg, const VariableRegistry &var_reg,
                    std::unique_ptr<IHistogramBooker> booker, SystematicsProcessor &sys_proc,
                    const nlohmann::json &plgn_cfg)
         : analysis_definition_(sel_reg, var_reg), data_loader_(ldr), selection_registry_(sel_reg),
