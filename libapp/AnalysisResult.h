@@ -50,6 +50,18 @@ class AnalysisResult : public TObject {
         }
     }
 
+    std::map<std::string, AnalysisResult> resultsByBeam() const {
+        std::map<std::string, AnalysisResult> m;
+
+        for (auto const &kv : regions_)
+            m[kv.second.beamConfig()].regions().insert(kv);
+
+        for (auto &[k, v] : m)
+            v.build();
+
+        return m;
+    }
+
     void saveToFile(const std::string &path) const {
         TFile outfile(path.c_str(), "RECREATE");
         outfile.WriteObject(this, "analysis_result");

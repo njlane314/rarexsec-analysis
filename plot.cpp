@@ -40,14 +40,7 @@ static void runPlotting(const nlohmann::json &config_data, const nlohmann::json 
                                                                              ntuple_base_directory, true));
     }
 
-    auto beam_results = [&res] {
-        std::map<std::string, analysis::AnalysisResult> m;
-        for (auto const &kv : res.regions())
-            m[kv.second.beamConfig()].regions().insert(kv);
-        for (auto &[k, v] : m)
-            v.build();
-        return m;
-    }();
+    auto beam_results = res.resultsByBeam();
 
     for (auto &[beam, loader] : loaders) {
         analysis::PlotPluginManager manager;
