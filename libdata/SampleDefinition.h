@@ -10,7 +10,7 @@
 #include "nlohmann/json.hpp"
 
 #include "AnalysisLogger.h"
-#include "EventVariableRegistry.h"
+#include "VariableRegistry.h"
 #include "IEventProcessor.h"
 #include "SampleTypes.h"
 
@@ -31,7 +31,7 @@ class SampleDefinition {
     SampleDefinition(const nlohmann::json &j,
                      const nlohmann::json &all_samples_json,
                      const std::string &base_dir,
-                     const EventVariableRegistry &var_reg,
+                     const VariableRegistry &var_reg,
                      IEventProcessor &processor)
         : sample_key_(SampleKey{j.at("sample_key").get<std::string>()}),
           nominal_node_(this->makeDataFrame(base_dir, var_reg, processor,
@@ -140,7 +140,7 @@ class SampleDefinition {
     }
 
     ROOT::RDF::RNode makeDataFrame(const std::string &base_dir,
-                                   const EventVariableRegistry &,
+                                   const VariableRegistry &,
                                    IEventProcessor &processor,
                                    const std::string &relPath,
                                    const nlohmann::json &all_samples_json) {

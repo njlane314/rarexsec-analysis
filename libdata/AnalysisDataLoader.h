@@ -11,7 +11,7 @@
 
 #include "AnalysisLogger.h"
 #include "BlipProcessor.h"
-#include "EventVariableRegistry.h"
+#include "VariableRegistry.h"
 #include "IEventProcessor.h"
 #include "KeyTypes.h"
 #include "MuonSelectionProcessor.h"
@@ -28,7 +28,7 @@ class AnalysisDataLoader {
   public:
     using SampleFrameMap = std::map<SampleKey, SampleDefinition>;
 
-    AnalysisDataLoader(const RunConfigRegistry &run_config_registry, EventVariableRegistry variable_registry,
+    AnalysisDataLoader(const RunConfigRegistry &run_config_registry, VariableRegistry variable_registry,
                        const std::string &beam_mode, std::vector<std::string> periods,
                        const std::string &ntuple_base_dir, bool blind = true)
         : run_registry_(run_config_registry), var_registry_(std::move(variable_registry)),
@@ -83,7 +83,7 @@ class AnalysisDataLoader {
 
   private:
     const RunConfigRegistry &run_registry_;
-    EventVariableRegistry var_registry_;
+    VariableRegistry var_registry_;
     std::string ntuple_base_directory_;
     SampleFrameMap frames_;
     std::string beam_;
