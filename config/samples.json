@@ -1,7 +1,7 @@
 {
-  "analysis_configs": {
-    "ntuple_base_directory": "/exp/uboone/data/users/nlane/ntuples",
-    "run_configurations": {
+  "samples": {
+    "ntuple_directory": "/exp/uboone/data/users/nlane/ntuples",
+    "beamlines": {
       "numi_fhc": {
         "run1": {
           "nominal_pot": 1e+20,
@@ -28,18 +28,6 @@
           ]
         }
       }
-    },
-    "plugins": [
-      {
-        "path": "build/CutFlowPlotPlugin.so"
-      }
-    ]
-  },
-  "plot_configs": {
-    "plugins": [
-      {
-        "path": "build/CutFlowPlotPlugin.so"
-      }
-    ]
+    }
   }
 }

@@ -188,7 +188,7 @@ def main():
     output_path = Path(CONFIG_PATH)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
-        json.dump({"analysis_configs": config, "plot_configs": {"plugins": []}}, f, indent=4)
+        json.dump({"sample_definitions": config, "plot_configs": {"plugins": []}}, f, indent=4)
 
     print(f"\n--- Workflow Complete ---")
     print(f"Successfully generated configuration at '{output_path}'")

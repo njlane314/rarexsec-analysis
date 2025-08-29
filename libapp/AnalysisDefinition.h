@@ -13,7 +13,7 @@
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
-#include "EventVariableRegistry.h"
+#include "VariableRegistry.h"
 #include "KeyTypes.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
@@ -83,7 +83,7 @@ class RegionHandle {
 
 class AnalysisDefinition {
   public:
-    AnalysisDefinition(const SelectionRegistry &sel_reg, const EventVariableRegistry &var_reg)
+    AnalysisDefinition(const SelectionRegistry &sel_reg, const VariableRegistry &var_reg)
         : sel_reg_(sel_reg), var_reg_(var_reg) {}
 
     AnalysisDefinition &addVariable(const std::string &key, const std::string &expr, const std::string &lbl,
@@ -94,7 +94,7 @@ class AnalysisDefinition {
         if (variable_expressions_.count(var_key))
             log::fatal("AnalysisDefinition", "duplicate variable:", key);
 
-        auto valid = EventVariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
+        auto valid = VariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
         if (std::find(valid.begin(), valid.end(), expr) == valid.end())
             log::fatal("AnalysisDefinition", "unknown expression:", expr);
 
@@ -314,7 +314,7 @@ class AnalysisDefinition {
 
   private:
     const SelectionRegistry &sel_reg_;
-    const EventVariableRegistry &var_reg_;
+    const VariableRegistry &var_reg_;
 
     std::map<VariableKey, std::string> variable_expressions_;
     std::map<VariableKey, std::string> variable_labels_;
