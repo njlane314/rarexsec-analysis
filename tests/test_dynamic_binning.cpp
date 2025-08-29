@@ -1,0 +1,63 @@
+#include "BinningDefinition.h"
+#include "DynamicBinning.h"
+#include "ROOT/RDataFrame.hxx"
+#include "TFile.h"
+#include "TTree.h"
+#include <catch2/catch_test_macros.hpp>
+#include <vector>
+
+using namespace analysis;
+
+TEST_CASE("bayesian_blocks_unweighted") {
+    TFile f("unw.root", "RECREATE");
+    TTree t("t", "");
+    double x;
+    t.Branch("x", &x);
+    for (int i = 0; i < 50; ++i) {
+        x = i / 10.0;
+        t.Fill();
+    }
+    for (int i = 0; i < 50; ++i) {
+        x = 10 + i / 10.0;
+        t.Fill();
+    }
+    t.Write();
+    ROOT::RDataFrame df("t", "unw.root");
+    std::vector<ROOT::RDF::RNode> nodes{df};
+    BinningDefinition b({0.0, 14.9}, "x", "x");
+    auto res = DynamicBinning::calculate(nodes, b);
+    auto e = res.getEdges();
+    REQUIRE(e.size() == 4);
+    REQUIRE(e[0] == Approx(0.0));
+    REQUIRE(e[1] == Approx(4.85).margin(0.01));
+    REQUIRE(e[2] == Approx(10.05).margin(0.01));
+    REQUIRE(e[3] == Approx(14.9).margin(0.01));
+}
+
+TEST_CASE("bayesian_blocks_weighted") {
+    TFile f("wei.root", "RECREATE");
+    TTree t("t", "");
+    double x;
+    double w;
+    t.Branch("x", &x);
+    t.Branch("w", &w);
+    for (int i = 0; i < 50; ++i) {
+        x = i / 10.0;
+        w = 1.0;
+        t.Fill();
+    }
+    for (int i = 0; i < 50; ++i) {
+        x = 10 + i / 10.0;
+        w = 2.0;
+        t.Fill();
+    }
+    t.Write();
+    ROOT::RDataFrame df("t", "wei.root");
+    std::vector<ROOT::RDF::RNode> nodes{df};
+    BinningDefinition b({0.0, 14.9}, "x", "x");
+    auto res = DynamicBinning::calculate(nodes, b, "w");
+    auto e = res.getEdges();
+    REQUIRE(e.size() == 4);
+    REQUIRE(e[1] == Approx(4.85).margin(0.01));
+    REQUIRE(e[2] == Approx(10.05).margin(0.01));
+}
