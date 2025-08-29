@@ -71,7 +71,7 @@ class SemanticDisplay:public IEventDisplay {
       : IEventDisplay(std::move(tag),image_size,std::move(output_directory)),data_(std::move(data)) {}
 
  protected:
-  void draw(TCanvas &canvas) override {
+  void draw(TCanvas &) override {
     TH2F hist(tag_.c_str(),tag_.c_str(),image_size_,0,image_size_,image_size_,0,image_size_);
 
     int palette[10];
