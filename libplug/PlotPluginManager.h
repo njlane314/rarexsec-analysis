@@ -13,6 +13,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "IPlotPlugin.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -23,6 +24,9 @@ class PlotPluginManager {
             return;
         for (auto const &p : jobj.at("plugins")) {
             std::string path = p.at("path");
+
+            PluginConfigValidator::validatePlot(p.value("plot_configs", nlohmann::json::object()));
+
             log::info("PlotPluginManager::loadPlugins", "Loading plugin from:", path);
             void *handle = dlopen(path.c_str(), RTLD_NOW);
             if (!handle)
