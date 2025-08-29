@@ -7,6 +7,7 @@
 #include <vector>
 
 using namespace analysis;
+using Catch::Approx;
 
 TEST_CASE("bayesian_blocks_unweighted") {
     TFile f("unw.root", "RECREATE");
@@ -24,7 +25,7 @@ TEST_CASE("bayesian_blocks_unweighted") {
     t.Write();
     ROOT::RDataFrame df("t", "unw.root");
     std::vector<ROOT::RDF::RNode> nodes{df};
-    BinningDefinition b({0.0, 14.9}, "x", "x");
+    BinningDefinition b({0.0, 14.9}, "x", "x", std::vector<SelectionKey>{});
     auto res = DynamicBinning::calculate(nodes, b);
     auto e = res.getEdges();
     REQUIRE(e.size() == 4);
@@ -54,7 +55,7 @@ TEST_CASE("bayesian_blocks_weighted") {
     t.Write();
     ROOT::RDataFrame df("t", "wei.root");
     std::vector<ROOT::RDF::RNode> nodes{df};
-    BinningDefinition b({0.0, 14.9}, "x", "x");
+    BinningDefinition b({0.0, 14.9}, "x", "x", std::vector<SelectionKey>{});
     auto res = DynamicBinning::calculate(nodes, b, "w");
     auto e = res.getEdges();
     REQUIRE(e.size() == 4);
