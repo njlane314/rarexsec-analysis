@@ -3,8 +3,8 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <vector>
 
 using namespace analysis;
@@ -27,7 +27,8 @@ TEST_CASE("bayesian_blocks_unweighted") {
     ROOT::RDataFrame df("t", "unw.root");
     std::vector<ROOT::RDF::RNode> nodes{df};
     BinningDefinition b({0.0, 14.9}, "x", "x", std::vector<SelectionKey>{});
-    auto res = DynamicBinning::calculate(nodes, b);
+    auto res =
+        DynamicBinning::calculate(nodes, b, "nominal_event_weight", 0.0, false, DynamicBinningStrategy::BayesianBlocks);
     auto e = res.getEdges();
     REQUIRE(e.size() == 4);
     REQUIRE(e[0] == Approx(0.0));
@@ -57,7 +58,7 @@ TEST_CASE("bayesian_blocks_weighted") {
     ROOT::RDataFrame df("t", "wei.root");
     std::vector<ROOT::RDF::RNode> nodes{df};
     BinningDefinition b({0.0, 14.9}, "x", "x", std::vector<SelectionKey>{});
-    auto res = DynamicBinning::calculate(nodes, b, "w");
+    auto res = DynamicBinning::calculate(nodes, b, "w", 0.0, false, DynamicBinningStrategy::BayesianBlocks);
     auto e = res.getEdges();
     REQUIRE(e.size() == 4);
     REQUIRE(e[1] == Approx(4.85).margin(0.01));
