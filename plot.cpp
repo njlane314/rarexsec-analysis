@@ -36,12 +36,7 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
         loaders.emplace(beam, std::make_unique<analysis::AnalysisDataLoader>(run_config_registry, variable_registry, beam, periods, ntuple_directory, true));
     }
 
-    auto result_map = [&result] {
-        std::map<std::string, analysis::AnalysisResult> map;
-        for (auto const &kv : result.regions())
-            map[kv.second.beam()].regions().insert(kv);
-        return map;
-    }();
+    auto beam_results = res.resultsByBeam();
 
     for (auto &[beam, loader] : loaders) {
         analysis::PlotPluginManager manager;
