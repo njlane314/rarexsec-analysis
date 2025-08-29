@@ -6,16 +6,18 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
 
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
+#include "BayesianBlocks.h"
 
 namespace analysis {
 
-enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis, Scott, Sturges, Rice, Sqrt };
+enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis, Scott, Sturges, Rice, Sqrt, BayesianBlocks };
 
 class DynamicBinning {
   public:
@@ -253,6 +255,21 @@ class DynamicBinning {
         };
 
         switch (strategy) {
+        case DynamicBinningStrategy::BayesianBlocks: {
+            std::map<double, double> hist;
+            for (const auto &p : in_range) hist[p.first] += p.second;
+            std::vector<double> xs;
+            std::vector<double> ws;
+            xs.reserve(hist.size());
+            ws.reserve(hist.size());
+            for (auto &kv : hist) {
+                xs.push_back(kv.first);
+                ws.push_back(kv.second);
+            }
+            auto bb_edges = BayesianBlocks::blocks(xs, ws);
+            edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
+            break;
+        }
         case DynamicBinningStrategy::FreedmanDiaconis: {
             auto quant = [&](double q) {
                 double target = q * sumw;
@@ -406,6 +423,6 @@ class DynamicBinning {
     }
 };
 
-}
+} // namespace analysis
 
 #endif

@@ -48,7 +48,8 @@ class VariablesPlugin : public IAnalysisPlugin {
                     {"scott", DynamicBinningStrategy::Scott},
                     {"sturges", DynamicBinningStrategy::Sturges},
                     {"rice", DynamicBinningStrategy::Rice},
-                    {"sqrt", DynamicBinningStrategy::Sqrt}};
+                    {"sqrt", DynamicBinningStrategy::Sqrt},
+                    {"bayesian_blocks", DynamicBinningStrategy::BayesianBlocks}};
                 DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight;
                 auto it = strategy_map.find(strat_mode);
                 if (it != strategy_map.end()) {
@@ -87,7 +88,7 @@ class VariablesPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
