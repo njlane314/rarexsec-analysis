@@ -7,9 +7,11 @@
 #include "AnalysisTypes.h"
 #include "RegionAnalysis.h"
 
+#include <iomanip>
+#include <iostream>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 
 namespace analysis {
 
@@ -74,11 +76,44 @@ class AnalysisResult : public TObject {
         return ptr ? std::unique_ptr<AnalysisResult>(static_cast<AnalysisResult *>(ptr->Clone())) : nullptr;
     }
 
+    static void printSummary(const VariableResult &r) {
+        auto name = r.binning_.getVariable();
+        auto bins = r.binning_.getBinNumber();
+
+        size_t width = 70;
+        std::string line(width, '=');
+        std::string sub(width, '-');
+
+        std::cout << '\n' << line << '\n';
+        std::cout << std::left << std::setw(width) << ("Variable: " + name) << '\n';
+        std::cout << line << '\n';
+
+        std::cout << std::fixed << std::setprecision(2);
+        std::cout << std::left << std::setw(30) << "Bins" << std::right << std::setw(width - 30) << bins << '\n';
+        std::cout << std::left << std::setw(30) << "Total Data Events" << std::right << std::setw(width - 30) << r.data_hist_.getSum() << '\n';
+        std::cout << std::left << std::setw(30) << "Total MC Events" << std::right << std::setw(width - 30) << r.total_mc_hist_.getSum() << '\n';
+
+        std::cout << sub << '\n';
+        std::cout << std::left << std::setw(width) << "Stratum MC Sums" << '\n';
+        for (const auto &[k, h] : r.strat_hists_)
+            std::cout << std::left << std::setw(30) << k.str() << std::right << std::setw(width - 30) << h.getSum() << '\n';
+
+        if (!r.covariance_matrices_.empty()) {
+            std::cout << sub << '\n';
+            std::cout << std::left << std::setw(width) << "Available Systematics" << '\n';
+            for (const auto &[k, c] : r.covariance_matrices_)
+                if (c.GetNrows() > 0)
+                    std::cout << k.str() << '\n';
+        }
+
+        std::cout << line << "\n\n";
+    }
+
   private:
     RegionAnalysisMap regions_;
     std::map<RegionKey, VariableResults> variable_results_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef ANALYSIS_TYPES_H
 #define ANALYSIS_TYPES_H
 
-#include <iomanip>
-#include <iostream>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -38,30 +36,6 @@ struct VariableResult {
     BinnedHistogram nominal_with_band_;
 
     std::map<SystematicKey, std::vector<BinnedHistogram>> universe_projected_hists_;
-
-    void printSummary() const {
-        std::cout << "\n+------------------------------------------------------+" << std::endl;
-        std::cout << "| Analysis Result Summary for Variable: " << std::left << std::setw(20) << binning_.getVariable()
-                  << " |" << std::endl;
-        std::cout << "+------------------------------------------------------+" << std::endl;
-        std::cout << std::fixed << std::setprecision(2);
-        std::cout << "| Total MC Events: " << std::left << std::setw(34) << total_mc_hist_.getSum() << " |"
-                  << std::endl;
-        std::cout << "+------------------------------------------------------+" << std::endl;
-        std::cout << "| Stratum Breakdown:" << std::string(35, ' ') << "|" << std::endl;
-        for (const auto &[key, hist] : strat_hists_) {
-            std::cout << "|   - " << std::left << std::setw(20) << key.str() << ": " << std::left << std::setw(24)
-                      << hist.getSum() << " |" << std::endl;
-        }
-        std::cout << "+------------------------------------------------------+" << std::endl;
-        std::cout << "| Calculated Systematics:" << std::string(29, ' ') << "|" << std::endl;
-        for (const auto &[key, cov] : covariance_matrices_) {
-            if (cov.GetNrows() > 0) {
-                std::cout << "|   - " << std::left << std::setw(46) << key.str() << " |" << std::endl;
-            }
-        }
-        std::cout << "+------------------------------------------------------+\n" << std::endl;
-    }
 };
 
 using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
