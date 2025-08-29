@@ -204,7 +204,7 @@ class AnalysisRunner {
                 systematics_processor_.processSystematics(result);
                 systematics_processor_.clearFutures();
 
-                result.printSummary();
+                AnalysisResult::printSummary(result);
 
                 region_analysis.addFinalVariable(var_key, std::move(result));
 
