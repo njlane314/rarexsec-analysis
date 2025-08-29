@@ -1,6 +1,7 @@
 #ifndef PLOT_PLUGIN_MANAGER_H
 #define PLOT_PLUGIN_MANAGER_H
 
+#include <cstdlib>
 #include <dlfcn.h>
 #include <map>
 #include <memory>
@@ -23,7 +24,14 @@ class PlotPluginManager {
         if (!jobj.contains("plugins"))
             return;
         for (auto const &p : jobj.at("plugins")) {
-            std::string path = p.at("path");
+            std::string name = p.value("name", std::string());
+            std::string path = p.value("path", std::string());
+
+            if (path.empty()) {
+                if (name.empty())
+                    throw std::runtime_error("Plugin requires name or path");
+                path = makePluginPath(name);
+            }
 
             PluginConfigValidator::validatePlot(p.value("plot_configs", nlohmann::json::object()));
 
@@ -61,6 +69,16 @@ class PlotPluginManager {
     }
 
   private:
+    static std::string makeLibraryFilename(const std::string &name) {
+        return name + ".so";
+    }
+
+    static std::string makePluginPath(const std::string &name) {
+        const char *dir = std::getenv("ANALYSIS_PLUGIN_DIR");
+        std::string base = dir ? dir : "build";
+        return base + "/" + makeLibraryFilename(name);
+    }
+
     std::vector<std::unique_ptr<IPlotPlugin>> plugins_;
     std::vector<void *> handles_;
 };
