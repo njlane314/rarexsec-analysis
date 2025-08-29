@@ -12,7 +12,7 @@
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
-#include "EventDisplay.h"
+#include "IEventDisplay.h"
 #include "IAnalysisPlugin.h"
 #include "Selection.h"
 
@@ -112,10 +112,10 @@ class EventDisplayPlugin : public IAnalysisPlugin {
 
                     log::info("EventDisplayPlugin", "Generating", tag, "display");
 
-                    DetectorDisplayPlot det_disp(tag, det_data, cfg.image_size, out_dir.string());
+                    DetectorDisplay det_disp(tag, det_data, cfg.image_size, out_dir.string());
                     det_disp.drawAndSave();
 
-                    SemanticDisplayPlot sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
+                    SemanticDisplay sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
                     sem_disp.drawAndSave();
                 }
             }
