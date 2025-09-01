@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <initializer_list>
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
@@ -33,57 +34,53 @@ class DynamicBinning {
         const std::string &branch = original_bdef.getVariable();
         std::string typeName = nodes.front().GetColumnType(branch);
 
-        if (typeName == "double" || typeName == "Float64_t" || typeName == "Double_t") {
+        auto match = [&](std::initializer_list<std::string> names) {
+            return std::find(names.begin(), names.end(), typeName) != names.end();
+        };
+
+        auto contains = [&](std::initializer_list<std::string> names) {
+            return std::any_of(names.begin(), names.end(), [&](const std::string &s) {
+                return typeName.find(s) != std::string::npos;
+            });
+        };
+
+        if (match({"double", "Float64_t", "Double_t"})) {
             return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                             include_out_of_range_bins, strategy);
-        } else if (typeName == "float" || typeName == "Float32_t" || typeName == "Float_t") {
+        } else if (match({"float", "Float32_t", "Float_t"})) {
             return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                            include_out_of_range_bins, strategy);
-        } else if (typeName == "int" || typeName == "Int_t") {
+        } else if (match({"int", "Int_t"})) {
             return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                          include_out_of_range_bins, strategy);
-        } else if (typeName == "unsigned int" || typeName == "UInt_t") {
+        } else if (match({"unsigned int", "UInt_t"})) {
             return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                   include_out_of_range_bins, strategy);
-        } else if (typeName == "unsigned long" || typeName == "ULong64_t" || typeName == "unsigned long long") {
+        } else if (match({"unsigned long", "ULong64_t", "unsigned long long"})) {
             return calculate_scalar<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                         include_out_of_range_bins, strategy);
-        } else if (typeName == "long" || typeName == "Long64_t" || typeName == "long long") {
+        } else if (match({"long", "Long64_t", "long long"})) {
             return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<double>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<double>") != std::string::npos ||
-                   typeName.find("vector<double>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<double>", "ROOT::RVec<double>", "vector<double>"})) {
             return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                             include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<float>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<float>") != std::string::npos ||
-                   typeName.find("vector<float>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<float>", "ROOT::RVec<float>", "vector<float>"})) {
             return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                            include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<int>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<int>") != std::string::npos ||
-                   typeName.find("vector<int>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<int>", "ROOT::RVec<int>", "vector<int>"})) {
             return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                          include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<unsigned int>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned int>") != std::string::npos ||
-                   typeName.find("vector<unsigned int>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<unsigned int>", "ROOT::RVec<unsigned int>", "vector<unsigned int>"})) {
             return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                   include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<unsigned long>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned long>") != std::string::npos ||
-                   typeName.find("vector<unsigned long>") != std::string::npos ||
-                   typeName.find("vector<ULong64_t>") != std::string::npos ||
-                   typeName.find("ROOT::VecOps::RVec<unsigned long long>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<unsigned long long>") != std::string::npos ||
-                   typeName.find("vector<unsigned long long>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<unsigned long>", "ROOT::RVec<unsigned long>", "vector<unsigned long>",
+                             "vector<ULong64_t>", "ROOT::VecOps::RVec<unsigned long long>",
+                             "ROOT::RVec<unsigned long long>", "vector<unsigned long long>"})) {
             return calculate_vector<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                         include_out_of_range_bins, strategy);
-        } else if (typeName.find("ROOT::VecOps::RVec<long long>") != std::string::npos ||
-                   typeName.find("ROOT::RVec<long long>") != std::string::npos ||
-                   typeName.find("vector<long long>") != std::string::npos ||
-                   typeName.find("vector<Long64_t>") != std::string::npos) {
+        } else if (contains({"ROOT::VecOps::RVec<long long>", "ROOT::RVec<long long>", "vector<long long>",
+                             "vector<Long64_t>"})) {
             return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                include_out_of_range_bins, strategy);
         } else {
