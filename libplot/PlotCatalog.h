@@ -9,6 +9,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
+#include "QuadTreeBinning2D.h"
 #include "OccupancyMatrixPlot.h"
 #include "Selection.h"
 #include "StackedHistogramPlot.h"
@@ -85,6 +86,16 @@ class PlotCatalog {
 
         auto x_edges = x_res.binning_.getEdges();
         auto y_edges = y_res.binning_.getEdges();
+
+        std::vector<ROOT::RDF::RNode> mc_nodes;
+        for (auto &[key, sample] : loader_.getSampleFrames())
+            if (sample.isMc())
+                mc_nodes.emplace_back(sample.nominal_node_);
+        if (!mc_nodes.empty()) {
+            auto bins = QuadTreeBinning2D::calculate(mc_nodes, x_res.binning_, y_res.binning_);
+            x_edges = bins.first.getEdges();
+            y_edges = bins.second.getEdges();
+        }
 
         TH2F *hist = new TH2F(name.c_str(), name.c_str(), x_edges.size() - 1, x_edges.data(), y_edges.size() - 1,
                               y_edges.data());
