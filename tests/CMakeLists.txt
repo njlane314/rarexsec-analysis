@@ -17,3 +17,7 @@ catch_discover_tests(test_dynamic_binning)
 add_executable(test_dynamic_binning_2d test_dynamic_binning_2d.cpp)
 target_link_libraries(test_dynamic_binning_2d PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
 catch_discover_tests(test_dynamic_binning_2d)
+
+add_executable(test_quadtree_binning_2d test_quadtree_binning_2d.cpp)
+target_link_libraries(test_quadtree_binning_2d PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+catch_discover_tests(test_quadtree_binning_2d)
