@@ -341,7 +341,7 @@ class DynamicBinning {
                 size_t idx = 0;
                 for (int k = 1; k < target_bins; ++k) {
                     double thresh = (static_cast<double>(k) / static_cast<double>(target_bins)) * W;
-                    while (idx < in_range.size() && cum + in_range[idx].second < thresh) {
+                    while (idx < in_range.size() && cum + in_range[idx].second <= thresh) {
                         cum += in_range[idx].second;
                         ++idx;
                     }
