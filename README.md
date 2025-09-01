@@ -1,74 +1,106 @@
 # rarexsec_analysis
 
-Framework for rare cross-section measurements.
+Modular framework for precision rare cross-section measurements.
 
-## Build
+## Building
 ```bash
 source .container.sh
 source .setup.sh
 source .build.sh
 ```
 
-## Configure
+## Configuration
 ```bash
 python scripts/generate_analysis_config.py
 ```
-Generates `config/config.json` with `analysis_configs` and `plot_configs` by processing the sample definitions in `config/sample_definitions.json`.
-`config/sample_definitions.json` lists input samples, detector variations, and metadata such as file paths and nominal POT.
+`config/config.json` is assembled from the sample definitions in `config/sample_definitions.json`.
 
-## Run
+## Running
 ```bash
 ./build/analyse config/config.json output.root
 ./build/analyse config/config.json config/plugins/selection_efficiency.json output.root
 ./build/plot output.root config/config.json
 ```
-Runs the analysis with `analysis_configs` and executes plot plug-ins using `plot_configs`. A plug-in configuration file may be supplied as an additional argument to `analyse`.
+`analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
 
-## Test
+## Plugins
+| Plugin | Type | Purpose |
+| --- | --- | --- |
+| CutFlowPlotPlugin | Plot | Summarise selection stages in a cut-flow chart |
+| EventDisplayPlugin | Analysis | Render detector views for individual events |
+| FlashValidationPlugin | Plot | Produce flash validation figures |
+| OccupancyMatrixPlugin | Analysis | Build occupancy matrices |
+| RegionsPlugin | Analysis | Define analysis regions |
+| RocCurvePlugin | Analysis | Generate receiver operating characteristic curves |
+| RunPeriodNormalizationPlugin | Plot | Plot normalization by run period |
+| SlipStackingIntensityPlugin | Plot | Visualise slip-stacking intensity distributions |
+| SnapshotPlugin | Analysis | Write snapshots of selected events |
+| StackedHistogramPlugin | Plot | Create stacked histograms |
+| SystematicBreakdownPlugin | Analysis | Summarise systematic variations |
+| UnstackedHistogramPlugin | Analysis | Produce separate histograms for each component |
+| VariablesPlugin | Analysis | Register analysis variables |
+
+## Plot Modules
+| Module | Description |
+| --- | --- |
+| Event display | `IEventDisplay` interface for rendering detector views |
+| ROC curve | `RocCurvePlot` for classification performance |
+| Selection efficiency | `SelectionEfficiencyPlot` |
+| Stacked histogram | `StackedHistogramPlot` |
+| Unstacked histogram | `UnstackedHistogramPlot` |
+| Systematic breakdown | `SystematicBreakdownPlot` |
+| Occupancy matrix | `OccupancyMatrixPlot` |
+
+## Example plug-ins
+The configuration files contain analysis and plotting directives.
+
+```json
+{
+  "bins": {
+    "mode": "dynamic",
+    "min": 0.0,
+    "max": 3000.0,
+    "include_out_of_range_bins": true,
+    "strategy": "freedman_diaconis"
+  }
+}
+```
+
+The `strategy` field accepts `equal_weight`, `freedman_diaconis`, `scott`, `sturges`, `rice`, or `sqrt`.
+
+```json
+{
+  "path": "build/EventDisplayPlugin.so",
+  "event_displays": [
+    {
+      "sample": "sample",
+      "region": "REGION_KEY",
+      "n_events": 5,
+      "image_size": 800,
+      "output_directory": "./plots"
+    }
+  ]
+}
+```
+
+```json
+{
+  "path": "build/RocCurvePlugin.so",
+  "roc_curves": [
+    {
+      "region": "REGION_KEY",
+      "selection_rule": "NUMU_CC",
+      "channel_column": "incl_channel",
+      "signal_group": "inclusive_strange_channels",
+      "variable": "some_discriminant",
+      "output_directory": "./plots",
+      "plot_name": "roc_curve"
+    }
+  ]
+}
+```
+
+## Testing
 ```bash
 ctest --output-on-failure
-```
-
-## Example JSON plugins
-The plug-in files contain both the analysis and plot directives for the program.
-
-```json
-{
-    "bins" : {
-        "mode" : "dynamic",
-        "min" : 0.0,
-        "max" : 3000.0,
-        "include_out_of_range_bins" : true,
-        "strategy" : "freedman_diaconis"
-    }
-}
-```
-
-The `strategy` field accepts several common rules for choosing the number of
-bins: `equal_weight`, `freedman_diaconis`, `scott`, `sturges`, `rice`, or
-`sqrt`.
-
-```json
-{
-    "path" : "build/EventDisplayPlugin.so", "event_displays" : [ {
-        "sample" : "sample",
-        "region" : "REGION_KEY",
-        "n_events" : 5,
-        "image_size" : 800,
-        "output_directory" : "./plots"
-    } ]
-}
-```
-
-```json {
-    "path" : "build/RocCurvePlugin.so", "roc_curves" : [ {
-        "region" : "REGION_KEY",
-        "selection_rule" : "NUMU_CC",
-        "channel_column" : "incl_channel",
-        "signal_group" : "inclusive_strange_channels",
-        "variable" : "some_discriminant",
-        "output_directory" : "./plots",
-        "plot_name" : "roc_curve"
-    } ]
-}
 ```
