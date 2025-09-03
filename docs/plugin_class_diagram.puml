@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+skinparam {
+  linetype ortho
+  packageStyle rectangle
+  classAttributeIconSize 0
+  shadowing false
+  dpi 150
+  pageMargin 10
+  pageWidth 8.27in
+  pageHeight 11.69in
+  roundCorner 15
+  classFontName Helvetica
+}
+
+hide empty members
+
+package plug #LightYellow {
+  top to bottom direction
+  interface IAnalysisPlugin {
+    +onInitialisation()
+    +onEvent()
+    +onFinalisation()
+  }
+
+  class AnalysisPluginManager {
+    +register()
+  }
+
+  interface IPlotPlugin {
+    +run()
+  }
+
+  class PlotPluginManager {
+    +register()
+  }
+
+  class RocCurvePlugin
+  class CutFlowPlotPlugin
+}
+
+IAnalysisPlugin <|-- RocCurvePlugin
+IPlotPlugin <|-- CutFlowPlotPlugin
+AnalysisPluginManager o--> IAnalysisPlugin : manages
+PlotPluginManager o--> IPlotPlugin : manages
+
+@enduml
