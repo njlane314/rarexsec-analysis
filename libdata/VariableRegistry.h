@@ -50,6 +50,7 @@ class VariableRegistry {
         vars.insert(blipVariables().begin(), blipVariables().end());
         vars.insert(imageVariables().begin(), imageVariables().end());
         vars.insert(flashVariables().begin(), flashVariables().end());
+        vars.insert(energyVariables().begin(), energyVariables().end());
         vars.insert(sliceVariables().begin(), sliceVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
@@ -210,6 +211,16 @@ class VariableRegistry {
                                                    "charge_light_ratio",
                                                    "flash_slice_z_dist",
                                                    "flash_pe_per_charge"};
+        return v;
+    }
+
+    static const std::vector<std::string> &energyVariables() {
+        static const std::vector<std::string> v = {"neutrino_energy_0",
+                                                   "neutrino_energy_1",
+                                                   "neutrino_energy_2",
+                                                   "slice_calo_energy_0",
+                                                   "slice_calo_energy_1",
+                                                   "slice_calo_energy_2"};
         return v;
     }
 
