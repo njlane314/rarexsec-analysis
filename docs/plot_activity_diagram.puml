@@ -1,4 +1,20 @@
 @startuml
+left to right direction
+skinparam {
+  linetype ortho
+  packageStyle rectangle
+  classAttributeIconSize 0
+  shadowing false
+  dpi 150
+  pageMargin 10
+  pageWidth 8.27in
+  pageHeight 11.69in
+  roundCorner 15
+  classFontName Helvetica
+}
+
+hide empty members
+
 start
 
 :Load configs and result file;
