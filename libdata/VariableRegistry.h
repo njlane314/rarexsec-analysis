@@ -49,6 +49,7 @@ class VariableRegistry {
         vars.insert(processedEventVariables().begin(), processedEventVariables().end());
         vars.insert(blipVariables().begin(), blipVariables().end());
         vars.insert(imageVariables().begin(), imageVariables().end());
+        vars.insert(flashVariables().begin(), flashVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
@@ -191,7 +192,23 @@ class VariableRegistry {
                                                    "event_semantic_counts_w",
                                                    "is_vtx_in_image_u",
                                                    "is_vtx_in_image_v",
-                                                   "is_vtx_in_image_w"};
+                                                   "is_vtx_in_image_w",
+                                                   "inference_score"};
+        return v;
+    }
+
+    static const std::vector<std::string> &flashVariables() {
+        static const std::vector<std::string> v = {"t0",
+                                                   "flash_match_score",
+                                                   "flash_total_pe",
+                                                   "flash_time",
+                                                   "flash_z_center",
+                                                   "flash_z_width",
+                                                   "slice_charge",
+                                                   "slice_z_center",
+                                                   "charge_light_ratio",
+                                                   "flash_slice_z_dist",
+                                                   "flash_pe_per_charge"};
         return v;
     }
 
