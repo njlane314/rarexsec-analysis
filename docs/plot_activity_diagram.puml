@@ -1,0 +1,13 @@
+@startuml
+start
+
+:Load configs and result file;
+
+:Construct AnalysisDataLoader objects;
+
+:Invoke PlotPluginManager;
+
+:Run plugins;
+
+stop
+@enduml
