@@ -1,5 +1,6 @@
 @startuml
 top to bottom direction
+
 skinparam {
   linetype ortho
   packageStyle rectangle
@@ -70,9 +71,11 @@ PlotPluginManager o--> IPlotPlugin : manages
 
 package syst {
   class SystematicStrategy
-  class UniverseSystematicStrategy
-  class DetectorSystematicStrategy
-  class WeightSystematicStrategy
+  together {
+    class UniverseSystematicStrategy
+    class DetectorSystematicStrategy
+    class WeightSystematicStrategy
+  }
 }
 
 SystematicStrategy <|-- UniverseSystematicStrategy
