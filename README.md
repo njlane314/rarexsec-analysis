@@ -2,6 +2,9 @@
 
 Modular framework for precision rare cross-section measurements.
 
+## Diagrams
+- `docs/deployment_diagram.puml` illustrates the deployment architecture.
+
 ## Building
 ```bash
 source .container.sh

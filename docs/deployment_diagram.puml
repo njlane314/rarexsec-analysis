@@ -1,0 +1,19 @@
+@startuml
+node analyse
+node plot
+
+node ROOT
+node "JSON configs"
+
+node "plugin libraries"
+
+node "output data files"
+
+analyse --> ROOT
+analyse --> "JSON configs"
+analyse --> "plugin libraries"
+analyse --> "output data files"
+plot --> ROOT
+plot --> "JSON configs"
+plot --> "output data files"
+@enduml
