@@ -76,7 +76,3 @@ The `strategy` field accepts `equal_weight`, `freedman_diaconis`, `scott`, `stur
 ```bash
 ctest --output-on-failure
 ```
-
-## Diagrams
-PlantUML diagrams are rendered by a GitHub Actions workflow
-Generated images are available as build artifacts
