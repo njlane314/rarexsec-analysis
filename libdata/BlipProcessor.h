@@ -55,7 +55,7 @@ class BlipProcessor : public IEventProcessor {
                     }
                     return dists;
                 },
-                {"blip_X", "blip_Y", "blip_Z", "neutrino_vertex_x",
+                {"blip_x", "blip_y", "blip_z", "neutrino_vertex_x",
                  "neutrino_vertex_y", "neutrino_vertex_z"});
         } else {
             proc_df =
@@ -63,7 +63,7 @@ class BlipProcessor : public IEventProcessor {
                                [](const ROOT::RVec<float> &bx) {
                                    return ROOT::RVec<float>(bx.size(), -1.f);
                                },
-                               {"blip_X"});
+                               {"blip_x"});
         }
 
         return next_ ? next_->process(proc_df, st) : proc_df;
