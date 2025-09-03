@@ -27,20 +27,18 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install -y graphviz plantuml
 
-      - run: plantuml -o diagrams docs/*.puml
+      - run: |
+          find docs -name '*.puml' -exec plantuml {} \;
 
-      - name: Commit diagrams (if changed)
+      - name: Commit diagrams
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add docs/diagrams
-          if ! git diff --staged --quiet; then
-            git commit -m "Update diagrams [skip ci]"
-            git push origin HEAD:${{ github.ref }}
-          fi
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -f docs
+          git commit -m "[skip ci] chore: update diagrams" || echo "No changes"
+          git push
 
       - uses: actions/upload-artifact@v4
         with:
           name: diagrams
-          path: docs/diagrams
+          path: docs
