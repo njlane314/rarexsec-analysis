@@ -16,4 +16,14 @@ make -j"${NUM_CORES}" || { cd "${REPO_ROOT}"; return 1; }
 
 ctest || { ctest --rerun-failed --output-on-failure; cd "${REPO_ROOT}"; return 1; }
 
+if [ -n "${LARSOFT_INSTALL:-}" ] && [ -d "${LARSOFT_INSTALL}" ] && [ -n "${LARSOFT_TAR_DEST:-}" ]; then
+    tar -czf "${BUILD_DIR}/larsoft.tar.gz" -C "${LARSOFT_INSTALL}" . || { cd "${REPO_ROOT}"; return 1; }
+    mv "${BUILD_DIR}/larsoft.tar.gz" "${LARSOFT_TAR_DEST}" || { cd "${REPO_ROOT}"; return 1; }
+fi
+
+if [ -n "${ASSET_SOURCE:-}" ] && [ -d "${ASSET_SOURCE}" ] && [ -n "${ASSET_TAR_DEST:-}" ]; then
+    tar -czf "${BUILD_DIR}/asset.tar.gz" -C "${ASSET_SOURCE}" . || { cd "${REPO_ROOT}"; return 1; }
+    mv "${BUILD_DIR}/asset.tar.gz" "${ASSET_TAR_DEST}" || { cd "${REPO_ROOT}"; return 1; }
+fi
+
 cd "${REPO_ROOT}" || { return 0; }
