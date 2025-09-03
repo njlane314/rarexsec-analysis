@@ -1,6 +1,5 @@
 @startuml
 top to bottom direction
-
 skinparam {
   linetype ortho
   packageStyle rectangle
@@ -12,11 +11,24 @@ skinparam {
   pageHeight 11.69in
 }
 
-package app {
-  interface ISampleProcessor
-  class DataProcessor
-  class MonteCarloProcessor
-  class AnalysisRunner
+hide empty members
+
+package app #LightGray {
+  interface ISampleProcessor {
+    +processSample()
+  }
+
+  class DataProcessor {
+    +processSample()
+  }
+
+  class MonteCarloProcessor {
+    +processSample()
+  }
+
+  class AnalysisRunner {
+    +run()
+  }
 }
 
 ISampleProcessor <|-- DataProcessor
@@ -26,14 +38,32 @@ DataProcessor --> IEventProcessor : uses
 MonteCarloProcessor --> IEventProcessor : uses
 AnalysisRunner --> IAnalysisPlugin : loads
 AnalysisRunner --> IPlotPlugin : loads
+AnalysisRunner --> SystematicStrategy : configures
 
-package data {
-  interface IEventProcessor
-  class MuonSelectionProcessor
-  class ReconstructionProcessor
-  class TruthChannelProcessor
-  class WeightProcessor
-  class BlipProcessor
+package data #LightBlue {
+  interface IEventProcessor {
+    +processEvent()
+  }
+
+  class MuonSelectionProcessor {
+    +processEvent()
+  }
+
+  class ReconstructionProcessor {
+    +processEvent()
+  }
+
+  class TruthChannelProcessor {
+    +processEvent()
+  }
+
+  class WeightProcessor {
+    +processEvent()
+  }
+
+  class BlipProcessor {
+    +processEvent()
+  }
 }
 
 IEventProcessor <|-- MuonSelectionProcessor
@@ -42,8 +72,32 @@ IEventProcessor <|-- TruthChannelProcessor
 IEventProcessor <|-- WeightProcessor
 IEventProcessor <|-- BlipProcessor
 
-package plot {
-  class HistogramPlotterBase
+package plug #LightYellow {
+  interface IAnalysisPlugin {
+    +execute()
+  }
+
+  class AnalysisPluginManager {
+    +register()
+  }
+
+  interface IPlotPlugin {
+    +render()
+  }
+
+  class PlotPluginManager {
+    +register()
+  }
+}
+
+AnalysisPluginManager o--> IAnalysisPlugin : manages
+PlotPluginManager o--> IPlotPlugin : manages
+
+package plot #LightGreen {
+  class HistogramPlotterBase {
+    +plot()
+  }
+
   class StackedHistogramPlot
   class UnstackedHistogramPlot
   class OccupancyMatrixPlot
@@ -59,71 +113,26 @@ HistogramPlotterBase <|-- SelectionEfficiencyPlot
 HistogramPlotterBase <|-- SystematicBreakdownPlot
 HistogramPlotterBase <|-- RocCurvePlot
 
-package plug {
-  interface IAnalysisPlugin
-  class AnalysisPluginManager
-  interface IPlotPlugin
-  class PlotPluginManager
-}
+package syst #LightPink {
+  class SystematicStrategy {
+    +apply()
+  }
 
-AnalysisPluginManager o--> IAnalysisPlugin : manages
-PlotPluginManager o--> IPlotPlugin : manages
+  class UniverseSystematicStrategy {
+    +apply()
+  }
 
-package syst {
-  class SystematicStrategy
-  together {
-    class UniverseSystematicStrategy
-    class DetectorSystematicStrategy
-    class WeightSystematicStrategy
+  class DetectorSystematicStrategy {
+    +apply()
+  }
+
+  class WeightSystematicStrategy {
+    +apply()
   }
 }
 
 SystematicStrategy <|-- UniverseSystematicStrategy
 SystematicStrategy <|-- DetectorSystematicStrategy
 SystematicStrategy <|-- WeightSystematicStrategy
-
-note right of ISampleProcessor
-  Sample processing API
-end note
-
-note right of DataProcessor
-  Processes real data
-end note
-
-note right of MonteCarloProcessor
-  Processes MC events
-end note
-
-note right of AnalysisRunner
-  Coordinates analysis
-end note
-
-note right of IEventProcessor
-  Event processing API
-end note
-
-note right of HistogramPlotterBase
-  Base for plots
-end note
-
-note right of IAnalysisPlugin
-  Analysis plugin API
-end note
-
-note right of AnalysisPluginManager
-  Manages analysis plugins
-end note
-
-note right of IPlotPlugin
-  Plot plugin API
-end note
-
-note right of PlotPluginManager
-  Manages plot plugins
-end note
-
-note right of SystematicStrategy
-  Base for systematics
-end note
 
 @enduml
