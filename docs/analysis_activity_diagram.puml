@@ -1,0 +1,9 @@
+@startuml
+start
+:Load JSON configs;
+:Initialize registries;
+:Process beamlines;
+:Run AnalysisRunner;
+:Save results;
+stop
+@enduml

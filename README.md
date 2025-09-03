@@ -76,3 +76,7 @@ The `strategy` field accepts `equal_weight`, `freedman_diaconis`, `scott`, `stur
 ```bash
 ctest --output-on-failure
 ```
+
+## Analysis activity diagram
+
+See [analysis activity diagram](docs/analysis_activity_diagram.puml).
