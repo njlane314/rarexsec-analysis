@@ -50,6 +50,7 @@ class VariableRegistry {
         vars.insert(blipVariables().begin(), blipVariables().end());
         vars.insert(imageVariables().begin(), imageVariables().end());
         vars.insert(flashVariables().begin(), flashVariables().end());
+        vars.insert(sliceVariables().begin(), sliceVariables().end());
 
         if (type == SampleOrigin::kMonteCarlo) {
             vars.insert(truthVariables().begin(), truthVariables().end());
@@ -209,6 +210,58 @@ class VariableRegistry {
                                                    "charge_light_ratio",
                                                    "flash_slice_z_dist",
                                                    "flash_pe_per_charge"};
+        return v;
+    }
+
+    static const std::vector<std::string> &sliceVariables() {
+        static const std::vector<std::string> v = {"original_event_neutrino_hits",
+                                                   "event_neutrino_hits",
+                                                   "event_muon_hits",
+                                                   "event_electron_hits",
+                                                   "event_proton_hits",
+                                                   "event_charged_pion_hits",
+                                                   "event_neutral_pion_hits",
+                                                   "event_neutron_hits",
+                                                   "event_gamma_hits",
+                                                   "event_other_hits",
+                                                   "event_charged_kaon_hits",
+                                                   "event_neutral_kaon_hits",
+                                                   "event_lambda_hits",
+                                                   "event_charged_sigma_hits",
+                                                   "event_sigma_zero_hits",
+                                                   "event_cosmic_hits",
+                                                   "slice_neutrino_hits",
+                                                   "slice_muon_hits",
+                                                   "slice_electron_hits",
+                                                   "slice_proton_hits",
+                                                   "slice_charged_pion_hits",
+                                                   "slice_neutral_pion_hits",
+                                                   "slice_neutron_hits",
+                                                   "slice_gamma_hits",
+                                                   "slice_other_hits",
+                                                   "slice_charged_kaon_hits",
+                                                   "slice_neutral_kaon_hits",
+                                                   "slice_lambda_hits",
+                                                   "slice_charged_sigma_hits",
+                                                   "slice_sigma_zero_hits",
+                                                   "slice_cosmic_hits",
+                                                   "pfp_neutrino_hits",
+                                                   "pfp_muon_hits",
+                                                   "pfp_electron_hits",
+                                                   "pfp_proton_hits",
+                                                   "pfp_charged_pion_hits",
+                                                   "pfp_neutral_pion_hits",
+                                                   "pfp_neutron_hits",
+                                                   "pfp_gamma_hits",
+                                                   "pfp_other_hits",
+                                                   "pfp_charged_kaon_hits",
+                                                   "pfp_neutral_kaon_hits",
+                                                   "pfp_lambda_hits",
+                                                   "pfp_charged_sigma_hits",
+                                                   "pfp_sigma_zero_hits",
+                                                   "pfp_cosmic_hits",
+                                                   "neutrino_completeness_from_pfp",
+                                                   "neutrino_purity_from_pfp"};
         return v;
     }
 
