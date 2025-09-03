@@ -23,6 +23,9 @@ python scripts/generate_analysis_config.py
 ```
 `analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
 
+## Plug-in architecture
+See [docs/plugin_class_diagram.puml](docs/plugin_class_diagram.puml) for the relationships between plug-in interfaces, managers, and example implementations.
+
 ## Example plug-ins
 The configuration files contain analysis and plotting directives.
 
