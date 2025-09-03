@@ -1,0 +1,66 @@
+@startuml
+
+package app {
+  class ISampleProcessor
+  class DataProcessor
+  class MonteCarloProcessor
+  class AnalysisRunner
+}
+
+ISampleProcessor <|-- DataProcessor
+ISampleProcessor <|-- MonteCarloProcessor
+
+package data {
+  class IEventProcessor
+  class MuonSelectionProcessor
+  class ReconstructionProcessor
+  class TruthChannelProcessor
+  class WeightProcessor
+  class BlipProcessor
+}
+
+IEventProcessor <|-- MuonSelectionProcessor
+IEventProcessor <|-- ReconstructionProcessor
+IEventProcessor <|-- TruthChannelProcessor
+IEventProcessor <|-- WeightProcessor
+IEventProcessor <|-- BlipProcessor
+
+package plot {
+  class HistogramPlotterBase
+  class StackedHistogramPlot
+  class UnstackedHistogramPlot
+  class OccupancyMatrixPlot
+  class SelectionEfficiencyPlot
+  class SystematicBreakdownPlot
+  class RocCurvePlot
+}
+
+HistogramPlotterBase <|-- StackedHistogramPlot
+HistogramPlotterBase <|-- UnstackedHistogramPlot
+HistogramPlotterBase <|-- OccupancyMatrixPlot
+HistogramPlotterBase <|-- SelectionEfficiencyPlot
+HistogramPlotterBase <|-- SystematicBreakdownPlot
+HistogramPlotterBase <|-- RocCurvePlot
+
+package plug {
+  class IAnalysisPlugin
+  class AnalysisPluginManager
+  class IPlotPlugin
+  class PlotPluginManager
+}
+
+AnalysisPluginManager o--> IAnalysisPlugin
+PlotPluginManager o--> IPlotPlugin
+
+package syst {
+  class SystematicStrategy
+  class UniverseSystematicStrategy
+  class DetectorSystematicStrategy
+  class WeightSystematicStrategy
+}
+
+SystematicStrategy <|-- UniverseSystematicStrategy
+SystematicStrategy <|-- DetectorSystematicStrategy
+SystematicStrategy <|-- WeightSystematicStrategy
+
+@enduml
