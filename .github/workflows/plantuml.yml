@@ -7,11 +7,17 @@ on:
       - 'docs/**/*.puml'
       - '.github/workflows/plantuml.yml'
 
+permissions:
+  contents: write   
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        
+          persist-credentials: true
 
       - uses: actions/setup-java@v4
         with:
@@ -19,19 +25,20 @@ jobs:
           java-version: 17
 
       - run: sudo apt-get update
-
       - run: sudo apt-get install -y graphviz plantuml
 
       - run: plantuml -o diagrams docs/*.puml
 
-      - run: |
-          git config user.name github-actions
-          git config user.email github-actions@users.noreply.github.com
+      - name: Commit diagrams (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add docs/diagrams
-          git diff --staged --quiet || git commit -m "Update diagrams"
-
-          git push
+          if ! git diff --staged --quiet; then
+            git commit -m "Update diagrams [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
