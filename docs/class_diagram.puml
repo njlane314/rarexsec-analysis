@@ -1,7 +1,18 @@
 @startuml
+top to bottom direction
+skinparam {
+  linetype ortho
+  packageStyle rectangle
+  classAttributeIconSize 0
+  shadowing false
+  dpi 150
+  pageMargin 10
+  pageWidth 8.27in
+  pageHeight 11.69in
+}
 
 package app {
-  class ISampleProcessor
+  interface ISampleProcessor
   class DataProcessor
   class MonteCarloProcessor
   class AnalysisRunner
@@ -9,9 +20,14 @@ package app {
 
 ISampleProcessor <|-- DataProcessor
 ISampleProcessor <|-- MonteCarloProcessor
+AnalysisRunner --> ISampleProcessor : runs
+DataProcessor --> IEventProcessor : uses
+MonteCarloProcessor --> IEventProcessor : uses
+AnalysisRunner --> IAnalysisPlugin : loads
+AnalysisRunner --> IPlotPlugin : loads
 
 package data {
-  class IEventProcessor
+  interface IEventProcessor
   class MuonSelectionProcessor
   class ReconstructionProcessor
   class TruthChannelProcessor
@@ -43,14 +59,14 @@ HistogramPlotterBase <|-- SystematicBreakdownPlot
 HistogramPlotterBase <|-- RocCurvePlot
 
 package plug {
-  class IAnalysisPlugin
+  interface IAnalysisPlugin
   class AnalysisPluginManager
-  class IPlotPlugin
+  interface IPlotPlugin
   class PlotPluginManager
 }
 
-AnalysisPluginManager o--> IAnalysisPlugin
-PlotPluginManager o--> IPlotPlugin
+AnalysisPluginManager o--> IAnalysisPlugin : manages
+PlotPluginManager o--> IPlotPlugin : manages
 
 package syst {
   class SystematicStrategy
@@ -62,5 +78,49 @@ package syst {
 SystematicStrategy <|-- UniverseSystematicStrategy
 SystematicStrategy <|-- DetectorSystematicStrategy
 SystematicStrategy <|-- WeightSystematicStrategy
+
+note right of ISampleProcessor
+  Sample processing API
+end note
+
+note right of DataProcessor
+  Processes real data
+end note
+
+note right of MonteCarloProcessor
+  Processes MC events
+end note
+
+note right of AnalysisRunner
+  Coordinates analysis
+end note
+
+note right of IEventProcessor
+  Event processing API
+end note
+
+note right of HistogramPlotterBase
+  Base for plots
+end note
+
+note right of IAnalysisPlugin
+  Analysis plugin API
+end note
+
+note right of AnalysisPluginManager
+  Manages analysis plugins
+end note
+
+note right of IPlotPlugin
+  Plot plugin API
+end note
+
+note right of PlotPluginManager
+  Manages plot plugins
+end note
+
+note right of SystematicStrategy
+  Base for systematics
+end note
 
 @enduml
