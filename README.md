@@ -23,34 +23,6 @@ python scripts/generate_analysis_config.py
 ```
 `analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
 
-## Plugins
-| Plugin | Type | Purpose |
-| --- | --- | --- |
-| CutFlowPlotPlugin | Plot | Summarise selection stages in a cut-flow chart |
-| EventDisplayPlugin | Analysis | Render detector views for individual events |
-| FlashValidationPlugin | Plot | Produce flash validation figures |
-| OccupancyMatrixPlugin | Analysis | Build occupancy matrices |
-| RegionsPlugin | Analysis | Define analysis regions |
-| RocCurvePlugin | Analysis | Generate receiver operating characteristic curves |
-| RunPeriodNormalizationPlugin | Plot | Plot normalization by run period |
-| SlipStackingIntensityPlugin | Plot | Visualise slip-stacking intensity distributions |
-| SnapshotPlugin | Analysis | Write snapshots of selected events |
-| StackedHistogramPlugin | Plot | Create stacked histograms |
-| SystematicBreakdownPlugin | Analysis | Summarise systematic variations |
-| UnstackedHistogramPlugin | Analysis | Produce separate histograms for each component |
-| VariablesPlugin | Analysis | Register analysis variables |
-
-## Plot Modules
-| Module | Description |
-| --- | --- |
-| Event display | `IEventDisplay` interface for rendering detector views |
-| ROC curve | `RocCurvePlot` for classification performance |
-| Selection efficiency | `SelectionEfficiencyPlot` |
-| Stacked histogram | `StackedHistogramPlot` |
-| Unstacked histogram | `UnstackedHistogramPlot` |
-| Systematic breakdown | `SystematicBreakdownPlot` |
-| Occupancy matrix | `OccupancyMatrixPlot` |
-
 ## Example plug-ins
 The configuration files contain analysis and plotting directives.
 
