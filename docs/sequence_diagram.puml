@@ -1,0 +1,7 @@
+@startuml
+participant Analysis
+participant Plugin
+
+Analysis -> Plugin: load
+Plugin --> Analysis: result
+@enduml
