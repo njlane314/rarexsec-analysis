@@ -1,22 +1,69 @@
 @startuml
+top to bottom direction
+skinparam {
+  linetype ortho
+  packageStyle rectangle
+  classAttributeIconSize 0
+  shadowing false
+  dpi 150
+  pageMargin 10
+  pageWidth 8.27in
+  pageHeight 11.69in
+}
 
-package app {
-  class ISampleProcessor
-  class DataProcessor
-  class MonteCarloProcessor
-  class AnalysisRunner
+hide empty members
+
+package app #LightGray {
+  interface ISampleProcessor {
+    +processSample()
+  }
+
+  class DataProcessor {
+    +processSample()
+  }
+
+  class MonteCarloProcessor {
+    +processSample()
+  }
+
+  class AnalysisRunner {
+    +run()
+  }
 }
 
 ISampleProcessor <|-- DataProcessor
 ISampleProcessor <|-- MonteCarloProcessor
+AnalysisRunner --> ISampleProcessor : runs
+DataProcessor --> IEventProcessor : uses
+MonteCarloProcessor --> IEventProcessor : uses
+AnalysisRunner --> IAnalysisPlugin : loads
+AnalysisRunner --> IPlotPlugin : loads
+AnalysisRunner --> SystematicStrategy : configures
 
-package data {
-  class IEventProcessor
-  class MuonSelectionProcessor
-  class ReconstructionProcessor
-  class TruthChannelProcessor
-  class WeightProcessor
-  class BlipProcessor
+package data #LightBlue {
+  interface IEventProcessor {
+    +processEvent()
+  }
+
+  class MuonSelectionProcessor {
+    +processEvent()
+  }
+
+  class ReconstructionProcessor {
+    +processEvent()
+  }
+
+  class TruthChannelProcessor {
+    +processEvent()
+  }
+
+  class WeightProcessor {
+    +processEvent()
+  }
+
+  class BlipProcessor {
+    +processEvent()
+  }
 }
 
 IEventProcessor <|-- MuonSelectionProcessor
@@ -25,8 +72,32 @@ IEventProcessor <|-- TruthChannelProcessor
 IEventProcessor <|-- WeightProcessor
 IEventProcessor <|-- BlipProcessor
 
-package plot {
-  class HistogramPlotterBase
+package plug #LightYellow {
+  interface IAnalysisPlugin {
+    +execute()
+  }
+
+  class AnalysisPluginManager {
+    +register()
+  }
+
+  interface IPlotPlugin {
+    +render()
+  }
+
+  class PlotPluginManager {
+    +register()
+  }
+}
+
+AnalysisPluginManager o--> IAnalysisPlugin : manages
+PlotPluginManager o--> IPlotPlugin : manages
+
+package plot #LightGreen {
+  class HistogramPlotterBase {
+    +plot()
+  }
+
   class StackedHistogramPlot
   class UnstackedHistogramPlot
   class OccupancyMatrixPlot
@@ -42,21 +113,22 @@ HistogramPlotterBase <|-- SelectionEfficiencyPlot
 HistogramPlotterBase <|-- SystematicBreakdownPlot
 HistogramPlotterBase <|-- RocCurvePlot
 
-package plug {
-  class IAnalysisPlugin
-  class AnalysisPluginManager
-  class IPlotPlugin
-  class PlotPluginManager
-}
+package syst #LightPink {
+  class SystematicStrategy {
+    +apply()
+  }
 
-AnalysisPluginManager o--> IAnalysisPlugin
-PlotPluginManager o--> IPlotPlugin
+  class UniverseSystematicStrategy {
+    +apply()
+  }
 
-package syst {
-  class SystematicStrategy
-  class UniverseSystematicStrategy
-  class DetectorSystematicStrategy
-  class WeightSystematicStrategy
+  class DetectorSystematicStrategy {
+    +apply()
+  }
+
+  class WeightSystematicStrategy {
+    +apply()
+  }
 }
 
 SystematicStrategy <|-- UniverseSystematicStrategy
