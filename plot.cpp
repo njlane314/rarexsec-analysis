@@ -19,7 +19,7 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
     ROOT::EnableImplicitMT();
     analysis::log::info("plot::runPlotting", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
-    std::string ntupledir = samples.at("ntupledir").get<std::string>();
+    std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
     analysis::log::info("plot::runPlotting", "Configuration loaded for", samples.at("beamlines").size(), "beamlines.");
 
     analysis::RunConfigRegistry run_config_registry;
@@ -28,13 +28,14 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
     analysis::VariableRegistry variable_registry;
     std::map<std::string, std::unique_ptr<analysis::AnalysisDataLoader>> loaders;
 
-    for (auto const &[beam, run] : samples.at("beamlines").items()) {
+    for (auto const &[beam, runs] : samples.at("beamlines").items()) {
         std::vector<std::string> periods;
-        for (auto const &p : run.items()) {
-            periods.push_back(p.key());
+        periods.reserve(runs.size());
+        for (auto const &[period, _] : runs.items()) {
+            periods.emplace_back(period);
         }
 
-        loaders.emplace(beam, std::make_unique<analysis::AnalysisDataLoader>(run_config_registry, variable_registry, beam, periods, ntupledir, true));
+        loaders.emplace(beam, std::make_unique<analysis::AnalysisDataLoader>(run_config_registry, variable_registry, beam, periods, ntuple_dir, true));
     }
 
     auto result_map = result.resultsByBeam();
