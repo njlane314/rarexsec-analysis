@@ -21,6 +21,7 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
                                                 const nlohmann::json &runs, const nlohmann::json &analysis) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
+
     for (auto const &[period, _] : runs.items()) {
         periods.emplace_back(period);
     }
@@ -29,8 +30,9 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
     analysis::SystematicsProcessor systematics_processor(variable_registry);
     analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_dir, true);
     auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
-
+    
     analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor, analysis);
+
     return runner.run();
 }
 
@@ -78,7 +80,8 @@ int main(int argc, char *argv[]) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
     }
-
+    
     analysis::log::info("analyse::main", "Global analysis routine terminated nominally.");
+    
     return 0;
 }
