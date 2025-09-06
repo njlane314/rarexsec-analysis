@@ -95,12 +95,7 @@ class AnalysisRunner {
         size_t sample_total = 0;
         for (auto &[sample_key, _] : sample_frames) {
             const auto *run_config = data_loader_.getRunConfigForSample(sample_key);
-            if (!run_config)
-                continue;
-            if (!region_beam.empty() && run_config->beam_mode != region_beam)
-                continue;
-            if (!region_runs.empty() &&
-                std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+            if (!isSampleEligible(sample_key, run_config, region_beam, region_runs))
                 continue;
             ++sample_total;
         }
@@ -109,12 +104,7 @@ class AnalysisRunner {
         std::set<std::string> accounted_runs;
         for (auto &[sample_key, sample_def] : sample_frames) {
             const auto *run_config = data_loader_.getRunConfigForSample(sample_key);
-            if (!run_config)
-                continue;
-            if (!region_beam.empty() && run_config->beam_mode != region_beam)
-                continue;
-            if (!region_runs.empty() &&
-                std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+            if (!isSampleEligible(sample_key, run_config, region_beam, region_runs))
                 continue;
             ++sample_index;
 
@@ -238,6 +228,21 @@ class AnalysisRunner {
         }
 
         region_analysis.setCutFlow(std::move(stage_counts));
+    }
+
+    bool isSampleEligible(const SampleKey &sample_key, const RunConfig *run_config, const std::string &region_beam,
+                          const std::vector<std::string> &region_runs) const {
+        static_cast<void>(sample_key);
+
+        if (!run_config)
+            return false;
+        if (!region_beam.empty() && run_config->beam_mode != region_beam)
+            return false;
+        if (!region_runs.empty() &&
+            std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+            return false;
+
+        return true;
     }
 
     void processVariables(const RegionHandle &region_handle, RegionAnalysis &region_analysis,
