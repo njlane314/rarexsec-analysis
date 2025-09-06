@@ -43,7 +43,6 @@ add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
 # Plot plugins
 add_plugin(EventDisplayPlugin plot/EventDisplayPlugin.cc "")
 add_plugin(CutFlowPlotPlugin plot/CutFlowPlotPlugin.cc "")
-add_plugin(FlashValidationPlugin plot/FlashValidationPlugin.cc "")
 add_plugin(SlipStackingIntensityPlugin plot/SlipStackingIntensityPlugin.cc "")
 add_plugin(StackedHistogramPlugin plot/StackedHistogramPlugin.cc "")
 add_plugin(OccupancyMatrixPlugin plot/OccupancyMatrixPlugin.cc "")
