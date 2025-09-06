@@ -14,7 +14,6 @@
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
 #include "SelectionRegistry.h"
-#include "StratifierRegistry.h"
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
@@ -40,7 +39,6 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
 
         analysis::VariableRegistry variable_registry;
         analysis::SelectionRegistry selection_registry;
-        analysis::StratifierRegistry stratifier_registry;
 
         std::vector<analysis::KnobDef> knob_defs;
         knob_defs.reserve(variable_registry.knobVariations().size());
@@ -57,7 +55,7 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
         analysis::SystematicsProcessor systematics_processor(knob_defs, universe_defs);
         analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods,
                                                  ntuple_directory, true);
-        auto histogram_booker = std::make_unique<analysis::HistogramBooker>(stratifier_registry);
+        auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
 
         analysis::AnalysisRunner runner(data_loader, selection_registry, variable_registry, std::move(histogram_booker),
                                         systematics_processor, analysis);
