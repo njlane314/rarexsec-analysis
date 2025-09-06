@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -88,33 +89,14 @@ class AnalysisRunner {
         log::info("AnalysisRunner::run", "Processing sample ensemble...");
         auto &sample_frames = data_loader_.getSampleFrames();
 
-        const std::string region_beam = region_analysis.beamConfig();
-        const auto &region_runs = region_analysis.runNumbers();
-
-        size_t sample_total = 0;
-        for (auto &[sample_key, _] : sample_frames) {
-            const auto *run_config = data_loader_.getRunConfigForSample(sample_key);
-            if (!run_config)
-                continue;
-            if (!region_beam.empty() && run_config->beam_mode != region_beam)
-                continue;
-            if (!region_runs.empty() &&
-                std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
-                continue;
-            ++sample_total;
-        }
+        auto filtered_samples = filterSamplesForRegion(region_analysis);
+        size_t sample_total = filtered_samples.size();
 
         size_t sample_index = 0;
         std::set<std::string> accounted_runs;
-        for (auto &[sample_key, sample_def] : sample_frames) {
+        for (auto &sample_key : filtered_samples) {
+            auto &sample_def = sample_frames.at(sample_key);
             const auto *run_config = data_loader_.getRunConfigForSample(sample_key);
-            if (!run_config)
-                continue;
-            if (!region_beam.empty() && run_config->beam_mode != region_beam)
-                continue;
-            if (!region_runs.empty() &&
-                std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
-                continue;
             ++sample_index;
 
             if (accounted_runs.insert(run_config->label()).second) {
@@ -125,37 +107,68 @@ class AnalysisRunner {
             log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total,
                       "):", sample_key.str());
 
-            auto region_df = sample_def.nominal_node_;
-            auto selection_expr = region_handle.selection().str();
-            if (!selection_expr.empty()) {
-                region_df = region_df.Filter(selection_expr);
-            }
+            auto [ensemble, region_df] = buildSampleDataset(sample_key, region_handle, sample_def);
 
-            log::info("AnalysisRunner::run", "Configuring systematic variations...");
-            std::unordered_map<SampleVariation, SampleDataset> variation_datasets;
-            for (auto &[variation_type, variation_node] : sample_def.variation_nodes_) {
-                auto variation_df = variation_node;
-                if (!selection_expr.empty()) {
-                    variation_df = variation_df.Filter(selection_expr);
-                }
-                variation_datasets.emplace(
-                    variation_type, SampleDataset{sample_def.sample_origin_, AnalysisRole::kVariation, variation_df});
-            }
-
-            SampleDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
-            SampleDatasetGroup ensemble{std::move(nominal_dataset), std::move(variation_datasets)};
-
-            if (sample_def.isData()) {
-                sample_processors[sample_key] = std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
-            } else {
-                monte_carlo_nodes.emplace(sample_key, region_df);
-                sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
-            }
+            sample_processors[sample_key] =
+                createSampleProcessor(sample_key, sample_def, std::move(ensemble), monte_carlo_nodes, region_df);
         }
 
         log::info("AnalysisRunner::run", "Sample processing sequence complete.");
 
         return {std::move(sample_processors), std::move(monte_carlo_nodes)};
+    }
+
+    std::vector<SampleKey> filterSamplesForRegion(const RegionAnalysis &region_analysis) {
+        std::vector<SampleKey> keys;
+        auto &sample_frames = data_loader_.getSampleFrames();
+
+        const std::string region_beam = region_analysis.beamConfig();
+        const auto &region_runs = region_analysis.runNumbers();
+
+        for (auto &[sample_key, _] : sample_frames) {
+            const auto *run_config = data_loader_.getRunConfigForSample(sample_key);
+            if (!run_config)
+                continue;
+            if (!region_beam.empty() && run_config->beam_mode != region_beam)
+                continue;
+            if (!region_runs.empty() &&
+                std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+                continue;
+            keys.push_back(sample_key);
+        }
+
+        return keys;
+    }
+
+    auto buildSampleDataset(const SampleKey &sample_key, const RegionHandle &region_handle,
+                            SampleDefinition &sample_def) -> std::pair<SampleDatasetGroup, ROOT::RDF::RNode> {
+        auto region_df = sample_def.nominal_node_;
+        auto selection_expr = region_handle.selection().str();
+        if (!selection_expr.empty())
+            region_df = region_df.Filter(selection_expr);
+
+        std::unordered_map<SampleVariation, SampleDataset> variation_datasets;
+        for (auto &[variation_type, variation_node] : sample_def.variation_nodes_) {
+            auto variation_df = variation_node;
+            if (!selection_expr.empty())
+                variation_df = variation_df.Filter(selection_expr);
+            variation_datasets.emplace(
+                variation_type, SampleDataset{sample_def.sample_origin_, AnalysisRole::kVariation, variation_df});
+        }
+
+        SampleDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
+        SampleDatasetGroup ensemble{std::move(nominal_dataset), std::move(variation_datasets)};
+        return {std::move(ensemble), region_df};
+    }
+
+    std::unique_ptr<ISampleProcessor>
+    createSampleProcessor(const SampleKey &sample_key, const SampleDefinition &sample_def, SampleDatasetGroup ensemble,
+                          std::unordered_map<SampleKey, ROOT::RDF::RNode> &monte_carlo_nodes,
+                          ROOT::RDF::RNode region_df) {
+        if (sample_def.isData())
+            return std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
+        monte_carlo_nodes.emplace(sample_key, region_df);
+        return std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
     }
 
     void computeCutFlow(const RegionHandle &region_handle, RegionAnalysis &region_analysis) {
