@@ -87,7 +87,7 @@ package plug #LightYellow {
   }
 
   interface IPlotPlugin {
-    +render()
+    +onPlot()
   }
 
   class PlotPluginManager {

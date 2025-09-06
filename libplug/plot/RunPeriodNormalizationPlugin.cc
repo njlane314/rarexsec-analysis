@@ -25,7 +25,7 @@ class RunPeriodNormalizationPlugin : public IPlotPlugin {
 
     explicit RunPeriodNormalizationPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::runtime_error("RunPeriodNormalizationPlugin missing plots");
+            throw std::onPlottime_error("RunPeriodNormalizationPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.run_column = p.at("run_column").get<std::string>();
@@ -38,9 +38,9 @@ class RunPeriodNormalizationPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &) override {
+    void onPlot(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("RunPeriodNormalizationPlugin::run", "No AnalysisDataLoader context provided");
+            log::error("RunPeriodNormalizationPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &pc : plots_) {

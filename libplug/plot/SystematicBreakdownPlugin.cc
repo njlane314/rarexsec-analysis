@@ -23,7 +23,7 @@ class SystematicBreakdownPlugin : public IPlotPlugin {
 
     explicit SystematicBreakdownPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::runtime_error("SystematicBreakdownPlugin missing plots");
+            throw std::onPlottime_error("SystematicBreakdownPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.variable = p.at("variable").get<std::string>();
@@ -34,13 +34,13 @@ class SystematicBreakdownPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &result) override {
+    void onPlot(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             VariableKey vkey{pc.variable};
             if (!result.hasResult(rkey, vkey)) {
-                log::error("SystematicBreakdownPlugin::run", "Could not find variable", vkey.str(),
+                log::error("SystematicBreakdownPlugin::onPlot", "Could not find variable", vkey.str(),
                            "in region", rkey.str());
                 continue;
             }

@@ -63,9 +63,9 @@ class PlotPluginManager {
         }
     }
 
-    void run(const AnalysisResult &res) {
+    void notifyPlot(const AnalysisResult &res) {
         for (auto &pl : plugins_)
-            pl->run(res);
+            pl->onPlot(res);
     }
 
     ~PlotPluginManager() {
