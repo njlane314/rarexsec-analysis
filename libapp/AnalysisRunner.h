@@ -65,10 +65,6 @@ class AnalysisRunner {
 
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
-            for (auto &[sample_key, _] : sample_processors) {
-                plugin_manager_.notifyPostSampleProcessing(sample_key, region_handle.key_, analysis_regions);
-            }
-
             log::info("AnalysisRunner::run", "Region protocol complete (", region_index, "/", region_count,
                       "):", region_handle.key_.str());
         }
@@ -110,8 +106,6 @@ class AnalysisRunner {
             if (accounted_runs.insert(run_config->label()).second) {
                 region_analysis.addProtonsOnTarget(run_config->nominal_pot);
             }
-            plugin_manager_.notifyPreSampleProcessing(sample_key, region_handle.key_, *run_config);
-
             log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total,
                       "):", sample_key.str());
 
