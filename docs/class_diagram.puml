@@ -106,7 +106,7 @@ package plot #LightGreen {
 
   class StackedHistogramPlot
   class UnstackedHistogramPlot
-  class OccupancyMatrixPlot
+  class MatrixPlot
   class SelectionEfficiencyPlot
   class SystematicBreakdownPlot
   class RocCurvePlot
@@ -114,7 +114,7 @@ package plot #LightGreen {
 
 IHistogramPlot <|-- StackedHistogramPlot
 IHistogramPlot <|-- UnstackedHistogramPlot
-IHistogramPlot <|-- OccupancyMatrixPlot
+IHistogramPlot <|-- MatrixPlot
 IHistogramPlot <|-- SelectionEfficiencyPlot
 IHistogramPlot <|-- SystematicBreakdownPlot
 IHistogramPlot <|-- RocCurvePlot

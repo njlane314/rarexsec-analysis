@@ -78,8 +78,8 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
-            catalog.generateOccupancyMatrixPlot(result, pc.x_variable, pc.y_variable, pc.region, pc.selection,
-                                                pc.x_cuts, pc.y_cuts);
+            catalog.generateMatrixPlot(result, pc.x_variable, pc.y_variable, pc.region, pc.selection,
+                                       pc.x_cuts, pc.y_cuts);
         }
     }
 

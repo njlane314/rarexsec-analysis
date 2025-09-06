@@ -11,7 +11,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
-#include "OccupancyMatrixPlot.h"
+#include "MatrixPlot.h"
 #include "QuadTreeBinning2D.h"
 #include "Selection.h"
 #include "StackedHistogramPlot.h"
@@ -69,10 +69,10 @@ class PlotCatalog {
         plot.drawAndSave();
     }
 
-    void generateOccupancyMatrixPlot(const AnalysisResult &res, const std::string &x_variable,
-                                     const std::string &y_variable, const std::string &region,
-                                     const Selection &selection, const std::vector<Cut> &x_cuts = {},
-                                     const std::vector<Cut> &y_cuts = {}) const {
+    void generateMatrixPlot(const AnalysisResult &res, const std::string &x_variable,
+                            const std::string &y_variable, const std::string &region,
+                            const Selection &selection, const std::vector<Cut> &x_cuts = {},
+                            const std::vector<Cut> &y_cuts = {}) const {
         const auto &x_res = this->fetchResult(res, x_variable, region);
         const auto &y_res = this->fetchResult(res, y_variable, region);
 
@@ -101,7 +101,7 @@ class PlotCatalog {
             this->fillHistogram(hist, data);
         }
 
-        OccupancyMatrixPlot plot(std::move(name), hist, output_directory_.string());
+        MatrixPlot plot(std::move(name), hist, output_directory_.string());
         plot.drawAndSave();
     }
 
