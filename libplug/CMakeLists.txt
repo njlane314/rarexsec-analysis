@@ -36,7 +36,6 @@ function(add_plugin NAME SRC EXTRA_LIBS)
 endfunction()
 
 # Analysis plugins
-add_plugin(EventDisplayPlugin analysis/EventDisplayPlugin.cc "")
 add_plugin(RegionsPlugin analysis/RegionsPlugin.cc "")
 add_plugin(SnapshotPlugin analysis/SnapshotPlugin.cc "")
 add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
