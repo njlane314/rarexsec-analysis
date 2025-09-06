@@ -38,12 +38,12 @@ class AnalysisRunner {
                    SystematicsProcessor &sys_proc, const nlohmann::json &plgn_cfg)
         : data_loader_(ldr), analysis_definition_(selection_registry_, var_reg), systematics_processor_(sys_proc),
           histogram_booker_(std::move(booker)) {
-        plugin_manager.loadPlugins(plgn_cfg, &data_loader_);
+        plugin_manager_.loadPlugins(plgn_cfg, &data_loader_);
     }
 
     AnalysisResult run() {
         log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
-        plugin_manager.notifyInitialisation(analysis_definition_, selection_registry_);
+        plugin_manager_.notifyInitialisation(analysis_definition_, selection_registry_);
 
         analysis_definition_.resolveDynamicBinning(data_loader_);
         RegionAnalysisMap analysis_regions;
@@ -58,16 +58,15 @@ class AnalysisRunner {
 
             RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
-            auto [sample_processors, monte_carlo_nodes] = prepareSampleProcessors(region_handle, region_analysis);
+            auto [sample_processors, monte_carlo_nodes] = this->prepareSampleProcessors(region_handle, region_analysis);
 
-            computeCutFlow(region_handle, region_analysis);
-
-            processVariables(region_handle, region_analysis, sample_processors, monte_carlo_nodes);
+            this->computeCutFlow(region_handle, region_analysis);
+            this->processVariables(region_handle, region_analysis, sample_processors, monte_carlo_nodes);
 
             analysis_regions[region_handle.key_] = std::move(region_analysis);
 
             for (auto &[sample_key, _] : sample_processors) {
-                plugin_manager.notifyPostSampleProcessing(sample_key, region_handle.key_, analysis_regions);
+                plugin_manager_.notifyPostSampleProcessing(sample_key, region_handle.key_, analysis_regions);
             }
 
             log::info("AnalysisRunner::run", "Region protocol complete (", region_index, "/", region_count,
@@ -75,7 +74,7 @@ class AnalysisRunner {
         }
 
         AnalysisResult result(std::move(analysis_regions));
-        plugin_manager.notifyFinalisation(result);
+        plugin_manager_.notifyFinalisation(result);
         return result;
     }
 
@@ -111,7 +110,7 @@ class AnalysisRunner {
             if (accounted_runs.insert(run_config->label()).second) {
                 region_analysis.addProtonsOnTarget(run_config->nominal_pot);
             }
-            plugin_manager.notifyPreSampleProcessing(sample_key, region_handle.key_, *run_config);
+            plugin_manager_.notifyPreSampleProcessing(sample_key, region_handle.key_, *run_config);
 
             log::info("AnalysisRunner::run", "--> Conditioning sample (", sample_index, "/", sample_total,
                       "):", sample_key.str());
@@ -197,7 +196,7 @@ class AnalysisRunner {
             stage_counts[i].total += tot_w.GetValue();
             stage_counts[i].total_w2 += tot_w2.GetValue();
 
-            updateSchemeTallies(df, schemes, scheme_keys, stage_counts[i]);
+            this->updateSchemeTallies(df, schemes, scheme_keys, stage_counts[i]);
         }
     }
 
@@ -206,7 +205,7 @@ class AnalysisRunner {
 
         auto clauses = analysis_definition_.regionClauses(region_handle.key_);
 
-        auto cumulative_filters = buildCumulativeFilters(clauses);
+        auto cumulative_filters = this->buildCumulativeFilters(clauses);
 
         std::vector<RegionAnalysis::StageCount> stage_counts(cumulative_filters.size());
 
@@ -224,7 +223,7 @@ class AnalysisRunner {
 
             auto base_df = sample_def.nominal_node_.Define("w2", "nominal_event_weight*nominal_event_weight");
 
-            calculateWeightsPerStage(base_df, cumulative_filters, stage_counts, schemes, scheme_keys);
+            this->calculateWeightsPerStage(base_df, cumulative_filters, stage_counts, schemes, scheme_keys);
         }
 
         region_analysis.setCutFlow(std::move(stage_counts));
@@ -289,7 +288,7 @@ class AnalysisRunner {
         }
     }
 
-    AnalysisPluginManager plugin_manager;
+    AnalysisPluginManager plugin_manager_;
     SelectionRegistry selection_registry_;
     AnalysisDataLoader &data_loader_;
     AnalysisDefinition analysis_definition_;
