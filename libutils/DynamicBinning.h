@@ -39,7 +39,7 @@ class DynamicBinning {
     }
 
   private:
-    static std::string determineColumnType(const std::vector<ROOT::RDF::RNode> &nodes,
+    static std::string determineColumnType(std::vector<ROOT::RDF::RNode> &nodes,
                                            const BinningDefinition &bdef) {
         const std::string &branch = bdef.getVariable();
         return nodes.front().GetColumnType(branch);
