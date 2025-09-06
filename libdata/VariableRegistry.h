@@ -27,17 +27,22 @@ class VariableRegistry {
                                          {"NormNCCOH", {"knobNormNCCOHup", "knobNormNCCOHdn"}},
                                          {"xsr_scc_Fv3", {"knobxsr_scc_Fv3up", "knobxsr_scc_Fv3dn"}},
                                          {"xsr_scc_Fa3", {"knobxsr_scc_Fa3up", "knobxsr_scc_Fa3dn"}}};
+
         return m;
     }
 
     static const MultiUniverseVars &multiUniverseVariations() {
-        static const MultiUniverseVars m = {
-            {"weightsGenie", 500}, {"weightsFlux", 500}, {"weightsReint", 500}, {"weightsPPFX", 500}};
+        static const MultiUniverseVars m = {{"weightsGenie", 500},
+                                           {"weightsFlux", 500},
+                                           {"weightsReint", 500},
+                                           {"weightsPPFX", 500}};
+
         return m;
     }
 
     static const std::string &singleKnobVar() {
         static const std::string s = "RootinoFix";
+
         return s;
     }
 
@@ -81,7 +86,10 @@ class VariableRegistry {
     }
 
     static const std::vector<std::string> &baseVariables() {
-        static const std::vector<std::string> v = {"run", "sub", "evt"};
+        static const std::vector<std::string> v = {"run",
+                                                   "sub",
+                                                   "evt"};
+
         return v;
     }
 
@@ -206,6 +214,7 @@ class VariableRegistry {
                                                    "neutrino_purity_from_pfp",
                                                    "backtracked_pdg_codes",
                                                    "blip_pdg"};
+
         return v;
     }
 
@@ -223,6 +232,7 @@ class VariableRegistry {
                                                    "num_tracks",
                                                    "num_showers",
                                                    "event_total_hits"};
+
         return v;
     }
 
@@ -254,8 +264,9 @@ class VariableRegistry {
                                                    "blip_vz",
                                                    "blip_e",
                                                    "blip_mass",
-                                                   "blip_trk_id",
-                                                   "blip_distance_to_vertex"};
+                                                     "blip_trk_id",
+                                                     "blip_distance_to_vertex"};
+
         return v;
     }
 
@@ -288,6 +299,7 @@ class VariableRegistry {
                                                    "is_vtx_in_image_v",
                                                    "is_vtx_in_image_w",
                                                    "inference_score"};
+
         return v;
     }
 
@@ -303,12 +315,18 @@ class VariableRegistry {
                                                    "charge_light_ratio",
                                                    "flash_slice_z_dist",
                                                    "flash_pe_per_charge"};
+
         return v;
     }
 
     static const std::vector<std::string> &energyVariables() {
-        static const std::vector<std::string> v = {"neutrino_energy_0",   "neutrino_energy_1",   "neutrino_energy_2",
-                                                   "slice_calo_energy_0", "slice_calo_energy_1", "slice_calo_energy_2"};
+        static const std::vector<std::string> v = {"neutrino_energy_0",
+                                                   "neutrino_energy_1",
+                                                   "neutrino_energy_2",
+                                                   "slice_calo_energy_0",
+                                                   "slice_calo_energy_1",
+                                                   "slice_calo_energy_2"};
+
         return v;
     }
 
@@ -361,26 +379,47 @@ class VariableRegistry {
                                                    "pfp_cosmic_hits",
                                                    "neutrino_completeness_from_pfp",
                                                    "neutrino_purity_from_pfp"};
+
         return v;
     }
 
     static const std::vector<std::string> &recoTrackVariables() {
-        static const std::vector<std::string> v = {"track_length",        "track_distance_to_vertex",
-                                                   "track_start_x",       "track_start_y",
-                                                   "track_start_z",       "track_end_x",
-                                                   "track_end_y",         "track_end_z",
-                                                   "track_theta",         "track_phi",
-                                                   "track_calo_energy_u", "track_calo_energy_v",
+        static const std::vector<std::string> v = {"track_length",
+                                                   "track_distance_to_vertex",
+                                                   "track_start_x",
+                                                   "track_start_y",
+                                                   "track_start_z",
+                                                   "track_end_x",
+                                                   "track_end_y",
+                                                   "track_end_z",
+                                                   "track_theta",
+                                                   "track_phi",
+                                                   "track_calo_energy_u",
+                                                   "track_calo_energy_v",
                                                    "track_calo_energy_y"};
+
         return v;
     }
 
     static const std::vector<std::string> &processedEventVariables() {
-        static const std::vector<std::string> v = {
-            "in_reco_fiducial", "n_pfps_gen2",       "n_pfps_gen3",         "quality_event",     "n_muons",
-            "has_muon",         "muon_track_length", "muon_track_costheta", "base_event_weight", "nominal_event_weight",
-            "in_fiducial",      "mc_n_strange",      "mc_n_pion",           "mc_n_proton",       "genie_int_mode",
-            "incl_channel",     "excl_channel"};
+        static const std::vector<std::string> v = {"in_reco_fiducial",
+                                                   "n_pfps_gen2",
+                                                   "n_pfps_gen3",
+                                                   "quality_event",
+                                                   "n_muons",
+                                                   "has_muon",
+                                                   "muon_track_length",
+                                                   "muon_track_costheta",
+                                                   "base_event_weight",
+                                                   "nominal_event_weight",
+                                                   "in_fiducial",
+                                                   "mc_n_strange",
+                                                   "mc_n_pion",
+                                                   "mc_n_proton",
+                                                   "genie_int_mode",
+                                                   "incl_channel",
+                                                   "excl_channel"};
+
         return v;
     }
 };
