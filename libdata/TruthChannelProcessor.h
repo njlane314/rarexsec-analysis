@@ -31,11 +31,11 @@ class TruthChannelProcessor : public IEventProcessor {
     ROOT::RDF::RNode processNonMc(ROOT::RDF::RNode df, SampleOrigin st) const {
         auto mode_df = df.Define("genie_int_mode", []() { return -1; });
 
-        auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
+        auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }); // Data or External
 
         auto incl_alias_df = incl_df.Define("inclusive_strange_channels", "incl_channel");
 
-        auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
+        auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }); // Data or External
 
         auto excl_alias_df = excl_df.Define("exclusive_strange_channels", "excl_channel");
 
@@ -101,25 +101,25 @@ class TruthChannelProcessor : public IEventProcessor {
             "incl_channel",
             [](bool fv, int nu, int cc, int s, int np, int npi) {
                 if (!fv)
-                    return 98;
+                    return 98; // out_fv
                 if (cc == 1)
-                    return 31;
+                    return 31; // nc
                 if (std::abs(nu) == 12 && cc == 0)
-                    return 30;
+                    return 30; // nue_cc
                 if (std::abs(nu) == 14 && cc == 0) {
                     if (s == 1)
-                        return 10;
+                        return 10; // numu_cc_1s
                     if (s > 1)
-                        return 11;
+                        return 11; // numu_cc_ms
                     if (np >= 1 && npi == 0)
-                        return 20;
+                        return 20; // numu_cc_np0pi
                     if (np == 0 && npi >= 1)
-                        return 21;
+                        return 21; // numu_cc_0pnpi
                     if (np >= 1 && npi >= 1)
-                        return 22;
-                    return 23;
+                        return 22; // numu_cc_npnpi
+                    return 23; // numu_cc_other
                 }
-                return 99;
+                return 99; // other
             },
             {"in_fiducial", "neutrino_pdg", "interaction_ccnc", "mc_n_strange", "mc_n_pion", "mc_n_proton"});
 
@@ -133,39 +133,39 @@ class TruthChannelProcessor : public IEventProcessor {
             "excl_channel",
             [](bool fv, int nu, int cc, int s, int kp, int km, int k0, int lam, int sp, int s0, int sm) {
                 if (!fv)
-                    return 98;
+                    return 98; // out_fv
                 if (cc == 1)
-                    return 31;
+                    return 31; // nc
                 if (std::abs(nu) == 12 && cc == 0)
-                    return 30;
+                    return 30; // nue_cc
                 if (std::abs(nu) == 14 && cc == 0) {
                     if (s == 0)
-                        return 32;
+                        return 32; // numu_cc_other
                     if ((kp == 1 || km == 1) && s == 1)
-                        return 50;
+                        return 50; // numu_cc_kpm
                     if (k0 == 1 && s == 1)
-                        return 51;
+                        return 51; // numu_cc_k0
                     if (lam == 1 && s == 1)
-                        return 52;
+                        return 52; // numu_cc_lambda
                     if ((sp == 1 || sm == 1) && s == 1)
-                        return 53;
+                        return 53; // numu_cc_sigmapm
                     if (lam == 1 && (kp == 1 || km == 1) && s == 2)
-                        return 54;
+                        return 54; // numu_cc_lambda_kpm
                     if ((sp == 1 || sm == 1) && k0 == 1 && s == 2)
-                        return 55;
+                        return 55; // numu_cc_sigma_k0
                     if ((sp == 1 || sm == 1) && (kp == 1 || km == 1) && s == 2)
-                        return 56;
+                        return 56; // numu_cc_sigma_kmp
                     if (lam == 1 && k0 == 1 && s == 2)
-                        return 57;
+                        return 57; // numu_cc_lambda_k0
                     if (kp == 1 && km == 1 && s == 2)
-                        return 58;
+                        return 58; // numu_cc_kpm_kmp
                     if (s0 == 1 && s == 1)
-                        return 59;
+                        return 59; // numu_cc_sigma0
                     if (s0 == 1 && kp == 1 && s == 2)
-                        return 60;
-                    return 61;
+                        return 60; // numu_cc_sigma0_kpm
+                    return 61; // numu_cc_other_strange
                 }
-                return 99;
+                return 99; // other
             },
             {"in_fiducial", "neutrino_pdg", "interaction_ccnc", "mc_n_strange", "count_kaon_plus", "count_kaon_minus",
              "count_kaon_zero", "count_lambda", "count_sigma_plus", "count_sigma_zero", "count_sigma_minus"});
