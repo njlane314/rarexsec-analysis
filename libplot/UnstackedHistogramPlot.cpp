@@ -1,6 +1,3 @@
-#ifndef UNSTACKED_HISTOGRAM_PLOT_H
-#define UNSTACKED_HISTOGRAM_PLOT_H
-
 #include <algorithm>
 #include <iomanip>
 #include <locale>
@@ -21,19 +18,19 @@
 
 #include "AnalysisTypes.h"
 #include "HistogramCut.h"
-#include "HistogramPlotterBase.h"
+#include "IHistogramPlot.h"
 #include "RegionAnalysis.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
 
-class UnstackedHistogramPlot : public HistogramPlotterBase {
+class UnstackedHistogramPlot : public IHistogramPlot {
   public:
     UnstackedHistogramPlot(std::string plot_name, const VariableResult &var_result, const RegionAnalysis &region_info,
                            std::string category_column, std::string output_directory = "plots",
                            std::vector<Cut> cut_list = {}, bool annotate_numbers = true, bool use_log_y = false,
                            std::string y_axis_label = "Events", bool area_normalise = false)
-        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
+        : IHistogramPlot(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
           region_analysis_(region_info), category_column_(std::move(category_column)), cuts_(cut_list),
           annotate_numbers_(annotate_numbers), use_log_y_(use_log_y), y_axis_label_(std::move(y_axis_label)),
           area_normalise_(area_normalise) {}
@@ -390,4 +387,3 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
 }
 
-#endif

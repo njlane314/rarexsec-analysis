@@ -11,11 +11,11 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
-#include "OccupancyMatrixPlot.h"
+#include "OccupancyMatrixPlot.cpp"
 #include "QuadTreeBinning2D.h"
 #include "Selection.h"
-#include "StackedHistogramPlot.h"
-#include "UnstackedHistogramPlot.h"
+#include "StackedHistogramPlot.cpp"
+#include "UnstackedHistogramPlot.cpp"
 
 namespace analysis {
 

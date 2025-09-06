@@ -8,7 +8,7 @@
 
 #include "AnalysisLogger.h"
 #include "IPlotPlugin.h"
-#include "SelectionEfficiencyPlot.h"
+#include "SelectionEfficiencyPlot.cpp"
 #include "StratifierRegistry.h"
 
 namespace analysis {
