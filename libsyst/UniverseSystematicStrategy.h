@@ -59,26 +59,12 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                 continue;
             }
 
-            Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
-            Eigen::MatrixXd shifts_mat = shifts;
-            BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), shifts_mat);
-            for (auto &[sample_key, future] : futures.variations.at(uni_key)) {
-                if (future.GetPtr())
-                    h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
-            }
+            auto h_universe = buildUniverseHistogram(binning, n, uni_key, futures);
 
-            for (int i = 0; i < n; ++i) {
-                double di = h_universe.getBinContent(i) - nominal_hist.getBinContent(i);
-                for (int j = 0; j <= i; ++j) {
-                    double dj = h_universe.getBinContent(j) - nominal_hist.getBinContent(j);
-                    cov(i, j) += di * dj;
-                }
-            }
+            updateCovarianceMatrix(cov, nominal_hist, h_universe);
 
             ++processed_universes;
-            if (store_universe_hists_) {
-                stored_hists.push_back(std::move(h_universe));
-            }
+            storeUniverseHistogram(stored_hists, std::move(h_universe));
         }
 
         double n_universes = static_cast<double>(processed_universes);
@@ -106,6 +92,38 @@ class UniverseSystematicStrategy : public SystematicStrategy {
     }
 
   private:
+    BinnedHistogram buildUniverseHistogram(const BinningDefinition &binning, int n, const SystematicKey &key,
+                                           SystematicFutures &futures) {
+        Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
+        Eigen::MatrixXd shifts_mat = shifts;
+        BinnedHistogram h_universe(binning, std::vector<double>(n, 0.0), shifts_mat);
+
+        for (auto &[sample_key, future] : futures.variations.at(key)) {
+            if (future.GetPtr())
+                h_universe = h_universe + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
+        }
+
+        return h_universe;
+    }
+
+    void updateCovarianceMatrix(TMatrixDSym &cov, const BinnedHistogram &nominal_hist,
+                                const BinnedHistogram &h_universe) {
+        int n = nominal_hist.getNumberOfBins();
+
+        for (int i = 0; i < n; ++i) {
+            double di = h_universe.getBinContent(i) - nominal_hist.getBinContent(i);
+            for (int j = 0; j <= i; ++j) {
+                double dj = h_universe.getBinContent(j) - nominal_hist.getBinContent(j);
+                cov(i, j) += di * dj;
+            }
+        }
+    }
+
+    void storeUniverseHistogram(std::vector<BinnedHistogram> &stored_hists, BinnedHistogram &&h_universe) {
+        if (store_universe_hists_)
+            stored_hists.push_back(std::move(h_universe));
+    }
+
     std::string identifier_;
     std::string vector_name_;
     unsigned n_universes_;
