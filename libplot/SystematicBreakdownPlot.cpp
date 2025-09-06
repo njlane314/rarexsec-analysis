@@ -39,24 +39,35 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     }
 
     stack_ = new THStack("syst_stack", "");
-    legend_ = new TLegend(0.65, 0.7, 0.9, 0.9);
-    legend_->SetBorderSize(0);
-    legend_->SetFillStyle(0);
-    legend_->SetTextFont(42);
+    const double x1 = 0.65;
+    const double y1 = 0.7;
+    const double x2 = 0.9;
+    const double y2 = 0.9;
+    const int border = 0;
+    const int fill = 0;
+    const int font_style = 42;
+    const int colour_offset = 1;
+    const int bin_offset = 1;
+    const double zero = 0.0;
 
-    int colour = kRed + 1;
+    legend_ = new TLegend(x1, y1, x2, y2);
+    legend_->SetBorderSize(border);
+    legend_->SetFillStyle(fill);
+    legend_->SetTextFont(font_style);
+
+    int colour = kRed + colour_offset;
     for (const auto &[key, cov] : variable_result_.covariance_matrices_) {
         TH1D *hist = new TH1D(key.str().c_str(), "", nbins, edges.data());
         const int n = cov.GetNrows();
         for (int i = 0; i < nbins && i < n; ++i) {
             double val = cov(i, i);
             if (std::isfinite(val)) {
-                if (normalise_ && bin_totals[i] > 0.0) {
+                if (normalise_ && bin_totals[i] > zero) {
                     val /= bin_totals[i];
                 }
-                hist->SetBinContent(i + 1, val);
+                hist->SetBinContent(i + bin_offset, val);
             } else {
-                hist->SetBinContent(i + 1, 0.0);
+                hist->SetBinContent(i + bin_offset, zero);
             }
         }
         hist->SetFillColor(colour);
