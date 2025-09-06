@@ -1,5 +1,8 @@
 add_library(libplot
   SystematicBreakdownPlot.cpp
+  OccupancyMatrixPlot.cpp
+  RocCurvePlot.cpp
+  SelectionEfficiencyPlot.cpp
 )
 
 set_target_properties(libplot PROPERTIES POSITION_INDEPENDENT_CODE ON)
