@@ -1,6 +1,7 @@
 #ifndef SYSTEMATIC_BREAKDOWN_PLOT_H
 #define SYSTEMATIC_BREAKDOWN_PLOT_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,16 +20,19 @@ class SystematicBreakdownPlot : public HistogramPlotterBase {
                             const VariableResult &var_result,
                             bool normalise = false,
                             std::string output_directory = "plots");
-    ~SystematicBreakdownPlot() override;
 
   private:
     void draw(TCanvas &canvas) override;
 
+    std::vector<double> calculateTotals() const;
+    void fillHistograms(const std::vector<double> &totals);
+    void renderStackLegend();
+
     const VariableResult &variable_result_;
     bool normalise_;
-    THStack *stack_;
-    std::vector<TH1D *> histograms_;
-    TLegend *legend_;
+    std::unique_ptr<THStack> stack_;
+    std::vector<std::unique_ptr<TH1D>> histograms_;
+    std::unique_ptr<TLegend> legend_;
 };
 
 } 
