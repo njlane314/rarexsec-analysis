@@ -3,27 +3,26 @@
 
 #include "AnalysisLogger.h"
 #include "AnalysisTypes.h"
-#include "IHistogramBooker.h"
 #include "StratifierManager.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
 
-class HistogramBooker : public IHistogramBooker {
+class HistogramBooker {
   public:
     HistogramBooker() : stratifier_manager_(stratifier_registry_) {
         log::debug("HistogramBooker::HistogramBooker", "Constructor called, StratifierManager has been created.");
     }
 
     ROOT::RDF::RResultPtr<TH1D> bookNominalHist(const BinningDefinition &binning, const SampleDataset &dataset,
-                                                const ROOT::RDF::TH1DModel &model) override {
+                                                const ROOT::RDF::TH1DModel &model) {
         auto d = dataset.dataframe_;
         return d.Histo1D(model, binning.getVariable(), "nominal_event_weight");
     }
 
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>>
     bookStratifiedHists(const BinningDefinition &binning, const SampleDataset &dataset,
-                        const ROOT::RDF::TH1DModel &model) override {
+                        const ROOT::RDF::TH1DModel &model) {
         analysis::log::info("HistogramBooker::bookStratifiedHists", "Calling stratifier manager...");
         auto &stratifier = stratifier_manager_.get(binning.getStratifierKey());
 

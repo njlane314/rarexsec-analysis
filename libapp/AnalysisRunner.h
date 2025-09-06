@@ -20,7 +20,7 @@
 #include "AnalysisResult.h"
 #include "AnalysisTypes.h"
 #include "DataProcessor.h"
-#include "IHistogramBooker.h"
+#include "HistogramBooker.h"
 #include "ISampleProcessor.h"
 #include "KeyTypes.h"
 #include "MonteCarloProcessor.h"
@@ -34,7 +34,7 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
-    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg, std::unique_ptr<IHistogramBooker> booker,
+    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg, std::unique_ptr<HistogramBooker> booker,
                    SystematicsProcessor &sys_proc, const nlohmann::json &plgn_cfg)
         : data_loader_(ldr), analysis_definition_(selection_registry_, var_reg), systematics_processor_(sys_proc),
           histogram_booker_(std::move(booker)) {
@@ -293,7 +293,7 @@ class AnalysisRunner {
     AnalysisDataLoader &data_loader_;
     AnalysisDefinition analysis_definition_;
     SystematicsProcessor &systematics_processor_;
-    std::unique_ptr<IHistogramBooker> histogram_booker_;
+    std::unique_ptr<HistogramBooker> histogram_booker_;
 };
 
 }

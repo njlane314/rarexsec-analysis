@@ -14,7 +14,7 @@ class MonteCarloProcessor : public ISampleProcessor {
         : sample_key_(key), nominal_dataset_(std::move(ensemble.nominal_)),
           variation_datasets_(std::move(ensemble.variations_)) {}
 
-    void book(IHistogramBooker &booker, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
+    void book(HistogramBooker &booker, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
         analysis::log::info("MonteCarloProcessor::book", "Beginning stratification...");
         nominal_futures_ = booker.bookStratifiedHists(binning, nominal_dataset_, model);
 
