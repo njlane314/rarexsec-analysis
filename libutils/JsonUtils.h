@@ -2,9 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
-#include <nlohmann/json.hpp>
 
 #include "AnalysisLogger.h"
 
@@ -12,7 +12,7 @@ namespace analysis {
 
 inline nlohmann::json loadJsonFile(const std::string &path) {
     namespace fs = std::filesystem;
-    
+
     if (!fs::exists(path) || !fs::is_regular_file(path)) {
         log::fatal("loadJsonFile", "File inaccessible:", path);
     }
@@ -25,4 +25,4 @@ inline nlohmann::json loadJsonFile(const std::string &path) {
     return nlohmann::json::parse(file);
 }
 
-}
+} // namespace analysis

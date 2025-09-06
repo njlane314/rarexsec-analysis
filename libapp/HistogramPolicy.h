@@ -28,10 +28,8 @@ struct TH1DRenderer {
             static int hist_counter = 0;
             TString unique_name = TString::Format("_h_%d", hist_counter++);
 
-            hist =
-                new TH1D(unique_name,
-                         (";" + s.binning.getTexLabel() + ";Events").c_str(),
-                         s.binning.getBinNumber(), s.binning.getEdges().data());
+            hist = new TH1D(unique_name, (";" + s.binning.getTexLabel() + ";Events").c_str(), s.binning.getBinNumber(),
+                            s.binning.getEdges().data());
             hist->SetDirectory(nullptr);
         }
         for (std::size_t i = 0; i < s.size(); ++i) {
@@ -51,6 +49,6 @@ struct TH1DRenderer {
     }
 };
 
-}
+} // namespace analysis
 
 #endif

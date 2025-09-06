@@ -19,26 +19,23 @@
 #include "AnalysisResult.h"
 #include "AnalysisTypes.h"
 #include "DataProcessor.h"
-#include "VariableRegistry.h"
 #include "IHistogramBooker.h"
 #include "ISampleProcessor.h"
 #include "KeyTypes.h"
 #include "MonteCarloProcessor.h"
 #include "SelectionRegistry.h"
-#include "SystematicsProcessor.h"
-#include <tbb/parallel_for_each.h>
 #include "StratifierRegistry.h"
+#include "SystematicsProcessor.h"
+#include "VariableRegistry.h"
+#include <tbb/parallel_for_each.h>
 
 namespace analysis {
 
 class AnalysisRunner {
   public:
-    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg,
-                   std::unique_ptr<IHistogramBooker> booker, SystematicsProcessor &sys_proc,
-                   const nlohmann::json &plgn_cfg)
-        : data_loader_(ldr),
-          analysis_definition_(selection_registry_, var_reg),
-          systematics_processor_(sys_proc),
+    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg, std::unique_ptr<IHistogramBooker> booker,
+                   SystematicsProcessor &sys_proc, const nlohmann::json &plgn_cfg)
+        : data_loader_(ldr), analysis_definition_(selection_registry_, var_reg), systematics_processor_(sys_proc),
           histogram_booker_(std::move(booker)) {
         plugin_manager.loadPlugins(plgn_cfg, &data_loader_);
     }
@@ -141,8 +138,8 @@ class AnalysisRunner {
                 if (!selection_expr.empty()) {
                     variation_df = variation_df.Filter(selection_expr);
                 }
-                variation_datasets.emplace(variation_type, SampleDataset{sample_def.sample_origin_,
-                                                                         AnalysisRole::kVariation, variation_df});
+                variation_datasets.emplace(
+                    variation_type, SampleDataset{sample_def.sample_origin_, AnalysisRole::kVariation, variation_df});
             }
 
             SampleDataset nominal_dataset{sample_def.sample_origin_, AnalysisRole::kNominal, region_df};
@@ -152,8 +149,7 @@ class AnalysisRunner {
                 sample_processors[sample_key] = std::make_unique<DataProcessor>(std::move(ensemble.nominal_));
             } else {
                 monte_carlo_nodes.emplace(sample_key, region_df);
-                sample_processors[sample_key] =
-                    std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
+                sample_processors[sample_key] = std::make_unique<MonteCarloProcessor>(sample_key, std::move(ensemble));
             }
         }
 
@@ -175,7 +171,7 @@ class AnalysisRunner {
         }
         std::vector<RegionAnalysis::StageCount> stage_counts(cumulative_filters.size());
         StratifierRegistry strat_reg;
-        std::vector<std::string> schemes{"inclusive_strange_channels","exclusive_strange_channels"};
+        std::vector<std::string> schemes{"inclusive_strange_channels", "exclusive_strange_channels"};
         std::unordered_map<std::string, std::vector<int>> scheme_keys;
         for (auto &s : schemes)
             for (auto &k : strat_reg.getAllStratumKeysForScheme(s))
@@ -183,7 +179,7 @@ class AnalysisRunner {
         for (auto &[skey, sample_def] : sample_frames) {
             if (!sample_def.isMc())
                 continue;
-            auto base_df = sample_def.nominal_node_.Define("w2","nominal_event_weight*nominal_event_weight");
+            auto base_df = sample_def.nominal_node_.Define("w2", "nominal_event_weight*nominal_event_weight");
             for (size_t i = 0; i < cumulative_filters.size(); ++i) {
                 auto df = base_df;
                 if (!cumulative_filters[i].empty())

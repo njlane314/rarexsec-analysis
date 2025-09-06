@@ -75,4 +75,4 @@ class RegionAnalysis {
     std::vector<StageCount> cut_flow_;
 };
 
-  }
+} // namespace analysis

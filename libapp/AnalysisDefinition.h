@@ -13,11 +13,11 @@
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
-#include "VariableRegistry.h"
 #include "KeyTypes.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
+#include "VariableRegistry.h"
 
 namespace analysis {
 enum class DynamicBinningStrategy;
@@ -110,42 +110,42 @@ class AnalysisDefinition {
     }
 
     AnalysisDefinition &addRegion(const std::string &key, const std::string &region_name, std::string sel_rule_key,
-                                    double pot = 0.0, bool blinded = true, std::string beam_config = "",
-                                    std::vector<std::string> runs = {}) {
-          RegionKey region_key{key};
-          if (region_analyses_.count(region_key))
-              log::fatal("AnalysisDefinition", "duplicate region:", key);
+                                  double pot = 0.0, bool blinded = true, std::string beam_config = "",
+                                  std::vector<std::string> runs = {}) {
+        RegionKey region_key{key};
+        if (region_analyses_.count(region_key))
+            log::fatal("AnalysisDefinition", "duplicate region:", key);
 
-          auto rule = sel_reg_.getRule(sel_rule_key);
-          Selection sel = sel_reg_.get(sel_rule_key);
-          region_names_[region_key] = region_name;
-          region_selections_[region_key] = std::move(sel);
-          region_clauses_[region_key] = rule.clauses;
+        auto rule = sel_reg_.getRule(sel_rule_key);
+        Selection sel = sel_reg_.get(sel_rule_key);
+        region_names_[region_key] = region_name;
+        region_selections_[region_key] = std::move(sel);
+        region_clauses_[region_key] = rule.clauses;
 
-          auto region_analysis = std::make_unique<RegionAnalysis>(region_key, region_name, pot, blinded,
-                                                                  std::move(beam_config), std::move(runs));
+        auto region_analysis = std::make_unique<RegionAnalysis>(region_key, region_name, pot, blinded,
+                                                                std::move(beam_config), std::move(runs));
 
-          region_analyses_[region_key] = std::move(region_analysis);
-          return *this;
-      }
+        region_analyses_[region_key] = std::move(region_analysis);
+        return *this;
+    }
 
     AnalysisDefinition &addRegionExpr(const std::string &key, const std::string &label, std::string raw_expr,
-                                        double pot = 0.0, bool blinded = true, std::string beam_config = "",
-                                        std::vector<std::string> runs = {}) {
-          RegionKey region_key{key};
-          if (region_analyses_.count(region_key))
-              log::fatal("AnalysisDefinition", "duplicate region: " + key);
+                                      double pot = 0.0, bool blinded = true, std::string beam_config = "",
+                                      std::vector<std::string> runs = {}) {
+        RegionKey region_key{key};
+        if (region_analyses_.count(region_key))
+            log::fatal("AnalysisDefinition", "duplicate region: " + key);
 
-          region_names_[region_key] = label;
-          region_selections_[region_key] = Selection(std::move(raw_expr));
-          region_clauses_[region_key] = {};
+        region_names_[region_key] = label;
+        region_selections_[region_key] = Selection(std::move(raw_expr));
+        region_clauses_[region_key] = {};
 
-          auto region_analysis =
-              std::make_unique<RegionAnalysis>(region_key, label, pot, blinded, std::move(beam_config), std::move(runs));
+        auto region_analysis =
+            std::make_unique<RegionAnalysis>(region_key, label, pot, blinded, std::move(beam_config), std::move(runs));
 
-          region_analyses_[region_key] = std::move(region_analysis);
-          return *this;
-      }
+        region_analyses_[region_key] = std::move(region_analysis);
+        return *this;
+    }
 
     void addVariableToRegion(const std::string &reg_key, const std::string &var_key) {
         RegionKey region_key{reg_key};
@@ -181,15 +181,15 @@ class AnalysisDefinition {
         return VariableHandle{key, variable_expressions_, variable_labels_, variable_binning_, variable_stratifiers_};
     }
 
-      RegionHandle region(const RegionKey &key) const {
-          return RegionHandle{key, region_names_, region_selections_, region_analyses_, region_variables_};
-      }
+    RegionHandle region(const RegionKey &key) const {
+        return RegionHandle{key, region_names_, region_selections_, region_analyses_, region_variables_};
+    }
 
-      const std::vector<std::string> &regionClauses(const RegionKey &key) const {
-          static const std::vector<std::string> empty;
-          auto it = region_clauses_.find(key);
-          return it != region_clauses_.end() ? it->second : empty;
-      }
+    const std::vector<std::string> &regionClauses(const RegionKey &key) const {
+        static const std::vector<std::string> empty;
+        auto it = region_clauses_.find(key);
+        return it != region_clauses_.end() ? it->second : empty;
+    }
 
     class VariableIterator {
       public:

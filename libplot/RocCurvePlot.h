@@ -13,12 +13,9 @@ namespace analysis {
 
 class RocCurvePlot : public HistogramPlotterBase {
   public:
-    RocCurvePlot(std::string plot_name, std::vector<double> signal_eff,
-                 std::vector<double> background_rej,
+    RocCurvePlot(std::string plot_name, std::vector<double> signal_eff, std::vector<double> background_rej,
                  std::string output_directory = "plots")
-        : HistogramPlotterBase(std::move(plot_name),
-                               std::move(output_directory)),
-          signal_eff_(std::move(signal_eff)),
+        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), signal_eff_(std::move(signal_eff)),
           background_rej_(std::move(background_rej)) {}
 
   private:
@@ -44,6 +41,6 @@ class RocCurvePlot : public HistogramPlotterBase {
     std::vector<double> background_rej_;
 };
 
-}
+} // namespace analysis
 
 #endif
