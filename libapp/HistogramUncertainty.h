@@ -41,6 +41,7 @@ class HistogramUncertainty {
 
     friend HistogramUncertainty operator*(double s, const HistogramUncertainty &h) { return h * s; }
 };
+
 inline HistogramUncertainty::HistogramUncertainty(const BinningDefinition &b, const std::vector<double> &c,
                                                   const Eigen::MatrixXd &s)
     : binning(b), counts(c), shifts(s) {
