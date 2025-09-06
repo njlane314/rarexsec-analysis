@@ -26,7 +26,7 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
 
     explicit OccupancyMatrixPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("occupancy_matrix_plots") || !cfg.at("occupancy_matrix_plots").is_array())
-            throw std::runtime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
+            throw std::onPlottime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
         for (auto const &p : cfg.at("occupancy_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();
@@ -51,9 +51,9 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &result) override {
+    void onPlot(const AnalysisResult &result) override {
         if (!loader_) {
-            log::error("OccupancyMatrixPlugin::run", "No AnalysisDataLoader context provided");
+            log::error("OccupancyMatrixPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &pc : plots_) {
@@ -61,7 +61,7 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
             VariableKey x_key{pc.x_variable};
             VariableKey y_key{pc.y_variable};
             if (!result.hasResult(rkey, x_key) || !result.hasResult(rkey, y_key)) {
-                log::error("OccupancyMatrixPlugin::run", "Missing variables for region", rkey.str());
+                log::error("OccupancyMatrixPlugin::onPlot", "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);

@@ -3,7 +3,6 @@
 
 #include <cstdlib>
 #include <dlfcn.h>
-#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -22,8 +21,6 @@ namespace analysis {
 
 class AnalysisPluginManager {
   public:
-    using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
-
     void loadPlugins(const nlohmann::json &jobj, AnalysisDataLoader *loader = nullptr) {
         if (!jobj.contains("plugins"))
             return;
@@ -79,16 +76,6 @@ class AnalysisPluginManager {
     void notifyInitialisation(AnalysisDefinition &def, const SelectionRegistry &selec_reg) {
         for (auto &pl : plugins_)
             pl->onInitialisation(def, selec_reg);
-    }
-
-    void notifyPreSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RunConfig &run_config) {
-        for (auto &pl : plugins_)
-            pl->onPreSampleProcessing(skey, rkey, run_config);
-    }
-
-    void notifyPostSampleProcessing(const SampleKey &skey, const RegionKey &rkey, const RegionAnalysisMap &res) {
-        for (auto &pl : plugins_)
-            pl->onPostSampleProcessing(skey, rkey, res);
     }
 
     void notifyFinalisation(const AnalysisResult &res) {

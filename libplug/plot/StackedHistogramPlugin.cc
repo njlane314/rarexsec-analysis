@@ -32,7 +32,7 @@ class StackedHistogramPlugin : public IPlotPlugin {
 
     explicit StackedHistogramPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::runtime_error("StackedHistogramPlugin missing plots");
+            throw std::onPlottime_error("StackedHistogramPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.variable = p.at("variable").get<std::string>();
@@ -58,13 +58,13 @@ class StackedHistogramPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &result) override {
+    void onPlot(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             VariableKey vkey{pc.variable};
             if (!result.hasResult(rkey, vkey)) {
-                log::error("StackedHistogramPlugin::run", "Could not find variable", vkey.str(), "in region",
+                log::error("StackedHistogramPlugin::onPlot", "Could not find variable", vkey.str(), "in region",
                            rkey.str());
                 continue;
             }

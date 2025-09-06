@@ -29,7 +29,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
 
     explicit CutFlowPlotPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::runtime_error("CutFlowPlotPlugin missing plots");
+            throw std::onPlottime_error("CutFlowPlotPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.selection_rule = p.at("selection_rule").get<std::string>();
@@ -46,7 +46,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &res) override {
+    void onPlot(const AnalysisResult &res) override {
         StratifierRegistry strat_reg;
         for (const auto &pc : plots_) {
             auto signal_keys = this->fetchSignalKeys(strat_reg, pc.signal_group);
@@ -65,7 +65,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
                                          metrics.eff_errors, metrics.purities, metrics.pur_errors, pc.output_directory,
                                          pc.use_log_y);
             plot.drawAndSave("pdf");
-            log::info("CutFlowPlotPlugin::run", pc.output_directory + "/" + pc.plot_name + "_" + pc.region + ".pdf");
+            log::info("CutFlowPlotPlugin::onPlot", pc.output_directory + "/" + pc.plot_name + "_" + pc.region + ".pdf");
         }
     }
 
@@ -74,7 +74,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
         try {
             return strat_reg.getSignalKeys(group);
         } catch (const std::exception &e) {
-            log::error("CutFlowPlotPlugin::run", e.what());
+            log::error("CutFlowPlotPlugin::onPlot", e.what());
             return std::nullopt;
         }
     }

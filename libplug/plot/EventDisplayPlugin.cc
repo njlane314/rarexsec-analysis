@@ -30,7 +30,7 @@ class EventDisplayPlugin : public IPlotPlugin {
 
     explicit EventDisplayPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
-            throw std::runtime_error("EventDisplayPlugin missing event_displays");
+            throw std::onPlottime_error("EventDisplayPlugin missing event_displays");
         }
         SelectionRegistry sel_reg;
         for (auto const &ed : cfg.at("event_displays")) {
@@ -52,9 +52,9 @@ class EventDisplayPlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &) override {
+    void onPlot(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("EventDisplayPlugin::run", "No AnalysisDataLoader context provided");
+            log::error("EventDisplayPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &cfg : configs_) {
