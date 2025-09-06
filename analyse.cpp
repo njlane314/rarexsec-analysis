@@ -16,8 +16,8 @@
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
-static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &runcfg,
-                                                const std::string &ntupledir, const std::string &beam,
+static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry,
+                                                const std::string &ntuple_dir, const std::string &beam,
                                                 const nlohmann::json &runs, const nlohmann::json &analysis) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
@@ -25,12 +25,12 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
         periods.emplace_back(period);
     }
 
-    analysis::VariableRegistry varreg;
-    analysis::SystematicsProcessor sysproc(varreg);
-    analysis::AnalysisDataLoader dataldr(runcfg, varreg, beam, periods, ntupledir, true);
+    analysis::VariableRegistry variable_registry;
+    analysis::SystematicsProcessor systematics_processor(variable_registry);
+    analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_dir, true);
     auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
 
-    analysis::AnalysisRunner runner(dataldr, varreg, std::move(histogram_booker), sysproc, analysis);
+    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor, analysis);
     return runner.run();
 }
 
@@ -44,15 +44,15 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
     ROOT::EnableImplicitMT();
     analysis::log::info("analyse::runAnalysis", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
-    std::string ntupledir = samples.at("ntupledir").get<std::string>();
+    std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
     analysis::log::info("analyse::runAnalysis", "Configuration loaded for", samples.at("beamlines").size(), "beamlines.");
 
-    analysis::RunConfigRegistry runcfg;
-    analysis::RunConfigLoader::loadRunConfigurations(samples, runcfg);
+    analysis::RunConfigRegistry run_config_registry;
+    analysis::RunConfigLoader::loadRunConfigurations(samples, run_config_registry);
 
     analysis::AnalysisResult result;
     for (auto const &[beam, runs] : samples.at("beamlines").items()) {
-        auto beamline_result = processBeamline(runcfg, ntupledir, beam, runs, analysis);
+        auto beamline_result = processBeamline(run_config_registry, ntuple_dir, beam, runs, analysis);
         aggregateResults(result, beamline_result);
     }
 
@@ -70,10 +70,10 @@ int main(int argc, char *argv[]) {
     try {
         nlohmann::json cfg = analysis::loadJson(argv[1]);
         nlohmann::json plg = analysis::loadJson(argv[2]);
-        const char *out_path = argv[3];
+        const char *output_path = argv[3];
 
         auto result = runAnalysis(cfg.at("samples"), plg.at("analysis"));
-        result.saveToFile(out_path);
+        result.saveToFile(output_path);
     } catch (const std::exception &e) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
