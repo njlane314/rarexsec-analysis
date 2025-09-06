@@ -34,7 +34,7 @@ class IHistogramStratifier {
         for (const auto &key : this->getRegistryKeys()) {
             std::string stratum_key_str = key.str();
             std::replace(stratum_key_str.begin(), stratum_key_str.end(), '-', 'n');
-            std::string filter_col_name = "pass_" + getSchemeName() + "_" + stratum_key_str;
+            std::string filter_col_name = "pass_" + this->getSchemeName() + "_" + stratum_key_str;
 
             df_with_filters = this->defineFilterColumn(df_with_filters, std::stoi(key.str()), filter_col_name);
             strat_futurs[key] =

@@ -31,7 +31,7 @@ class SampleDefinition {
     SampleDefinition(const nlohmann::json &j, const nlohmann::json &all_samples_json, const std::string &base_dir,
                      const VariableRegistry &var_reg, IEventProcessor &processor)
         : sample_key_(SampleKey{j.at("sample_key").get<std::string>()}),
-          nominal_node_(this->makeDataFrame(base_dir, var_reg, processor, parseMetadata(j), all_samples_json)) {
+          nominal_node_(this->makeDataFrame(base_dir, var_reg, processor, this->parseMetadata(j), all_samples_json)) {
         if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto &[dv, path] : var_paths_) {
                 SampleKey dataset_key{sample_key_.str() + "_" + variationToKey(dv)};
@@ -84,7 +84,7 @@ class SampleDefinition {
         triggers_ = j.value("triggers", 0L);
         if (j.contains("detector_variations")) {
             for (auto &dv : j.at("detector_variations")) {
-                SampleVariation dvt = convertDetVarType(dv.at("variation_type").get<std::string>());
+                SampleVariation dvt = this->convertDetVarType(dv.at("variation_type").get<std::string>());
                 var_paths_[dvt] = dv.at("relative_path").get<std::string>();
             }
         }

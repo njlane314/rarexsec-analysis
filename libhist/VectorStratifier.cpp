@@ -20,7 +20,7 @@ class VectorStratifier : public IHistogramStratifier {
     ROOT::RDF::RNode defineFilterColumn(ROOT::RDF::RNode dataframe, int key,
                                         const std::string &new_column_name) const override {
 
-        std::vector<std::string> columns = {getSchemeName()};
+        std::vector<std::string> columns = {this->getSchemeName()};
 
         return dataframe.Define(
             new_column_name,

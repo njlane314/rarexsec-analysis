@@ -99,7 +99,7 @@ class AnalysisDataLoader {
         if constexpr (sizeof...(tail) == 0) {
             return head;
         } else {
-            auto next = chainEventProcessors(std::move(tail)...);
+            auto next = this->chainEventProcessors(std::move(tail)...);
             head->chainNextProcessor(std::move(next));
             return head;
         }
@@ -115,7 +115,7 @@ class AnalysisDataLoader {
                 continue;
             }
 
-            auto pipeline = chainEventProcessors(
+            auto pipeline = this->chainEventProcessors(
                 std::make_unique<WeightProcessor>(sample_json, total_pot_), std::make_unique<TruthChannelProcessor>(),
                 std::make_unique<BlipProcessor>(), std::make_unique<MuonSelectionProcessor>(),
                 std::make_unique<ReconstructionProcessor>());
@@ -137,7 +137,7 @@ class AnalysisDataLoader {
             total_pot_ += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
 
-            processPeriod(period);
+            this->processPeriod(period);
         }
     }
 };

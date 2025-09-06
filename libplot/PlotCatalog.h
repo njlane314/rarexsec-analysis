@@ -85,7 +85,7 @@ class PlotCatalog {
         std::string name = "occupancy_matrix_" + sanitise(x_variable) + "_vs_" + sanitise(y_variable) + "_" +
                            sanitise(region.empty() ? "default" : region);
 
-        auto edges = determineEdges(x_res, y_res);
+        auto edges = this->determineEdges(x_res, y_res);
 
         TH2F *hist = new TH2F(name.c_str(), name.c_str(), edges.first.size() - 1, edges.first.data(),
                               edges.second.size() - 1, edges.second.data());
@@ -96,9 +96,9 @@ class PlotCatalog {
 
         for (auto &kv : loader_.getSampleFrames()) {
             auto df = kv.second.nominal_node_;
-            df = applySelectionFilters(df, x_res, y_res, filter, x_cuts, y_cuts);
-            auto data = extractValues(df, x_res, y_res);
-            fillHistogram(hist, data);
+            df = this->applySelectionFilters(df, x_res, y_res, filter, x_cuts, y_cuts);
+            auto data = this->extractValues(df, x_res, y_res);
+            this->fillHistogram(hist, data);
         }
 
         OccupancyMatrixPlot plot(std::move(name), hist, output_directory_.string());

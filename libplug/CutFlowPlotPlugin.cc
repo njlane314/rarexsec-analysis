@@ -49,7 +49,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
     void run(const AnalysisResult &res) override {
         StratifierRegistry strat_reg;
         for (const auto &pc : plots_) {
-            auto signal_keys = fetchSignalKeys(strat_reg, pc.signal_group);
+            auto signal_keys = this->fetchSignalKeys(strat_reg, pc.signal_group);
             if (!signal_keys)
                 continue;
 
@@ -58,8 +58,8 @@ class CutFlowPlotPlugin : public IPlotPlugin {
             auto stage_labels = std::vector<std::string>{pc.initial_label};
             stage_labels.insert(stage_labels.end(), pc.clauses.begin(), pc.clauses.end());
 
-            auto counts = computeCounts(cf, pc.channel_column, *signal_keys);
-            auto metrics = computeMetrics(cf, pc.channel_column, *signal_keys, counts.first, counts.second);
+            auto counts = this->computeCounts(cf, pc.channel_column, *signal_keys);
+            auto metrics = this->computeMetrics(cf, pc.channel_column, *signal_keys, counts.first, counts.second);
 
             SelectionEfficiencyPlot plot(pc.plot_name + "_" + pc.region, stage_labels, metrics.efficiencies,
                                          metrics.eff_errors, metrics.purities, metrics.pur_errors, pc.output_directory,

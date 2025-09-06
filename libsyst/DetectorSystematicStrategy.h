@@ -37,18 +37,18 @@ class DetectorSystematicStrategy : public SystematicStrategy {
             return total_detvar_cov;
         }
 
-        auto total_detvar_hists = aggregateVariations(result);
+        auto total_detvar_hists = this->aggregateVariations(result);
 
-        auto h_det_cv_opt = sanitizeCvHistogram(total_detvar_hists);
+        auto h_det_cv_opt = this->sanitizeCvHistogram(total_detvar_hists);
 
         if (!h_det_cv_opt)
             return total_detvar_cov;
 
         auto h_det_cv = *h_det_cv_opt;
 
-        projectVariations(result, nominal_hist, h_det_cv, total_detvar_hists);
+        this->projectVariations(result, nominal_hist, h_det_cv, total_detvar_hists);
 
-        total_detvar_cov = accumulateCovariance(result, n_bins);
+        total_detvar_cov = this->accumulateCovariance(result, n_bins);
 
         log::debug("DetectorSystematicStrategy::computeCovariance", "Computed detector covariance with",
                    total_detvar_hists.size() - 1, "variations");
