@@ -8,12 +8,10 @@
 
 namespace analysis {
 
-SystematicBreakdownPlot::SystematicBreakdownPlot(
-    std::string plot_name, const VariableResult &var_result, bool normalise,
-    std::string output_directory)
-    : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)),
-      variable_result_(var_result), normalise_(normalise), stack_(nullptr),
-      legend_(nullptr) {}
+SystematicBreakdownPlot::SystematicBreakdownPlot(std::string plot_name, const VariableResult &var_result,
+                                                 bool normalise, std::string output_directory)
+    : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
+      normalise_(normalise), stack_(nullptr), legend_(nullptr) {}
 
 SystematicBreakdownPlot::~SystematicBreakdownPlot() {
     delete stack_;
@@ -70,11 +68,9 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     }
 
     stack_->Draw("hist");
-    stack_->GetXaxis()->SetTitle(
-        variable_result_.binning_.getTexLabel().c_str());
-    stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution"
-                                            : "Variance");
+    stack_->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
+    stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution" : "Variance");
     legend_->Draw();
 }
 
-}
+} // namespace analysis

@@ -14,27 +14,18 @@ template <class Tag> class AnalysisKey {
     const std::string &str() const noexcept { return v_; }
     const char *c_str() const noexcept { return v_.c_str(); }
     bool operator==(const AnalysisKey &b) const noexcept { return v_ == b.v_; }
-    friend bool operator!=(const AnalysisKey &a,
-                           const AnalysisKey &b) noexcept {
-        return !(a == b);
-    }
-    friend bool operator<(const AnalysisKey &a, const AnalysisKey &b) noexcept {
-        return a.v_ < b.v_;
-    }
-    friend std::ostream &operator<<(std::ostream &os, const AnalysisKey &k) {
-        return os << k.v_;
-    }
+    friend bool operator!=(const AnalysisKey &a, const AnalysisKey &b) noexcept { return !(a == b); }
+    friend bool operator<(const AnalysisKey &a, const AnalysisKey &b) noexcept { return a.v_ < b.v_; }
+    friend std::ostream &operator<<(std::ostream &os, const AnalysisKey &k) { return os << k.v_; }
 
   private:
     std::string v_;
 };
 
-}
+} // namespace analysis
 
 namespace std {
 template <class Tag> struct hash<analysis::AnalysisKey<Tag>> {
-    size_t operator()(const analysis::AnalysisKey<Tag> &k) const noexcept {
-        return std::hash<std::string>()(k.str());
-    }
+    size_t operator()(const analysis::AnalysisKey<Tag> &k) const noexcept { return std::hash<std::string>()(k.str()); }
 };
-}
+} // namespace std

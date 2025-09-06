@@ -22,10 +22,8 @@ struct RunConfig {
     json samples;
 
     RunConfig(const json &j, std::string bm, std::string pr)
-        : beam_mode(std::move(bm)), run_period(std::move(pr)),
-          nominal_pot(j.value("nominal_pot", 0.0)),
-          nominal_triggers(j.value("nominal_triggers", 0L)),
-          samples(j.at("samples")) {}
+        : beam_mode(std::move(bm)), run_period(std::move(pr)), nominal_pot(j.value("nominal_pot", 0.0)),
+          nominal_triggers(j.value("nominal_triggers", 0L)), samples(j.at("samples")) {}
 
     std::string label() const { return beam_mode + ":" + run_period; }
 
@@ -35,8 +33,7 @@ struct RunConfig {
         if (run_period.empty())
             log::fatal("RunConfig::validate", "empty run_period");
         if (samples.empty())
-            log::fatal("RunConfig::validate", "no samples for",
-                       beam_mode + "/" + run_period);
+            log::fatal("RunConfig::validate", "no samples for", beam_mode + "/" + run_period);
 
         std::set<std::string> keys;
         for (auto &s : samples) {
@@ -48,6 +45,6 @@ struct RunConfig {
     }
 };
 
-}
+} // namespace analysis
 
 #endif

@@ -40,21 +40,26 @@ class PlotPluginManager {
             if (!handle)
                 throw std::runtime_error(dlerror());
 
-            if (loader) {
-                using CtxFn = void (*)(AnalysisDataLoader *);
-                if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
-                    setctx(loader);
+            try {
+                if (loader) {
+                    using CtxFn = void (*)(AnalysisDataLoader *);
+                    if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
+                        setctx(loader);
+                    }
                 }
+
+                using FactoryFn = IPlotPlugin *(*)(const nlohmann::json &);
+                auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlotPlugin"));
+                if (!create)
+                    throw std::runtime_error(dlerror());
+
+                std::unique_ptr<IPlotPlugin> plugin(create(p.value("plot_configs", nlohmann::json::object())));
+                plugins_.push_back(std::move(plugin));
+                handles_.push_back(handle);
+            } catch (...) {
+                dlclose(handle);
+                throw;
             }
-
-            using FactoryFn = IPlotPlugin *(*)(const nlohmann::json &);
-            auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlotPlugin"));
-            if (!create)
-                throw std::runtime_error(dlerror());
-
-            std::unique_ptr<IPlotPlugin> plugin(create(p.value("plot_configs", nlohmann::json::object())));
-            plugins_.push_back(std::move(plugin));
-            handles_.push_back(handle);
         }
     }
 
@@ -69,9 +74,7 @@ class PlotPluginManager {
     }
 
   private:
-    static std::string makeLibraryFilename(const std::string &name) {
-        return name + ".so";
-    }
+    static std::string makeLibraryFilename(const std::string &name) { return name + ".so"; }
 
     static std::string makePluginPath(const std::string &name) {
         const char *dir = std::getenv("ANALYSIS_PLUGIN_DIR");

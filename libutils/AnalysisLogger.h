@@ -21,28 +21,23 @@ class AnalysisLogger {
 
     void setLevel(LogLevel level) { level_ = level; }
 
-    template <typename... Args>
-    void debug(const std::string &context, const Args &...args) {
+    template <typename... Args> void debug(const std::string &context, const Args &...args) {
         log(LogLevel::DEBUG, context, args...);
     }
 
-    template <typename... Args>
-    void info(const std::string &context, const Args &...args) {
+    template <typename... Args> void info(const std::string &context, const Args &...args) {
         log(LogLevel::INFO, context, args...);
     }
 
-    template <typename... Args>
-    void warn(const std::string &context, const Args &...args) {
+    template <typename... Args> void warn(const std::string &context, const Args &...args) {
         log(LogLevel::WARN, context, args...);
     }
 
-    template <typename... Args>
-    void error(const std::string &context, const Args &...args) {
+    template <typename... Args> void error(const std::string &context, const Args &...args) {
         log(LogLevel::ERROR, context, args...);
     }
 
-    template <typename... Args>
-    void fatal(const std::string &context, const Args &...args) {
+    template <typename... Args> void fatal(const std::string &context, const Args &...args) {
         log(LogLevel::FATAL, context, args...);
         std::exit(EXIT_FAILURE);
     }
@@ -54,8 +49,7 @@ class AnalysisLogger {
     AnalysisLogger &operator=(const AnalysisLogger &) = delete;
 
     template <typename T, typename... Args>
-    void printArgs(std::ostream &os, const T &first,
-                   const Args &...rest) const {
+    void printArgs(std::ostream &os, const T &first, const Args &...rest) const {
         os << first;
         if constexpr (sizeof...(rest) > 0) {
             os << " ";
@@ -65,8 +59,7 @@ class AnalysisLogger {
 
     void printArgs(std::ostream &) const {}
 
-    template <typename... Args>
-    void log(LogLevel level, const std::string &context, const Args &...args) {
+    template <typename... Args> void log(LogLevel level, const std::string &context, const Args &...args) {
         if (level >= level_) {
             std::lock_guard<std::mutex> lock(mutex_);
             auto now = std::chrono::system_clock::now();
@@ -75,13 +68,11 @@ class AnalysisLogger {
             const char *timeColour = "\033[90m";
             const char *levelColour = levelToColour(level);
             std::string levelStr = levelToString(level);
-            std::cout << timeColour << "["
-                      << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S")
-                      << "]" << reset << " ";
+            std::cout << timeColour << "[" << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "]" << reset
+                      << " ";
             std::cout << "[" << levelColour << levelStr << reset << "] ";
             const char *bracketColour = "\033[30m";
-            std::cout << bracketColour << "[" << reset << context
-                      << bracketColour << "]" << reset << " ";
+            std::cout << bracketColour << "[" << reset << context << bracketColour << "]" << reset << " ";
             printArgs(std::cout, args...);
             std::cout << reset << std::endl;
         }
@@ -124,28 +115,23 @@ class AnalysisLogger {
 };
 
 namespace log {
-template <typename... Args>
-inline void debug(const std::string &ctx, const Args &...args) {
+template <typename... Args> inline void debug(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().debug(ctx, args...);
 }
-template <typename... Args>
-inline void info(const std::string &ctx, const Args &...args) {
+template <typename... Args> inline void info(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().info(ctx, args...);
 }
-template <typename... Args>
-inline void warn(const std::string &ctx, const Args &...args) {
+template <typename... Args> inline void warn(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().warn(ctx, args...);
 }
-template <typename... Args>
-inline void error(const std::string &ctx, const Args &...args) {
+template <typename... Args> inline void error(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().error(ctx, args...);
 }
-template <typename... Args>
-inline void fatal(const std::string &ctx, const Args &...args) {
+template <typename... Args> inline void fatal(const std::string &ctx, const Args &...args) {
     AnalysisLogger::getInstance().fatal(ctx, args...);
 }
-}
+} // namespace log
 
-}
+} // namespace analysis
 
 #endif

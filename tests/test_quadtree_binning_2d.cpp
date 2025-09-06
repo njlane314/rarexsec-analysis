@@ -33,4 +33,3 @@ TEST_CASE("quadtree_binning_2d") {
     REQUIRE(ex.size() == 3);
     REQUIRE(ey.size() == 3);
 }
-
