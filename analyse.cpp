@@ -42,19 +42,8 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
         analysis::SelectionRegistry selection_registry;
         analysis::StratifierRegistry stratifier_registry;
 
-        std::vector<analysis::KnobDef> knob_defs;
-        knob_defs.reserve(variable_registry.knobVariations().size());
-        for (const auto &kv : variable_registry.knobVariations()) {
-            knob_defs.push_back({kv.first, kv.second.first, kv.second.second});
-        }
+        analysis::SystematicsProcessor systematics_processor(variable_registry);
 
-        std::vector<analysis::UniverseDef> universe_defs;
-        universe_defs.reserve(variable_registry.multiUniverseVariations().size());
-        for (const auto &kv : variable_registry.multiUniverseVariations()) {
-            universe_defs.push_back({kv.first, kv.first, kv.second});
-        }
-
-        analysis::SystematicsProcessor systematics_processor(knob_defs, universe_defs);
         analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods,
                                                  ntuple_directory, true);
         auto histogram_booker = std::make_unique<analysis::HistogramBooker>(stratifier_registry);
