@@ -1,6 +1,3 @@
-#ifndef EVENTDISPLAYPLUGIN_H
-#define EVENTDISPLAYPLUGIN_H
-
 #include <algorithm>
 #include <array>
 #include <filesystem>
@@ -12,13 +9,15 @@
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
-#include "EventDisplay.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
+#include "DetectorDisplay.h"
+#include "SemanticDisplay.h"
 #include "Selection.h"
+#include "SelectionRegistry.h"
 
 namespace analysis {
 
-class EventDisplayPlugin : public IAnalysisPlugin {
+class EventDisplayPlugin : public IPlotPlugin {
   public:
     struct DisplayConfig {
         std::string sample;
@@ -29,10 +28,11 @@ class EventDisplayPlugin : public IAnalysisPlugin {
         std::filesystem::path output_directory{"./plots/event_displays"};
     };
 
-    inline explicit EventDisplayPlugin(const nlohmann::json &cfg) {
+    explicit EventDisplayPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
             throw std::runtime_error("EventDisplayPlugin missing event_displays");
         }
+        SelectionRegistry sel_reg;
         for (auto const &ed : cfg.at("event_displays")) {
             DisplayConfig dc;
             dc.sample = ed.at("sample").get<std::string>();
@@ -41,29 +41,20 @@ class EventDisplayPlugin : public IAnalysisPlugin {
             dc.image_size = ed.value("image_size", 800);
             dc.output_directory = ed.value("output_directory", std::string{"./plots/event_displays"});
             dc.output_directory = std::filesystem::absolute(dc.output_directory).lexically_normal();
+            if (!dc.region.empty()) {
+                try {
+                    dc.selection = sel_reg.get(dc.region);
+                } catch (const std::exception &) {
+                    log::error("EventDisplayPlugin", "Unknown region:", dc.region);
+                }
+            }
             configs_.push_back(std::move(dc));
         }
     }
 
-    inline void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
-        for (auto &cfg : configs_) {
-            if (!cfg.region.empty()) {
-                try {
-                    RegionKey rkey{cfg.region};
-                    cfg.selection = def.region(rkey).selection();
-                } catch (const std::exception &) {
-                    log::error("EventDisplayPlugin::onInitialisation", "Unknown region:", cfg.region);
-                }
-            }
-        }
-    }
-
-    inline void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    inline void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    inline void onFinalisation(const RegionAnalysisMap &) override {
+    void run(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("EventDisplayPlugin::onFinalisation", "No AnalysisDataLoader context provided");
+            log::error("EventDisplayPlugin::run", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &cfg : configs_) {
@@ -112,32 +103,31 @@ class EventDisplayPlugin : public IAnalysisPlugin {
 
                     log::info("EventDisplayPlugin", "Generating", tag, "display");
 
-                    DetectorDisplayPlot det_disp(tag, det_data, cfg.image_size, out_dir.string());
+                    DetectorDisplay det_disp(tag, det_data, cfg.image_size, out_dir.string());
                     det_disp.drawAndSave();
 
-                    SemanticDisplayPlot sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
+                    SemanticDisplay sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
                     sem_disp.drawAndSave();
                 }
             }
         }
     }
 
-    inline static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
+    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
 
   private:
     std::vector<DisplayConfig> configs_;
+
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::EventDisplayPlugin(cfg);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::EventDisplayPlugin::setLoader(loader);
 }
-#endif
-
 #endif

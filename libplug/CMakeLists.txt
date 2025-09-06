@@ -42,6 +42,7 @@ add_plugin(SnapshotPlugin analysis/SnapshotPlugin.cc "")
 add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
 
 # Plot plugins
+add_plugin(EventDisplayPlugin plot/EventDisplayPlugin.cc "")
 add_plugin(CutFlowPlotPlugin plot/CutFlowPlotPlugin.cc "")
 add_plugin(FlashValidationPlugin plot/FlashValidationPlugin.cc "")
 add_plugin(RunPeriodNormalizationPlugin plot/RunPeriodNormalizationPlugin.cc "")
