@@ -74,9 +74,7 @@ class PlotPluginManager {
     }
 
   private:
-    static std::string makeLibraryFilename(const std::string &name) {
-        return name + ".so";
-    }
+    static std::string makeLibraryFilename(const std::string &name) { return name + ".so"; }
 
     static std::string makePluginPath(const std::string &name) {
         const char *dir = std::getenv("ANALYSIS_PLUGIN_DIR");

@@ -13,17 +13,14 @@ class IEventProcessor {
   public:
     virtual ~IEventProcessor() = default;
 
-    virtual ROOT::RDF::RNode process(ROOT::RDF::RNode df,
-                                     SampleOrigin st) const = 0;
+    virtual ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const = 0;
 
-    void chainNextProcessor(std::unique_ptr<IEventProcessor> next) {
-        next_ = std::move(next);
-    }
+    void chainNextProcessor(std::unique_ptr<IEventProcessor> next) { next_ = std::move(next); }
 
   protected:
     std::unique_ptr<IEventProcessor> next_;
 };
 
-}
+} // namespace analysis
 
 #endif

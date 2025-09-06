@@ -1,15 +1,15 @@
 #ifndef _BAYESIAN_BLOCKS_HH
 #define _BAYESIAN_BLOCKS_HH
 
-#include <vector>
-#include <chrono>
-#include <iostream>
-#include <cmath>
-#include <map>
 #include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <iostream>
+#include <map>
 #include <numeric>
 #include <stdexcept>
-#include <cassert>
+#include <vector>
 
 namespace BayesianBlocks {
 
@@ -21,25 +21,31 @@ using pair = std::pair<double, double>;
 using clock = std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using us = std::chrono::microseconds;
-}
+} // namespace bb
 
-bb::array blocks(bb::data_array data, bb::weights_array weights, double p = 0.01, bool counter = false, bool benchmark = false);
+bb::array blocks(bb::data_array data, bb::weights_array weights, double p = 0.01, bool counter = false,
+                 bool benchmark = false);
 bb::array blocks(bb::data_array data, double p = 0.01, bool counter = false, bool benchmark = false);
 
-}
+} // namespace BayesianBlocks
 
 namespace BayesianBlocks {
 
 bb::array blocks(bb::data_array data, bb::weights_array weights, double p, bool counter, bool benchmark) {
     auto start = bb::clock::now();
-    if (data.size() != weights.size()) throw std::domain_error("data and weights vectors are of different sizes");
-    if (data.empty()) throw std::invalid_argument("empty arrays provided as input");
-    if (std::find_if(weights.begin(), weights.end(), [](double v) { return v <= 0.0; }) != weights.end()) throw std::domain_error("invalid weights found in input");
-    if (std::unique(data.begin(), data.end()) != data.end()) throw std::invalid_argument("duplicated values found in input");
+    if (data.size() != weights.size())
+        throw std::domain_error("data and weights vectors are of different sizes");
+    if (data.empty())
+        throw std::invalid_argument("empty arrays provided as input");
+    if (std::find_if(weights.begin(), weights.end(), [](double v) { return v <= 0.0; }) != weights.end())
+        throw std::domain_error("invalid weights found in input");
+    if (std::unique(data.begin(), data.end()) != data.end())
+        throw std::invalid_argument("duplicated values found in input");
     const auto N = data.size();
     std::vector<bb::pair> hist;
     hist.reserve(N);
-    for (size_t i = 0; i < N; ++i) hist.emplace_back(data[i], weights[i]);
+    for (size_t i = 0; i < N; ++i)
+        hist.emplace_back(data[i], weights[i]);
     std::sort(hist.begin(), hist.end(), [](bb::pair a, bb::pair b) { return a.first < b.first; });
     for (size_t i = 0; i < N; ++i) {
         data[i] = hist[i].first;
@@ -47,7 +53,8 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, bool 
     }
     bb::array edges(N + 1);
     edges[0] = data[0];
-    for (size_t i = 0; i < N - 1; ++i) edges[i + 1] = (data[i] + data[i + 1]) / 2.0;
+    for (size_t i = 0; i < N - 1; ++i)
+        edges[i + 1] = (data[i] + data[i + 1]) / 2.0;
     edges[N] = data[N - 1];
     assert(std::unique(edges.begin(), edges.end()) == edges.end());
     auto cash = [](double Nk, double Tk) { return Nk * std::log(Nk / Tk); };
@@ -65,13 +72,16 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, bool 
         }
         last[k] = std::distance(A.begin(), std::max_element(A.begin(), A.end()));
         best[k] = A[last[k]];
-        if (counter) std::cout << '\r' << k << '/' << N << std::flush;
+        if (counter)
+            std::cout << '\r' << k << '/' << N << std::flush;
     }
-    if (counter) std::cout << std::endl;
+    if (counter)
+        std::cout << std::endl;
     auto loop_time = bb::duration_cast<bb::us>(bb::clock::now() - start).count();
     start = bb::clock::now();
     std::vector<size_t> cp;
-    for (auto i = N; i != 0; i = last[i - 1]) cp.push_back(i);
+    for (auto i = N; i != 0; i = last[i - 1])
+        cp.push_back(i);
     cp.push_back(0);
     std::reverse(cp.begin(), cp.end());
     bb::array result(cp.size(), 0.0);
@@ -93,7 +103,8 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, bool 
 
 bb::array blocks(bb::data_array data, double p, bool counter, bool benchmark) {
     std::map<double, double> hist;
-    for (auto i : data) hist[i]++;
+    for (auto i : data)
+        hist[i]++;
     bb::data_array x;
     bb::weights_array weights;
     for (auto &i : hist) {
@@ -103,6 +114,6 @@ bb::array blocks(bb::data_array data, double p, bool counter, bool benchmark) {
     return blocks(x, weights, p, counter, benchmark);
 }
 
-}
+} // namespace BayesianBlocks
 
 #endif

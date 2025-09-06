@@ -11,50 +11,34 @@ struct PluginConfigValidator {
     inline static const nlohmann::json variables_schema = {
         {"type", "object"},
         {"required", {"variables"}},
-        {"properties", {
-            {"variables", {
-                {"type", "array"},
-                {"items", {
-                    {"type", "object"},
-                    {"required", {"name", "branch", "label", "stratum", "bins"}},
-                    {"properties", {
-                        {"name", {{"type", "string"}}},
-                        {"branch", {{"type", "string"}}},
-                        {"label", {{"type", "string"}}},
-                        {"stratum", {{"type", "string"}}},
-                        {"bins", {{"oneOf", {
-                            {{"type", "array"}},
-                            {{"type", "object"}}
-                        }}}}
-                    }}
-                }}
-            }}
-        }}
-    };
+        {"properties",
+         {{"variables",
+           {{"type", "array"},
+            {"items",
+             {{"type", "object"},
+              {"required", {"name", "branch", "label", "stratum", "bins"}},
+              {"properties",
+               {{"name", {{"type", "string"}}},
+                {"branch", {{"type", "string"}}},
+                {"label", {{"type", "string"}}},
+                {"stratum", {{"type", "string"}}},
+                {"bins", {{"oneOf", {{{"type", "array"}}, {{"type", "object"}}}}}}}}}}}}}}};
 
-    inline static const nlohmann::json regions_schema = {
-        {"type", "object"},
-        {"required", {"regions"}},
-        {"properties", {
-            {"regions", {
-                {"type", "array"},
-                {"items", {
-                    {"type", "object"},
-                    {"required", {"region_key", "label"}},
-                    {"properties", {
-                        {"region_key", {{"type", "string"}}},
-                        {"label", {{"type", "string"}}},
-                        {"selection_rule", {{"type", "string"}}},
-                        {"expression", {{"type", "string"}}}
-                    }}
-                }}
-            }}
-        }}
-    };
+    inline static const nlohmann::json regions_schema = {{"type", "object"},
+                                                         {"required", {"regions"}},
+                                                         {"properties",
+                                                          {{"regions",
+                                                            {{"type", "array"},
+                                                             {"items",
+                                                              {{"type", "object"},
+                                                               {"required", {"region_key", "label"}},
+                                                               {"properties",
+                                                                {{"region_key", {{"type", "string"}}},
+                                                                 {"label", {{"type", "string"}}},
+                                                                 {"selection_rule", {{"type", "string"}}},
+                                                                 {"expression", {{"type", "string"}}}}}}}}}}}};
 
-    inline static const nlohmann::json plot_schema = {
-        {"type", "object"}
-    };
+    inline static const nlohmann::json plot_schema = {{"type", "object"}};
 
     static void validateVariables(const nlohmann::json &cfg) {
         if (!cfg.is_object())
@@ -106,6 +90,6 @@ struct PluginConfigValidator {
     }
 };
 
-}
+} // namespace analysis
 
 #endif

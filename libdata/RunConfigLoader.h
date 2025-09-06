@@ -14,8 +14,7 @@ namespace analysis {
 
 class RunConfigLoader {
   public:
-    static inline void loadRunConfigurations(const nlohmann::json &data,
-                                             RunConfigRegistry &registry) {
+    static inline void loadRunConfigurations(const nlohmann::json &data, RunConfigRegistry &registry) {
         for (auto const &[beam, run_configs] : data.at("run_configurations").items()) {
             for (auto const &[run_period, run_details] : run_configs.items()) {
                 RunConfig config(run_details, beam, run_period);
@@ -24,12 +23,10 @@ class RunConfigLoader {
             }
         }
     }
-    static inline void loadRunConfigurations(const std::string &config_path,
-                                             RunConfigRegistry &registry) {
+    static inline void loadRunConfigurations(const std::string &config_path, RunConfigRegistry &registry) {
         std::ifstream f(config_path);
         if (!f.is_open()) {
-            log::fatal("RunConfigLoader::loadRunConfigurations",
-                       "Could not open config file:", config_path);
+            log::fatal("RunConfigLoader::loadRunConfigurations", "Could not open config file:", config_path);
         }
         try {
             nlohmann::json data = nlohmann::json::parse(f);
@@ -40,6 +37,6 @@ class RunConfigLoader {
     }
 };
 
-}
+} // namespace analysis
 
 #endif

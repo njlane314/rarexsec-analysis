@@ -2,9 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
-#include <nlohmann/json.hpp>
 
 #include "AnalysisLogger.h"
 
@@ -31,4 +31,4 @@ inline nlohmann::json loadJsonFile(const std::string &path) {
     return nlohmann::json();
 }
 
-}
+} // namespace analysis

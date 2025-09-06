@@ -19,28 +19,22 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
 
     BinnedHistogram() = default;
 
-    BinnedHistogram(const BinningDefinition &bn, const std::vector<double> &ct,
-                    const Eigen::MatrixXd &sh, TString nm = "hist",
-                    TString ti = "", Color_t cl = kBlack, int ht = 0,
-                    TString tx = "")
+    BinnedHistogram(const BinningDefinition &bn, const std::vector<double> &ct, const Eigen::MatrixXd &sh,
+                    TString nm = "hist", TString ti = "", Color_t cl = kBlack, int ht = 0, TString tx = "")
         : TNamed(nm, ti), hist(bn, ct, sh) {
         TH1DRenderer::style(cl, ht, tx);
     }
 
-    BinnedHistogram(const HistogramUncertainty &u, TString nm = "hist",
-                    TString ti = "", Color_t cl = kBlack, int ht = 0,
-                    TString tx = "")
+    BinnedHistogram(const HistogramUncertainty &u, TString nm = "hist", TString ti = "", Color_t cl = kBlack,
+                    int ht = 0, TString tx = "")
         : TNamed(nm, ti), hist(u) {
         TH1DRenderer::style(cl, ht, tx);
     }
 
-    BinnedHistogram(const BinnedHistogram &other)
-        : TNamed(other), TH1DRenderer(other), hist(other.hist) {}
+    BinnedHistogram(const BinnedHistogram &other) : TNamed(other), TH1DRenderer(other), hist(other.hist) {}
 
-    static BinnedHistogram createFromTH1D(const BinningDefinition &bn,
-                                          const TH1D &hist, TString nm = "hist",
-                                          TString ti = "", Color_t cl = kBlack,
-                                          int ht = 0, TString tx = "") {
+    static BinnedHistogram createFromTH1D(const BinningDefinition &bn, const TH1D &hist, TString nm = "hist",
+                                          TString ti = "", Color_t cl = kBlack, int ht = 0, TString tx = "") {
         std::vector<double> counts;
         int n = hist.GetNbinsX();
         Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(n);
@@ -68,9 +62,7 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
     double getSumError() const { return hist.sumErr(); }
     TMatrixDSym getCorrelationMatrix() const { return hist.corrMat(); }
 
-    void addCovariance(const TMatrixDSym &cov_to_add) {
-        hist.addCovariance(cov_to_add);
-    }
+    void addCovariance(const TMatrixDSym &cov_to_add) { hist.addCovariance(cov_to_add); }
 
     BinnedHistogram operator+(double s) const {
         auto tmp = *this;
@@ -83,9 +75,7 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
         return tmp;
     }
 
-    friend BinnedHistogram operator*(double s, const BinnedHistogram &h) {
-        return h * s;
-    }
+    friend BinnedHistogram operator*(double s, const BinnedHistogram &h) { return h * s; }
 
     BinnedHistogram operator+(const BinnedHistogram &o) const {
         auto tmp = *this;
@@ -113,6 +103,6 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
 
 using BinnedHistogramD = BinnedHistogram;
 
-}
+} // namespace analysis
 
 #endif

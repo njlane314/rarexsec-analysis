@@ -3,18 +3,18 @@
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <limits>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <initializer_list>
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
 
 #include "AnalysisLogger.h"
-#include "BinningDefinition.h"
 #include "BayesianBlocks.h"
+#include "BinningDefinition.h"
 
 namespace analysis {
 
@@ -39,9 +39,8 @@ class DynamicBinning {
         };
 
         auto contains = [&](std::initializer_list<std::string> names) {
-            return std::any_of(names.begin(), names.end(), [&](const std::string &s) {
-                return typeName.find(s) != std::string::npos;
-            });
+            return std::any_of(names.begin(), names.end(),
+                               [&](const std::string &s) { return typeName.find(s) != std::string::npos; });
         };
 
         if (match({"double", "Float64_t", "Double_t"})) {
@@ -254,7 +253,8 @@ class DynamicBinning {
         switch (strategy) {
         case DynamicBinningStrategy::BayesianBlocks: {
             std::map<double, double> hist;
-            for (const auto &p : in_range) hist[p.first] += p.second;
+            for (const auto &p : in_range)
+                hist[p.first] += p.second;
             std::vector<double> xs;
             std::vector<double> ws;
             xs.reserve(hist.size());

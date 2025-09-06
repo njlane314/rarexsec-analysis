@@ -20,9 +20,7 @@
 namespace analysis {
 
 struct SystematicFutures {
-    std::unordered_map<SystematicKey,
-                       std::map<SampleKey, ROOT::RDF::RResultPtr<TH1D>>>
-        variations;
+    std::unordered_map<SystematicKey, std::map<SampleKey, ROOT::RDF::RResultPtr<TH1D>>> variations;
 };
 
 struct UniverseDef {
@@ -43,20 +41,15 @@ class SystematicStrategy {
 
     virtual const std::string &getName() const = 0;
 
-    virtual void bookVariations(const SampleKey &sample_key,
-                                ROOT::RDF::RNode &rnode,
-                                const BinningDefinition &binning,
-                                const ROOT::RDF::TH1DModel &model,
-                                SystematicFutures &futures) = 0;
+    virtual void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode, const BinningDefinition &binning,
+                                const ROOT::RDF::TH1DModel &model, SystematicFutures &futures) = 0;
 
-    virtual TMatrixDSym computeCovariance(VariableResult &result,
-                                          SystematicFutures &futures) = 0;
+    virtual TMatrixDSym computeCovariance(VariableResult &result, SystematicFutures &futures) = 0;
 
-    virtual std::map<SystematicKey, BinnedHistogram>
-    getVariedHistograms(const BinningDefinition &bin,
-                        SystematicFutures &futures) = 0;
+    virtual std::map<SystematicKey, BinnedHistogram> getVariedHistograms(const BinningDefinition &bin,
+                                                                         SystematicFutures &futures) = 0;
 };
 
-}
+} // namespace analysis
 
 #endif
