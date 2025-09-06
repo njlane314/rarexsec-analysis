@@ -12,7 +12,7 @@
 #include "TCanvas.h"
 #include "TColor.h"
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "IHistogramPlot.h"
 
 namespace analysis {

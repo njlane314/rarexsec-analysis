@@ -5,6 +5,8 @@
 
 #include "AnalysisDefinition.h"
 #include "AnalysisResult.h"
+#include "RegionAnalysis.h"
+#include "RunConfig.h"
 #include "SelectionRegistry.h"
 
 namespace analysis {
