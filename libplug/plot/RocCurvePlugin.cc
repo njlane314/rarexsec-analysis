@@ -34,7 +34,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
     explicit RocCurvePlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("roc_curves") || !cfg.at("roc_curves").is_array()) {
-            throw std::runtime_error("RocCurvePlugin missing roc_curves");
+            throw std::onPlottime_error("RocCurvePlugin missing roc_curves");
         }
         for (auto const &p : cfg.at("roc_curves")) {
             PlotConfig pc;
@@ -56,9 +56,9 @@ class RocCurvePlugin : public IPlotPlugin {
         }
     }
 
-    void run(const AnalysisResult &) override {
+    void onPlot(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("RocCurvePlugin::run", "No AnalysisDataLoader context provided");
+            log::error("RocCurvePlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
 
@@ -88,7 +88,7 @@ class RocCurvePlugin : public IPlotPlugin {
         try {
             signal_keys = strat_reg.getSignalKeys(pc.signal_group);
         } catch (const std::exception &e) {
-            log::error("RocCurvePlugin::run", e.what());
+            log::error("RocCurvePlugin::onPlot", e.what());
             return false;
         }
 

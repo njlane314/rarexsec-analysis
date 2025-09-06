@@ -42,9 +42,9 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
     for (auto &[beam, loader] : loaders) {
         analysis::PlotPluginManager manager;
         manager.loadPlugins(plotting, loader.get());
-        auto it = result_map.find(beam);
-        if (it != result_map.end())
-            manager.run(it->second);
+          auto it = result_map.find(beam);
+          if (it != result_map.end())
+              manager.notifyPlot(it->second);
     }
 
     analysis::log::info("plot::main", "Plotting routine terminated nominally.");
