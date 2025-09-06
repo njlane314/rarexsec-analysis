@@ -19,7 +19,7 @@
 
 namespace analysis {
 
-static std::atomic<int> other_events_logged_count(0);
+static std::atomic<int> other_log(0);
 
 struct StratumProperties {
     int internal_key;
@@ -187,8 +187,8 @@ class StratifierRegistry {
                                         return false;
                                     }
                                 }
-                                if (other_events_logged_count < 5) {
-                                    other_events_logged_count++;
+                                if (other_log < 5) {
+                                    other_log++;
                                     std::cout << "[DEBUG: Stratifier] 'Other' event "
                                                  "contains PDG codes: ";
                                     for (int code : pdg_codes) {
@@ -231,8 +231,8 @@ class StratifierRegistry {
                                         return false;
                                     }
                                 }
-                                if (other_events_logged_count < 5) {
-                                    other_events_logged_count++;
+                                if (other_log < 5) {
+                                    other_log++;
                                     std::cout << "[DEBUG: Stratifier] 'Other' "
                                                  "blip contains PDG codes: ";
                                     for (int code : pdg_codes) {
@@ -270,8 +270,8 @@ class StratifierRegistry {
                                         return false;
                                     }
                                 }
-                                if (other_events_logged_count < 5) {
-                                    other_events_logged_count++;
+                                if (other_log < 5) {
+                                    other_log++;
                                     std::cout << "[DEBUG: Stratifier] 'Other' blip "
                                                  "contains process codes: ";
                                     for (int code : proc_codes) {
