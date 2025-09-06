@@ -37,12 +37,8 @@ endfunction()
 
 # Analysis plugins
 add_plugin(EventDisplayPlugin analysis/EventDisplayPlugin.cc "")
-add_plugin(OccupancyMatrixPlugin analysis/OccupancyMatrixPlugin.cc "")
 add_plugin(RegionsPlugin analysis/RegionsPlugin.cc "")
-add_plugin(RocCurvePlugin analysis/RocCurvePlugin.cc "")
 add_plugin(SnapshotPlugin analysis/SnapshotPlugin.cc "")
-add_plugin(SystematicBreakdownPlugin analysis/SystematicBreakdownPlugin.cc "")
-add_plugin(UnstackedHistogramPlugin analysis/UnstackedHistogramPlugin.cc "")
 add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
 
 # Plot plugins
@@ -51,3 +47,7 @@ add_plugin(FlashValidationPlugin plot/FlashValidationPlugin.cc "")
 add_plugin(RunPeriodNormalizationPlugin plot/RunPeriodNormalizationPlugin.cc "")
 add_plugin(SlipStackingIntensityPlugin plot/SlipStackingIntensityPlugin.cc "")
 add_plugin(StackedHistogramPlugin plot/StackedHistogramPlugin.cc "")
+add_plugin(OccupancyMatrixPlugin plot/OccupancyMatrixPlugin.cc "")
+add_plugin(RocCurvePlugin plot/RocCurvePlugin.cc "")
+add_plugin(SystematicBreakdownPlugin plot/SystematicBreakdownPlugin.cc "")
+add_plugin(UnstackedHistogramPlugin plot/UnstackedHistogramPlugin.cc "")

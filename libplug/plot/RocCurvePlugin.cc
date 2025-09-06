@@ -7,16 +7,15 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "HistogramCut.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "RocCurvePlot.h"
-#include "SelectionRegistry.h"
 #include "StratifierRegistry.h"
 
 #include "TH1D.h"
 
 namespace analysis {
 
-class RocCurvePlugin : public IAnalysisPlugin {
+class RocCurvePlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string region;
@@ -40,7 +39,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
         for (auto const &p : cfg.at("roc_curves")) {
             PlotConfig pc;
             pc.region = p.at("region").get<std::string>();
-            pc.selection_rule = p.at("selection_rule").get<std::string>();
+            pc.selection_rule = p.value("selection_rule", std::string());
             pc.channel_column = p.at("channel_column").get<std::string>();
             pc.signal_group = p.at("signal_group").get<std::string>();
             pc.variable = p.at("variable").get<std::string>();
@@ -57,24 +56,9 @@ class RocCurvePlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
-        for (auto &pc : plots_) {
-            try {
-                auto rule = sel_reg.getRule(pc.selection_rule);
-                pc.clauses = rule.clauses;
-                def.region(RegionKey{pc.region});
-            } catch (const std::exception &e) {
-                log::error("RocCurvePlugin::onInitialisation", e.what());
-            }
-        }
-    }
-
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &) override {
+    void run(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("RocCurvePlugin::onFinalisation", "No AnalysisDataLoader context provided");
+            log::error("RocCurvePlugin::run", "No AnalysisDataLoader context provided");
             return;
         }
 
@@ -104,7 +88,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
         try {
             signal_keys = strat_reg.getSignalKeys(pc.signal_group);
         } catch (const std::exception &e) {
-            log::error("RocCurvePlugin::onFinalisation", e.what());
+            log::error("RocCurvePlugin::run", e.what());
             return false;
         }
 
@@ -199,7 +183,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
 }
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::RocCurvePlugin(cfg);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::RocCurvePlugin::setLoader(loader); }

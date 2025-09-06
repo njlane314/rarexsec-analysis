@@ -9,12 +9,12 @@
 #include <TSystem.h>
 
 #include "AnalysisLogger.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "UnstackedHistogramPlot.h"
 
 namespace analysis {
 
-class UnstackedHistogramPlugin : public IAnalysisPlugin {
+class UnstackedHistogramPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string variable;
@@ -54,32 +54,13 @@ class UnstackedHistogramPlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
-        for (auto const &pc : plots_) {
-            if (!pc.selection_cuts)
-                continue;
-            RegionKey rkey{pc.region};
-            if (region_cuts_.count(rkey))
-                continue;
-            try {
-                const auto &sel_str = def.region(rkey).selection().str();
-                this->parseSelectionCuts(rkey, sel_str);
-            } catch (const std::exception &e) {
-                log::error("UnstackedHistogramPlugin::onInitialisation", "Could not parse selection for region",
-                           rkey.str(), e.what());
-            }
-        }
-    }
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &result) override {
+    void run(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             VariableKey vkey{pc.variable};
             if (!result.hasResult(rkey, vkey)) {
-                log::error("UnstackedHistogramPlugin::onFinalisation", "Could not find variable", vkey.str(),
+                log::error("UnstackedHistogramPlugin::run", "Could not find variable", vkey.str(),
                            "in region", rkey.str());
                 continue;
             }
@@ -126,7 +107,7 @@ class UnstackedHistogramPlugin : public IAnalysisPlugin {
 }
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::UnstackedHistogramPlugin(cfg);
 }
 #endif
