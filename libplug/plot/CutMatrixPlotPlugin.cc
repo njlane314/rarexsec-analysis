@@ -26,7 +26,7 @@ class CutMatrixPlotPlugin : public IPlotPlugin {
 
     explicit CutMatrixPlotPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("cut_matrix_plots") || !cfg.at("cut_matrix_plots").is_array())
-            throw std::onPlottime_error("CutMatrixPlotPlugin missing cut_matrix_plots");
+            throw std::runtime_error("CutMatrixPlotPlugin missing cut_matrix_plots");
         for (auto const &p : cfg.at("cut_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();

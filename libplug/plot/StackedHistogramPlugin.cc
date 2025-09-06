@@ -32,7 +32,7 @@ class StackedHistogramPlugin : public IPlotPlugin {
 
     explicit StackedHistogramPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::onPlottime_error("StackedHistogramPlugin missing plots");
+            throw std::runtime_error("StackedHistogramPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.variable = p.at("variable").get<std::string>();
