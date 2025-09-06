@@ -297,6 +297,7 @@ class StratifierRegistry {
     }
 
     std::map<std::string, SchemeDefinition> scheme_definitions_;
+
     std::map<std::string, std::vector<int>> signal_channel_groups_;
 };
 

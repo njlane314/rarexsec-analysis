@@ -67,10 +67,13 @@ class RegionAnalysis {
   private:
     RegionKey region_key_{};
     std::string region_label_{};
+
     double protons_on_target_{0.0};
     bool is_blinded_{true};
+
     std::string beam_config_{};
     std::vector<std::string> run_numbers_{};
+
     std::map<VariableKey, VariableResult> final_variables_;
     std::vector<StageCount> cut_flow_;
 };

@@ -74,6 +74,7 @@ class SnapshotPlugin : public IAnalysisPlugin {
 
   private:
     std::vector<SnapshotConfig> configs_;
+
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 

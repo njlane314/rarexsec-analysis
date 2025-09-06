@@ -20,11 +20,14 @@ class SampleDefinition {
   public:
     SampleKey sample_key_;
     SampleOrigin sample_origin_;
+
     std::string rel_path_;
     std::string truth_filter_;
     std::vector<std::string> truth_exclusions_;
+
     double pot_{0.0};
     long triggers_{0};
+
     ROOT::RDF::RNode nominal_node_;
     std::map<SampleVariation, ROOT::RDF::RNode> variation_nodes_;
 

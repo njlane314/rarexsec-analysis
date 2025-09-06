@@ -17,8 +17,10 @@ using json = nlohmann::json;
 struct RunConfig {
     std::string beam_mode;
     std::string run_period;
+
     double nominal_pot{0.0};
     long nominal_triggers{0};
+
     json samples;
 
     RunConfig(const json &j, std::string bm, std::string pr)

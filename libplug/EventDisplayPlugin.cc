@@ -123,6 +123,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
 
   private:
     std::vector<DisplayConfig> configs_;
+
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
