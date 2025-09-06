@@ -1,17 +1,13 @@
-add_library(libplot
-  SystematicBreakdownPlot.cpp
-)
-
-set_target_properties(libplot PROPERTIES POSITION_INDEPENDENT_CODE ON)
+add_library(libplot INTERFACE)
 
 target_include_directories(libplot
-  PUBLIC
+  INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(libplot
-  PUBLIC
+  INTERFACE
     libdata
     libutils
     ${ROOT_LIBRARIES}

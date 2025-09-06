@@ -10,7 +10,7 @@
 
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
-#include "UnstackedHistogramPlot.h"
+#include "UnstackedHistogramPlot.cpp"
 
 namespace analysis {
 
