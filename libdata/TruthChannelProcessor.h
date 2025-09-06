@@ -13,23 +13,36 @@ namespace analysis {
 class TruthChannelProcessor : public IEventProcessor {
   public:
     explicit TruthChannelProcessor() = default;
-
     ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         if (st != SampleOrigin::kMonteCarlo) {
-            auto mode_df = df.Define("genie_int_mode", []() { return -1; });
-
-            auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
-
-            auto incl_alias_df = incl_df.Define("inclusive_strange_channels", "incl_channel");
-
-            auto excl_df =
-                incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
-
-            auto excl_alias_df = excl_df.Define("exclusive_strange_channels", "excl_channel");
-
-            return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
+            return processNonMc(df, st);
         }
 
+        auto counts_df = defineCounts(df);
+
+        auto incl_df = assignInclusiveChannels(counts_df);
+
+        auto excl_df = assignExclusiveChannels(incl_df);
+
+        return next_ ? next_->process(excl_df, st) : excl_df;
+    }
+
+  private:
+    ROOT::RDF::RNode processNonMc(ROOT::RDF::RNode df, SampleOrigin st) const {
+        auto mode_df = df.Define("genie_int_mode", []() { return -1; });
+
+        auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
+
+        auto incl_alias_df = incl_df.Define("inclusive_strange_channels", "incl_channel");
+
+        auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
+
+        auto excl_alias_df = excl_df.Define("exclusive_strange_channels", "excl_channel");
+
+        return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
+    }
+
+    ROOT::RDF::RNode defineCounts(ROOT::RDF::RNode df) const {
         auto fid_df = df.Define("in_fiducial", "(neutrino_vertex_x > 5 && neutrino_vertex_x < 251) &&"
                                                "(neutrino_vertex_y > -110 && neutrino_vertex_y < 110) &&"
                                                "(neutrino_vertex_z > 20 && neutrino_vertex_z < 986)");
@@ -80,7 +93,11 @@ class TruthChannelProcessor : public IEventProcessor {
             },
             {"interaction_mode"});
 
-        auto incl_chan_df = mode_df.Define(
+        return mode_df;
+    }
+
+    ROOT::RDF::RNode assignInclusiveChannels(ROOT::RDF::RNode df) const {
+        auto incl_chan_df = df.Define(
             "incl_channel",
             [](bool fv, int nu, int cc, int s, int np, int npi) {
                 if (!fv)
@@ -108,7 +125,11 @@ class TruthChannelProcessor : public IEventProcessor {
 
         auto incl_alias_df = incl_chan_df.Define("inclusive_strange_channels", "incl_channel");
 
-        auto excl_chan_df = incl_alias_df.Define(
+        return incl_alias_df;
+    }
+
+    ROOT::RDF::RNode assignExclusiveChannels(ROOT::RDF::RNode df) const {
+        auto excl_chan_df = df.Define(
             "excl_channel",
             [](bool fv, int nu, int cc, int s, int kp, int km, int k0, int lam, int sp, int s0, int sm) {
                 if (!fv)
@@ -151,7 +172,7 @@ class TruthChannelProcessor : public IEventProcessor {
 
         auto excl_alias_df = excl_chan_df.Define("exclusive_strange_channels", "excl_channel");
 
-        return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
+        return excl_alias_df;
     }
 };
 
