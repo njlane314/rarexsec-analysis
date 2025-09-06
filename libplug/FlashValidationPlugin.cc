@@ -108,7 +108,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         bool first = true;
 
         for (size_t i = 0; i < hd.h_time.size(); ++i) {
-            auto h = hd.h_time[i].Get();
+            auto h = hd.h_time[i].GetPtr();
             h->SetLineColor(hd.colors[i]);
             h->SetLineWidth(2);
             if (first) {
@@ -131,7 +131,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         bool first = true;
 
         for (size_t i = 0; i < hd.h_pe.size(); ++i) {
-            auto h = hd.h_pe[i].Get();
+            auto h = hd.h_pe[i].GetPtr();
             h->SetLineColor(hd.colors[i]);
             h->SetLineWidth(2);
             if (first) {
