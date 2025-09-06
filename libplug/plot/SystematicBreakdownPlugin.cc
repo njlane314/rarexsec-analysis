@@ -7,12 +7,12 @@
 #include <TSystem.h>
 
 #include "AnalysisLogger.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "SystematicBreakdownPlot.h"
 
 namespace analysis {
 
-class SystematicBreakdownPlugin : public IAnalysisPlugin {
+class SystematicBreakdownPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string variable;
@@ -34,17 +34,13 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &, const SelectionRegistry &) override {}
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &result) override {
+    void run(const AnalysisResult &result) override {
         gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             VariableKey vkey{pc.variable};
             if (!result.hasResult(rkey, vkey)) {
-                log::error("SystematicBreakdownPlugin::onFinalisation", "Could not find variable", vkey.str(),
+                log::error("SystematicBreakdownPlugin::run", "Could not find variable", vkey.str(),
                            "in region", rkey.str());
                 continue;
             }
@@ -64,7 +60,7 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
 }
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::SystematicBreakdownPlugin(cfg);
 }
 #endif

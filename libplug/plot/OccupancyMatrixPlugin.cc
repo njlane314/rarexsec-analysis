@@ -6,13 +6,13 @@
 
 #include "AnalysisLogger.h"
 #include "HistogramCut.h"
-#include "IAnalysisPlugin.h"
+#include "IPlotPlugin.h"
 #include "PlotCatalog.h"
 #include "Selection.h"
 
 namespace analysis {
 
-class OccupancyMatrixPlugin : public IAnalysisPlugin {
+class OccupancyMatrixPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string x_variable;
@@ -51,22 +51,9 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
-        for (auto &pc : plots_) {
-            try {
-                RegionKey rkey{pc.region};
-                pc.selection = def.region(rkey).selection();
-            } catch (const std::exception &) {
-                log::error("OccupancyMatrixPlugin::onInitialisation", "Unknown region:", pc.region);
-            }
-        }
-    }
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
-
-    void onFinalisation(const AnalysisResult &result) override {
+    void run(const AnalysisResult &result) override {
         if (!loader_) {
-            log::error("OccupancyMatrixPlugin::onFinalisation", "No AnalysisDataLoader context provided");
+            log::error("OccupancyMatrixPlugin::run", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &pc : plots_) {
@@ -74,7 +61,7 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
             VariableKey x_key{pc.x_variable};
             VariableKey y_key{pc.y_variable};
             if (!result.hasResult(rkey, x_key) || !result.hasResult(rkey, y_key)) {
-                log::error("OccupancyMatrixPlugin::onFinalisation", "Missing variables for region", rkey.str());
+                log::error("OccupancyMatrixPlugin::run", "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
@@ -94,7 +81,7 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
 }
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::OccupancyMatrixPlugin(cfg);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
