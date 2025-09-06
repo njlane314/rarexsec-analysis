@@ -9,7 +9,7 @@
               "initial_label": "empty",
               "clauses": [
                 "in_reco_fiducial",
-                "num_slices == 1"
+                "num_slices == 1",
                 "optical_filter_pe_beam > 20",
                 "muon_score > 0.5",
                 "muon_length > 10",
