@@ -49,6 +49,6 @@ struct TH1DRenderer {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

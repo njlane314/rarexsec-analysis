@@ -18,6 +18,6 @@ class IHistogramBooker {
                         const ROOT::RDF::TH1DModel &model) = 0;
 };
 
-} // namespace analysis
+}
 
 #endif

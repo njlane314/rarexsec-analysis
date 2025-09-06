@@ -130,6 +130,6 @@ class UniverseSystematicStrategy : public SystematicStrategy {
     bool store_universe_hists_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -11,6 +11,6 @@ class IPlotPlugin {
     virtual void run(const AnalysisResult &result) = 0;
 };
 
-} // namespace analysis
+}
 
 #endif

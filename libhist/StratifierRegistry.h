@@ -300,6 +300,6 @@ class StratifierRegistry {
     std::map<std::string, std::vector<int>> signal_channel_groups_;
 };
 
-} // namespace analysis
+}
 
 #endif

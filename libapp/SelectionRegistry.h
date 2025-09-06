@@ -74,6 +74,6 @@ class SelectionRegistry {
     std::unordered_map<std::string, SelectionRule> rules_;
 };
 
-} // namespace analysis
+}
 
 #endif

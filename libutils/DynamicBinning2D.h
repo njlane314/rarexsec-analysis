@@ -22,6 +22,6 @@ class DynamicBinning2D {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

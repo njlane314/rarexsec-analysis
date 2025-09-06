@@ -31,4 +31,4 @@ inline nlohmann::json loadJson(const std::string &path) {
     return nlohmann::json();
 }
 
-} // namespace analysis
+}

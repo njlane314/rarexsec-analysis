@@ -62,6 +62,6 @@ class WeightProcessor : public IEventProcessor {
     double total_run_pot_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -142,6 +142,6 @@ class AnalysisDataLoader {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

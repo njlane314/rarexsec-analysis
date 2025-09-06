@@ -32,6 +32,6 @@ class ReconstructionProcessor : public IEventProcessor {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

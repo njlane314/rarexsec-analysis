@@ -119,6 +119,6 @@ class AnalysisResult : public TObject {
     std::map<RegionKey, VariableResults> variable_results_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -25,6 +25,6 @@ using StratifierKey = AnalysisKey<StratifierKeyTag>;
 using StratumKey = AnalysisKey<StratumKeyTag>;
 using SelectionKey = AnalysisKey<SelectionKeyTag>;
 
-} // namespace analysis
+}
 
 #endif

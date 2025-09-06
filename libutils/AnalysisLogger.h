@@ -132,6 +132,6 @@ template <typename... Args> inline void fatal(const std::string &ctx, const Args
 }
 } // namespace log
 
-} // namespace analysis
+}
 
 #endif

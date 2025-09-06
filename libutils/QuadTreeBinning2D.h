@@ -163,6 +163,6 @@ class QuadTreeBinning2D {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

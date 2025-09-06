@@ -176,6 +176,6 @@ class TruthChannelProcessor : public IEventProcessor {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

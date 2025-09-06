@@ -149,7 +149,7 @@ class FlashValidationPlugin : public IPlotPlugin {
     }
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {

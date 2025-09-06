@@ -47,6 +47,6 @@ class BinningDefinition {
     StratifierKey strat_key_;
 };
 
-} // namespace analysis
+}
 
 #endif

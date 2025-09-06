@@ -34,6 +34,6 @@ class RunConfigRegistry {
     std::map<std::string, RunConfig> configs_;
 };
 
-} // namespace analysis
+}
 
 #endif
