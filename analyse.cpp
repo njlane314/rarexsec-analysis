@@ -13,7 +13,6 @@
 #include "JsonUtils.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
-#include "SelectionRegistry.h"
 #include "StratifierRegistry.h"
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
@@ -39,7 +38,6 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
         }
 
         analysis::VariableRegistry variable_registry;
-        analysis::SelectionRegistry selection_registry;
         analysis::StratifierRegistry stratifier_registry;
 
         std::vector<analysis::KnobDef> knob_defs;
@@ -59,7 +57,7 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
                                                  ntuple_directory, true);
         auto histogram_booker = std::make_unique<analysis::HistogramBooker>(stratifier_registry);
 
-        analysis::AnalysisRunner runner(data_loader, selection_registry, variable_registry, std::move(histogram_booker),
+        analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker),
                                         systematics_processor, analysis);
         auto beamline_result = runner.run();
         for (auto &kv : beamline_result.regions()) {

@@ -32,11 +32,13 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
-    AnalysisRunner(AnalysisDataLoader &ldr, const SelectionRegistry &sel_reg, const VariableRegistry &var_reg,
+    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg,
                    std::unique_ptr<IHistogramBooker> booker, SystematicsProcessor &sys_proc,
                    const nlohmann::json &plgn_cfg)
-        : analysis_definition_(sel_reg, var_reg), data_loader_(ldr), selection_registry_(sel_reg),
-          systematics_processor_(sys_proc), histogram_booker_(std::move(booker)) {
+        : data_loader_(ldr),
+          analysis_definition_(selection_registry_, var_reg),
+          systematics_processor_(sys_proc),
+          histogram_booker_(std::move(booker)) {
         plugin_manager.loadPlugins(plgn_cfg, &data_loader_);
     }
 
@@ -229,9 +231,9 @@ class AnalysisRunner {
 
   private:
     AnalysisPluginManager plugin_manager;
-    AnalysisDefinition analysis_definition_;
+    SelectionRegistry selection_registry_;
     AnalysisDataLoader &data_loader_;
-    const SelectionRegistry &selection_registry_;
+    AnalysisDefinition analysis_definition_;
     SystematicsProcessor &systematics_processor_;
     std::unique_ptr<IHistogramBooker> histogram_booker_;
 };
