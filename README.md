@@ -1,10 +1,5 @@
 # rarexsec_analysis
 
-Modular framework for precision rare cross-section measurements.
-
-## Diagrams
-- `docs/deployment_diagram.puml` illustrates the deployment architecture.
-
 ## Building
 ```bash
 source .container.sh
@@ -25,13 +20,6 @@ python scripts/generate_analysis_config.py
 ./build/plot output.root config/config.json
 ```
 `analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
-
-## Plotting workflow
-
-The plotting stages are outlined in [docs/plot_activity_diagram.puml](docs/plot_activity_diagram.puml).
-
-## Plug-in architecture
-See [docs/plugin_class_diagram.puml](docs/plugin_class_diagram.puml) for the relationships between plug-in interfaces, managers, and example implementations.
 
 ## Example plug-ins
 The configuration files contain analysis and plotting directives.
@@ -86,7 +74,3 @@ The `strategy` field accepts `equal_weight`, `freedman_diaconis`, `scott`, `stur
 ```bash
 ctest --output-on-failure
 ```
-
-## Analysis activity diagram
-
-See [analysis activity diagram](docs/analysis_activity_diagram.puml).

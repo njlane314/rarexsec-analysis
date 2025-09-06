@@ -38,7 +38,6 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
     }
 
     auto result_map = result.resultsByBeam();
-
     for (auto &[beam, loader] : loaders) {
         analysis::PlotPluginManager manager;
         manager.loadPlugins(plotting, loader.get());
