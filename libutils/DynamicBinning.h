@@ -7,6 +7,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ROOT/RDataFrame.hxx"
@@ -31,9 +32,24 @@ class DynamicBinning {
             return original_bdef;
         }
 
-        const std::string &branch = original_bdef.getVariable();
-        std::string typeName = nodes.front().GetColumnType(branch);
+        std::string typeName = determineColumnType(nodes, original_bdef);
 
+        return dispatchCalculation(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
+                                   include_out_of_range_bins, strategy, typeName);
+    }
+
+  private:
+    static std::string determineColumnType(const std::vector<ROOT::RDF::RNode> &nodes,
+                                           const BinningDefinition &bdef) {
+        const std::string &branch = bdef.getVariable();
+        return nodes.front().GetColumnType(branch);
+    }
+
+    static BinningDefinition dispatchCalculation(std::vector<ROOT::RDF::RNode> nodes,
+                                                 const BinningDefinition &original_bdef,
+                                                 const std::string &weight_col, double min_neff_per_bin,
+                                                 bool include_out_of_range_bins, DynamicBinningStrategy strategy,
+                                                 const std::string &typeName) {
         auto match = [&](std::initializer_list<std::string> names) {
             return std::find(names.begin(), names.end(), typeName) != names.end();
         };
@@ -82,13 +98,13 @@ class DynamicBinning {
                              "vector<Long64_t>"})) {
             return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
                                                include_out_of_range_bins, strategy);
-        } else {
-            log::fatal("DynamicBinning::calculate", "Unsupported type for dynamic binning:", typeName);
-            return original_bdef;
         }
+
+        log::fatal("DynamicBinning::dispatchCalculation", "Unsupported type for dynamic binning:", typeName);
+
+        return original_bdef;
     }
 
-  private:
     template <typename T>
     static BinningDefinition calculate_scalar(std::vector<ROOT::RDF::RNode> nodes,
                                               const BinningDefinition &original_bdef, const std::string &weight_col,
