@@ -44,9 +44,9 @@ class RunPeriodNormalizationPlugin : public IPlotPlugin {
             return;
         }
         for (auto const &pc : plots_) {
-            auto stats = collectRunStats(pc);
+            auto stats = this->collectRunStats(pc);
 
-            createRunGraphs(pc, stats);
+            this->createRunGraphs(pc, stats);
         }
     }
 

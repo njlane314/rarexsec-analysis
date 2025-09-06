@@ -59,12 +59,12 @@ class UniverseSystematicStrategy : public SystematicStrategy {
                 continue;
             }
 
-            auto h_universe = buildUniverseHistogram(binning, n, uni_key, futures);
+            auto h_universe = this->buildUniverseHistogram(binning, n, uni_key, futures);
 
-            updateCovarianceMatrix(cov, nominal_hist, h_universe);
+            this->updateCovarianceMatrix(cov, nominal_hist, h_universe);
 
             ++processed_universes;
-            storeUniverseHistogram(stored_hists, std::move(h_universe));
+            this->storeUniverseHistogram(stored_hists, std::move(h_universe));
         }
 
         double n_universes = static_cast<double>(processed_universes);

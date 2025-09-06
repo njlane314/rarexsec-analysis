@@ -23,7 +23,9 @@ namespace analysis {
 class SystematicsProcessor {
   public:
     SystematicsProcessor(const VariableRegistry &registry, bool store_universe_hists = false)
-        : SystematicsProcessor(createKnobs(registry), createUniverses(registry), store_universe_hists) {}
+        : SystematicsProcessor(SystematicsProcessor::createKnobs(registry),
+                               SystematicsProcessor::createUniverses(registry),
+                               store_universe_hists) {}
 
     SystematicsProcessor(std::vector<KnobDef> knob_definitions, std::vector<UniverseDef> universe_definitions,
                          bool store_universe_hists = false)
@@ -58,12 +60,12 @@ class SystematicsProcessor {
             SystematicKey key{strategy->getName()};
             log::debug("SystematicsProcessor::processSystematics", "Computing covariance for", key.str());
             auto cov = strategy->computeCovariance(result, systematic_futures_);
-            sanitizeMatrix(cov);
+            this->sanitizeMatrix(cov);
             log::debug("SystematicsProcessor::processSystematics", key.str(), "matrix size", cov.GetNrows(), "x",
                        cov.GetNcols());
             result.covariance_matrices_.insert_or_assign(key, cov);
         }
-        combineCovariances(result);
+        this->combineCovariances(result);
         log::debug("SystematicsProcessor::processSystematics", "Covariance calculation complete");
     }
 
@@ -91,7 +93,7 @@ class SystematicsProcessor {
         for (const auto &[name, cov_matrix] : result.covariance_matrices_) {
             if (cov_matrix.GetNrows() == n_bins) {
                 TMatrixDSym cov = cov_matrix;
-                sanitizeMatrix(cov);
+                SystematicsProcessor::sanitizeMatrix(cov);
 
                 log::debug("SystematicsProcessor::combineCovariances", "Adding matrix", name.str());
 
@@ -103,7 +105,7 @@ class SystematicsProcessor {
             }
         }
 
-        sanitizeMatrix(result.total_covariance_);
+        SystematicsProcessor::sanitizeMatrix(result.total_covariance_);
 
         result.nominal_with_band_ = result.total_mc_hist_;
         result.nominal_with_band_.hist.shifts.resize(n_bins, 0);

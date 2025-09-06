@@ -18,7 +18,7 @@ class ScalarStratifier : public IHistogramStratifier {
     ROOT::RDF::RNode defineFilterColumn(ROOT::RDF::RNode dataframe, int key,
                                         const std::string &new_column_name) const override {
 
-        std::string filter_expression = getSchemeName() + " == " + std::to_string(key);
+        std::string filter_expression = this->getSchemeName() + " == " + std::to_string(key);
         return dataframe.Define(new_column_name, filter_expression);
     }
 

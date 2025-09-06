@@ -54,11 +54,11 @@ class FlashValidationPlugin : public IPlotPlugin {
         }
 
         for (auto const &pc : plots_) {
-            auto hd = buildHistograms(pc);
+            auto hd = this->buildHistograms(pc);
 
-            drawTimeDistributions(pc, hd);
+            this->drawTimeDistributions(pc, hd);
 
-            drawPeDistributions(pc, hd);
+            this->drawPeDistributions(pc, hd);
         }
     }
 

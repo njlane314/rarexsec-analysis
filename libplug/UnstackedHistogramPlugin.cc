@@ -63,7 +63,7 @@ class UnstackedHistogramPlugin : public IAnalysisPlugin {
                 continue;
             try {
                 const auto &sel_str = def.region(rkey).selection().str();
-                parseSelectionCuts(rkey, sel_str);
+                this->parseSelectionCuts(rkey, sel_str);
             } catch (const std::exception &e) {
                 log::error("UnstackedHistogramPlugin::onInitialisation", "Could not parse selection for region",
                            rkey.str(), e.what());

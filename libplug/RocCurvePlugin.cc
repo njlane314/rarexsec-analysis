@@ -83,14 +83,14 @@ class RocCurvePlugin : public IAnalysisPlugin {
             std::string signal_expr;
             std::string selection_expr;
 
-            if (!buildExpressions(pc, strat_reg, signal_expr, selection_expr))
+            if (!this->buildExpressions(pc, strat_reg, signal_expr, selection_expr))
                 continue;
 
-            auto [total_hist, sig_hist] = accumulateHistograms(pc, signal_expr, selection_expr);
+            auto [total_hist, sig_hist] = this->accumulateHistograms(pc, signal_expr, selection_expr);
 
-            auto [efficiencies, rejections] = computeRocPoints(pc, total_hist, sig_hist);
+            auto [efficiencies, rejections] = this->computeRocPoints(pc, total_hist, sig_hist);
 
-            renderPlot(pc, efficiencies, rejections);
+            this->renderPlot(pc, efficiencies, rejections);
         }
     }
 
