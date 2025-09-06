@@ -16,8 +16,8 @@
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
-static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry,
-                                                const std::string &ntuple_directory, const std::string &beam,
+static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &runcfg,
+                                                const std::string &ntupledir, const std::string &beam,
                                                 const nlohmann::json &runs, const nlohmann::json &analysis) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
@@ -25,16 +25,12 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
         periods.emplace_back(period);
     }
 
-    analysis::VariableRegistry variable_registry;
-
-    analysis::SystematicsProcessor systematics_processor(variable_registry);
-
-    analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_directory,
-                                             true);
+    analysis::VariableRegistry varreg;
+    analysis::SystematicsProcessor sysproc(varreg);
+    analysis::AnalysisDataLoader dataldr(runcfg, varreg, beam, periods, ntupledir, true);
     auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
 
-    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor,
-                                    analysis);
+    analysis::AnalysisRunner runner(dataldr, varreg, std::move(histogram_booker), sysproc, analysis);
     return runner.run();
 }
 
@@ -46,20 +42,17 @@ static void aggregateResults(analysis::AnalysisResult &result, const analysis::A
 
 static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const nlohmann::json &analysis) {
     ROOT::EnableImplicitMT();
-    analysis::log::info("analyse::runAnalysis", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(),
-                        "threads.");
+    analysis::log::info("analyse::runAnalysis", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(), "threads.");
 
-    std::string ntuple_directory = samples.at("ntuple_directory").get<std::string>();
-    analysis::log::info("analyse::runAnalysis", "Configuration loaded for", samples.at("beamlines").size(),
-                        "beamlines.");
+    std::string ntupledir = samples.at("ntupledir").get<std::string>();
+    analysis::log::info("analyse::runAnalysis", "Configuration loaded for", samples.at("beamlines").size(), "beamlines.");
 
-    analysis::RunConfigRegistry run_config_registry;
-    analysis::RunConfigLoader::loadRunConfigurations(samples, run_config_registry);
+    analysis::RunConfigRegistry runcfg;
+    analysis::RunConfigLoader::loadRunConfigurations(samples, runcfg);
 
     analysis::AnalysisResult result;
-
     for (auto const &[beam, runs] : samples.at("beamlines").items()) {
-        auto beamline_result = processBeamline(run_config_registry, ntuple_directory, beam, runs, analysis);
+        auto beamline_result = processBeamline(runcfg, ntupledir, beam, runs, analysis);
         aggregateResults(result, beamline_result);
     }
 
@@ -70,14 +63,13 @@ int main(int argc, char *argv[]) {
     analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
     if (argc != 4) {
-        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0],
-                             "<samples.json> <plugins.json> <output.root>");
+        analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<samples.json> <plugins.json> <output.root>");
         return 1;
     }
 
     try {
-        nlohmann::json cfg = analysis::loadJsonFile(argv[1]);
-        nlohmann::json plg = analysis::loadJsonFile(argv[2]);
+        nlohmann::json cfg = analysis::loadJson(argv[1]);
+        nlohmann::json plg = analysis::loadJson(argv[2]);
         const char *out_path = argv[3];
 
         auto result = runAnalysis(cfg.at("samples"), plg.at("analysis"));
