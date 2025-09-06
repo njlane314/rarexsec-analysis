@@ -16,6 +16,30 @@
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
+static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry, const std::string &ntuple_directory, const std::string &beam, const nlohmann::json &runs, const nlohmann::json &analysis) {
+    std::vector<std::string> periods;
+    periods.reserve(runs.size());
+    for (auto const &[period, _] : runs.items()) {
+        periods.emplace_back(period);
+    }
+
+    analysis::VariableRegistry variable_registry;
+
+    analysis::SystematicsProcessor systematics_processor(variable_registry);
+
+    analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_directory, true);
+    auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
+
+    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor, analysis);
+    return runner.run();
+}
+
+static void aggregateResults(analysis::AnalysisResult &result, const analysis::AnalysisResult &beamline_result) {
+    for (auto &kv : beamline_result.regions()) {
+        result.regions().insert(kv);
+    }
+}
+
 static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const nlohmann::json &analysis) {
     ROOT::EnableImplicitMT();
     analysis::log::info("analyse::runAnalysis", "Implicit multithreading engaged across", ROOT::GetThreadPoolSize(),
@@ -29,27 +53,10 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
     analysis::RunConfigLoader::loadRunConfigurations(samples, run_config_registry);
 
     analysis::AnalysisResult result;
+
     for (auto const &[beam, runs] : samples.at("beamlines").items()) {
-        std::vector<std::string> periods;
-        periods.reserve(runs.size());
-        for (auto const &[period, _] : runs.items()) {
-            periods.emplace_back(period);
-        }
-
-        analysis::VariableRegistry variable_registry;
-
-        analysis::SystematicsProcessor systematics_processor(variable_registry);
-
-        analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods,
-                                                 ntuple_directory, true);
-        auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
-
-        analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker),
-                                        systematics_processor, analysis);
-        auto beamline_result = runner.run();
-        for (auto &kv : beamline_result.regions()) {
-            result.regions().insert(kv);
-        }
+        auto beamline_result = processBeamline(run_config_registry, ntuple_directory, beam, runs, analysis);
+        aggregateResults(result, beamline_result);
     }
 
     return result;
