@@ -19,19 +19,38 @@ class QuadTreeBinning2D {
     calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &xb, const BinningDefinition &yb,
               const std::string &weight_col = "nominal_event_weight", double min_neff_per_bin = 400.0,
               bool include_out_of_range_bins = false) {
-        struct Point {
-            double x;
-            double y;
-            double w;
-        };
-
-        std::vector<Point> pts;
-        pts.reserve(262144);
-
         double xmin = xb.getEdges().front();
         double xmax = xb.getEdges().back();
         double ymin = yb.getEdges().front();
         double ymax = yb.getEdges().back();
+
+        auto pts = collectPoints(nodes, xmin, xmax, ymin, ymax, xb, yb, weight_col);
+
+        std::set<double> xset;
+        std::set<double> yset;
+
+        subdividePoints(pts, xmin, xmax, ymin, ymax, min_neff_per_bin, xset, yset);
+
+        auto edges = buildEdgeVectors(xset, yset, xmin, xmax, ymin, ymax, include_out_of_range_bins);
+        auto xedges = std::move(edges.first);
+        auto yedges = std::move(edges.second);
+
+        return {BinningDefinition(xedges, xb.getVariable(), xb.getTexLabel(), {}, xb.getStratifierKey().str()),
+                BinningDefinition(yedges, yb.getVariable(), yb.getTexLabel(), {}, yb.getStratifierKey().str())};
+    }
+
+  private:
+    struct Point {
+        double x;
+        double y;
+        double w;
+    };
+
+    static std::vector<Point>
+    collectPoints(std::vector<ROOT::RDF::RNode> &nodes, double xmin, double xmax, double ymin, double ymax,
+                  const BinningDefinition &xb, const BinningDefinition &yb, const std::string &weight_col) {
+        std::vector<Point> pts;
+        pts.reserve(262144);
 
         for (auto &n : nodes) {
             bool has_w = n.HasColumn(weight_col);
@@ -57,60 +76,63 @@ class QuadTreeBinning2D {
             }
         }
 
-        std::set<double> xset;
-        std::set<double> yset;
+        return pts;
+    }
 
-        auto subdivide = [&](auto &&self, std::vector<Point> &v, double x0, double x1, double y0, double y1) -> void {
-            double sw = 0.0;
-            double sw2 = 0.0;
-            for (auto &p : v) {
-                sw += p.w;
-                sw2 += p.w * p.w;
+    static void
+    subdividePoints(std::vector<Point> &v, double x0, double x1, double y0, double y1, double min_neff_per_bin,
+                    std::set<double> &xset, std::set<double> &yset) {
+        double sw = 0.0;
+        double sw2 = 0.0;
+        for (auto &p : v) {
+            sw += p.w;
+            sw2 += p.w * p.w;
+        }
+        double neff = (sw * sw) / std::max(sw2, std::numeric_limits<double>::min());
+        if (neff <= min_neff_per_bin || v.size() <= 1)
+            return;
+
+        double xm = 0.5 * (x0 + x1);
+        double ym = 0.5 * (y0 + y1);
+
+        xset.insert(xm);
+        yset.insert(ym);
+
+        std::vector<Point> q1;
+        std::vector<Point> q2;
+        std::vector<Point> q3;
+        std::vector<Point> q4;
+
+        q1.reserve(v.size());
+        q2.reserve(v.size());
+        q3.reserve(v.size());
+        q4.reserve(v.size());
+
+        for (auto &p : v) {
+            bool left = p.x < xm;
+            bool bottom = p.y < ym;
+            if (left) {
+                if (bottom)
+                    q1.push_back(p);
+                else
+                    q2.push_back(p);
+            } else {
+                if (bottom)
+                    q3.push_back(p);
+                else
+                    q4.push_back(p);
             }
-            double neff = (sw * sw) / std::max(sw2, std::numeric_limits<double>::min());
-            if (neff <= min_neff_per_bin || v.size() <= 1)
-                return;
+        }
 
-            double xm = 0.5 * (x0 + x1);
-            double ym = 0.5 * (y0 + y1);
+        subdividePoints(q1, x0, xm, y0, ym, min_neff_per_bin, xset, yset);
+        subdividePoints(q2, x0, xm, ym, y1, min_neff_per_bin, xset, yset);
+        subdividePoints(q3, xm, x1, y0, ym, min_neff_per_bin, xset, yset);
+        subdividePoints(q4, xm, x1, ym, y1, min_neff_per_bin, xset, yset);
+    }
 
-            xset.insert(xm);
-            yset.insert(ym);
-
-            std::vector<Point> q1;
-            std::vector<Point> q2;
-            std::vector<Point> q3;
-            std::vector<Point> q4;
-
-            q1.reserve(v.size());
-            q2.reserve(v.size());
-            q3.reserve(v.size());
-            q4.reserve(v.size());
-
-            for (auto &p : v) {
-                bool left = p.x < xm;
-                bool bottom = p.y < ym;
-                if (left) {
-                    if (bottom)
-                        q1.push_back(p);
-                    else
-                        q2.push_back(p);
-                } else {
-                    if (bottom)
-                        q3.push_back(p);
-                    else
-                        q4.push_back(p);
-                }
-            }
-
-            self(self, q1, x0, xm, y0, ym);
-            self(self, q2, x0, xm, ym, y1);
-            self(self, q3, xm, x1, y0, ym);
-            self(self, q4, xm, x1, ym, y1);
-        };
-
-        subdivide(subdivide, pts, xmin, xmax, ymin, ymax);
-
+    static std::pair<std::vector<double>, std::vector<double>>
+    buildEdgeVectors(const std::set<double> &xset, const std::set<double> &yset, double xmin, double xmax, double ymin,
+                     double ymax, bool include_out_of_range_bins) {
         std::vector<double> xedges;
         std::vector<double> yedges;
 
@@ -137,8 +159,7 @@ class QuadTreeBinning2D {
             yedges.push_back(yedges.back() + 0.5 * last_w);
         }
 
-        return {BinningDefinition(xedges, xb.getVariable(), xb.getTexLabel(), {}, xb.getStratifierKey().str()),
-                BinningDefinition(yedges, yb.getVariable(), yb.getTexLabel(), {}, yb.getStratifierKey().str())};
+        return {xedges, yedges};
     }
 };
 
