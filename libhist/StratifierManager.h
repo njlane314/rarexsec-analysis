@@ -9,11 +9,11 @@
 #include "AnalysisLogger.h"
 #include "IHistogramStratifier.h"
 #include "KeyTypes.h"
-#include "ScalarStratifier.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
 
+std::unique_ptr<IHistogramStratifier> makeScalarStratifier(const StratifierKey &key, StratifierRegistry &registry);
 std::unique_ptr<IHistogramStratifier> makeVectorStratifier(const StratifierKey &key, StratifierRegistry &registry);
 
 class StratifierManager {
@@ -33,7 +33,7 @@ class StratifierManager {
             StratifierType type = registry_.findSchemeType(key);
 
             if (type == StratifierType::kScalar) {
-                stratifier = std::make_unique<ScalarStratifier>(key, registry_);
+                stratifier = makeScalarStratifier(key, registry_);
             } else if (type == StratifierType::kVector) {
                 stratifier = makeVectorStratifier(key, registry_);
             } else {
