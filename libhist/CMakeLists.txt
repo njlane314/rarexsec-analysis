@@ -1,4 +1,4 @@
-add_library(libhist VectorStratifier.cpp)
+add_library(libhist ScalarStratifier.cpp VectorStratifier.cpp)
 
 target_include_directories(libhist
   PUBLIC
