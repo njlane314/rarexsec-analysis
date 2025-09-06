@@ -1,3 +1,6 @@
+#ifndef SYSTEMATICBREAKDOWNPLOT_H
+#define SYSTEMATICBREAKDOWNPLOT_H
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -101,3 +104,5 @@ class SystematicBreakdownPlot : public IHistogramPlot {
 };
 
 }
+
+#endif

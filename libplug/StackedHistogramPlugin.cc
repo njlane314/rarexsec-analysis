@@ -8,7 +8,7 @@
 
 #include "AnalysisLogger.h"
 #include "IPlotPlugin.h"
-#include "StackedHistogramPlot.cpp"
+#include "StackedHistogramPlot.h"
 
 namespace analysis {
 

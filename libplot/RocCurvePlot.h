@@ -1,3 +1,6 @@
+#ifndef ROCCURVEPLOT_H
+#define ROCCURVEPLOT_H
+
 #include <string>
 #include <vector>
 
@@ -45,3 +48,5 @@ class RocCurvePlot : public IHistogramPlot {
 };
 
 }
+
+#endif

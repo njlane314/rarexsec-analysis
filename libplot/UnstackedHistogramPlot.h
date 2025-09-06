@@ -1,3 +1,6 @@
+#ifndef UNSTACKEDHISTOGRAMPLOT_H
+#define UNSTACKEDHISTOGRAMPLOT_H
+
 #include <algorithm>
 #include <iomanip>
 #include <locale>
@@ -383,7 +386,9 @@ class UnstackedHistogramPlot : public IHistogramPlot {
     std::vector<TH1D *> hists_;
     TLegend *legend_ = nullptr;
     std::vector<TObject *> cut_visuals_;
-};
+  };
 
-}
+ }
+
+#endif
 

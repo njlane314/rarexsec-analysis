@@ -8,7 +8,7 @@
 
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
-#include "SystematicBreakdownPlot.cpp"
+#include "SystematicBreakdownPlot.h"
 
 namespace analysis {
 
