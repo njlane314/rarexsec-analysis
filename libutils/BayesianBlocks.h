@@ -1,11 +1,12 @@
 #ifndef _BAYESIAN_BLOCKS_HH
 #define _BAYESIAN_BLOCKS_HH
 
-#include <vector>
+#include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <map>
-#include <algorithm>
 #include <numeric>
 #include <stdexcept>
 #include <cassert>
@@ -21,12 +22,12 @@ using pair = std::pair<double, double>;
 using clock = std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using us = std::chrono::microseconds;
-}
+} // namespace bb
 
 bb::array blocks(bb::data_array data, bb::weights_array weights, double p = 0.01, std::function<void(size_t,size_t)> counter = {}, std::function<void(long long,long long,long long)> benchmark = {});
 bb::array blocks(bb::data_array data, double p = 0.01, std::function<void(size_t,size_t)> counter = {}, std::function<void(long long,long long,long long)> benchmark = {});
 
-}
+} // namespace BayesianBlocks
 
 namespace BayesianBlocks {
 
@@ -42,7 +43,8 @@ static bb::array preprocess(bb::data_array &data, bb::weights_array &weights) {
 
     std::vector<bb::pair> hist;
     hist.reserve(N);
-    for (size_t i = 0; i < N; ++i) hist.emplace_back(data[i], weights[i]);
+    for (size_t i = 0; i < N; ++i)
+        hist.emplace_back(data[i], weights[i]);
     std::sort(hist.begin(), hist.end(), [](bb::pair a, bb::pair b) { return a.first < b.first; });
 
     for (size_t i = 0; i < N; ++i) {
@@ -52,7 +54,8 @@ static bb::array preprocess(bb::data_array &data, bb::weights_array &weights) {
 
     bb::array edges(N + 1);
     edges[0] = data[0];
-    for (size_t i = 0; i < N - 1; ++i) edges[i + 1] = (data[i] + data[i + 1]) / 2.0;
+    for (size_t i = 0; i < N - 1; ++i)
+        edges[i + 1] = (data[i] + data[i + 1]) / 2.0;
     edges[N] = data[N - 1];
     assert(std::unique(edges.begin(), edges.end()) == edges.end());
 
@@ -82,11 +85,13 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, std::
         best[k] = A[last[k]];
         if (counter) counter(k, N);
     }
+    
     auto loop_time = bb::duration_cast<bb::us>(bb::clock::now() - start).count();
     start = bb::clock::now();
 
     std::vector<size_t> cp;
-    for (auto i = N; i != 0; i = last[i - 1]) cp.push_back(i);
+    for (auto i = N; i != 0; i = last[i - 1])
+        cp.push_back(i);
     cp.push_back(0);
     std::reverse(cp.begin(), cp.end());
     bb::array result(cp.size(), 0.0);
@@ -98,7 +103,8 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, std::
 
 bb::array blocks(bb::data_array data, double p, std::function<void(size_t,size_t)> counter, std::function<void(long long,long long,long long)> benchmark) {
     std::map<double, double> hist;
-    for (auto i : data) hist[i]++;
+    for (auto i : data)
+        hist[i]++;
     bb::data_array x;
     bb::weights_array weights;
     for (auto &i : hist) {
@@ -108,6 +114,6 @@ bb::array blocks(bb::data_array data, double p, std::function<void(size_t,size_t
     return blocks(x, weights, p, counter, benchmark);
 }
 
-}
+} // namespace BayesianBlocks
 
 #endif

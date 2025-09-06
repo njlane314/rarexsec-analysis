@@ -28,32 +28,25 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
     };
 
     explicit OccupancyMatrixPlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("occupancy_matrix_plots") ||
-            !cfg.at("occupancy_matrix_plots").is_array())
-            throw std::runtime_error(
-                "OccupancyMatrixPlugin missing occupancy_matrix_plots");
+        if (!cfg.contains("occupancy_matrix_plots") || !cfg.at("occupancy_matrix_plots").is_array())
+            throw std::runtime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
         for (auto const &p : cfg.at("occupancy_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();
             pc.y_variable = p.at("y").get<std::string>();
             pc.region = p.at("region").get<std::string>();
-            pc.output_directory =
-                p.value("output_directory", std::string("plots"));
+            pc.output_directory = p.value("output_directory", std::string("plots"));
             if (p.contains("x_cuts")) {
                 for (auto const &c : p.at("x_cuts")) {
-                    auto dir =
-                        c.at("direction").get<std::string>() == "GreaterThan"
-                            ? CutDirection::GreaterThan
-                            : CutDirection::LessThan;
+                    auto dir = c.at("direction").get<std::string>() == "GreaterThan" ? CutDirection::GreaterThan
+                                                                                     : CutDirection::LessThan;
                     pc.x_cuts.push_back({c.at("threshold").get<double>(), dir});
                 }
             }
             if (p.contains("y_cuts")) {
                 for (auto const &c : p.at("y_cuts")) {
-                    auto dir =
-                        c.at("direction").get<std::string>() == "GreaterThan"
-                            ? CutDirection::GreaterThan
-                            : CutDirection::LessThan;
+                    auto dir = c.at("direction").get<std::string>() == "GreaterThan" ? CutDirection::GreaterThan
+                                                                                     : CutDirection::LessThan;
                     pc.y_cuts.push_back({c.at("threshold").get<double>(), dir});
                 }
             }
@@ -61,50 +54,41 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def,
-                          const SelectionRegistry &) override {
+    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         for (auto &pc : plots_) {
             try {
                 RegionKey rkey{pc.region};
                 pc.selection = def.region(rkey).selection();
             } catch (const std::exception &) {
-                log::error("OccupancyMatrixPlugin::onInitialisation",
-                           "Unknown region:", pc.region);
+                log::error("OccupancyMatrixPlugin::onInitialisation", "Unknown region:", pc.region);
             }
         }
     }
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
+    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
+    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
     void onFinalisation(const RegionAnalysisMap &region_map) override {
         if (!loader_) {
-            log::error("OccupancyMatrixPlugin::onFinalisation",
-                       "No AnalysisDataLoader context provided");
+            log::error("OccupancyMatrixPlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &pc : plots_) {
             RegionKey rkey{pc.region};
             auto it = region_map.find(rkey);
             if (it == region_map.end()) {
-                log::error(
-                    "OccupancyMatrixPlugin::onFinalisation",
-                    "Could not find analysis region for key:", rkey.str());
+                log::error("OccupancyMatrixPlugin::onFinalisation",
+                           "Could not find analysis region for key:", rkey.str());
                 continue;
             }
             VariableKey x_key{pc.x_variable};
             VariableKey y_key{pc.y_variable};
-            if (!it->second.hasFinalVariable(x_key) ||
-                !it->second.hasFinalVariable(y_key)) {
-                log::error("OccupancyMatrixPlugin::onFinalisation",
-                           "Missing variables for region", rkey.str());
+            if (!it->second.hasFinalVariable(x_key) || !it->second.hasFinalVariable(y_key)) {
+                log::error("OccupancyMatrixPlugin::onFinalisation", "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
-            catalog.generateOccupancyMatrixPlot(
-                region_map, pc.x_variable, pc.y_variable, pc.region,
-                pc.selection, pc.x_cuts, pc.y_cuts);
+            catalog.generateOccupancyMatrixPlot(region_map, pc.x_variable, pc.y_variable, pc.region, pc.selection,
+                                                pc.x_cuts, pc.y_cuts);
         }
     }
 
@@ -115,7 +99,7 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {

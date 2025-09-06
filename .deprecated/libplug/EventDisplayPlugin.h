@@ -129,7 +129,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {

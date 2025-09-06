@@ -19,8 +19,7 @@ class RunConfigRegistry {
         configs_.emplace(std::move(key), std::move(rc));
     }
 
-    const RunConfig &get(const std::string &beam,
-                         const std::string &period) const {
+    const RunConfig &get(const std::string &beam, const std::string &period) const {
         auto key = beam + ":" + period;
         auto it = configs_.find(key);
         if (it == configs_.end()) {
@@ -29,14 +28,12 @@ class RunConfigRegistry {
         return it->second;
     }
 
-    const std::map<std::string, RunConfig> &all() const noexcept {
-        return configs_;
-    }
+    const std::map<std::string, RunConfig> &all() const noexcept { return configs_; }
 
   private:
     std::map<std::string, RunConfig> configs_;
 };
 
-}
+} // namespace analysis
 
 #endif

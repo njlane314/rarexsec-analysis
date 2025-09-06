@@ -14,42 +14,31 @@ class TruthChannelProcessor : public IEventProcessor {
   public:
     explicit TruthChannelProcessor() = default;
 
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df,
-                             SampleOrigin st) const override {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         if (st != SampleOrigin::kMonteCarlo) {
             auto mode_df = df.Define("genie_int_mode", []() { return -1; });
 
-            auto incl_df = mode_df.Define("incl_channel", [c = st]() {
-                return c == SampleOrigin::kData ? 0 : 1;
-            });
+            auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
 
-            auto incl_alias_df =
-                incl_df.Define("inclusive_strange_channels", "incl_channel");
+            auto incl_alias_df = incl_df.Define("inclusive_strange_channels", "incl_channel");
 
-            auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() {
-                return c == SampleOrigin::kData ? 0 : 1;
-            });
+            auto excl_df =
+                incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; });
 
-            auto excl_alias_df =
-                excl_df.Define("exclusive_strange_channels", "excl_channel");
+            auto excl_alias_df = excl_df.Define("exclusive_strange_channels", "excl_channel");
 
             return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
         }
 
-        auto fid_df =
-            df.Define("in_fiducial",
-                      "(neutrino_vertex_x > 5 && neutrino_vertex_x < 251) &&"
-                      "(neutrino_vertex_y > -110 && neutrino_vertex_y < 110) &&"
-                      "(neutrino_vertex_z > 20 && neutrino_vertex_z < 986)");
+        auto fid_df = df.Define("in_fiducial", "(neutrino_vertex_x > 5 && neutrino_vertex_x < 251) &&"
+                                               "(neutrino_vertex_y > -110 && neutrino_vertex_y < 110) &&"
+                                               "(neutrino_vertex_z > 20 && neutrino_vertex_z < 986)");
 
-        auto strange_df = fid_df.Define(
-            "mc_n_strange",
-            "count_kaon_plus + count_kaon_minus + count_kaon_zero +"
-            " count_lambda + count_sigma_plus + count_sigma_zero + "
-            "count_sigma_minus");
+        auto strange_df = fid_df.Define("mc_n_strange", "count_kaon_plus + count_kaon_minus + count_kaon_zero +"
+                                                        " count_lambda + count_sigma_plus + count_sigma_zero + "
+                                                        "count_sigma_minus");
 
-        auto pion_df =
-            strange_df.Define("mc_n_pion", "count_pi_plus + count_pi_minus");
+        auto pion_df = strange_df.Define("mc_n_pion", "count_pi_plus + count_pi_minus");
 
         auto proton_df = pion_df.Define("mc_n_proton", "count_proton");
 
@@ -60,11 +49,9 @@ class TruthChannelProcessor : public IEventProcessor {
                     std::map<int, long long> counts;
                     std::mutex mtx;
                     ~ModeCounter() {
-                        std::cout
-                            << "[DEBUG] GENIE interaction mode frequencies:\n";
+                        std::cout << "[DEBUG] GENIE interaction mode frequencies:\n";
                         for (const auto &kv : counts) {
-                            std::cout << "  mode " << kv.first << ": "
-                                      << kv.second << std::endl;
+                            std::cout << "  mode " << kv.first << ": " << kv.second << std::endl;
                         }
                     }
                 };
@@ -72,11 +59,8 @@ class TruthChannelProcessor : public IEventProcessor {
                 {
                     std::lock_guard<std::mutex> lock(counter.mtx);
                     counter.counts[mode]++;
-                    if (counter.counts[mode] == 1 && mode != 0 && mode != 1 &&
-                        mode != 2 && mode != 3 && mode != 10) {
-                        std::cout
-                            << "[DEBUG] Uncategorised GENIE mode: " << mode
-                            << std::endl;
+                    if (counter.counts[mode] == 1 && mode != 0 && mode != 1 && mode != 2 && mode != 3 && mode != 10) {
+                        std::cout << "[DEBUG] Uncategorised GENIE mode: " << mode << std::endl;
                     }
                 }
                 switch (mode) {
@@ -96,40 +80,37 @@ class TruthChannelProcessor : public IEventProcessor {
             },
             {"interaction_mode"});
 
-        auto incl_chan_df =
-            mode_df.Define("incl_channel",
-                           [](bool fv, int nu, int cc, int s, int np, int npi) {
-                               if (!fv)
-                                   return 98;
-                               if (cc == 1)
-                                   return 31;
-                               if (std::abs(nu) == 12 && cc == 0)
-                                   return 30;
-                               if (std::abs(nu) == 14 && cc == 0) {
-                                   if (s == 1)
-                                       return 10;
-                                   if (s > 1)
-                                       return 11;
-                                   if (np >= 1 && npi == 0)
-                                       return 20;
-                                   if (np == 0 && npi >= 1)
-                                       return 21;
-                                   if (np >= 1 && npi >= 1)
-                                       return 22;
-                                   return 23;
-                               }
-                               return 99;
-                           },
-                           {"in_fiducial", "neutrino_pdg", "interaction_ccnc",
-                            "mc_n_strange", "mc_n_pion", "mc_n_proton"});
+        auto incl_chan_df = mode_df.Define(
+            "incl_channel",
+            [](bool fv, int nu, int cc, int s, int np, int npi) {
+                if (!fv)
+                    return 98;
+                if (cc == 1)
+                    return 31;
+                if (std::abs(nu) == 12 && cc == 0)
+                    return 30;
+                if (std::abs(nu) == 14 && cc == 0) {
+                    if (s == 1)
+                        return 10;
+                    if (s > 1)
+                        return 11;
+                    if (np >= 1 && npi == 0)
+                        return 20;
+                    if (np == 0 && npi >= 1)
+                        return 21;
+                    if (np >= 1 && npi >= 1)
+                        return 22;
+                    return 23;
+                }
+                return 99;
+            },
+            {"in_fiducial", "neutrino_pdg", "interaction_ccnc", "mc_n_strange", "mc_n_pion", "mc_n_proton"});
 
-        auto incl_alias_df =
-            incl_chan_df.Define("inclusive_strange_channels", "incl_channel");
+        auto incl_alias_df = incl_chan_df.Define("inclusive_strange_channels", "incl_channel");
 
         auto excl_chan_df = incl_alias_df.Define(
             "excl_channel",
-            [](bool fv, int nu, int cc, int s, int kp, int km, int k0, int lam,
-               int sp, int s0, int sm) {
+            [](bool fv, int nu, int cc, int s, int kp, int km, int k0, int lam, int sp, int s0, int sm) {
                 if (!fv)
                     return 98;
                 if (cc == 1)
@@ -165,18 +146,15 @@ class TruthChannelProcessor : public IEventProcessor {
                 }
                 return 99;
             },
-            {"in_fiducial", "neutrino_pdg", "interaction_ccnc", "mc_n_strange",
-             "count_kaon_plus", "count_kaon_minus", "count_kaon_zero",
-             "count_lambda", "count_sigma_plus", "count_sigma_zero",
-             "count_sigma_minus"});
+            {"in_fiducial", "neutrino_pdg", "interaction_ccnc", "mc_n_strange", "count_kaon_plus", "count_kaon_minus",
+             "count_kaon_zero", "count_lambda", "count_sigma_plus", "count_sigma_zero", "count_sigma_minus"});
 
-        auto excl_alias_df =
-            excl_chan_df.Define("exclusive_strange_channels", "excl_channel");
+        auto excl_alias_df = excl_chan_df.Define("exclusive_strange_channels", "excl_channel");
 
         return next_ ? next_->process(excl_alias_df, st) : excl_alias_df;
     }
 };
 
-}
+} // namespace analysis
 
 #endif
