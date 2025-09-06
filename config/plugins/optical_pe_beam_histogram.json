@@ -1,7 +1,7 @@
 {
     "plugins": [
       {
-        "path": "build/VariablesPlugin.so",
+        "name": "VariablePlugin",
         "analysis_configs": {
           "variables": [
             {
@@ -25,7 +25,7 @@
       },
 
       {
-        "path": "build/StackedHistogramPlugin.so",
+        "name": "StackedHistogramPlugin",
         "plot_configs": {
           "plots": [
             {
