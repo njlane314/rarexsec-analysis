@@ -1,7 +1,7 @@
 #ifndef ANALYSIS_DEFINITION_H
 #define ANALYSIS_DEFINITION_H
 
-#include <iterator>
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <string>
@@ -135,95 +135,25 @@ class AnalysisDefinition {
         return it != region_clauses_.end() ? it->second : empty;
     }
 
-    class VariableIterator {
-      public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = VariableHandle;
-        using pointer = value_type *;
-        using reference = value_type &;
+    std::vector<VariableHandle> variables() const {
+        std::vector<VariableHandle> result;
+        result.reserve(variable_expressions_.size());
 
-        VariableIterator(std::map<VariableKey, std::string>::const_iterator it, const AnalysisDefinition &def)
-            : it_(it), def_(def) {}
+        for (const auto &entry : variable_expressions_)
+            result.emplace_back(entry.first, variable_expressions_, variable_labels_, variable_binning_,
+                                 variable_stratifiers_);
 
-        VariableHandle operator*() const {
-            return VariableHandle{it_->first, def_.variable_expressions_, def_.variable_labels_, def_.variable_binning_,
-                                  def_.variable_stratifiers_};
-        }
-
-        VariableIterator &operator++() {
-            ++it_;
-            return *this;
-        }
-        VariableIterator operator++(int) {
-            auto tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        friend bool operator==(const VariableIterator &a, const VariableIterator &b) { return a.it_ == b.it_; }
-        friend bool operator!=(const VariableIterator &a, const VariableIterator &b) { return !(a == b); }
-
-      private:
-        std::map<VariableKey, std::string>::const_iterator it_;
-        const AnalysisDefinition &def_;
-    };
-
-    class RegionIterator {
-      public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = RegionHandle;
-        using pointer = value_type *;
-        using reference = value_type &;
-
-        RegionIterator(std::map<RegionKey, std::string>::const_iterator it, const AnalysisDefinition &def)
-            : it_(it), def_(def) {}
-
-        RegionHandle operator*() const {
-            return RegionHandle{it_->first, def_.region_names_, def_.region_selections_, def_.region_analyses_,
-                                def_.region_variables_};
-        }
-
-        RegionIterator &operator++() {
-            ++it_;
-            return *this;
-        }
-        RegionIterator operator++(int) {
-            auto tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        friend bool operator==(const RegionIterator &a, const RegionIterator &b) { return a.it_ == b.it_; }
-        friend bool operator!=(const RegionIterator &a, const RegionIterator &b) { return !(a == b); }
-
-      private:
-        std::map<RegionKey, std::string>::const_iterator it_;
-        const AnalysisDefinition &def_;
-    };
-
-    struct VariableRange {
-        VariableIterator begin() const { return begin_; }
-        VariableIterator end() const { return end_; }
-        std::size_t size() const { return std::distance(begin_, end_); }
-        VariableIterator begin_, end_;
-    };
-
-    struct RegionRange {
-        RegionIterator begin() const { return begin_; }
-        RegionIterator end() const { return end_; }
-        std::size_t size() const { return std::distance(begin_, end_); }
-        RegionIterator begin_, end_;
-    };
-
-    VariableRange variables() const {
-        return {VariableIterator{variable_expressions_.begin(), *this},
-                VariableIterator{variable_expressions_.end(), *this}};
+        return result;
     }
 
-    RegionRange regions() const {
-        return {RegionIterator{region_names_.begin(), *this}, RegionIterator{region_names_.end(), *this}};
+    std::vector<RegionHandle> regions() const {
+        std::vector<RegionHandle> result;
+        result.reserve(region_names_.size());
+
+        for (const auto &entry : region_names_)
+            result.emplace_back(entry.first, region_names_, region_selections_, region_analyses_, region_variables_);
+
+        return result;
     }
 
     void resolveDynamicBinning(AnalysisDataLoader &loader) {
@@ -273,9 +203,6 @@ class AnalysisDefinition {
     std::map<RegionKey, std::unique_ptr<RegionAnalysis>> region_analyses_;
     std::map<RegionKey, std::vector<VariableKey>> region_variables_;
     std::map<RegionKey, std::vector<std::string>> region_clauses_;
-
-    friend class VariableIterator;
-    friend class RegionIterator;
 };
 
 }
