@@ -102,7 +102,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         return hd;
     }
 
-    void drawTimeDistributions(const PlotConfig &pc, const HistData &hd) {
+    void drawTimeDistributions(const PlotConfig &pc, HistData &hd) {
         TCanvas c;
         TLegend l(0.7, 0.7, 0.9, 0.9);
         bool first = true;
@@ -125,7 +125,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         c.SaveAs((pc.output_directory + "/" + pc.plot_name + "_time.pdf").c_str());
     }
 
-    void drawPeDistributions(const PlotConfig &pc, const HistData &hd) {
+    void drawPeDistributions(const PlotConfig &pc, HistData &hd) {
         TCanvas c;
         TLegend l(0.7, 0.7, 0.9, 0.9);
         bool first = true;
