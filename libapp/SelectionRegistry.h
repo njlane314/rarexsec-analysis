@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "AnalysisDefinition.h"
 #include "Selection.h"
 
 namespace analysis {
