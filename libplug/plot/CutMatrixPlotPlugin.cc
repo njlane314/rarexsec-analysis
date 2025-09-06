@@ -12,7 +12,7 @@
 
 namespace analysis {
 
-class OccupancyMatrixPlugin : public IPlotPlugin {
+class CutMatrixPlotPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string x_variable;
@@ -24,10 +24,10 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
         std::vector<Cut> y_cuts;
     };
 
-    explicit OccupancyMatrixPlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("occupancy_matrix_plots") || !cfg.at("occupancy_matrix_plots").is_array())
-            throw std::onPlottime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
-        for (auto const &p : cfg.at("occupancy_matrix_plots")) {
+    explicit CutMatrixPlotPlugin(const nlohmann::json &cfg) {
+        if (!cfg.contains("cut_matrix_plots") || !cfg.at("cut_matrix_plots").is_array())
+            throw std::onPlottime_error("CutMatrixPlotPlugin missing cut_matrix_plots");
+        for (auto const &p : cfg.at("cut_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();
             pc.y_variable = p.at("y").get<std::string>();
@@ -53,7 +53,7 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
 
     void onPlot(const AnalysisResult &result) override {
         if (!loader_) {
-            log::error("OccupancyMatrixPlugin::onPlot", "No AnalysisDataLoader context provided");
+            log::error("CutMatrixPlotPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
         for (auto const &pc : plots_) {
@@ -61,7 +61,7 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
             VariableKey x_key{pc.x_variable};
             VariableKey y_key{pc.y_variable};
             if (!result.hasResult(rkey, x_key) || !result.hasResult(rkey, y_key)) {
-                log::error("OccupancyMatrixPlugin::onPlot", "Missing variables for region", rkey.str());
+                log::error("CutMatrixPlotPlugin::onPlot", "Missing variables for region", rkey.str());
                 continue;
             }
             PlotCatalog catalog(*loader_, 800, pc.output_directory);
@@ -82,9 +82,9 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::OccupancyMatrixPlugin(cfg);
+    return new analysis::CutMatrixPlotPlugin(cfg);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
-    analysis::OccupancyMatrixPlugin::setLoader(loader);
+    analysis::CutMatrixPlotPlugin::setLoader(loader);
 }
 #endif
