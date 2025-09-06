@@ -86,6 +86,6 @@ class PlotPluginManager {
     std::vector<void *> handles_;
 };
 
-} // namespace analysis
+}
 
 #endif

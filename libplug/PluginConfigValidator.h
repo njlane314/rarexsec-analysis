@@ -90,6 +90,6 @@ struct PluginConfigValidator {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

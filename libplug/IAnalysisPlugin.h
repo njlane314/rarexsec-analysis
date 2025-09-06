@@ -27,5 +27,5 @@ class IAnalysisPlugin {
     virtual void onFinalisation(const AnalysisResult &results) = 0;
 };
 
-} // namespace analysis
+}
 #endif

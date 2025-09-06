@@ -96,6 +96,6 @@ class SemanticDisplay : public IEventDisplay {
     std::vector<int> data_;
 };
 
-} // namespace analysis
+}
 
 #endif

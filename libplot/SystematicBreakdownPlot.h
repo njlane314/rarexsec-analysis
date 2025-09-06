@@ -29,6 +29,6 @@ class SystematicBreakdownPlot : public HistogramPlotterBase {
     TLegend *legend_;
 };
 
-} // namespace analysis
+}
 
 #endif

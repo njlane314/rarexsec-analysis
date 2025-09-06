@@ -85,7 +85,7 @@ class VariablesPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {

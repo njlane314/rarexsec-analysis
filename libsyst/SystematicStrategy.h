@@ -50,6 +50,6 @@ class SystematicStrategy {
                                                                          SystematicFutures &futures) = 0;
 };
 
-} // namespace analysis
+}
 
 #endif

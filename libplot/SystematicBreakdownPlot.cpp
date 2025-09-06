@@ -73,4 +73,4 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     legend_->Draw();
 }
 
-} // namespace analysis
+}

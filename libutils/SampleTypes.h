@@ -50,6 +50,6 @@ inline std::string variationToKey(SampleVariation var) {
     }
 }
 
-} // namespace analysis
+}
 
 #endif

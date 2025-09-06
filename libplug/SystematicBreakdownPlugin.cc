@@ -61,7 +61,7 @@ class SystematicBreakdownPlugin : public IAnalysisPlugin {
     std::vector<PlotConfig> plots_;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {

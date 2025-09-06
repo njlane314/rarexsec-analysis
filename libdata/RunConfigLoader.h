@@ -37,6 +37,6 @@ class RunConfigLoader {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

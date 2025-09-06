@@ -123,7 +123,7 @@ class UnstackedHistogramPlugin : public IAnalysisPlugin {
     std::map<RegionKey, std::map<std::string, std::vector<Cut>>> region_cuts_;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {

@@ -55,6 +55,6 @@ class IHistogramStratifier {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

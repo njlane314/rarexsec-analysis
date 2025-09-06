@@ -257,6 +257,6 @@ inline HistogramUncertainty HistogramUncertainty::operator/(const HistogramUncer
     return tmp;
 }
 
-} // namespace analysis
+}
 
 #endif

@@ -101,6 +101,6 @@ class MuonSelectionProcessor : public IEventProcessor {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

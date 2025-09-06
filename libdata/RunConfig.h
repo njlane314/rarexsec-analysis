@@ -45,6 +45,6 @@ struct RunConfig {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

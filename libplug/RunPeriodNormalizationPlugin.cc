@@ -135,7 +135,7 @@ class RunPeriodNormalizationPlugin : public IPlotPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {

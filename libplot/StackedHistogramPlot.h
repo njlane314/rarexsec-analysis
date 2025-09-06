@@ -410,6 +410,6 @@ class StackedHistogramPlot : public HistogramPlotterBase {
     std::vector<TObject *> cut_visuals_;
 };
 
-} // namespace analysis
+}
 
 #endif

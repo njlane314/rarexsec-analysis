@@ -103,6 +103,6 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
 
 using BinnedHistogramD = BinnedHistogram;
 
-} // namespace analysis
+}
 
 #endif

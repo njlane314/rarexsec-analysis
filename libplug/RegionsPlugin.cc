@@ -44,7 +44,7 @@ class RegionsPlugin : public IAnalysisPlugin {
     nlohmann::json config_;
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createRegionsPlugin(const nlohmann::json &cfg) {

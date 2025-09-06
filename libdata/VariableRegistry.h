@@ -385,6 +385,6 @@ class VariableRegistry {
     }
 };
 
-} // namespace analysis
+}
 
 #endif

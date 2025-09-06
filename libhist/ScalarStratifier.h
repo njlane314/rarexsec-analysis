@@ -31,6 +31,6 @@ class ScalarStratifier : public IHistogramStratifier {
     StratifierRegistry &stratifier_registry_;
 };
 
-} // namespace analysis
+}
 
 #endif
