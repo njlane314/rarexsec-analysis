@@ -12,7 +12,7 @@ namespace analysis {
 
 inline nlohmann::json loadJsonFile(const std::string &path) {
     namespace fs = std::filesystem;
-    
+
     if (!fs::exists(path) || !fs::is_regular_file(path)) {
         log::fatal("loadJsonFile", "File inaccessible:", path);
     }
@@ -22,7 +22,13 @@ inline nlohmann::json loadJsonFile(const std::string &path) {
         log::fatal("loadJsonFile", "Unable to open file:", path);
     }
 
-    return nlohmann::json::parse(file);
+    try {
+        return nlohmann::json::parse(file);
+    } catch (const std::exception &e) {
+        log::fatal("loadJsonFile", "Parsing error:", e.what());
+    }
+
+    return nlohmann::json();
 }
 
 }

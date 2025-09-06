@@ -50,24 +50,29 @@ class AnalysisPluginManager {
             if (!handle)
                 throw std::runtime_error(dlerror());
 
-            if (loader) {
-                using CtxFn = void (*)(AnalysisDataLoader *);
-                if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
-                    setctx(loader);
+            try {
+                if (loader) {
+                    using CtxFn = void (*)(AnalysisDataLoader *);
+                    if (auto setctx = reinterpret_cast<CtxFn>(dlsym(handle, "setPluginContext"))) {
+                        setctx(loader);
+                    }
                 }
-            }
 
-            using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &, const nlohmann::json &);
-            auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
-            if (!create) {
-                create = reinterpret_cast<FactoryFn>(dlsym(handle, "createRegionsPlugin"));
-            }
-            if (!create)
-                throw std::runtime_error(dlerror());
+                using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &, const nlohmann::json &);
+                auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
+                if (!create) {
+                    create = reinterpret_cast<FactoryFn>(dlsym(handle, "createRegionsPlugin"));
+                }
+                if (!create)
+                    throw std::runtime_error(dlerror());
 
-            std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()), p.value("plot_configs", nlohmann::json::object())));
-            plugins_.push_back(std::move(plugin));
-            handles_.push_back(handle);
+                std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()), p.value("plot_configs", nlohmann::json::object())));
+                plugins_.push_back(std::move(plugin));
+                handles_.push_back(handle);
+            } catch (...) {
+                dlclose(handle);
+                throw;
+            }
         }
     }
 
