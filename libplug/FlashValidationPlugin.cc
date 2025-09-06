@@ -80,11 +80,11 @@ class FlashValidationPlugin : public IPlotPlugin {
         int idx = 0;
         for (auto const &[skey, sample] : loader_->getSampleFrames()) {
             auto df = sample.nominal_node_;
-            auto ht = df.Histo1D(
-                {(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max},
-                pc.time_column);
-            auto hp = df.Histo1D(
-                {(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max}, pc.pe_column);
+            auto ht =
+                df.Histo1D({(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max},
+                           pc.time_column);
+            auto hp = df.Histo1D({(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max},
+                                 pc.pe_column);
             hd.h_time.push_back(ht);
             hd.h_pe.push_back(hp);
             int c = 2 + idx;
@@ -108,7 +108,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         bool first = true;
 
         for (size_t i = 0; i < hd.h_time.size(); ++i) {
-            auto h = hd.h_time[i].GetPtr();
+            auto h = hd.h_time[i].Get();
             h->SetLineColor(hd.colors[i]);
             h->SetLineWidth(2);
             if (first) {
@@ -131,7 +131,7 @@ class FlashValidationPlugin : public IPlotPlugin {
         bool first = true;
 
         for (size_t i = 0; i < hd.h_pe.size(); ++i) {
-            auto h = hd.h_pe[i].GetPtr();
+            auto h = hd.h_pe[i].Get();
             h->SetLineColor(hd.colors[i]);
             h->SetLineWidth(2);
             if (first) {
@@ -149,7 +149,7 @@ class FlashValidationPlugin : public IPlotPlugin {
     }
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
