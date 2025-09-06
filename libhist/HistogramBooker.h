@@ -11,8 +11,8 @@ namespace analysis {
 
 class HistogramBooker : public IHistogramBooker {
   public:
-    HistogramBooker(StratifierRegistry &strat_reg)
-        : stratifier_manager_(strat_reg) {
+    HistogramBooker()
+        : stratifier_manager_(stratifier_registry_) {
         log::debug("HistogramBooker::HistogramBooker",
                    "Constructor called, StratifierManager has been created.");
     }
@@ -45,6 +45,7 @@ class HistogramBooker : public IHistogramBooker {
     }
 
   private:
+    StratifierRegistry stratifier_registry_;
     StratifierManager stratifier_manager_;
 };
 
