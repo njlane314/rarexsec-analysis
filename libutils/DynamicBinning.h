@@ -189,30 +189,31 @@ class DynamicBinning {
         return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
     }
 
-    static BinningDefinition finalize_edges(std::vector<std::pair<double, double>> &xw, double sumw, double sumw2,
-                                            const BinningDefinition &original_bdef, double min_neff_per_bin,
-                                            bool include_out_of_range_bins, DynamicBinningStrategy strategy) {
-        const auto &domain_edges = original_bdef.getEdges();
-        double domain_min = domain_edges.front();
-        double domain_max = domain_edges.back();
+    static void filterEntries(std::vector<std::pair<double, double>> &xw) {
+        size_t before = xw.size();
 
-        size_t before_filter = xw.size();
-        xw.erase(std::remove_if(xw.begin(), xw.end(),
-                                [&](const auto &p) {
+        xw.erase(std::remove_if(xw.begin(), xw.end(), [&](const auto &p) {
                                     double x = p.first;
                                     double w = p.second;
                                     return !std::isfinite(x) || !std::isfinite(w) || w <= 0.0;
                                 }),
                  xw.end());
-        size_t removed_invalid = before_filter - xw.size();
-        if (removed_invalid > 0) {
-            log::info("DynamicBinning::finalize_edges", "Discarded", removed_invalid,
+
+        size_t removed = before - xw.size();
+
+        if (removed > 0) {
+            log::info("DynamicBinning::filterEntries", "Discarded", removed,
                       "entries with non-finite values or non-positive weights");
         }
+    }
 
+    static std::vector<std::pair<double, double>> splitRangeEntries(const std::vector<std::pair<double, double>> &xw,
+                                                                    double domain_min, double domain_max) {
         std::vector<std::pair<double, double>> in_range;
+
         size_t n_underflow = 0;
         size_t n_overflow = 0;
+
         for (const auto &p : xw) {
             double x = p.first;
             if (x < domain_min) {
@@ -223,35 +224,18 @@ class DynamicBinning {
                 in_range.push_back(p);
             }
         }
+
         if (n_underflow > 0 || n_overflow > 0) {
-            log::info("DynamicBinning::finalize_edges", "Found", n_underflow, "entries below domain and", n_overflow,
-                      "entries above domain; they will fill underflow/overflow bins");
+            log::info("DynamicBinning::splitRangeEntries", "Found", n_underflow, "entries below domain and",
+                      n_overflow, "entries above domain; they will fill underflow/overflow bins");
         }
 
-        if (in_range.size() < 2) {
-            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
-                                     {}, original_bdef.getStratifierKey().str());
-        }
+        return in_range;
+    }
 
-        std::sort(in_range.begin(), in_range.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
-
-        sumw = 0.0;
-        sumw2 = 0.0;
-        for (const auto &p : in_range) {
-            sumw += p.second;
-            sumw2 += p.second * p.second;
-        }
-
-        if (sumw <= 0.0) {
-            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
-                                     {}, original_bdef.getStratifierKey().str());
-        }
-
-        double xmin = domain_min;
-        double xmax = domain_max;
-        log::info("DynamicBinning::finalize_edges", "Using fixed data range for", original_bdef.getVariable(), ":",
-                  xmin, "to", xmax);
-
+    static std::vector<double> applyStrategy(const std::vector<std::pair<double, double>> &in_range, double sumw,
+                                             double sumw2, double xmin, double xmax, double min_neff_per_bin,
+                                             DynamicBinningStrategy strategy) {
         std::vector<double> edges;
 
         double neff_total = (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
@@ -372,6 +356,13 @@ class DynamicBinning {
         }
         }
 
+        return edges;
+    }
+
+    static std::vector<double> finalizeEdgeList(std::vector<double> edges,
+                                                const std::vector<std::pair<double, double>> &in_range,
+                                                double min_neff_per_bin, bool include_out_of_range_bins, double domain_min,
+                                                double domain_max) {
         edges.front() = domain_min;
         edges.back() = domain_max;
 
@@ -414,7 +405,7 @@ class DynamicBinning {
             double overflow_width = 0.5 * last_width;
             edges.insert(edges.begin(), domain_min - underflow_width);
             edges.push_back(domain_max + overflow_width);
-            log::info("DynamicBinning::finalize_edges", "Added underflow/overflow bins spanning",
+            log::info("DynamicBinning::finalizeEdgeList", "Added underflow/overflow bins spanning",
                       domain_min - underflow_width, "to", domain_max + overflow_width);
         }
 
@@ -430,6 +421,50 @@ class DynamicBinning {
                 edges[i] = std::nextafter(edges[i - 1], std::numeric_limits<double>::infinity());
             }
         }
+
+        return edges;
+    }
+
+    static BinningDefinition finalize_edges(std::vector<std::pair<double, double>> &xw, double sumw, double sumw2,
+                                            const BinningDefinition &original_bdef, double min_neff_per_bin,
+                                            bool include_out_of_range_bins, DynamicBinningStrategy strategy) {
+        const auto &domain_edges = original_bdef.getEdges();
+        double domain_min = domain_edges.front();
+        double domain_max = domain_edges.back();
+
+        filterEntries(xw);
+
+        auto in_range = splitRangeEntries(xw, domain_min, domain_max);
+
+        if (in_range.size() < 2) {
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
+                                     {}, original_bdef.getStratifierKey().str());
+        }
+
+        std::sort(in_range.begin(), in_range.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
+
+        sumw = 0.0;
+        sumw2 = 0.0;
+        for (const auto &p : in_range) {
+            sumw += p.second;
+            sumw2 += p.second * p.second;
+        }
+
+        if (sumw <= 0.0) {
+            return BinningDefinition({domain_min, domain_max}, original_bdef.getVariable(), original_bdef.getTexLabel(),
+                                     {}, original_bdef.getStratifierKey().str());
+        }
+
+        double xmin = domain_min;
+        double xmax = domain_max;
+
+        log::info("DynamicBinning::finalize_edges", "Using fixed data range for", original_bdef.getVariable(), ":",
+                  xmin, "to", xmax);
+
+        auto edges = applyStrategy(in_range, sumw, sumw2, xmin, xmax, min_neff_per_bin, strategy);
+
+        edges = finalizeEdgeList(std::move(edges), in_range, min_neff_per_bin, include_out_of_range_bins, domain_min,
+                                 domain_max);
 
         return BinningDefinition(edges, original_bdef.getVariable(), original_bdef.getTexLabel(), {},
                                  original_bdef.getStratifierKey().str());
