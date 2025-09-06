@@ -1,3 +1,6 @@
+#ifndef STACKEDHISTOGRAMPLOT_H
+#define STACKEDHISTOGRAMPLOT_H
+
 #include <algorithm>
 #include <iomanip>
 #include <map>
@@ -408,4 +411,6 @@ class StackedHistogramPlot : public IHistogramPlot {
 };
 
 }
+
+#endif
 

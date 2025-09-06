@@ -1,3 +1,6 @@
+#ifndef OCCUPANCYMATRIXPLOT_H
+#define OCCUPANCYMATRIXPLOT_H
+
 #include <string>
 
 #include "TCanvas.h"
@@ -39,3 +42,5 @@ class OccupancyMatrixPlot : public IHistogramPlot {
 };
 
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef SELECTIONEFFICIENCYPLOT_H
+#define SELECTIONEFFICIENCYPLOT_H
+
 #include <string>
 #include <vector>
 #include <utility>
@@ -147,3 +150,5 @@ class SelectionEfficiencyPlot : public IHistogramPlot {
 };
 
 }
+
+#endif
