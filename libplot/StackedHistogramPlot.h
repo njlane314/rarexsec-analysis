@@ -121,15 +121,11 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, line4.c_str());
         watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, line5.c_str());
     }
-
-  protected:
-    void draw(TCanvas &canvas) override {
-        log::info("StackedHistogramPlot::draw",
-                  "X-axis label from result:", variable_result_.binning_.getTexLabel().c_str());
+    void setupPads(TCanvas &canvas, TPad *&p_main, TPad *&p_legend) const {
         const double PLOT_LEGEND_SPLIT = 0.85;
         canvas.cd();
-        TPad *p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
-        TPad *p_legend = new TPad("legend_pad", "legend_pad", 0.0, PLOT_LEGEND_SPLIT, 1.0, 1.0);
+        p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
+        p_legend = new TPad("legend_pad", "legend_pad", 0.0, PLOT_LEGEND_SPLIT, 1.0, 1.0);
         p_main->SetTopMargin(0.01);
         p_main->SetBottomMargin(0.12);
         p_main->SetLeftMargin(0.12);
@@ -140,25 +136,27 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         p_legend->SetBottomMargin(0.01);
         p_legend->Draw();
         p_main->Draw();
+    }
 
+    std::vector<double> prepareHistograms(std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists,
+                                          double &total_mc_events, double &left_edge, double &right_edge,
+                                          double &min_edge, double &max_edge) {
         mc_stack_ = new THStack("mc_stack", "");
-        StratifierRegistry registry;
 
         std::vector<double> orig_edges;
         if (use_uniform_binning_ && uniform_max_ > uniform_min_) {
             orig_edges.resize(uniform_bins_ + 1);
             double width = (uniform_max_ - uniform_min_) / uniform_bins_;
-            for (int i = 0; i <= uniform_bins_; ++i) {
+            for (int i = 0; i <= uniform_bins_; ++i)
                 orig_edges[i] = uniform_min_ + width * i;
-            }
         } else {
             orig_edges = variable_result_.binning_.getEdges();
         }
 
-        double left_edge = orig_edges.empty() ? 0.0 : orig_edges.front();
-        double right_edge = orig_edges.empty() ? 0.0 : orig_edges[orig_edges.size() - 1];
-        double min_edge = left_edge;
-        double max_edge = right_edge;
+        left_edge = orig_edges.empty() ? 0.0 : orig_edges.front();
+        right_edge = orig_edges.empty() ? 0.0 : orig_edges[orig_edges.size() - 1];
+        min_edge = left_edge;
+        max_edge = right_edge;
         if (orig_edges.size() >= 2) {
             double interior_range = right_edge - left_edge;
             double edge_width = interior_range * 0.05;
@@ -166,21 +164,23 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             max_edge += edge_width;
         }
 
-        std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
-        for (auto const &[key, hist] : variable_result_.strat_hists_) {
-            if (hist.getSum() > 0) {
+        for (auto const &[key, hist] : variable_result_.strat_hists_)
+            if (hist.getSum() > 0)
                 mc_hists.emplace_back(key, hist);
-            }
-        }
 
         std::sort(mc_hists.begin(), mc_hists.end(),
                   [](const auto &a, const auto &b) { return a.second.getSum() < b.second.getSum(); });
         std::reverse(mc_hists.begin(), mc_hists.end());
 
-        double total_mc_events = 0.0;
-        for (const auto &[key, hist] : mc_hists) {
+        total_mc_events = 0.0;
+        for (const auto &[key, hist] : mc_hists)
             total_mc_events += hist.getSum();
-        }
+
+        return orig_edges;
+    }
+
+    void buildLegend(TPad *p_legend, const std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists) {
+        StratifierRegistry registry;
 
         p_legend->cd();
         legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
@@ -200,9 +200,8 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             h_leg->SetLineWidth(1.5);
 
             std::string tex_label = stratum.tex_label;
-            if (tex_label == "#emptyset") {
+            if (tex_label == "#emptyset")
                 tex_label = "\xE2\x88\x85";
-            }
 
             std::string legend_label =
                 annotate_numbers_ ? tex_label + " : " + formatWithCommas(hist.getSum(), 2) : tex_label;
@@ -218,7 +217,13 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             std::string total_label = "Stat. #oplus Syst. Unc.";
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
         }
+
         legend_->Draw();
+    }
+
+    double drawStack(TPad *p_main, const std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists,
+                     const std::vector<double> &orig_edges) {
+        StratifierRegistry registry;
 
         p_main->cd();
 
@@ -272,6 +277,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             total_mc_hist_->Draw("E1 SAME");
         }
 
+        return max_y;
+    }
+
+    void renderCuts(double max_y) {
         for (const auto &cut : cuts_) {
             double y_arrow_pos = max_y * 0.85;
             double x_range = mc_stack_->GetXaxis()->GetXmax() - mc_stack_->GetXaxis()->GetXmin();
@@ -284,7 +293,8 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             line->Draw("same");
             cut_visuals_.push_back(line);
 
-            double x_start, x_end;
+            double x_start;
+            double x_end;
             if (cut.direction == CutDirection::GreaterThan) {
                 x_start = cut.threshold;
                 x_end = cut.threshold + arrow_length;
@@ -299,7 +309,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             arrow->Draw("same");
             cut_visuals_.push_back(arrow);
         }
+    }
 
+    void configureAxes(const std::vector<double> &orig_edges, double left_edge, double right_edge, double min_edge,
+                       double max_edge, double max_y) {
         TH1 *frame = mc_stack_->GetHistogram();
         frame->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
         frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
@@ -308,8 +321,10 @@ class StackedHistogramPlot : public HistogramPlotterBase {
         frame->GetXaxis()->SetLimits(min_edge, max_edge);
         frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
+
         if (orig_edges.size() >= 2) {
-            std::ostringstream uf_label, of_label;
+            std::ostringstream uf_label;
+            std::ostringstream of_label;
             uf_label << "<" << formatWithCommas(left_edge);
             of_label << ">" << formatWithCommas(right_edge);
             frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1, uf_label.str().c_str());
@@ -342,6 +357,33 @@ class StackedHistogramPlot : public HistogramPlotterBase {
             of_box->Draw("same");
             cut_visuals_.push_back(of_box);
         }
+    }
+
+  protected:
+    void draw(TCanvas &canvas) override {
+        log::info("StackedHistogramPlot::draw", "X-axis label from result:",
+                  variable_result_.binning_.getTexLabel().c_str());
+
+        TPad *p_main;
+        TPad *p_legend;
+        setupPads(canvas, p_main, p_legend);
+
+        std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
+        double total_mc_events;
+        double left_edge;
+        double right_edge;
+        double min_edge;
+        double max_edge;
+        std::vector<double> orig_edges =
+            prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge, min_edge, max_edge);
+
+        buildLegend(p_legend, mc_hists);
+
+        double max_y = drawStack(p_main, mc_hists, orig_edges);
+
+        renderCuts(max_y);
+
+        configureAxes(orig_edges, left_edge, right_edge, min_edge, max_edge, max_y);
 
         drawWatermark(p_main, total_mc_events);
 
