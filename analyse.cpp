@@ -16,7 +16,9 @@
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
-static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry, const std::string &ntuple_directory, const std::string &beam, const nlohmann::json &runs, const nlohmann::json &analysis) {
+static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry,
+                                                const std::string &ntuple_directory, const std::string &beam,
+                                                const nlohmann::json &runs, const nlohmann::json &analysis) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
     for (auto const &[period, _] : runs.items()) {
@@ -27,10 +29,12 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
 
     analysis::SystematicsProcessor systematics_processor(variable_registry);
 
-    analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_directory, true);
+    analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_directory,
+                                             true);
     auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
 
-    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor, analysis);
+    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor,
+                                    analysis);
     return runner.run();
 }
 

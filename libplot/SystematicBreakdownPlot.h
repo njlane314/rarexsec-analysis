@@ -15,9 +15,7 @@ namespace analysis {
 
 class SystematicBreakdownPlot : public HistogramPlotterBase {
   public:
-    SystematicBreakdownPlot(std::string plot_name,
-                            const VariableResult &var_result,
-                            bool normalise = false,
+    SystematicBreakdownPlot(std::string plot_name, const VariableResult &var_result, bool normalise = false,
                             std::string output_directory = "plots");
     ~SystematicBreakdownPlot() override;
 
@@ -31,6 +29,6 @@ class SystematicBreakdownPlot : public HistogramPlotterBase {
     TLegend *legend_;
 };
 
-} 
+} // namespace analysis
 
 #endif

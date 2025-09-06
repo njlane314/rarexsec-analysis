@@ -60,15 +60,21 @@ class FlashValidationPlugin : public IPlotPlugin {
             int idx = 0;
             for (auto const &[skey, sample] : loader_->getSampleFrames()) {
                 auto df = sample.nominal_node_;
-                auto ht = df.Histo1D({(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max}, pc.time_column);
-                auto hp = df.Histo1D({(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max}, pc.pe_column);
+                auto ht = df.Histo1D(
+                    {(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max},
+                    pc.time_column);
+                auto hp = df.Histo1D(
+                    {(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max}, pc.pe_column);
                 h_time.push_back(ht);
                 h_pe.push_back(hp);
                 int c = 2 + idx;
                 auto s = skey.str();
-                if (s.find("data") != std::string::npos) c = 1;
-                else if (s.find("dirt") != std::string::npos) c = 2;
-                else if (s.find("overlay") != std::string::npos) c = 4;
+                if (s.find("data") != std::string::npos)
+                    c = 1;
+                else if (s.find("dirt") != std::string::npos)
+                    c = 2;
+                else if (s.find("overlay") != std::string::npos)
+                    c = 4;
                 colors.push_back(c);
                 labels.push_back(s);
                 ++idx;
@@ -117,7 +123,7 @@ class FlashValidationPlugin : public IPlotPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
@@ -127,4 +133,3 @@ extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::FlashValidationPlugin::setLoader(loader);
 }
 #endif
-

@@ -13,11 +13,8 @@ namespace analysis {
 
 class OccupancyMatrixPlot : public HistogramPlotterBase {
   public:
-    OccupancyMatrixPlot(std::string plot_name, TH2F *hist,
-                        std::string output_directory = "plots")
-        : HistogramPlotterBase(std::move(plot_name),
-                               std::move(output_directory)),
-          hist_(hist) {}
+    OccupancyMatrixPlot(std::string plot_name, TH2F *hist, std::string output_directory = "plots")
+        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), hist_(hist) {}
 
     ~OccupancyMatrixPlot() override { delete hist_; }
 
@@ -41,6 +38,6 @@ class OccupancyMatrixPlot : public HistogramPlotterBase {
     TH2F *hist_;
 };
 
-}
+} // namespace analysis
 
 #endif

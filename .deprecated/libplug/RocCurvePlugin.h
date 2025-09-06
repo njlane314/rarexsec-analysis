@@ -46,24 +46,20 @@ class RocCurvePlugin : public IAnalysisPlugin {
             pc.channel_column = p.at("channel_column").get<std::string>();
             pc.signal_group = p.at("signal_group").get<std::string>();
             pc.variable = p.at("variable").get<std::string>();
-            pc.output_directory =
-                p.value("output_directory", std::string{"plots"});
+            pc.output_directory = p.value("output_directory", std::string{"plots"});
             pc.plot_name = p.value("plot_name", std::string{"roc_curve"});
             pc.n_bins = p.value("n_bins", 100);
             pc.min = p.value("min", 0.0);
             pc.max = p.value("max", 1.0);
             if (p.contains("cut_direction")) {
                 auto dir = p.at("cut_direction").get<std::string>();
-                pc.cut_direction = (dir == "LessThan")
-                                       ? CutDirection::LessThan
-                                       : CutDirection::GreaterThan;
+                pc.cut_direction = (dir == "LessThan") ? CutDirection::LessThan : CutDirection::GreaterThan;
             }
             plots_.push_back(std::move(pc));
         }
     }
 
-    void onInitialisation(AnalysisDefinition &def,
-                          const SelectionRegistry &sel_reg) override {
+    void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &sel_reg) override {
         for (auto &pc : plots_) {
             try {
                 auto rule = sel_reg.getRule(pc.selection_rule);
@@ -75,15 +71,12 @@ class RocCurvePlugin : public IAnalysisPlugin {
         }
     }
 
-    void onPreSampleProcessing(const SampleKey &, const RegionKey &,
-                               const RunConfig &) override {}
-    void onPostSampleProcessing(const SampleKey &, const RegionKey &,
-                                const RegionAnalysisMap &) override {}
+    void onPreSampleProcessing(const SampleKey &, const RegionKey &, const RunConfig &) override {}
+    void onPostSampleProcessing(const SampleKey &, const RegionKey &, const RegionAnalysisMap &) override {}
 
     void onFinalisation(const RegionAnalysisMap &) override {
         if (!loader_) {
-            log::error("RocCurvePlugin::onFinalisation",
-                       "No AnalysisDataLoader context provided");
+            log::error("RocCurvePlugin::onFinalisation", "No AnalysisDataLoader context provided");
             return;
         }
 
@@ -102,8 +95,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
                 for (size_t i = 0; i < keys.size(); ++i) {
                     if (i > 0)
                         expr += " || ";
-                    expr +=
-                        pc.channel_column + " == " + std::to_string(keys[i]);
+                    expr += pc.channel_column + " == " + std::to_string(keys[i]);
                 }
                 return expr;
             };
@@ -125,14 +117,11 @@ class RocCurvePlugin : public IAnalysisPlugin {
                 auto df = sample.nominal_node_;
                 if (!selection_expr.empty())
                     df = df.Filter(selection_expr);
-                auto tot_h =
-                    df.Histo1D({"tot_h", "", pc.n_bins, pc.min, pc.max},
-                               pc.variable, "nominal_event_weight");
+                auto tot_h = df.Histo1D({"tot_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
                 total_hist.Add(tot_h.GetPtr());
                 auto sig_df = df.Filter(signal_expr);
                 auto sig_h =
-                    sig_df.Histo1D({"sig_h", "", pc.n_bins, pc.min, pc.max},
-                                   pc.variable, "nominal_event_weight");
+                    sig_df.Histo1D({"sig_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
                 sig_hist.Add(sig_h.GetPtr());
             }
 
@@ -150,8 +139,7 @@ class RocCurvePlugin : public IAnalysisPlugin {
                     double sig_pass = sig_hist.Integral(bin, pc.n_bins);
                     double bkg_pass = bkg_hist.Integral(bin, pc.n_bins);
                     double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
-                    double rej =
-                        bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
+                    double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
                     efficiencies.push_back(eff);
                     rejections.push_back(rej);
                 }
@@ -160,15 +148,13 @@ class RocCurvePlugin : public IAnalysisPlugin {
                     double sig_pass = sig_hist.Integral(1, bin);
                     double bkg_pass = bkg_hist.Integral(1, bin);
                     double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
-                    double rej =
-                        bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
+                    double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
                     efficiencies.push_back(eff);
                     rejections.push_back(rej);
                 }
             }
 
-            RocCurvePlot plot(pc.plot_name + "_" + pc.region, efficiencies,
-                              rejections, pc.output_directory);
+            RocCurvePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
             plot.drawAndSave("pdf");
         }
     }
@@ -180,15 +166,13 @@ class RocCurvePlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
     return new analysis::RocCurvePlugin(cfg);
 }
-extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
-    analysis::RocCurvePlugin::setLoader(loader);
-}
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::RocCurvePlugin::setLoader(loader); }
 #endif
 
 #endif

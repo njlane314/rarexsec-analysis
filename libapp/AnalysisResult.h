@@ -30,7 +30,9 @@ class AnalysisResult : public TObject {
     RegionAnalysisMap &regions() noexcept { return regions_; }
 
     const RegionAnalysis &region(const RegionKey &r) const { return regions_.at(r); }
-    const std::vector<RegionAnalysis::StageCount> &cutFlow(const RegionKey &r) const { return regions_.at(r).cutFlow(); }
+    const std::vector<RegionAnalysis::StageCount> &cutFlow(const RegionKey &r) const {
+        return regions_.at(r).cutFlow();
+    }
 
     const VariableResult &result(const RegionKey &r, const VariableKey &v) const {
         return variable_results_.at(r).get(v);
@@ -90,13 +92,16 @@ class AnalysisResult : public TObject {
 
         std::cout << std::fixed << std::setprecision(2);
         std::cout << std::left << std::setw(30) << "Bins" << std::right << std::setw(width - 30) << bins << '\n';
-        std::cout << std::left << std::setw(30) << "Total Data Events" << std::right << std::setw(width - 30) << r.data_hist_.getSum() << '\n';
-        std::cout << std::left << std::setw(30) << "Total MC Events" << std::right << std::setw(width - 30) << r.total_mc_hist_.getSum() << '\n';
+        std::cout << std::left << std::setw(30) << "Total Data Events" << std::right << std::setw(width - 30)
+                  << r.data_hist_.getSum() << '\n';
+        std::cout << std::left << std::setw(30) << "Total MC Events" << std::right << std::setw(width - 30)
+                  << r.total_mc_hist_.getSum() << '\n';
 
         std::cout << sub << '\n';
         std::cout << std::left << std::setw(width) << "Stratum MC Sums" << '\n';
         for (const auto &[k, h] : r.strat_hists_)
-            std::cout << std::left << std::setw(30) << k.str() << std::right << std::setw(width - 30) << h.getSum() << '\n';
+            std::cout << std::left << std::setw(30) << k.str() << std::right << std::setw(width - 30) << h.getSum()
+                      << '\n';
 
         if (!r.covariance_matrices_.empty()) {
             std::cout << sub << '\n';
@@ -114,6 +119,6 @@ class AnalysisResult : public TObject {
     std::map<RegionKey, VariableResults> variable_results_;
 };
 
-}
+} // namespace analysis
 
 #endif

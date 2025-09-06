@@ -11,7 +11,7 @@ import concurrent.futures
 def get_xml_entities(xml_path: Path) -> dict:
     entities = {}
     entity_regex = re.compile(r'<!ENTITY\s+([^\s]+)\s+"([^"]+)">')
-    with open(xml_path, 'r') as f:
+    with open(xml_path, "r") as f:
         content = f.read()
         for match in entity_regex.finditer(content):
             entities[match.group(1)] = match.group(2)
@@ -76,10 +76,16 @@ def get_total_triggers_from_files_parallel(file_paths: list[str]) -> int:
             total_triggers += triggers
     return total_triggers
 
-
-def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdirs: dict, entities: dict, nominal_pot: float, is_detvar: bool = False):
+def process_sample_entry(
+    entry: dict,
+    processed_analysis_path: Path,
+    stage_outdirs: dict,
+    entities: dict,
+    nominal_pot: float,
+    is_detvar: bool = False,
+):
     execute_hadd_for_sample = entry.pop("do_hadd", False)
-    
+
     if not entry.get("active", True):
         sample_key = entry.get("sample_key", "UNKNOWN")
         print(f"  Skipping {'detector variation' if is_detvar else 'sample'}: {sample_key} (marked as inactive)")
@@ -87,14 +93,18 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
 
     stage_name = entry.get("stage_name")
     sample_key = entry.get("sample_key")
-    sample_type = entry.get("sample_type", "mc") 
+    sample_type = entry.get("sample_type", "mc")
 
     print(f"  Processing {'detector variation' if is_detvar else 'sample'}: {sample_key} (from stage: {stage_name})")
-    print(f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: {'Enabled' if execute_hadd_for_sample else 'Disabled'}")
-
+    print(
+        f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: {'Enabled' if execute_hadd_for_sample else 'Disabled'}"
+    )
 
     if not stage_name or stage_name not in stage_outdirs:
-        print(f"    Warning: Stage '{stage_name}' not found in XML outdirs. Skipping {'detector variation' if is_detvar else 'sample'} '{sample_key}'.", file=sys.stderr)
+        print(
+            f"    Warning: Stage '{stage_name}' not found in XML outdirs. Skipping {'detector variation' if is_detvar else 'sample'} '{sample_key}'.",
+            file=sys.stderr,
+        )
         return False
 
     input_dir_template = stage_outdirs[stage_name]
@@ -103,19 +113,23 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
         input_dir = input_dir.replace(f"&{name};", value)
 
     output_file = processed_analysis_path / f"{sample_key}.root"
-    entry["relative_path"] = output_file.name 
+    entry["relative_path"] = output_file.name
 
     root_files = sorted([str(f) for f in Path(input_dir).rglob("*.root")])
     if not root_files:
         print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
-    
+
     if root_files and execute_hadd_for_sample:
         if not run_command(["hadd", "-f", str(output_file)] + root_files, True):
-            print(f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.", file=sys.stderr)
+            print(
+                f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.", file=sys.stderr
+            )
             return False
-    elif not root_files and execute_hadd_for_sample: 
-        print(f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable).")
-    elif root_files and not execute_hadd_for_sample: 
+    elif not root_files and execute_hadd_for_sample:
+        print(
+            f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable)."
+        )
+    elif root_files and not execute_hadd_for_sample:
         print(f"    Note: HADD not requested for '{sample_key}'. Skipping HADD command.")
 
     source_for_pot_triggers = []
@@ -128,14 +142,13 @@ def process_sample_entry(entry: dict, processed_analysis_path: Path, stage_outdi
         entry["pot"] = get_total_pot_from_files_parallel(source_for_pot_triggers)
         entry["triggers"] = get_total_triggers_from_files_parallel(source_for_pot_triggers)
         if entry["pot"] == 0.0:
-            entry["pot"] = nominal_pot 
+            entry["pot"] = nominal_pot
     elif sample_type == "data":
-        entry["pot"] = nominal_pot 
+        entry["pot"] = nominal_pot
         entry["triggers"] = get_total_triggers_from_files_parallel(source_for_pot_triggers)
 
-    del entry["stage_name"] 
+    del entry["stage_name"]
     return True
-
 
 def main():
     DEFINITIONS_PATH = "config/sample_definitions.json"
@@ -157,7 +170,9 @@ def main():
         print("Error: Could not find <project> tag in XML file.", file=sys.stderr)
         sys.exit(1)
 
-    stage_outdirs = {s.get("name"): s.find("outdir").text for s in project_node.findall("stage") if s.find("outdir") is not None}
+    stage_outdirs = {
+        s.get("name"): s.find("outdir").text for s in project_node.findall("stage") if s.find("outdir") is not None
+    }
 
     print("\n===== PART 2: Hadding Files and Calculating Metadata =====")
     processed_analysis_path = Path(config["ntuple_base_directory"])
@@ -173,18 +188,28 @@ def main():
 
             nominal_pot = run_details.get("nominal_pot", 0.0)
             nominal_triggers = run_details.get("nominal_triggers", 0)
-            
+
             if nominal_pot == 0.0:
-                print(f"  Warning: No nominal_pot specified for run '{run}'. MC scaling might be incorrect.", file=sys.stderr)
+                print(
+                    f"  Warning: No nominal_pot specified for run '{run}'. MC scaling might be incorrect.",
+                    file=sys.stderr,
+                )
             else:
                 print(f"  Using nominal POT for this run: {nominal_pot:.4e}")
-            
+
             for sample in run_details.get("samples", []):
                 if process_sample_entry(sample, processed_analysis_path, stage_outdirs, entities, nominal_pot):
                     if "detector_variations" in sample:
                         for detvar_sample in sample["detector_variations"]:
-                            process_sample_entry(detvar_sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, is_detvar=True)
-            
+                            process_sample_entry(
+                                detvar_sample,
+                                processed_analysis_path,
+                                stage_outdirs,
+                                entities,
+                                nominal_pot,
+                                is_detvar=True,
+                            )
+
     output_path = Path(CONFIG_PATH)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:

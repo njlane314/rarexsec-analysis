@@ -5,13 +5,7 @@
 
 namespace analysis {
 
-enum class SampleOrigin : unsigned int {
-    kUnknown = 0,
-    kData,
-    kMonteCarlo,
-    kExternal,
-    kDirt
-};
+enum class SampleOrigin : unsigned int { kUnknown = 0, kData, kMonteCarlo, kExternal, kDirt };
 
 enum class AnalysisRole { kData, kNominal, kVariation };
 
@@ -56,6 +50,6 @@ inline std::string variationToKey(SampleVariation var) {
     }
 }
 
-}
+} // namespace analysis
 
 #endif

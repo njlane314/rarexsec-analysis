@@ -9,8 +9,8 @@
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
-#include "IEventDisplay.h"
 #include "IAnalysisPlugin.h"
+#include "IEventDisplay.h"
 #include "Selection.h"
 
 namespace analysis {
@@ -126,7 +126,7 @@ class EventDisplayPlugin : public IAnalysisPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
@@ -136,4 +136,3 @@ extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::EventDisplayPlugin::setLoader(loader);
 }
 #endif
-

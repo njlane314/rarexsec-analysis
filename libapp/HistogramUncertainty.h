@@ -20,9 +20,7 @@ class HistogramUncertainty {
     Eigen::MatrixXd shifts;
 
     HistogramUncertainty() = default;
-    HistogramUncertainty(const BinningDefinition &b,
-                         const std::vector<double> &c,
-                         const Eigen::MatrixXd &s);
+    HistogramUncertainty(const BinningDefinition &b, const std::vector<double> &c, const Eigen::MatrixXd &s);
 
     std::size_t size() const { return binning.getBinNumber(); }
     double count(int i) const { return counts.at(i); }
@@ -41,22 +39,15 @@ class HistogramUncertainty {
     HistogramUncertainty operator*(const HistogramUncertainty &o) const;
     HistogramUncertainty operator/(const HistogramUncertainty &o) const;
 
-    friend HistogramUncertainty operator*(double s,
-                                          const HistogramUncertainty &h) {
-        return h * s;
-    }
+    friend HistogramUncertainty operator*(double s, const HistogramUncertainty &h) { return h * s; }
 };
-inline HistogramUncertainty::HistogramUncertainty(const BinningDefinition &b,
-                                                  const std::vector<double> &c,
+inline HistogramUncertainty::HistogramUncertainty(const BinningDefinition &b, const std::vector<double> &c,
                                                   const Eigen::MatrixXd &s)
     : binning(b), counts(c), shifts(s) {
     if (b.getBinNumber() == 0)
-        log::fatal("HistogramUncertainty::HistogramUncertainty",
-                   "Zero binning");
-    if (c.size() != b.getBinNumber() ||
-        s.rows() != static_cast<int>(b.getBinNumber()))
-        log::fatal("HistogramUncertainty::HistogramUncertainty",
-                   "Dimension mismatch");
+        log::fatal("HistogramUncertainty::HistogramUncertainty", "Zero binning");
+    if (c.size() != b.getBinNumber() || s.rows() != static_cast<int>(b.getBinNumber()))
+        log::fatal("HistogramUncertainty::HistogramUncertainty", "Dimension mismatch");
 }
 
 inline double HistogramUncertainty::err(int i) const {
@@ -66,9 +57,7 @@ inline double HistogramUncertainty::err(int i) const {
     return v > 0 ? std::sqrt(v) : 0;
 }
 
-inline double HistogramUncertainty::sum() const {
-    return std::accumulate(counts.begin(), counts.end(), 0.0);
-}
+inline double HistogramUncertainty::sum() const { return std::accumulate(counts.begin(), counts.end(), 0.0); }
 
 inline double HistogramUncertainty::sumErr() const {
     int n = size();
@@ -135,8 +124,7 @@ inline void HistogramUncertainty::addCovariance(const TMatrixDSym &cov_to_add) {
     if (llt.info() == Eigen::NumericalIssue) {
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(cov);
         Eigen::VectorXd evals = es.eigenvalues().cwiseMax(0.0);
-        Eigen::MatrixXd cov_psd = es.eigenvectors() * evals.asDiagonal() *
-                                  es.eigenvectors().transpose();
+        Eigen::MatrixXd cov_psd = es.eigenvectors() * evals.asDiagonal() * es.eigenvectors().transpose();
         Eigen::LLT<Eigen::MatrixXd> llt_psd(cov_psd);
         shifts = llt_psd.matrixL();
     } else {
@@ -159,16 +147,13 @@ inline HistogramUncertainty HistogramUncertainty::operator*(double s) const {
     return tmp;
 }
 
-inline HistogramUncertainty
-HistogramUncertainty::operator+(const HistogramUncertainty &o) const {
+inline HistogramUncertainty HistogramUncertainty::operator+(const HistogramUncertainty &o) const {
     if (size() <= 0)
         return o;
     if (o.size() <= 0)
         return *this;
     if (size() != o.size()) {
-        log::fatal(
-            "HistogramUncertainty::operator+",
-            "Attempting to add histograms with different numbers of bins.");
+        log::fatal("HistogramUncertainty::operator+", "Attempting to add histograms with different numbers of bins.");
     }
     auto tmp = *this;
     int n = size();
@@ -176,8 +161,7 @@ HistogramUncertainty::operator+(const HistogramUncertainty &o) const {
         tmp.counts[i] += o.counts[i];
     }
     if (shifts.rows() != o.shifts.rows()) {
-        log::error("HistogramUncertainty::operator+",
-                   "Shifts matrix dimension mismatch: ", shifts.rows(), " vs ",
+        log::error("HistogramUncertainty::operator+", "Shifts matrix dimension mismatch: ", shifts.rows(), " vs ",
                    o.shifts.rows());
         return HistogramUncertainty();
     }
@@ -191,16 +175,14 @@ HistogramUncertainty::operator+(const HistogramUncertainty &o) const {
     return tmp;
 }
 
-inline HistogramUncertainty
-HistogramUncertainty::operator-(const HistogramUncertainty &o) const {
+inline HistogramUncertainty HistogramUncertainty::operator-(const HistogramUncertainty &o) const {
     if (size() <= 0)
         return o * -1.0;
     if (o.size() <= 0)
         return *this;
     if (size() != o.size()) {
-        log::fatal("HistogramUncertainty::operator-",
-                   "Attempting to subtract histograms with different numbers "
-                   "of bins.");
+        log::fatal("HistogramUncertainty::operator-", "Attempting to subtract histograms with different numbers "
+                                                      "of bins.");
     }
     auto tmp = *this;
     int n = size();
@@ -208,8 +190,7 @@ HistogramUncertainty::operator-(const HistogramUncertainty &o) const {
         tmp.counts[i] -= o.counts[i];
     }
     if (shifts.rows() != o.shifts.rows()) {
-        log::error("HistogramUncertainty::operator-",
-                   "Shifts matrix dimension mismatch: ", shifts.rows(), " vs ",
+        log::error("HistogramUncertainty::operator-", "Shifts matrix dimension mismatch: ", shifts.rows(), " vs ",
                    o.shifts.rows());
         return HistogramUncertainty();
     }
@@ -223,14 +204,12 @@ HistogramUncertainty::operator-(const HistogramUncertainty &o) const {
     return tmp;
 }
 
-inline HistogramUncertainty
-HistogramUncertainty::operator*(const HistogramUncertainty &o) const {
+inline HistogramUncertainty HistogramUncertainty::operator*(const HistogramUncertainty &o) const {
     if (size() <= 0 || o.size() <= 0)
         return HistogramUncertainty();
     if (size() != o.size()) {
-        log::fatal("HistogramUncertainty::operator*",
-                   "Attempting to multiply histograms with different numbers "
-                   "of bins.");
+        log::fatal("HistogramUncertainty::operator*", "Attempting to multiply histograms with different numbers "
+                                                      "of bins.");
     }
     auto tmp = *this;
     int n = size();
@@ -243,21 +222,18 @@ HistogramUncertainty::operator*(const HistogramUncertainty &o) const {
         double e2 = o.err(i);
         double rel1 = v1 != 0 ? e1 / v1 : 0;
         double rel2 = v2 != 0 ? e2 / v2 : 0;
-        double er =
-            std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
+        double er = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
         tmp.shifts(i) = er;
     }
     return tmp;
 }
 
-inline HistogramUncertainty
-HistogramUncertainty::operator/(const HistogramUncertainty &o) const {
+inline HistogramUncertainty HistogramUncertainty::operator/(const HistogramUncertainty &o) const {
     if (size() <= 0 || o.size() <= 0)
         return HistogramUncertainty();
     if (size() != o.size()) {
-        log::fatal(
-            "HistogramUncertainty::operator/",
-            "Attempting to divide histograms with different numbers of bins.");
+        log::fatal("HistogramUncertainty::operator/",
+                   "Attempting to divide histograms with different numbers of bins.");
     }
     auto tmp = *this;
     int n = size();
@@ -271,8 +247,7 @@ HistogramUncertainty::operator/(const HistogramUncertainty &o) const {
             double e2 = o.err(i);
             double rel1 = v1 != 0 ? e1 / v1 : 0;
             double rel2 = v2 != 0 ? e2 / v2 : 0;
-            double er =
-                std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
+            double er = std::abs(tmp.counts[i]) * std::sqrt(rel1 * rel1 + rel2 * rel2);
             tmp.shifts(i) = er;
         } else {
             tmp.counts[i] = 0;
@@ -282,6 +257,6 @@ HistogramUncertainty::operator/(const HistogramUncertainty &o) const {
     return tmp;
 }
 
-}
+} // namespace analysis
 
 #endif
