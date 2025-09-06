@@ -1,11 +1,9 @@
 #ifndef ANALYSIS_DEFINITION_H
 #define ANALYSIS_DEFINITION_H
 
-#include <initializer_list>
 #include <iterator>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -15,8 +13,10 @@
 #include "DynamicBinning.h"
 #include "KeyTypes.h"
 #include "RegionAnalysis.h"
+#include "RegionHandle.h"
 #include "Selection.h"
 #include "SelectionRegistry.h"
+#include "VariableHandle.h"
 #include "VariableRegistry.h"
 
 namespace analysis {
@@ -24,62 +24,6 @@ enum class DynamicBinningStrategy;
 }
 
 namespace analysis {
-
-class VariableHandle {
-  public:
-    VariableHandle(const VariableKey &k, const std::map<VariableKey, std::string> &exprs,
-                   const std::map<VariableKey, std::string> &lbls,
-                   const std::map<VariableKey, BinningDefinition> &bdefs,
-                   const std::map<VariableKey, std::string> &strats)
-        : key_(k), expressions_(exprs), labels_(lbls), binnings_(bdefs), stratifiers_(strats) {}
-
-    const std::string &expression() const { return expressions_.at(key_); }
-    const std::string &label() const { return labels_.at(key_); }
-    const BinningDefinition &binning() const { return binnings_.at(key_); }
-
-    std::string stratifier() const {
-        auto it = stratifiers_.find(key_);
-        return it != stratifiers_.end() ? it->second : "";
-    }
-
-    const VariableKey key_;
-
-  private:
-    const std::map<VariableKey, std::string> &expressions_;
-    const std::map<VariableKey, std::string> &labels_;
-    const std::map<VariableKey, BinningDefinition> &binnings_;
-    const std::map<VariableKey, std::string> &stratifiers_;
-};
-
-class RegionHandle {
-  public:
-    RegionHandle(const RegionKey &k, const std::map<RegionKey, std::string> &names,
-                 const std::map<RegionKey, Selection> &sels,
-                 const std::map<RegionKey, std::unique_ptr<RegionAnalysis>> &analyses,
-                 const std::map<RegionKey, std::vector<VariableKey>> &vars)
-        : key_(k), names_(names), selections_(sels), analyses_(analyses), variables_(vars) {}
-
-    const std::string &name() const { return names_.at(key_); }
-    const Selection &selection() const { return selections_.at(key_); }
-
-    std::unique_ptr<RegionAnalysis> &analysis() const {
-        return const_cast<std::unique_ptr<RegionAnalysis> &>(analyses_.at(key_));
-    }
-
-    const std::vector<VariableKey> &vars() const {
-        auto it = variables_.find(key_);
-        static const std::vector<VariableKey> empty;
-        return it != variables_.end() ? it->second : empty;
-    }
-
-    const RegionKey key_;
-
-  private:
-    const std::map<RegionKey, std::string> &names_;
-    const std::map<RegionKey, Selection> &selections_;
-    const std::map<RegionKey, std::unique_ptr<RegionAnalysis>> &analyses_;
-    const std::map<RegionKey, std::vector<VariableKey>> &variables_;
-};
 
 class AnalysisDefinition {
   public:
@@ -334,6 +278,6 @@ class AnalysisDefinition {
     friend class RegionIterator;
 };
 
-} // namespace analysis
+}
 
 #endif
