@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "TGraphErrors.h"
 #include "TH1F.h"
@@ -26,19 +27,36 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
 
   private:
     void draw(TCanvas &canvas) override {
+        int n = stages_.size();
+        TH1F frame("frame", "", n, 0, n);
+
+        setupFrame(canvas, frame);
+
+        auto [eff_graph, pur_graph] = buildGraphs();
+
+        eff_graph.DrawClone("PL SAME");
+        pur_graph.DrawClone("PL SAME");
+
+        annotatePoints();
+
+        auto legend = buildLegend();
+        legend.DrawClone();
+    }
+
+    void setupFrame(TCanvas &canvas, TH1F &frame) {
         canvas.cd();
         if (use_log_y_)
             canvas.SetLogy();
-        int n = stages_.size();
-        TH1F frame("frame", "", n, 0, n);
         double y_min = use_log_y_ ? 1e-3 : 0.0;
         frame.GetYaxis()->SetRangeUser(y_min, 1.05);
         frame.GetYaxis()->SetTitle("Fraction");
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < stages_.size(); ++i)
             frame.GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
-        }
         frame.DrawClone("AXIS");
+    }
 
+    std::pair<TGraphErrors, TGraphErrors> buildGraphs() {
+        int n = stages_.size();
         TGraphErrors eff_graph(n);
         TGraphErrors pur_graph(n);
         for (int i = 0; i < n; ++i) {
@@ -56,15 +74,15 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
         pur_graph.SetMarkerColor(kRed + 1);
         pur_graph.SetMarkerStyle(21);
         pur_graph.SetLineWidth(2);
+        return {eff_graph, pur_graph};
+    }
 
-        eff_graph.DrawClone("PL SAME");
-        pur_graph.DrawClone("PL SAME");
-
+    void annotatePoints() {
         TLatex latex;
         latex.SetTextAlign(23);
         latex.SetTextFont(42);
         latex.SetTextSize(0.035);
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < stages_.size(); ++i) {
             double x = i + 0.5;
             double ye = efficiencies_[i];
             double yp = purities_[i];
@@ -73,7 +91,9 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
             latex.SetTextColor(kRed + 1);
             latex.DrawLatex(x, yp + 0.02, Form("%.2f", yp));
         }
+    }
 
+    TLegend buildLegend() {
         TLegend legend(0.6, 0.75, 0.88, 0.88);
         legend.SetBorderSize(0);
         legend.SetFillStyle(0);
@@ -86,7 +106,7 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
         pur_entry->SetLineColor(kRed + 1);
         pur_entry->SetMarkerColor(kRed + 1);
         pur_entry->SetMarkerStyle(21);
-        legend.DrawClone();
+        return legend;
     }
 
     std::vector<std::string> stages_;
