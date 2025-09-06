@@ -81,11 +81,10 @@ class StackedHistogramPlugin : public IPlotPlugin {
     std::vector<PlotConfig> plots_;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
     return new analysis::StackedHistogramPlugin(cfg);
 }
 #endif
-

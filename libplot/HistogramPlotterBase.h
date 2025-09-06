@@ -14,10 +14,8 @@ namespace analysis {
 
 class HistogramPlotterBase {
   public:
-    HistogramPlotterBase(std::string plot_name,
-                         std::string output_directory = "plots")
-        : plot_name_(std::move(plot_name)),
-          output_directory_(std::move(output_directory)) {
+    HistogramPlotterBase(std::string plot_name, std::string output_directory = "plots")
+        : plot_name_(std::move(plot_name)), output_directory_(std::move(output_directory)) {
         gSystem->mkdir(output_directory_.c_str(), true);
     }
 
@@ -29,8 +27,7 @@ class HistogramPlotterBase {
         this->setGlobalStyle();
         TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
         this->draw(canvas);
-        canvas.SaveAs(
-            (output_directory_ + "/" + plot_name_ + "." + format).c_str());
+        canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
     }
 
   protected:
@@ -76,6 +73,6 @@ class HistogramPlotterBase {
     std::string output_directory_;
 };
 
-}
+} // namespace analysis
 
 #endif

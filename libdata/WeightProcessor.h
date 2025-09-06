@@ -16,14 +16,12 @@ class WeightProcessor : public IEventProcessor {
     WeightProcessor(const nlohmann::json &cfg, double total_run_pot)
         : sample_pot_(cfg.value("pot", 0.0)), total_run_pot_(total_run_pot) {
         if (sample_pot_ <= 0.0) {
-            log::warn("WeightProcessor::WeightProcessor",
-                      "sample JSON has no or invalid 'pot';"
-                      "base_event_weight will default to 1");
+            log::warn("WeightProcessor::WeightProcessor", "sample JSON has no or invalid 'pot';"
+                                                          "base_event_weight will default to 1");
         }
     }
 
-    ROOT::RDF::RNode process(ROOT::RDF::RNode df,
-                             SampleOrigin st) const override {
+    ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         if (st == SampleOrigin::kMonteCarlo) {
             double scale = 1.0;
             if (sample_pot_ > 0.0 && total_run_pot_ > 0.0) {
@@ -38,8 +36,7 @@ class WeightProcessor : public IEventProcessor {
                                    final_weight *= w_spline;
                                if (std::isfinite(w_tune) && w_tune > 0)
                                    final_weight *= w_tune;
-                               if (!std::isfinite(final_weight) ||
-                                   final_weight < 0)
+                               if (!std::isfinite(final_weight) || final_weight < 0)
                                    return 1.0;
                                return final_weight;
                            },
@@ -49,8 +46,7 @@ class WeightProcessor : public IEventProcessor {
                 if (df.HasColumn("base_event_weight")) {
                     df = df.Alias("nominal_event_weight", "base_event_weight");
                 } else {
-                    df =
-                        df.Define("nominal_event_weight", []() { return 1.0; });
+                    df = df.Define("nominal_event_weight", []() { return 1.0; });
                 }
             }
         }
@@ -66,6 +62,6 @@ class WeightProcessor : public IEventProcessor {
     double total_run_pot_;
 };
 
-}
+} // namespace analysis
 
 #endif

@@ -2,9 +2,9 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
 #include <TCanvas.h>
 #include <TGraph.h>
+#include <nlohmann/json.hpp>
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
@@ -111,7 +111,7 @@ class RunPeriodNormalizationPlugin : public IPlotPlugin {
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 
-}
+} // namespace analysis
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
@@ -121,4 +121,3 @@ extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::RunPeriodNormalizationPlugin::setLoader(loader);
 }
 #endif
-

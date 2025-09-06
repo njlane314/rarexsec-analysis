@@ -65,7 +65,8 @@ class AnalysisPluginManager {
             if (!create)
                 throw std::runtime_error(dlerror());
 
-            std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()), p.value("plot_configs", nlohmann::json::object())));
+            std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()),
+                                                           p.value("plot_configs", nlohmann::json::object())));
             plugins_.push_back(std::move(plugin));
             handles_.push_back(handle);
         }
@@ -97,9 +98,7 @@ class AnalysisPluginManager {
     }
 
   private:
-    static std::string makeLibraryFilename(const std::string &name) {
-        return name + ".so";
-    }
+    static std::string makeLibraryFilename(const std::string &name) { return name + ".so"; }
 
     static std::string makePluginPath(const std::string &name) {
         const char *dir = std::getenv("ANALYSIS_PLUGIN_DIR");
@@ -111,5 +110,5 @@ class AnalysisPluginManager {
     std::vector<void *> handles_;
 };
 
-}
+} // namespace analysis
 #endif

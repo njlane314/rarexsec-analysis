@@ -9,8 +9,8 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
-#include "QuadTreeBinning2D.h"
 #include "OccupancyMatrixPlot.h"
+#include "QuadTreeBinning2D.h"
 #include "Selection.h"
 #include "StackedHistogramPlot.h"
 #include "UnstackedHistogramPlot.h"
@@ -26,8 +26,8 @@ class PlotCatalog {
         output_directory_ = p;
     }
 
-    void generateStackedPlot(const AnalysisResult &res, const std::string &variable,
-                             const std::string &region, const std::string &category_column, bool overlay_signal = true,
+    void generateStackedPlot(const AnalysisResult &res, const std::string &variable, const std::string &region,
+                             const std::string &category_column, bool overlay_signal = true,
                              const std::vector<Cut> &cut_list = {}, bool annotate_numbers = true) const {
         const auto &result = this->fetchResult(res, variable, region);
         auto sanitise = [&](std::string s) {
@@ -46,10 +46,9 @@ class PlotCatalog {
         plot.drawAndSave();
     }
 
-    void generateUnstackedPlot(const AnalysisResult &res, const std::string &variable,
-                               const std::string &region, const std::string &category_column,
-                               const std::vector<Cut> &cut_list = {}, bool annotate_numbers = true,
-                               bool area_normalise = false, bool use_log_y = false,
+    void generateUnstackedPlot(const AnalysisResult &res, const std::string &variable, const std::string &region,
+                               const std::string &category_column, const std::vector<Cut> &cut_list = {},
+                               bool annotate_numbers = true, bool area_normalise = false, bool use_log_y = false,
                                const std::string &y_axis_label = "Events") const {
         const auto &result = this->fetchResult(res, variable, region);
         auto sanitise = [&](std::string s) {
@@ -222,8 +221,7 @@ class PlotCatalog {
         if (res.hasResult(rkey, vkey)) {
             return res.result(rkey, vkey);
         }
-        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for variable", variable, "in region",
-                   region);
+        log::fatal("PlotCatalog::fetchResult", "Missing analysis result for variable", variable, "in region", region);
         throw std::runtime_error("Missing analysis result for variable");
     }
 
@@ -232,6 +230,6 @@ class PlotCatalog {
     std::filesystem::path output_directory_;
 };
 
-}
+} // namespace analysis
 
 #endif
