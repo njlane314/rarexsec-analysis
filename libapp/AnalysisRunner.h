@@ -290,9 +290,11 @@ class AnalysisRunner {
 
     AnalysisPluginManager plugin_manager_;
     SelectionRegistry selection_registry_;
+
     AnalysisDataLoader &data_loader_;
     AnalysisDefinition analysis_definition_;
     SystematicsProcessor &systematics_processor_;
+
     std::unique_ptr<HistogramBooker> histogram_booker_;
 };
 

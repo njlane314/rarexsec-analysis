@@ -87,6 +87,7 @@ class OccupancyMatrixPlugin : public IAnalysisPlugin {
 
   private:
     std::vector<PlotConfig> plots_;
+
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
 

@@ -86,6 +86,7 @@ class WeightSystematicStrategy : public SystematicStrategy {
 
   private:
     std::string identifier_;
+
     std::string up_column_;
     std::string dn_column_;
 };
