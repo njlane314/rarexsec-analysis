@@ -48,23 +48,27 @@ class SelectionRegistry {
     }
 
     void registerDefaults() {
-        rules_.emplace("QUALITY", SelectionRule{"Quality Preselection", {"quality_event"}});
-        rules_.emplace("QUALITY_BREAKDOWN", SelectionRule{"Quality Preselection Breakdown",
-                                                          {"in_reco_fiducial", "num_slices == 1", "selection_pass",
-                                                           "optical_filter_pe_beam > 20"}});
-        rules_.emplace("NUMU_CC", SelectionRule{"NuMu CC Selection", {"has_muon", "n_pfps_gen2 > 1"}});
-        rules_.emplace(
-            "NUMU_CC_BREAKDOWN",
-            SelectionRule{"NuMu CC Selection Breakdown", {"muon_score", "muon_length", "has_muon", "n_pfps_gen2 > 1"}});
-        rules_.emplace("QUALITY_NUMU_CC",
-                       SelectionRule{"Quality + NuMu CC Selection", {"quality_event", "has_muon", "n_pfps_gen2 > 1"}});
-        rules_.emplace(
-            "QUALITY_NUMU_CC_BREAKDOWN",
-            SelectionRule{"Quality + NuMu CC Selection Breakdown",
-                          {"in_reco_fiducial", "num_slices == 1", "selection_pass", "optical_filter_pe_beam > 20",
-                           "muon_score", "muon_length", "has_muon", "n_pfps_gen2 > 1"}});
-        rules_.emplace("ALL_EVENTS", SelectionRule{"All Events", {}});
-        rules_.emplace("NONE", SelectionRule{"No Preselection", {}});
+        const std::vector<std::pair<std::string, SelectionRule>> defaults{
+            {"QUALITY", {"Quality Preselection", {"quality_event"}}},
+            {"QUALITY_BREAKDOWN",
+             {"Quality Preselection Breakdown",
+              {"in_reco_fiducial", "num_slices == 1", "selection_pass", "optical_filter_pe_beam > 20"}}},
+
+            {"NUMU_CC", {"NuMu CC Selection", {"has_muon", "n_pfps_gen2 > 1"}}},
+            {"NUMU_CC_BREAKDOWN",
+             {"NuMu CC Selection Breakdown", {"muon_score", "muon_length", "has_muon", "n_pfps_gen2 > 1"}}},
+
+            {"QUALITY_NUMU_CC", {"Quality + NuMu CC Selection", {"quality_event", "has_muon", "n_pfps_gen2 > 1"}}},
+            {"QUALITY_NUMU_CC_BREAKDOWN",
+             {"Quality + NuMu CC Selection Breakdown",
+              {"in_reco_fiducial", "num_slices == 1", "selection_pass", "optical_filter_pe_beam > 20", "muon_score",
+               "muon_length", "has_muon", "n_pfps_gen2 > 1"}}},
+
+            {"ALL_EVENTS", {"All Events", {}}},
+            {"NONE", {"No Preselection", {}}}};
+
+        for (const auto &r : defaults)
+            rules_.emplace(r);
     }
 
     std::unordered_map<std::string, SelectionRule> rules_;
