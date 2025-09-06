@@ -50,9 +50,7 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
     void addCut(const Cut &cut) { cuts_.push_back(cut); }
 
   private:
-    void drawWatermark(TPad *pad, double total_mc_events) const {
-        pad->cd();
-
+    std::vector<std::string> formatWatermarkLines(double total_mc_events) const {
         auto format_double = [](double val, int precision) {
             std::stringstream stream;
             stream.imbue(std::locale(""));
@@ -69,7 +67,9 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
         if (e_pos != std::string::npos) {
             int exponent = std::stoi(pot_str.substr(e_pos + 1));
             pot_str = pot_str.substr(0, e_pos);
-            pot_str += " #times 10^{" + std::to_string(exponent) + "}";
+            pot_str += " #times 10^{";
+            pot_str += std::to_string(exponent);
+            pot_str += "}";
         }
 
         std::map<std::string, std::string> beam_map = {{"numi_fhc", "NuMI FHC"}, {"numi_rhc", "NuMI RHC"}};
@@ -97,18 +97,30 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
         std::string line4 = "#it{Analysis Region}: " + region_analysis_.regionLabel();
         std::string line5 = "Total Simulated Entries: " + format_double(total_mc_events, 2);
 
+        return {line1, line2, line3, line4, line5};
+    }
+
+    void renderWatermark(TPad *pad, const std::vector<std::string> &lines) const {
+        pad->cd();
+
         TLatex watermark;
         watermark.SetNDC();
         watermark.SetTextAlign(33);
         watermark.SetTextFont(62);
         watermark.SetTextSize(0.05);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, line1.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, lines[0].c_str());
         watermark.SetTextFont(42);
         watermark.SetTextSize(0.05 * 0.8);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, line2.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, line3.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, line4.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, line5.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, lines[1].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, lines[2].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, lines[3].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, lines[4].c_str());
+    }
+
+    void drawWatermark(TPad *pad, double total_mc_events) const {
+        auto lines = formatWatermarkLines(total_mc_events);
+
+        renderWatermark(pad, lines);
     }
 
   protected:
