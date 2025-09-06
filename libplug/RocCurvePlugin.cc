@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
@@ -79,86 +80,117 @@ class RocCurvePlugin : public IAnalysisPlugin {
 
         StratifierRegistry strat_reg;
         for (const auto &pc : plots_) {
-            std::vector<int> signal_keys;
-            try {
-                signal_keys = strat_reg.getSignalKeys(pc.signal_group);
-            } catch (const std::exception &e) {
-                log::error("RocCurvePlugin::onFinalisation", e.what());
-                continue;
-            }
-
-            auto buildSignalExpr = [&](const std::vector<int> &keys) {
-                std::string expr;
-                for (size_t i = 0; i < keys.size(); ++i) {
-                    if (i > 0)
-                        expr += " || ";
-                    expr += pc.channel_column + " == " + std::to_string(keys[i]);
-                }
-                return expr;
-            };
-
-            std::string signal_expr = buildSignalExpr(signal_keys);
+            std::string signal_expr;
             std::string selection_expr;
-            for (size_t i = 0; i < pc.clauses.size(); ++i) {
-                if (i > 0)
-                    selection_expr += " && ";
-                selection_expr += pc.clauses[i];
-            }
 
-            TH1D total_hist("total", "", pc.n_bins, pc.min, pc.max);
-            TH1D sig_hist("sig", "", pc.n_bins, pc.min, pc.max);
+            if (!buildExpressions(pc, strat_reg, signal_expr, selection_expr))
+                continue;
 
-            for (auto const &[skey, sample] : loader_->getSampleFrames()) {
-                if (!sample.isMc())
-                    continue;
-                auto df = sample.nominal_node_;
-                if (!selection_expr.empty())
-                    df = df.Filter(selection_expr);
-                auto tot_h = df.Histo1D({"tot_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
-                total_hist.Add(tot_h.GetPtr());
-                auto sig_df = df.Filter(signal_expr);
-                auto sig_h =
-                    sig_df.Histo1D({"sig_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
-                sig_hist.Add(sig_h.GetPtr());
-            }
+            auto [total_hist, sig_hist] = accumulateHistograms(pc, signal_expr, selection_expr);
 
-            TH1D bkg_hist(total_hist);
-            bkg_hist.Add(&sig_hist, -1.0);
+            auto [efficiencies, rejections] = computeRocPoints(pc, total_hist, sig_hist);
 
-            double sig_total = sig_hist.Integral();
-            double bkg_total = bkg_hist.Integral();
-
-            std::vector<double> efficiencies;
-            std::vector<double> rejections;
-
-            if (pc.cut_direction == CutDirection::GreaterThan) {
-                for (int bin = pc.n_bins; bin >= 1; --bin) {
-                    double sig_pass = sig_hist.Integral(bin, pc.n_bins);
-                    double bkg_pass = bkg_hist.Integral(bin, pc.n_bins);
-                    double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
-                    double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
-                    efficiencies.push_back(eff);
-                    rejections.push_back(rej);
-                }
-            } else {
-                for (int bin = 1; bin <= pc.n_bins; ++bin) {
-                    double sig_pass = sig_hist.Integral(1, bin);
-                    double bkg_pass = bkg_hist.Integral(1, bin);
-                    double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
-                    double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
-                    efficiencies.push_back(eff);
-                    rejections.push_back(rej);
-                }
-            }
-
-            RocCurvePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
-            plot.drawAndSave("pdf");
+            renderPlot(pc, efficiencies, rejections);
         }
     }
 
     static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
 
   private:
+    bool buildExpressions(const PlotConfig &pc, StratifierRegistry &strat_reg, std::string &signal_expr,
+                          std::string &selection_expr) const {
+        std::vector<int> signal_keys;
+
+        try {
+            signal_keys = strat_reg.getSignalKeys(pc.signal_group);
+        } catch (const std::exception &e) {
+            log::error("RocCurvePlugin::onFinalisation", e.what());
+            return false;
+        }
+
+        for (size_t i = 0; i < signal_keys.size(); ++i) {
+            if (i > 0)
+                signal_expr += " || ";
+            signal_expr += pc.channel_column + " == " + std::to_string(signal_keys[i]);
+        }
+
+        for (size_t i = 0; i < pc.clauses.size(); ++i) {
+            if (i > 0)
+                selection_expr += " && ";
+            selection_expr += pc.clauses[i];
+        }
+
+        return true;
+    }
+
+    std::pair<TH1D, TH1D> accumulateHistograms(const PlotConfig &pc, const std::string &signal_expr,
+                                               const std::string &selection_expr) const {
+        TH1D total_hist("total", "", pc.n_bins, pc.min, pc.max);
+        TH1D sig_hist("sig", "", pc.n_bins, pc.min, pc.max);
+
+        for (auto const &[skey, sample] : loader_->getSampleFrames()) {
+            if (!sample.isMc())
+                continue;
+
+            auto df = sample.nominal_node_;
+            if (!selection_expr.empty())
+                df = df.Filter(selection_expr);
+
+            auto tot_h = df.Histo1D({"tot_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
+            total_hist.Add(tot_h.GetPtr());
+
+            auto sig_df = df.Filter(signal_expr);
+            auto sig_h = sig_df.Histo1D({"sig_h", "", pc.n_bins, pc.min, pc.max}, pc.variable, "nominal_event_weight");
+            sig_hist.Add(sig_h.GetPtr());
+        }
+
+        return {total_hist, sig_hist};
+    }
+
+    std::pair<std::vector<double>, std::vector<double>> computeRocPoints(const PlotConfig &pc, const TH1D &total_hist,
+                                                                         const TH1D &sig_hist) const {
+        TH1D bkg_hist(total_hist);
+        bkg_hist.Add(&sig_hist, -1.0);
+
+        double sig_total = sig_hist.Integral();
+        double bkg_total = bkg_hist.Integral();
+
+        std::vector<double> efficiencies;
+        std::vector<double> rejections;
+
+        if (pc.cut_direction == CutDirection::GreaterThan) {
+            for (int bin = pc.n_bins; bin >= 1; --bin) {
+                double sig_pass = sig_hist.Integral(bin, pc.n_bins);
+                double bkg_pass = bkg_hist.Integral(bin, pc.n_bins);
+
+                double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
+                double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
+
+                efficiencies.push_back(eff);
+                rejections.push_back(rej);
+            }
+        } else {
+            for (int bin = 1; bin <= pc.n_bins; ++bin) {
+                double sig_pass = sig_hist.Integral(1, bin);
+                double bkg_pass = bkg_hist.Integral(1, bin);
+
+                double eff = sig_total > 0 ? sig_pass / sig_total : 0.0;
+                double rej = bkg_total > 0 ? 1.0 - (bkg_pass / bkg_total) : 0.0;
+
+                efficiencies.push_back(eff);
+                rejections.push_back(rej);
+            }
+        }
+
+        return {efficiencies, rejections};
+    }
+
+    void renderPlot(const PlotConfig &pc, const std::vector<double> &efficiencies,
+                    const std::vector<double> &rejections) const {
+        RocCurvePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
+        plot.drawAndSave("pdf");
+    }
+
     std::vector<PlotConfig> plots_;
     inline static AnalysisDataLoader *loader_ = nullptr;
 };
