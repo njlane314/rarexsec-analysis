@@ -30,7 +30,7 @@ class FlashValidationPlugin : public IPlotPlugin {
 
     explicit FlashValidationPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::onPlottime_error("FlashValidationPlugin missing plots");
+            throw std::runtime_error("FlashValidationPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.time_column = p.value("time_column", std::string("h_flash_time"));

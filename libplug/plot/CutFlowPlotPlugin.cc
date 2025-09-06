@@ -29,7 +29,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
 
     explicit CutFlowPlotPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::onPlottime_error("CutFlowPlotPlugin missing plots");
+            throw std::runtime_error("CutFlowPlotPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.selection_rule = p.at("selection_rule").get<std::string>();

@@ -30,7 +30,7 @@ class EventDisplayPlugin : public IPlotPlugin {
 
     explicit EventDisplayPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
-            throw std::onPlottime_error("EventDisplayPlugin missing event_displays");
+            throw std::runtime_error("EventDisplayPlugin missing event_displays");
         }
         SelectionRegistry sel_reg;
         for (auto const &ed : cfg.at("event_displays")) {

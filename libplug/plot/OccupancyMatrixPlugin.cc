@@ -26,7 +26,7 @@ class OccupancyMatrixPlugin : public IPlotPlugin {
 
     explicit OccupancyMatrixPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("occupancy_matrix_plots") || !cfg.at("occupancy_matrix_plots").is_array())
-            throw std::onPlottime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
+            throw std::runtime_error("OccupancyMatrixPlugin missing occupancy_matrix_plots");
         for (auto const &p : cfg.at("occupancy_matrix_plots")) {
             PlotConfig pc;
             pc.x_variable = p.at("x").get<std::string>();
