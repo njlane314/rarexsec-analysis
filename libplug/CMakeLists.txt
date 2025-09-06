@@ -36,7 +36,6 @@ function(add_plugin NAME SRC EXTRA_LIBS)
 endfunction()
 
 # Analysis plugins
-add_plugin(EventDisplayPlugin analysis/EventDisplayPlugin.cc "")
 add_plugin(OccupancyMatrixPlugin analysis/OccupancyMatrixPlugin.cc "")
 add_plugin(RegionsPlugin analysis/RegionsPlugin.cc "")
 add_plugin(RocCurvePlugin analysis/RocCurvePlugin.cc "")
@@ -46,6 +45,7 @@ add_plugin(UnstackedHistogramPlugin analysis/UnstackedHistogramPlugin.cc "")
 add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
 
 # Plot plugins
+add_plugin(EventDisplayPlugin plot/EventDisplayPlugin.cc "")
 add_plugin(CutFlowPlotPlugin plot/CutFlowPlotPlugin.cc "")
 add_plugin(FlashValidationPlugin plot/FlashValidationPlugin.cc "")
 add_plugin(RunPeriodNormalizationPlugin plot/RunPeriodNormalizationPlugin.cc "")
