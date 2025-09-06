@@ -103,19 +103,30 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
     void renderWatermark(TPad *pad, const std::vector<std::string> &lines) const {
         pad->cd();
+        const int align = 33;
+        const int bold_font = 62;
+        const int regular_font = 42;
+        const double base_size = 0.05;
+        const double size_scale = 0.8;
+        const double offset = 0.03;
+        const double line_spacing = 0.06;
 
         TLatex watermark;
         watermark.SetNDC();
-        watermark.SetTextAlign(33);
-        watermark.SetTextFont(62);
-        watermark.SetTextSize(0.05);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, lines[0].c_str());
-        watermark.SetTextFont(42);
-        watermark.SetTextSize(0.05 * 0.8);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, lines[1].c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, lines[2].c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, lines[3].c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, lines[4].c_str());
+        watermark.SetTextAlign(align);
+        watermark.SetTextFont(bold_font);
+        watermark.SetTextSize(base_size);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - offset, 1 - pad->GetTopMargin() - offset, lines[0].c_str());
+        watermark.SetTextFont(regular_font);
+        watermark.SetTextSize(base_size * size_scale);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - offset,
+                            1 - pad->GetTopMargin() - (offset + line_spacing * 1), lines[1].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - offset,
+                            1 - pad->GetTopMargin() - (offset + line_spacing * 2), lines[2].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - offset,
+                            1 - pad->GetTopMargin() - (offset + line_spacing * 3), lines[3].c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - offset,
+                            1 - pad->GetTopMargin() - (offset + line_spacing * 4), lines[4].c_str());
     }
 
     void drawWatermark(TPad *pad, double total_mc_events) const {
@@ -125,22 +136,30 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
     }
 
     std::pair<TPad *, TPad *> setupPads(TCanvas &canvas) const {
-        const double PLOT_LEGEND_SPLIT = 0.85;
+        const double split = 0.85;
+        const double zero = 0.0;
+        const double one = 1.0;
+        const double top_margin = 0.01;
+        const double bottom_margin = 0.12;
+        const double left_margin = 0.12;
+        const double right_margin = 0.05;
+        const double legend_top = 0.05;
+        const double legend_bottom = 0.01;
 
         canvas.cd();
-        TPad *p_main = new TPad("main_pad", "main_pad", 0.0, 0.0, 1.0, PLOT_LEGEND_SPLIT);
-        TPad *p_legend = new TPad("legend_pad", "legend_pad", 0.0, PLOT_LEGEND_SPLIT, 1.0, 1.0);
+        TPad *p_main = new TPad("main_pad", "main_pad", zero, zero, one, split);
+        TPad *p_legend = new TPad("legend_pad", "legend_pad", zero, split, one, one);
 
-        p_main->SetTopMargin(0.01);
-        p_main->SetBottomMargin(0.12);
-        p_main->SetLeftMargin(0.12);
-        p_main->SetRightMargin(0.05);
+        p_main->SetTopMargin(top_margin);
+        p_main->SetBottomMargin(bottom_margin);
+        p_main->SetLeftMargin(left_margin);
+        p_main->SetRightMargin(right_margin);
 
         if (use_log_y_)
             p_main->SetLogy();
 
-        p_legend->SetTopMargin(0.05);
-        p_legend->SetBottomMargin(0.01);
+        p_legend->SetTopMargin(legend_top);
+        p_legend->SetBottomMargin(legend_bottom);
         p_legend->Draw();
         p_main->Draw();
 
@@ -169,13 +188,24 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
     void buildLegend(TPad *p_legend, const std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists) {
         p_legend->cd();
 
-        legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
-        legend_->SetBorderSize(0);
-        legend_->SetFillStyle(0);
-        legend_->SetTextFont(42);
+        const double x1 = 0.12;
+        const double y1 = 0.0;
+        const double x2 = 0.95;
+        const double y2 = 1.0;
+        const int border = 0;
+        const int fill = 0;
+        const int font_style = 42;
+        const int threshold = 4;
+        const int cols_large = 3;
+        const int cols_small = 2;
+
+        legend_ = new TLegend(x1, y1, x2, y2);
+        legend_->SetBorderSize(border);
+        legend_->SetFillStyle(fill);
+        legend_->SetTextFont(font_style);
 
         const int n_entries = mc_hists.size();
-        int n_cols = (n_entries > 4) ? 3 : 2;
+        int n_cols = (n_entries > threshold) ? cols_large : cols_small;
         legend_->SetNColumns(n_cols);
 
         auto format_double = [](double val, int precision) {
@@ -187,13 +217,16 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
         StratifierRegistry registry;
 
+        const int line_width = 2;
+        const int fill_style = 0;
+
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h_leg = new TH1D();
 
             const auto &stratum = registry.getStratumProperties(category_column_, std::stoi(key.str()));
             h_leg->SetLineColor(stratum.fill_colour);
-            h_leg->SetLineWidth(2);
-            h_leg->SetFillStyle(0);
+            h_leg->SetLineWidth(line_width);
+            h_leg->SetFillStyle(fill_style);
 
             std::string tex_label = stratum.tex_label;
 
@@ -213,7 +246,14 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
         StratifierRegistry registry;
 
-        double max_y = use_log_y_ ? 0.1 : 0.0;
+        const double log_y_init = 0.1;
+        const double lin_y_init = 0.0;
+        const int line_width = 2;
+        const int fill_style = 0;
+        const double unit = 1.0;
+        const double zero = 0.0;
+
+        double max_y = use_log_y_ ? log_y_init : lin_y_init;
         bool first_drawn = false;
 
         for (const auto &[key, hist] : mc_hists) {
@@ -222,11 +262,11 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
 
             const auto &stratum = registry.getStratumProperties(category_column_, std::stoi(key.str()));
             h->SetLineColor(stratum.fill_colour);
-            h->SetLineWidth(2);
-            h->SetFillStyle(0);
+            h->SetLineWidth(line_width);
+            h->SetFillStyle(fill_style);
 
-            if (area_normalise_ && h->Integral() > 0)
-                h->Scale(1.0 / h->Integral());
+            if (area_normalise_ && h->Integral() > zero)
+                h->Scale(unit / h->Integral());
 
             max_y = std::max(max_y, h->GetMaximum());
 
@@ -243,14 +283,20 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
     }
 
     void renderCuts(double max_y) {
-        for (const auto &cut : cuts_) {
-            double y_arrow_pos = max_y * 0.85;
-            double x_range = hists_.empty() ? 0.0 : hists_[0]->GetXaxis()->GetXmax() - hists_[0]->GetXaxis()->GetXmin();
-            double arrow_length = x_range * 0.04;
+        const double arrow_pos_factor = 0.85;
+        const double arrow_len_factor = 0.04;
+        const double line_scale = 1.3;
+        const int line_width = 2;
+        const double arrow_size = 0.025;
 
-            TLine *line = new TLine(cut.threshold, 0, cut.threshold, max_y * 1.3);
+        for (const auto &cut : cuts_) {
+            double y_arrow_pos = max_y * arrow_pos_factor;
+            double x_range = hists_.empty() ? 0.0 : hists_[0]->GetXaxis()->GetXmax() - hists_[0]->GetXaxis()->GetXmin();
+            double arrow_length = x_range * arrow_len_factor;
+
+            TLine *line = new TLine(cut.threshold, 0, cut.threshold, max_y * line_scale);
             line->SetLineColor(kRed);
-            line->SetLineWidth(2);
+            line->SetLineWidth(line_width);
             line->SetLineStyle(kDashed);
             line->Draw("same");
             cut_visuals_.push_back(line);
@@ -265,36 +311,43 @@ class UnstackedHistogramPlot : public HistogramPlotterBase {
                 x_end = cut.threshold - arrow_length;
             }
 
-            TArrow *arrow = new TArrow(x_start, y_arrow_pos, x_end, y_arrow_pos, 0.025, ">");
+            TArrow *arrow = new TArrow(x_start, y_arrow_pos, x_end, y_arrow_pos, arrow_size, ">");
             arrow->SetLineColor(kRed);
             arrow->SetFillColor(kRed);
-            arrow->SetLineWidth(2);
+            arrow->SetLineWidth(line_width);
             arrow->Draw("same");
             cut_visuals_.push_back(arrow);
         }
     }
 
     void configureAxes() {
+        const double title_offset = 1.0;
+        const int divisions = 520;
+        const double tick_length = 0.02;
+        const int first_bin = 1;
+        const int default_setting = -1;
+
         if (hists_.empty())
             return;
 
         hists_[0]->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
         hists_[0]->GetYaxis()->SetTitle(y_axis_label_.c_str());
-        hists_[0]->GetXaxis()->SetTitleOffset(1.0);
-        hists_[0]->GetYaxis()->SetTitleOffset(1.0);
+        hists_[0]->GetXaxis()->SetTitleOffset(title_offset);
+        hists_[0]->GetYaxis()->SetTitleOffset(title_offset);
 
         const auto &edges = variable_result_.binning_.getEdges();
         hists_[0]->GetXaxis()->SetLimits(edges.front(), edges.back());
-        hists_[0]->GetXaxis()->SetNdivisions(520);
-        hists_[0]->GetXaxis()->SetTickLength(0.02);
+        hists_[0]->GetXaxis()->SetNdivisions(divisions);
+        hists_[0]->GetXaxis()->SetTickLength(tick_length);
 
         if (edges.size() >= 3) {
             std::ostringstream uf_label, of_label;
-            uf_label << "<" << edges[1];
+            uf_label << "<" << edges[first_bin];
             of_label << ">" << edges[edges.size() - 2];
-            hists_[0]->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1, uf_label.str().c_str());
-            hists_[0]->GetXaxis()->ChangeLabel(hists_[0]->GetXaxis()->GetNbins(), -1, -1, -1, -1, -1,
-                                               of_label.str().c_str());
+            hists_[0]->GetXaxis()->ChangeLabel(first_bin, default_setting, default_setting, default_setting, default_setting,
+                                               default_setting, uf_label.str().c_str());
+            hists_[0]->GetXaxis()->ChangeLabel(hists_[0]->GetXaxis()->GetNbins(), default_setting, default_setting,
+                                               default_setting, default_setting, default_setting, of_label.str().c_str());
         }
     }
 

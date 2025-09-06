@@ -21,16 +21,20 @@ class OccupancyMatrixPlot : public HistogramPlotterBase {
   private:
     void draw(TCanvas &canvas) override {
         canvas.cd();
+        const int stats_off = 0;
+        const int contour_count = 255;
+        const double margin = 0.15;
+        const double title_offset = 1.2;
 
-        gStyle->SetOptStat(0);
-        gStyle->SetNumberContours(255);
+        gStyle->SetOptStat(stats_off);
+        gStyle->SetNumberContours(contour_count);
 
         canvas.SetLogz();
-        canvas.SetLeftMargin(0.15);
-        canvas.SetRightMargin(0.15);
+        canvas.SetLeftMargin(margin);
+        canvas.SetRightMargin(margin);
 
         hist_->SetTitle("");
-        hist_->GetZaxis()->SetTitleOffset(1.2);
+        hist_->GetZaxis()->SetTitleOffset(title_offset);
 
         hist_->Draw("COLZ");
     }
