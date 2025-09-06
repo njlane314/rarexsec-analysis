@@ -105,27 +105,41 @@ class AnalysisDataLoader {
         }
     }
 
+    void processPeriod(const std::string &period) {
+        const auto &rc = run_registry_.get(beam_, period);
+
+        for (auto &sample_json : rc.samples) {
+            if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
+                log::info("AnalysisDataLoader::processPeriod",
+                          "Skipping inactive sample: ", sample_json.at("sample_key").get<std::string>());
+                continue;
+            }
+
+            auto pipeline = chainEventProcessors(
+                std::make_unique<WeightProcessor>(sample_json, total_pot_),
+                std::make_unique<TruthChannelProcessor>(),
+                std::make_unique<BlipProcessor>(),
+                std::make_unique<MuonSelectionProcessor>(),
+                std::make_unique<ReconstructionProcessor>());
+            processors_.push_back(std::move(pipeline));
+
+            auto &proc = *processors_.back();
+
+            SampleDefinition sample{sample_json, rc.samples, ntuple_base_directory_, var_registry_, proc};
+
+            run_config_cache_.emplace(sample.sample_key_, &rc);
+
+            frames_.emplace(sample.sample_key_, std::move(sample));
+        }
+    }
+
     void loadAll() {
         for (auto &period : periods_) {
             const auto &rc = run_registry_.get(beam_, period);
             total_pot_ += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
-            for (auto &sample_json : rc.samples) {
-                if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
-                    log::info("AnalysisDataLoader::loadAll",
-                              "Skipping inactive sample: ", sample_json.at("sample_key").get<std::string>());
-                    continue;
-                }
-                auto pipeline = chainEventProcessors(
-                    std::make_unique<WeightProcessor>(sample_json, total_pot_),
-                    std::make_unique<TruthChannelProcessor>(), std::make_unique<BlipProcessor>(),
-                    std::make_unique<MuonSelectionProcessor>(), std::make_unique<ReconstructionProcessor>());
-                processors_.push_back(std::move(pipeline));
-                auto &proc = *processors_.back();
-                SampleDefinition sample{sample_json, rc.samples, ntuple_base_directory_, var_registry_, proc};
-                run_config_cache_.emplace(sample.sample_key_, &rc);
-                frames_.emplace(sample.sample_key_, std::move(sample));
-            }
+
+            processPeriod(period);
         }
     }
 };
