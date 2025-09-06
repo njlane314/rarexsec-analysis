@@ -42,6 +42,16 @@ class VariableRegistry {
     }
 
     static std::vector<std::string> eventVariables(SampleOrigin type) {
+        auto vars = collectBaseGroups();
+
+        if (type == SampleOrigin::kMonteCarlo)
+            appendMonteCarloGroups(vars);
+
+        return {vars.begin(), vars.end()};
+    }
+
+  private:
+    static std::unordered_set<std::string> collectBaseGroups() {
         std::unordered_set<std::string> vars{baseVariables().begin(), baseVariables().end()};
 
         vars.insert(recoEventVariables().begin(), recoEventVariables().end());
@@ -53,25 +63,23 @@ class VariableRegistry {
         vars.insert(energyVariables().begin(), energyVariables().end());
         vars.insert(sliceVariables().begin(), sliceVariables().end());
 
-        if (type == SampleOrigin::kMonteCarlo) {
-            vars.insert(truthVariables().begin(), truthVariables().end());
-
-            for (auto &kv : knobVariations()) {
-                vars.insert(kv.second.first);
-                vars.insert(kv.second.second);
-            }
-
-            for (auto &kv : multiUniverseVariations()) {
-                vars.insert(kv.first);
-            }
-
-            vars.insert(singleKnobVar());
-        }
-
-        return {vars.begin(), vars.end()};
+        return vars;
     }
 
-  private:
+    static void appendMonteCarloGroups(std::unordered_set<std::string> &vars) {
+        vars.insert(truthVariables().begin(), truthVariables().end());
+
+        for (auto &kv : knobVariations()) {
+            vars.insert(kv.second.first);
+            vars.insert(kv.second.second);
+        }
+
+        for (auto &kv : multiUniverseVariations())
+            vars.insert(kv.first);
+
+        vars.insert(singleKnobVar());
+    }
+
     static const std::vector<std::string> &baseVariables() {
         static const std::vector<std::string> v = {"run", "sub", "evt"};
         return v;
