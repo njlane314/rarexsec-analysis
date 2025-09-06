@@ -1,28 +1,37 @@
-#include "SystematicBreakdownPlot.h"
-
+#include <string>
+#include <vector>
 #include <algorithm>
 #include <cmath>
 
+#include "TH1D.h"
+#include "THStack.h"
+#include "TLegend.h"
 #include "TCanvas.h"
 #include "TColor.h"
 
+#include "AnalysisTypes.h"
+#include "IHistogramPlot.h"
+
 namespace analysis {
 
-SystematicBreakdownPlot::SystematicBreakdownPlot(std::string plot_name, const VariableResult &var_result,
-                                                 bool normalise, std::string output_directory)
-    : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
-      normalise_(normalise), stack_(nullptr), legend_(nullptr) {}
+class SystematicBreakdownPlot : public IHistogramPlot {
+  public:
+    SystematicBreakdownPlot(std::string plot_name, const VariableResult &var_result, bool normalise = false,
+                            std::string output_directory = "plots")
+        : IHistogramPlot(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
+          normalise_(normalise), stack_(nullptr), legend_(nullptr) {}
 
-SystematicBreakdownPlot::~SystematicBreakdownPlot() {
-    delete stack_;
-    delete legend_;
-    for (auto *h : histograms_) {
-        delete h;
+    ~SystematicBreakdownPlot() override {
+        delete stack_;
+        delete legend_;
+        for (auto *h : histograms_) {
+            delete h;
+        }
     }
-}
 
-void SystematicBreakdownPlot::draw(TCanvas &canvas) {
-    canvas.cd();
+  private:
+    void draw(TCanvas &canvas) override {
+        canvas.cd();
 
     const auto &edges = variable_result_.binning_.getEdges();
     const int nbins = variable_result_.binning_.getBinNumber();
@@ -81,7 +90,14 @@ void SystematicBreakdownPlot::draw(TCanvas &canvas) {
     stack_->Draw("hist");
     stack_->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
     stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution" : "Variance");
-    legend_->Draw();
-}
+        legend_->Draw();
+    }
+
+    const VariableResult &variable_result_;
+    bool normalise_;
+    THStack *stack_;
+    std::vector<TH1D *> histograms_;
+    TLegend *legend_;
+};
 
 }

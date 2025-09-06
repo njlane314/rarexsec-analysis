@@ -1,5 +1,5 @@
-#ifndef HISTOGRAM_PLOTTER_BASE_H
-#define HISTOGRAM_PLOTTER_BASE_H
+#ifndef IHISTOGRAMPLOT_H
+#define IHISTOGRAMPLOT_H
 
 #include "BinnedHistogram.h"
 #include "TCanvas.h"
@@ -12,14 +12,14 @@
 
 namespace analysis {
 
-class HistogramPlotterBase {
+class IHistogramPlot {
   public:
-    HistogramPlotterBase(std::string plot_name, std::string output_directory = "plots")
+    IHistogramPlot(std::string plot_name, std::string output_directory = "plots")
         : plot_name_(std::move(plot_name)), output_directory_(std::move(output_directory)) {
         gSystem->mkdir(output_directory_.c_str(), true);
     }
 
-    virtual ~HistogramPlotterBase() = default;
+    virtual ~IHistogramPlot() = default;
 
     virtual void draw(TCanvas &canvas) = 0;
 

@@ -100,7 +100,7 @@ PlotPluginManager o--> IPlotPlugin : manages
 
 package plot #LightGreen {
   top to bottom direction
-  class HistogramPlotterBase {
+  class IHistogramPlot {
     +plot()
   }
 
@@ -112,12 +112,12 @@ package plot #LightGreen {
   class RocCurvePlot
 }
 
-HistogramPlotterBase <|-- StackedHistogramPlot
-HistogramPlotterBase <|-- UnstackedHistogramPlot
-HistogramPlotterBase <|-- OccupancyMatrixPlot
-HistogramPlotterBase <|-- SelectionEfficiencyPlot
-HistogramPlotterBase <|-- SystematicBreakdownPlot
-HistogramPlotterBase <|-- RocCurvePlot
+IHistogramPlot <|-- StackedHistogramPlot
+IHistogramPlot <|-- UnstackedHistogramPlot
+IHistogramPlot <|-- OccupancyMatrixPlot
+IHistogramPlot <|-- SelectionEfficiencyPlot
+IHistogramPlot <|-- SystematicBreakdownPlot
+IHistogramPlot <|-- RocCurvePlot
 
 package syst #LightPink {
   top to bottom direction

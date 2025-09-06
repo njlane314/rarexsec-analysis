@@ -1,6 +1,3 @@
-#ifndef STACKED_HISTOGRAM_PLOT_H
-#define STACKED_HISTOGRAM_PLOT_H
-
 #include <algorithm>
 #include <iomanip>
 #include <map>
@@ -20,19 +17,19 @@
 
 #include "AnalysisTypes.h"
 #include "HistogramCut.h"
-#include "HistogramPlotterBase.h"
+#include "IHistogramPlot.h"
 #include "RegionAnalysis.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
-class StackedHistogramPlot : public HistogramPlotterBase {
+class StackedHistogramPlot : public IHistogramPlot {
   public:
     StackedHistogramPlot(std::string plot_name, const VariableResult &var_result, const RegionAnalysis &region_info,
                          std::string category_column, std::string output_directory = "plots",
                          bool overlay_signal = true, std::vector<Cut> cut_list = {}, bool annotate_numbers = true,
                          bool use_log_y = false, std::string y_axis_label = "Events", int uniform_bins = -1,
                          double uniform_min = 0.0, double uniform_max = 0.0)
-        : HistogramPlotterBase(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
+        : IHistogramPlot(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
           region_analysis_(region_info), category_column_(std::move(category_column)), overlay_signal_(overlay_signal),
           cuts_(cut_list), annotate_numbers_(annotate_numbers), use_log_y_(use_log_y),
           y_axis_label_(std::move(y_axis_label)), use_uniform_binning_(uniform_bins > 0), uniform_bins_(uniform_bins),
@@ -412,4 +409,3 @@ class StackedHistogramPlot : public HistogramPlotterBase {
 
 }
 
-#endif

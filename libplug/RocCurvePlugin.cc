@@ -8,7 +8,7 @@
 #include "AnalysisLogger.h"
 #include "HistogramCut.h"
 #include "IAnalysisPlugin.h"
-#include "RocCurvePlot.h"
+#include "RocCurvePlot.cpp"
 #include "SelectionRegistry.h"
 #include "StratifierRegistry.h"
 
