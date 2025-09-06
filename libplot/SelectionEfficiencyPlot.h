@@ -50,7 +50,7 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
         double y_min = use_log_y_ ? 1e-3 : 0.0;
         frame.GetYaxis()->SetRangeUser(y_min, 1.05);
         frame.GetYaxis()->SetTitle("Fraction");
-        for (int i = 0; i < stages_.size(); ++i)
+        for (size_t i = 0; i < stages_.size(); ++i)
             frame.GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
         frame.DrawClone("AXIS");
     }
@@ -82,7 +82,7 @@ class SelectionEfficiencyPlot : public HistogramPlotterBase {
         latex.SetTextAlign(23);
         latex.SetTextFont(42);
         latex.SetTextSize(0.035);
-        for (int i = 0; i < stages_.size(); ++i) {
+        for (size_t i = 0; i < stages_.size(); ++i) {
             double x = i + 0.5;
             double ye = efficiencies_[i];
             double yp = purities_[i];
