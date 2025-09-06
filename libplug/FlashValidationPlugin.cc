@@ -52,67 +52,13 @@ class FlashValidationPlugin : public IPlotPlugin {
             log::error("FlashValidationPlugin::run", "No AnalysisDataLoader context provided");
             return;
         }
+
         for (auto const &pc : plots_) {
-            std::vector<ROOT::RDF::RResultPtr<TH1D>> h_time;
-            std::vector<ROOT::RDF::RResultPtr<TH1D>> h_pe;
-            std::vector<int> colors;
-            std::vector<std::string> labels;
-            int idx = 0;
-            for (auto const &[skey, sample] : loader_->getSampleFrames()) {
-                auto df = sample.nominal_node_;
-                auto ht = df.Histo1D(
-                    {(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max},
-                    pc.time_column);
-                auto hp = df.Histo1D(
-                    {(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max}, pc.pe_column);
-                h_time.push_back(ht);
-                h_pe.push_back(hp);
-                int c = 2 + idx;
-                auto s = skey.str();
-                if (s.find("data") != std::string::npos)
-                    c = 1;
-                else if (s.find("dirt") != std::string::npos)
-                    c = 2;
-                else if (s.find("overlay") != std::string::npos)
-                    c = 4;
-                colors.push_back(c);
-                labels.push_back(s);
-                ++idx;
-            }
-            TCanvas c1;
-            TLegend l1(0.7, 0.7, 0.9, 0.9);
-            bool first = true;
-            for (size_t i = 0; i < h_time.size(); ++i) {
-                auto h = h_time[i].GetPtr();
-                h->SetLineColor(colors[i]);
-                h->SetLineWidth(2);
-                if (first) {
-                    h->Draw("hist");
-                    first = false;
-                } else {
-                    h->Draw("hist same");
-                }
-                l1.AddEntry(h, labels[i].c_str(), "l");
-            }
-            l1.Draw();
-            c1.SaveAs((pc.output_directory + "/" + pc.plot_name + "_time.pdf").c_str());
-            TCanvas c2;
-            TLegend l2(0.7, 0.7, 0.9, 0.9);
-            bool first2 = true;
-            for (size_t i = 0; i < h_pe.size(); ++i) {
-                auto h = h_pe[i].GetPtr();
-                h->SetLineColor(colors[i]);
-                h->SetLineWidth(2);
-                if (first2) {
-                    h->Draw("hist");
-                    first2 = false;
-                } else {
-                    h->Draw("hist same");
-                }
-                l2.AddEntry(h, labels[i].c_str(), "l");
-            }
-            l2.Draw();
-            c2.SaveAs((pc.output_directory + "/" + pc.plot_name + "_pe.pdf").c_str());
+            auto hd = buildHistograms(pc);
+
+            drawTimeDistributions(pc, hd);
+
+            drawPeDistributions(pc, hd);
         }
     }
 
@@ -121,9 +67,89 @@ class FlashValidationPlugin : public IPlotPlugin {
   private:
     std::vector<PlotConfig> plots_;
     inline static AnalysisDataLoader *loader_ = nullptr;
+
+    struct HistData {
+        std::vector<ROOT::RDF::RResultPtr<TH1D>> h_time;
+        std::vector<ROOT::RDF::RResultPtr<TH1D>> h_pe;
+        std::vector<int> colors;
+        std::vector<std::string> labels;
+    };
+
+    HistData buildHistograms(const PlotConfig &pc) {
+        HistData hd;
+        int idx = 0;
+        for (auto const &[skey, sample] : loader_->getSampleFrames()) {
+            auto df = sample.nominal_node_;
+            auto ht = df.Histo1D(
+                {(pc.plot_name + "_time_" + skey.str()).c_str(), "", pc.time_bins, pc.time_min, pc.time_max},
+                pc.time_column);
+            auto hp = df.Histo1D(
+                {(pc.plot_name + "_pe_" + skey.str()).c_str(), "", pc.pe_bins, pc.pe_min, pc.pe_max}, pc.pe_column);
+            hd.h_time.push_back(ht);
+            hd.h_pe.push_back(hp);
+            int c = 2 + idx;
+            auto s = skey.str();
+            if (s.find("data") != std::string::npos)
+                c = 1;
+            else if (s.find("dirt") != std::string::npos)
+                c = 2;
+            else if (s.find("overlay") != std::string::npos)
+                c = 4;
+            hd.colors.push_back(c);
+            hd.labels.push_back(s);
+            ++idx;
+        }
+        return hd;
+    }
+
+    void drawTimeDistributions(const PlotConfig &pc, const HistData &hd) {
+        TCanvas c;
+        TLegend l(0.7, 0.7, 0.9, 0.9);
+        bool first = true;
+
+        for (size_t i = 0; i < hd.h_time.size(); ++i) {
+            auto h = hd.h_time[i].GetPtr();
+            h->SetLineColor(hd.colors[i]);
+            h->SetLineWidth(2);
+            if (first) {
+                h->Draw("hist");
+                first = false;
+            } else {
+                h->Draw("hist same");
+            }
+            l.AddEntry(h, hd.labels[i].c_str(), "l");
+        }
+
+        l.Draw();
+
+        c.SaveAs((pc.output_directory + "/" + pc.plot_name + "_time.pdf").c_str());
+    }
+
+    void drawPeDistributions(const PlotConfig &pc, const HistData &hd) {
+        TCanvas c;
+        TLegend l(0.7, 0.7, 0.9, 0.9);
+        bool first = true;
+
+        for (size_t i = 0; i < hd.h_pe.size(); ++i) {
+            auto h = hd.h_pe[i].GetPtr();
+            h->SetLineColor(hd.colors[i]);
+            h->SetLineWidth(2);
+            if (first) {
+                h->Draw("hist");
+                first = false;
+            } else {
+                h->Draw("hist same");
+            }
+            l.AddEntry(h, hd.labels[i].c_str(), "l");
+        }
+
+        l.Draw();
+
+        c.SaveAs((pc.output_directory + "/" + pc.plot_name + "_pe.pdf").c_str());
+    }
 };
 
-} // namespace analysis
+}
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
