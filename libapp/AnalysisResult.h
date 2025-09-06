@@ -4,7 +4,7 @@
 #include "TFile.h"
 #include "TObject.h"
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "RegionAnalysis.h"
 
 #include <iomanip>

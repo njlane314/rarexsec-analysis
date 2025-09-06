@@ -6,7 +6,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisResult.h"
-#include "AnalysisTypes.h"
+#include "RegionAnalysis.h"
 #include "RunConfig.h"
 #include "SelectionRegistry.h"
 

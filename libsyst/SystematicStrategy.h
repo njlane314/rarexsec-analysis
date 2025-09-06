@@ -11,7 +11,7 @@
 #include "TH1D.h"
 #include <TMatrixDSym.h>
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "BinnedHistogram.h"
 #include "BinningDefinition.h"
 #include "KeyTypes.h"

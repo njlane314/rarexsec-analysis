@@ -18,7 +18,7 @@
 #include "TLine.h"
 #include "TPad.h"
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "HistogramCut.h"
 #include "IHistogramPlot.h"
 #include "RegionAnalysis.h"

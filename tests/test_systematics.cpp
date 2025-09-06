@@ -1,4 +1,4 @@
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "BinningDefinition.h"
 #include "DetectorSystematicStrategy.h"
 #include "SystematicsProcessor.h"

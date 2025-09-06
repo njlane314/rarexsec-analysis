@@ -1,13 +1,11 @@
-#ifndef ANALYSIS_TYPES_H
-#define ANALYSIS_TYPES_H
+#ifndef VARIABLE_RESULT_H
+#define VARIABLE_RESULT_H
 
 #include <map>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
-#include "ROOT/RDataFrame.hxx"
 #include "TMatrixDSym.h"
 
 #include "BinnedHistogram.h"
@@ -15,8 +13,6 @@
 #include "SampleTypes.h"
 
 namespace analysis {
-
-class RegionAnalysis;
 
 struct VariableResult {
     BinningDefinition binning_;
@@ -38,21 +34,6 @@ struct VariableResult {
     std::map<SystematicKey, std::vector<BinnedHistogram>> universe_projected_hists_;
 };
 
-using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
-
-struct SampleDataset {
-    SampleOrigin origin_;
-    AnalysisRole role_;
-    mutable ROOT::RDF::RNode dataframe_;
-};
-
-struct SampleDatasetGroup {
-    SampleDataset nominal_;
-    std::unordered_map<SampleVariation, SampleDataset> variations_;
-};
-
-using SampleDatasetGroupMap = std::unordered_map<SampleKey, SampleDatasetGroup>;
-
-}
+} // namespace analysis
 
 #endif

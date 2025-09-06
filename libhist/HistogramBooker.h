@@ -2,7 +2,7 @@
 #define HISTOGRAM_BOOKER_H
 
 #include "AnalysisLogger.h"
-#include "AnalysisTypes.h"
+#include "SampleDataset.h"
 #include "StratifierManager.h"
 #include "StratifierRegistry.h"
 

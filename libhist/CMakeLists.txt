@@ -9,5 +9,6 @@ target_include_directories(libhist
 target_link_libraries(libhist
   PUBLIC
     libutils
+    libdata
     nlohmann_json::nlohmann_json
 )

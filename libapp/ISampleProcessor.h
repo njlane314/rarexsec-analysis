@@ -1,7 +1,7 @@
 #ifndef ISAMPLE_PROCESSOR_H
 #define ISAMPLE_PROCESSOR_H
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "HistogramBooker.h"
 
 namespace analysis {

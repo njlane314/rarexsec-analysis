@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnalysisTypes.h"
+#include "VariableResult.h"
 #include "KeyTypes.h"
 
 #include <map>
@@ -77,5 +77,7 @@ class RegionAnalysis {
     std::map<VariableKey, VariableResult> final_variables_;
     std::vector<StageCount> cut_flow_;
 };
+
+using RegionAnalysisMap = std::map<RegionKey, RegionAnalysis>;
 
 }
