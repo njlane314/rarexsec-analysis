@@ -25,8 +25,13 @@ class ReconstructionProcessor : public IEventProcessor {
                                       [](const ROOT::RVec<unsigned> &gens) { return ROOT::VecOps::Sum(gens == 3u); },
                                       {"pfp_generations"});
 
-        auto quality_df = gen3_df.Define("quality_event", "in_reco_fiducial && num_slices == 1 && "
-                                                          "selection_pass && optical_filter_pe_beam > 20");
+        auto quality_df = gen3_df.Define(
+            "quality_event",
+            "in_reco_fiducial && "
+            "num_slices == 1 && "
+            "selection_pass && "
+            "optical_filter_pe_beam > 20"
+        );
 
         return next_ ? next_->process(quality_df, st) : quality_df;
     }
