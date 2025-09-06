@@ -166,7 +166,7 @@ class AnalysisRunner {
         return filters;
     }
 
-    void updateSchemeTallies(const ROOT::RDF::RNode &df, const std::vector<std::string> &schemes,
+    void updateSchemeTallies(ROOT::RDF::RNode df, const std::vector<std::string> &schemes,
                              const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
                              RegionAnalysis::StageCount &stage_count) {
         for (auto &s : schemes)
