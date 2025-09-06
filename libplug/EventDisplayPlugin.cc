@@ -10,7 +10,8 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
-#include "IEventDisplay.h"
+#include "DetectorDisplay.h"
+#include "SemanticDisplay.h"
 #include "Selection.h"
 
 namespace analysis {
