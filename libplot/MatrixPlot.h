@@ -1,5 +1,5 @@
-#ifndef OCCUPANCYMATRIXPLOT_H
-#define OCCUPANCYMATRIXPLOT_H
+#ifndef MATRIXPLOT_H
+#define MATRIXPLOT_H
 
 #include <string>
 
@@ -11,12 +11,12 @@
 
 namespace analysis {
 
-class OccupancyMatrixPlot : public IHistogramPlot {
+class MatrixPlot : public IHistogramPlot {
   public:
-    OccupancyMatrixPlot(std::string plot_name, TH2F *hist, std::string output_directory = "plots")
+    MatrixPlot(std::string plot_name, TH2F *hist, std::string output_directory = "plots")
         : IHistogramPlot(std::move(plot_name), std::move(output_directory)), hist_(hist) {}
 
-    ~OccupancyMatrixPlot() override { delete hist_; }
+    ~MatrixPlot() override { delete hist_; }
 
   private:
     void draw(TCanvas &canvas) override {
