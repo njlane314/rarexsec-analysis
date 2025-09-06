@@ -28,8 +28,12 @@ class RunConfigLoader {
         if (!f.is_open()) {
             log::fatal("RunConfigLoader::loadRunConfigurations", "Could not open config file:", config_path);
         }
-        nlohmann::json data = nlohmann::json::parse(f);
-        loadRunConfigurations(data, registry);
+        try {
+            nlohmann::json data = nlohmann::json::parse(f);
+            loadRunConfigurations(data, registry);
+        } catch (const std::exception &e) {
+            log::fatal("RunConfigLoader::loadRunConfigurations", "Parsing error:", e.what());
+        }
     }
 };
 
