@@ -1,5 +1,6 @@
 {
     "samples": {
+        "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
         "beamlines": {
             "numi_fhc": {
                 "run1": {
@@ -53,14 +54,13 @@
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 0.0,
+                            "pot": 1e+20,
                             "ext_triggers_db": 0
                         }
                     ]
                 }
             }
         },
-        "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
         "run_configurations": {
             "numi_fhc": {
                 "run1": {
@@ -114,7 +114,7 @@
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 0.0,
+                            "pot": 1e+20,
                             "ext_triggers_db": 0
                         }
                     ]
