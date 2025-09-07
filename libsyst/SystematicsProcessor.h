@@ -72,7 +72,7 @@ class SystematicsProcessor {
     void clearFutures() { systematic_futures_.variations.clear(); }
 
   private:
-    static void sanitiseMatrix(TMatrixDSym &m) {
+    static void sanitiseMatrix(TMatrixDSym &matrix) {
         const int rows = matrix.GetNrows();
         const int cols = matrix.GetNcols();
         for (int i = 0; i < rows; ++i) {
