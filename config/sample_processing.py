@@ -127,10 +127,10 @@ def process_sample_entry(
     trigger_counts = get_trigger_counts_from_files_parallel(source_files)
     selected_triggers = select_trigger_count(trigger_counts, beam, run)
 
-    if sample_type == "mc" or is_detvar:
+    if sample_type in {"mc", "ext"} or is_detvar:
         entry["pot"] = get_total_pot_from_files_parallel(source_files)
         entry["triggers"] = selected_triggers
-        if entry["pot"] == 0.0:
+        if (sample_type == "mc" or is_detvar) and entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
     elif sample_type == "data":
         entry["pot"] = nominal_pot

@@ -59,7 +59,9 @@
                             "sample_key": "numu_fhc_ext",
                             "sample_type": "ext",
                             "active": true,
-                            "relative_path": "numu_fhc_ext.root"
+                            "relative_path": "numu_fhc_ext.root",
+                            "pot": 0.0,
+                            "triggers": 0
                         }
                     ]
                 }
