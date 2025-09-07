@@ -1,5 +1,5 @@
-#ifndef HISTOGRAM_BOOKER_H
-#define HISTOGRAM_BOOKER_H
+#ifndef HISTOGRAM_FACTORY_H
+#define HISTOGRAM_FACTORY_H
 
 #include "AnalysisLogger.h"
 #include "SampleDataset.h"
@@ -8,10 +8,10 @@
 
 namespace analysis {
 
-class HistogramBooker {
+class HistogramFactory {
   public:
-    HistogramBooker() : stratifier_manager_(stratifier_registry_) {
-        log::debug("HistogramBooker::HistogramBooker", "Constructor called, StratifierManager has been created.");
+    HistogramFactory() : stratifier_manager_(stratifier_registry_) {
+        log::debug("HistogramFactory::HistogramFactory", "Constructor called, StratifierManager has been created.");
     }
 
     ROOT::RDF::RResultPtr<TH1D> bookNominalHist(const BinningDefinition &binning, const SampleDataset &dataset,
@@ -23,13 +23,13 @@ class HistogramBooker {
     std::unordered_map<StratumKey, ROOT::RDF::RResultPtr<TH1D>>
     bookStratifiedHists(const BinningDefinition &binning, const SampleDataset &dataset,
                         const ROOT::RDF::TH1DModel &model) {
-        analysis::log::info("HistogramBooker::bookStratifiedHists", "Calling stratifier manager...");
+        analysis::log::info("HistogramFactory::bookStratifiedHists", "Calling stratifier manager...");
         auto &stratifier = stratifier_manager_.get(binning.getStratifierKey());
 
-        analysis::log::info("HistogramBooker::bookStratifiedHists", "Creating stratified hists.");
+        analysis::log::info("HistogramFactory::bookStratifiedHists", "Creating stratified hists.");
         auto stratified_hists = stratifier.stratifyHist(dataset.dataframe_, binning, model, "nominal_event_weight");
 
-        analysis::log::info("HistogramBooker::bookStratifiedHists",
+        analysis::log::info("HistogramFactory::bookStratifiedHists",
                             "Variable created. About to return stratified hists.");
         return stratified_hists;
     }

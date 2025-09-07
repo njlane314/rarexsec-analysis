@@ -14,14 +14,14 @@ class MonteCarloProcessor : public ISampleProcessor {
         : sample_key_(key), nominal_dataset_(std::move(ensemble.nominal_)),
           variation_datasets_(std::move(ensemble.variations_)) {}
 
-    void book(HistogramBooker &booker, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
+    void book(HistogramFactory &factory, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
         analysis::log::info("MonteCarloProcessor::book", "Beginning stratification...");
-        nominal_futures_ = booker.bookStratifiedHists(binning, nominal_dataset_, model);
+        nominal_futures_ = factory.bookStratifiedHists(binning, nominal_dataset_, model);
 
         analysis::log::info("MonteCarloProcessor::book", "Booking nominals...");
         if (!variation_datasets_.empty()) {
             for (auto &[var_key, dataset] : variation_datasets_) {
-                variation_futures_[var_key] = booker.bookNominalHist(binning, dataset, model);
+                variation_futures_[var_key] = factory.bookNominalHist(binning, dataset, model);
             }
         }
     }

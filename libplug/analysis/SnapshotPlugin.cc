@@ -7,7 +7,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "IAnalysisPlugin.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 
 namespace analysis {
 
@@ -15,7 +15,7 @@ class SnapshotPlugin : public IAnalysisPlugin {
   public:
     struct SnapshotConfig {
         std::string selection_rule;
-        Selection selection;
+        SelectionQuery selection;
         std::string output_directory{"snapshots"};
         std::vector<std::string> columns;
     };

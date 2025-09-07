@@ -14,7 +14,7 @@
 #include "KeyTypes.h"
 #include "RegionAnalysis.h"
 #include "RegionHandle.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 #include "SelectionRegistry.h"
 #include "VariableHandle.h"
 #include "VariableRegistry.h"
@@ -61,7 +61,7 @@ class AnalysisDefinition {
             log::fatal("AnalysisDefinition", "duplicate region:", key);
 
         auto rule = sel_reg_.getRule(sel_rule_key);
-        Selection sel = sel_reg_.get(sel_rule_key);
+        SelectionQuery sel = sel_reg_.get(sel_rule_key);
         region_names_[region_key] = region_name;
         region_selections_[region_key] = std::move(sel);
         region_clauses_[region_key] = rule.clauses;
@@ -81,7 +81,7 @@ class AnalysisDefinition {
             log::fatal("AnalysisDefinition", "duplicate region: " + key);
 
         region_names_[region_key] = label;
-        region_selections_[region_key] = Selection(std::move(raw_expr));
+        region_selections_[region_key] = SelectionQuery(std::move(raw_expr));
         region_clauses_[region_key] = {};
 
         auto region_analysis =
@@ -199,7 +199,7 @@ class AnalysisDefinition {
     std::map<VariableKey, DynamicBinningStrategy> dynamic_strategy_;
 
     std::map<RegionKey, std::string> region_names_;
-    std::map<RegionKey, Selection> region_selections_;
+    std::map<RegionKey, SelectionQuery> region_selections_;
     std::map<RegionKey, std::unique_ptr<RegionAnalysis>> region_analyses_;
     std::map<RegionKey, std::vector<VariableKey>> region_variables_;
     std::map<RegionKey, std::vector<std::string>> region_clauses_;

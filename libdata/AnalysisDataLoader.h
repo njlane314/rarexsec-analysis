@@ -17,7 +17,7 @@
 #include "ReconstructionProcessor.h"
 #include "RunConfigRegistry.h"
 #include "SampleDefinition.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 #include "TruthChannelProcessor.h"
 #include "VariableRegistry.h"
 #include "WeightProcessor.h"
@@ -65,7 +65,7 @@ class AnalysisDataLoader {
         }
     }
 
-    void snapshot(const Selection &query, const std::string &output_file,
+    void snapshot(const SelectionQuery &query, const std::string &output_file,
                   const std::vector<std::string> &columns = {}) const {
         snapshot(query.str(), output_file, columns);
     }

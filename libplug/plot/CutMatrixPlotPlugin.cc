@@ -8,7 +8,7 @@
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "PlotCatalog.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 
 namespace analysis {
 
@@ -18,7 +18,7 @@ class CutMatrixPlotPlugin : public IPlotPlugin {
         std::string x_variable;
         std::string y_variable;
         std::string region;
-        Selection selection;
+        SelectionQuery selection;
         std::string output_directory = "plots";
         std::vector<Cut> x_cuts;
         std::vector<Cut> y_cuts;
