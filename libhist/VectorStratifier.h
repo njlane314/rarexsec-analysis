@@ -1,3 +1,6 @@
+#ifndef VECTOR_STRATIFIER_H
+#define VECTOR_STRATIFIER_H
+
 #include "IHistogramStratifier.h"
 #include "AnalysisKey.h"
 #include "ROOT/RVec.hxx"
@@ -13,10 +16,12 @@ namespace analysis {
 
 class VectorStratifier : public IHistogramStratifier {
   public:
-    VectorStratifier(const StratifierKey &key, StratifierRegistry &registry) : strat_key_(key), strat_registry_(registry) {}
+    VectorStratifier(const StratifierKey &key, StratifierRegistry &registry)
+        : strat_key_(key), strat_registry_(registry) {}
 
   protected:
-    ROOT::RDF::RNode defineFilterColumn(ROOT::RDF::RNode dataframe, int key, const std::string &new_column_name) const override {
+    ROOT::RDF::RNode defineFilterColumn(ROOT::RDF::RNode dataframe, int key,
+                                        const std::string &new_column_name) const override {
         std::vector<std::string> columns = {this->getSchemeName()};
 
         return dataframe.Define(
@@ -28,21 +33,20 @@ class VectorStratifier : public IHistogramStratifier {
             columns);
     }
 
-    const std::string &getSchemeName() const override {
-        return strat_key_.str();
-    }
+    const std::string &getSchemeName() const override { return strat_key_.str(); }
 
-    const StratifierRegistry &getRegistry() const override {
-        return strat_registry_;
-    }
+    const StratifierRegistry &getRegistry() const override { return strat_registry_; }
 
   private:
     StratifierKey strat_key_;
     StratifierRegistry &strat_registry_;
 };
 
-std::unique_ptr<IHistogramStratifier> makeVectorStratifier(const StratifierKey &key, StratifierRegistry &registry) {
+inline std::unique_ptr<IHistogramStratifier>
+makeVectorStratifier(const StratifierKey &key, StratifierRegistry &registry) {
     return std::make_unique<VectorStratifier>(key, registry);
 }
 
-}
+} // namespace analysis
+
+#endif
