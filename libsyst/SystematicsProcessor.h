@@ -60,7 +60,7 @@ class SystematicsProcessor {
             SystematicKey key{strategy->getName()};
             log::debug("SystematicsProcessor::processSystematics", "Computing covariance for", key.str());
             auto cov = strategy->computeCovariance(result, systematic_futures_);
-            this->sanitizeMatrix(cov);
+            this->sanitiseMatrix(cov);
             log::debug("SystematicsProcessor::processSystematics", key.str(), "matrix size", cov.GetNrows(), "x",
                        cov.GetNcols());
             result.covariance_matrices_.insert_or_assign(key, cov);
@@ -72,7 +72,7 @@ class SystematicsProcessor {
     void clearFutures() { systematic_futures_.variations.clear(); }
 
   private:
-    static void sanitizeMatrix(TMatrixDSym &m) {
+    static void sanitiseMatrix(TMatrixDSym &m) {
         for (int i = 0; i < m.GetNrows(); ++i) {
             for (int j = 0; j < m.GetNcols(); ++j) {
                 if (!std::isfinite(m(i, j))) m(i, j) = 0.0;
@@ -93,7 +93,7 @@ class SystematicsProcessor {
         for (const auto &[name, cov_matrix] : result.covariance_matrices_) {
             if (cov_matrix.GetNrows() == n_bins) {
                 TMatrixDSym cov = cov_matrix;
-                SystematicsProcessor::sanitizeMatrix(cov);
+                SystematicsProcessor::sanitiseMatrix(cov);
 
                 log::debug("SystematicsProcessor::combineCovariances", "Adding matrix", name.str());
 
@@ -105,7 +105,7 @@ class SystematicsProcessor {
             }
         }
 
-        SystematicsProcessor::sanitizeMatrix(result.total_covariance_);
+        SystematicsProcessor::sanitiseMatrix(result.total_covariance_);
 
         result.nominal_with_band_ = result.total_mc_hist_;
         result.nominal_with_band_.hist.shifts.resize(n_bins, 0);
