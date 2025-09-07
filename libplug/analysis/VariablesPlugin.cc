@@ -41,11 +41,7 @@ class VariablesPlugin : public IAnalysisPlugin {
                 std::string strat_mode = bins_cfg.value("strategy", std::string("equal_weight"));
                 static const std::unordered_map<std::string, DynamicBinningStrategy> strategy_map = {
                     {"equal_weight", DynamicBinningStrategy::EqualWeight},
-                    {"freedman_diaconis", DynamicBinningStrategy::FreedmanDiaconis},
-                    {"scott", DynamicBinningStrategy::Scott},
-                    {"sturges", DynamicBinningStrategy::Sturges},
-                    {"rice", DynamicBinningStrategy::Rice},
-                    {"sqrt", DynamicBinningStrategy::Sqrt},
+                    {"uniform", DynamicBinningStrategy::Uniform},
                     {"bayesian_blocks", DynamicBinningStrategy::BayesianBlocks}};
                 DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight;
                 auto it = strategy_map.find(strat_mode);
