@@ -31,12 +31,12 @@ The configuration files contain analysis and plotting directives.
     "min": 0.0,
     "max": 3000.0,
     "include_out_of_range_bins": true,
-    "strategy": "freedman_diaconis"
+    "strategy": "bayesian_blocks"
   }
 }
 ```
 
-The `strategy` field accepts `equal_weight`, `freedman_diaconis`, `scott`, `sturges`, `rice`, or `sqrt`.
+The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_blocks`.
 
 ```json
 {
