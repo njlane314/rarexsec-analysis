@@ -14,29 +14,29 @@ namespace analysis {
 
 class IHistogramPlot {
 public:
-  IHistogramPlot(std::string plot_name, std::string output_directory = "plots")
-      : plot_name_(std::move(plot_name)),
-        output_directory_(std::move(output_directory)) {
-      gSystem->mkdir(output_directory_.c_str(), true);
-  }
+    IHistogramPlot(std::string plot_name, std::string output_directory = "plots")
+        : plot_name_(std::move(plot_name)),
+          output_directory_(std::move(output_directory)) {
+        gSystem->mkdir(output_directory_.c_str(), true);
+    }
 
-  virtual ~IHistogramPlot() = default;
+    virtual ~IHistogramPlot() = default;
 
-  virtual void draw(TCanvas &canvas) = 0;
+    virtual void draw(TCanvas &canvas) = 0;
 
-  void drawAndSave(const std::string &format = "png") {
-      this->setGlobalStyle();
-      TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
-      this->draw(canvas);
-      canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
-  }
+    void drawAndSave(const std::string &format = "png") {
+        this->setGlobalStyle();
+        TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
+        this->draw(canvas);
+        canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
+    }
 
-  static std::string sanitise(std::string s) {
-      for (auto &c : s)
-          if (c == '.' || c == '/' || c == ' ')
-            c = '_';
-      return s;
-  }
+    static std::string sanitise(std::string s) {
+        for (auto &c : s)
+            if (c == '.' || c == '/' || c == ' ')
+                c = '_';
+        return s;
+    }
 
 protected:
     virtual void setGlobalStyle() const {
@@ -75,12 +75,12 @@ protected:
         style->SetTitleBorderSize(0);
         gROOT->SetStyle("PlotterStyle");
         gROOT->ForceStyle();
-  }
+    }
 
-  std::string plot_name_;
-  std::string output_directory_;
+    std::string plot_name_;
+    std::string output_directory_;
 };
 
-}
+} // namespace analysis
 
 #endif
