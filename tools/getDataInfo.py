@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sqlite3
 import argparse
 import sys
-#append path to find confDB
+# append path to find confDB
 sys.path.append("/exp/uboone/data/uboonebeam/beamdb")
 import os
 import samweb_cli
@@ -14,8 +15,7 @@ import json
 import confDB
 
 def getDataGivenFileList(flist,r):
-    #query SAM for each file in file list and gets run and subrun processed from meta data
-    #puts that into dictionary rslist[run]=list_of_subruns
+    # query SAM for each file in file list and get run/subrun from metadata
     con=sqlite3.connect("%s/run.db"%dbdir)
     con.row_factory=sqlite3.Row
     cur=con.cursor()
@@ -53,6 +53,7 @@ def getDataGivenFileList(flist,r):
                 for pfkey in pf:
                     if pfkey not in r:
                         r[pfkey]=0
+
             query="%s WHERE r.run=%i AND r.subrun=%i"%(dbquerybase, int(rs[0]),int(rs[1]))
             cur.execute(query)
             row=cur.fetchone()
@@ -72,8 +73,14 @@ def getDataGivenFileList(flist,r):
                         elif rs[1] not in missprescale[rs[0]]:
                             missprescale[rs[0]].append(rs[1])
                         prescalewarn=True
-                    
-                    r[k]+=row[k]
+
+                    if 'wcut' in k and int(rs[0]) in pre_1970.keys() and int(rs[1]) in pre_1970[int(rs[0])]:
+                        if args.format_numi:
+                            pass # row[k] = 0
+                        else:
+                            r[k]+=row[k.replace('_wcut','')]
+                    else:
+                        r[k]+=row[k]
                 elif k in bnbcols:
                     if rs[0] not in missbnb:
                         missbnb[rs[0]]=[rs[1]]
@@ -86,7 +93,7 @@ def getDataGivenFileList(flist,r):
                     elif rs[1] not in missnumi[rs[0]]:
                         missnumi[rs[0]].append(rs[1])
                     numiwarn=True
-                elif k is "EXT":
+                elif k == "EXT":
                     if rs[0] not in missother:
                         missother[rs[0]]=[rs[1]]
                     elif rs[1] not in missother[rs[0]]:
@@ -105,7 +112,7 @@ def getDataGivenFileList(flist,r):
         logging.debug("Warning! Did not get metadata for all files.")
 
     con.close()
-    return 
+    return
 
 def getDataGivenRSList(rslist,r):
     con=sqlite3.connect("%s/run.db"%dbdir)
@@ -126,7 +133,7 @@ def getDataGivenRSList(rslist,r):
     missprescale={}
     mcount=0
     for rsrow in rslist:
-        rs=rsrow.split(" ")
+        rs=rsrow.split()
         pf=None
         if prescaleFactor:
             pf=cfgDB.getAllPrescaleFactors(rs[0])
@@ -154,8 +161,14 @@ def getDataGivenRSList(rslist,r):
                     elif rs[1] not in missprescale[rs[0]]:
                         missprescale[rs[0]].append(rs[1])
                     prescalewarn=True
-                    
-                r[k]+=row[k]
+
+                if 'wcut' in k and int(rs[0]) in pre_1970.keys() and int(rs[1]) in pre_1970[int(rs[0])]:
+                    if args.format_numi:
+                        pass # row[k] = 0
+                    else:
+                        r[k]+=row[k.replace('_wcut','')]
+                else:
+                    r[k]+=row[k]
             elif k in bnbcols:
                 if rs[0] not in missbnb:
                     missbnb[rs[0]]=[rs[1]]
@@ -168,7 +181,7 @@ def getDataGivenRSList(rslist,r):
                 elif rs[1] not in missnumi[rs[0]]:
                     missnumi[rs[0]].append(rs[1])
                 numiwarn=True
-            elif k is "EXT":
+            elif k == "EXT":
                 if rs[0] not in missother:
                     missother[rs[0]]=[rs[1]]
                 elif rs[1] not in missother[rs[0]]:
@@ -185,7 +198,7 @@ def getDataGivenRSList(rslist,r):
     r['missprescale']=missprescale
 
     con.close()
-    return 
+    return
 
 def getDataGivenRunSubrun(run,subrun,r):
     logging.debug("getDataGivenRunSubrun called.")
@@ -194,7 +207,7 @@ def getDataGivenRunSubrun(run,subrun,r):
     cur=con.cursor()
     cur.execute("ATTACH DATABASE '%s/bnb_v%i.db' AS bnb"%(dbdir,version))
     cur.execute("ATTACH DATABASE '%s/numi_v%i.db' AS numi"%(dbdir,version))
-            
+
     cfgDB=confDB.confDB()
 
     query="%s WHERE r.run=%i AND r.subrun=%i"%(dbquerybase,run,subrun)
@@ -205,7 +218,9 @@ def getDataGivenRunSubrun(run,subrun,r):
     numiwarn=False
     otherwarn=False
     prescalewarn=False
+    missprescale={}
     pf=None
+    rs=[run,subrun]
     if prescaleFactor:
         pf=cfgDB.getAllPrescaleFactors(run)
         if pf is None:
@@ -214,7 +229,7 @@ def getDataGivenRunSubrun(run,subrun,r):
         else:
             for pfkey in pf:
                 if pfkey not in r:
-                    r[pfkey]=0    
+                    r[pfkey]=0
     for k in r:
         if k in row.keys() and row[k] is not None:
             if pf is not None:
@@ -225,19 +240,26 @@ def getDataGivenRunSubrun(run,subrun,r):
                         r[pfkey]+=pf[pfkey]*row[k]
                     elif "Gate2" in k and "BNB_" in pfkey:
                         r[pfkey]+=pf[pfkey]*row[k]
-
-            r[k]+=row[k]
+            if 'wcut' in k and int(rs[0]) in pre_1970.keys() and int(rs[1]) in pre_1970[int(rs[0])]:
+                if args.format_numi:
+                    pass
+                else:
+                    r[k]+=row[k.replace('_wcut','')]
+            else:
+                r[k]+=row[k]
         elif k in bnbcols:
             bnbwarn=True
         elif k in numicols:
             numiwarn=True
-        elif k is "EXT":
+        elif k == "EXT":
             otherwarn=True
 
     r['bnbwarn']=bnbwarn
     r['numiwarn']=numiwarn
     r['otherwarn']=otherwarn
     r['prescalewarn']=prescalewarn
+    if prescalewarn:
+        r['missprescale']=missprescale
     return
 
 def getDataGivenRun(run,r):
@@ -256,16 +278,17 @@ def getDataGivenRun(run,r):
     otherwarn=False
     prescalewarn=False
     pf=None
-    if  prescaleFactor:
+    if prescaleFactor:
         pf=cfgDB.getAllPrescaleFactors(run)
         if pf is None:
             prescalewarn=True
         else:
             for pfkey in pf:
                 if pfkey not in r:
-                    r[pfkey]=0   
+                    r[pfkey]=0
 
     for k in r:
+        rs = [run,-1]
         if k in row.keys() and row[k] is not None:
             if pf is not None:
                 for pfkey in pf:
@@ -275,12 +298,18 @@ def getDataGivenRun(run,r):
                         r[pfkey]+=pf[pfkey]*row[k]
                     elif "Gate2" in k and "BNB_" in pfkey:
                         r[pfkey]+=pf[pfkey]*row[k]
-            r[k]+=row[k]
+            if 'wcut' in k and int(rs[0]) in pre_1970.keys() and int(rs[1]) in pre_1970[int(rs[0])]:
+                if args.format_numi:
+                    pass
+                else:
+                    r[k]+=row[k.replace('_wcut','')]
+            else:
+                r[k]+=row[k]
         elif k in bnbcols:
             bnbwarn=True
         elif k in numicols:
             numiwarn=True
-        elif k is "EXT":
+        elif k == "EXT":
             otherwarn=True
 
     r['bnbwarn']=bnbwarn
@@ -300,8 +329,9 @@ def getDataGivenWhere(where,r):
     wherec=" "+where
     for kw in [' run',' subrun',' begin_time',' end_time']:
         wherec=wherec.replace(kw," r."+kw.lstrip())
-    query="%s WHERE %s GROUP BY r.run"%(dbquerybase,wherec)
-    query=query.replace("SELECT ","SELECT r.run,")
+    # Group by run AND subrun so we can apply pre_1970 per subrun
+    query="%s WHERE %s GROUP BY r.run, r.subrun"%(dbquerybase,wherec)
+    query=query.replace("SELECT ","SELECT r.run, r.subrun,")
     cur.execute(query)
     bnbwarn=False
     numiwarn=False
@@ -324,9 +354,9 @@ def getDataGivenWhere(where,r):
         elif prescaleFactor:
             prescalewarn=True
             if row['run'] not in missprescale:
-                missprescale[row['run']]=[1]
-            else:
-                missprescale[row['run']].append(1)
+                missprescale[row['run']]=[row['subrun']]
+            elif row['subrun'] not in missprescale[row['run']]:
+                missprescale[row['run']].append(row['subrun'])
         for k in r:
             if k in row.keys() and row[k] is not None:
                 if pf is not None:
@@ -337,20 +367,28 @@ def getDataGivenWhere(where,r):
                             r[pfkey]+=pf[pfkey]*row[k]
                         elif "Gate2" in k and "BNB_" in pfkey:
                             r[pfkey]+=pf[pfkey]*row[k]
-                r[k]+=row[k]
+                # apply pre_1970 correction with run+subrun in scope
+                rs = [row['run'], row['subrun']]
+                if 'wcut' in k and int(rs[0]) in pre_1970.keys() and int(rs[1]) in pre_1970[int(rs[0])]:
+                    if args.format_numi:
+                        pass
+                    else:
+                        r[k]+=row[k.replace('_wcut','')]
+                else:
+                    r[k]+=row[k]
             elif k in bnbcols:
                 bnbwarn=True
                 if row['run'] not in missbnb:
-                    missbnb[row['run']]=[1]
-                else:
-                    missbnb[row['run']].append(1)
+                    missbnb[row['run']]=[row['subrun']]
+                elif row['subrun'] not in missbnb[row['run']]:
+                    missbnb[row['run']].append(row['subrun'])
             elif k in numicols:
                 numiwarn=True
                 if row['run'] not in missnumi:
-                    missnumi[row['run']]=[1]
-                else:
-                    missnumi[row['run']].append(1)
-            elif k is "EXT":
+                    missnumi[row['run']]=[row['subrun']]
+                elif row['subrun'] not in missnumi[row['run']]:
+                    missnumi[row['run']].append(row['subrun'])
+            elif k == "EXT":
                 otherwarn=True
 
     r['bnbwarn']=bnbwarn
@@ -369,8 +407,11 @@ def getFileListFromDefinition(defname):
     try:
         flist=samweb.listFiles(defname=args.defname)
     except:
-        print "Failed to get the list of files in %s"%args.defname
-        sys.exit(1)
+        try:
+            flist=samweb.listFiles(dimensions=args.defname)
+        except:
+            print "Failed to get the list of files in %s"%args.defname
+            sys.exit(1)
 
     flist.sort()
     if (not args.noheader):
@@ -399,7 +440,7 @@ def getListFromJSON(jsonflist):
     logging.debug("getListFromJSON called.")
     rslist=[]
     for f in jsonflist:
-        with open(f) as data_file:  
+        with open(f) as data_file:
             try:
                 data = json.load(data_file)
                 for el in data["subruns"]:
@@ -457,6 +498,20 @@ def getDBQueryBase(cols):
         elif "ea9cnt" in var:
             if "wcut" in var:
                 dbq+="SUM(n.EA9CNT) AS EA9CNT_wcut,"
+                if slipStacking:
+                    dbq+="SUM(n.EA9CNT_slip6) AS EA9CNT_slip6_wcut,"
+                    dbq+="SUM(n.EA9CNT_slip4) AS EA9CNT_slip4_wcut,"
+                    dbq+="SUM(n.EA9CNT_slipO) AS EA9CNT_slipO_wcut,"
+                if horncurr:
+                    dbq+="SUM(n.EA9CNT_fhc) AS EA9CNT_fhc_wcut,"
+                    dbq+="SUM(n.EA9CNT_rhc) AS EA9CNT_rhc_wcut,"
+                    if slipStacking:
+                        dbq+="SUM(n.EA9CNT_slip6_fhc) AS EA9CNT_slip6_fhc_wcut,"
+                        dbq+="SUM(n.EA9CNT_slip4_fhc) AS EA9CNT_slip4_fhc_wcut,"
+                        dbq+="SUM(n.EA9CNT_slipO_fhc) AS EA9CNT_slipO_fhc_wcut,"
+                        dbq+="SUM(n.EA9CNT_slip6_rhc) AS EA9CNT_slip6_rhc_wcut,"
+                        dbq+="SUM(n.EA9CNT_slip4_rhc) AS EA9CNT_slip4_rhc_wcut,"
+                        dbq+="SUM(n.EA9CNT_slipO_rhc) AS EA9CNT_slipO_rhc_wcut,"
                 addNuMI=True
             else:
                 dbq+="SUM(r.EA9CNT) AS EA9CNT,"
@@ -464,11 +519,39 @@ def getDBQueryBase(cols):
             if "wcut" in var:
                 dbq+="SUM(n.tor101) AS tor101_wcut,"
                 addNuMI=True
+                if slipStacking:
+                    dbq+="SUM(n.tor101_slip6) AS tor101_slip6_wcut,"
+                    dbq+="SUM(n.tor101_slip4) AS tor101_slip4_wcut,"
+                    dbq+="SUM(n.tor101_slipO) AS tor101_slipO_wcut,"
+                if horncurr:
+                    dbq+="SUM(n.tor101_fhc) AS tor101_fhc_wcut,"
+                    dbq+="SUM(n.tor101_rhc) AS tor101_rhc_wcut,"
+                    if slipStacking:
+                        dbq+="SUM(n.tor101_slip6_fhc) AS tor101_slip6_fhc_wcut,"
+                        dbq+="SUM(n.tor101_slip4_fhc) AS tor101_slip4_fhc_wcut,"
+                        dbq+="SUM(n.tor101_slipO_fhc) AS tor101_slipO_fhc_wcut,"
+                        dbq+="SUM(n.tor101_slip6_rhc) AS tor101_slip6_rhc_wcut,"
+                        dbq+="SUM(n.tor101_slip4_rhc) AS tor101_slip4_rhc_wcut,"
+                        dbq+="SUM(n.tor101_slipO_rhc) AS tor101_slipO_rhc_wcut,"
             else:
                 dbq+="SUM(r.tor101) AS tor101,"
         elif "tortgt" in var:
             if "wcut" in var:
                 dbq+="SUM(n.tortgt) AS tortgt_wcut,"
+                if slipStacking:
+                    dbq+="SUM(n.tortgt_slip6) AS tortgt_slip6_wcut,"
+                    dbq+="SUM(n.tortgt_slip4) AS tortgt_slip4_wcut,"
+                    dbq+="SUM(n.tortgt_slipO) AS tortgt_slipO_wcut,"
+                if horncurr:
+                    dbq+="SUM(n.tortgt_fhc) AS tortgt_fhc_wcut,"
+                    dbq+="SUM(n.tortgt_rhc) AS tortgt_rhc_wcut,"
+                    if slipStacking:
+                        dbq+="SUM(n.tortgt_slip6_fhc) AS tortgt_slip6_fhc_wcut,"
+                        dbq+="SUM(n.tortgt_slip4_fhc) AS tortgt_slip4_fhc_wcut,"
+                        dbq+="SUM(n.tortgt_slipO_fhc) AS tortgt_slipO_fhc_wcut,"
+                        dbq+="SUM(n.tortgt_slip6_rhc) AS tortgt_slip6_rhc_wcut,"
+                        dbq+="SUM(n.tortgt_slip4_rhc) AS tortgt_slip4_rhc_wcut,"
+                        dbq+="SUM(n.tortgt_slipO_rhc) AS tortgt_slipO_rhc_wcut,"
                 addNuMI=True
             else:
                 dbq+="SUM(r.tortgt) AS tortgt,"
@@ -481,6 +564,14 @@ def getDBQueryBase(cols):
 
     return dbq
 
+def make_pre_1970_list(dbdir):
+    pre1970 = {}
+    with open('%s/pre_1970_runs_subruns.txt'%dbdir) as f:
+        for r,s in [(int(rs[0]),int(rs[1])) for rs in [l.strip().split() for l in f.readlines()]]:
+            if r not in pre1970.keys():
+                pre1970[r]=[]
+            pre1970[r].append(s)
+    return pre1970
 
 
 parser = argparse.ArgumentParser(description='Run info.',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -504,25 +595,36 @@ parser.add_argument("-f", "--format", type=str,
                     help="Output format.")
 parser.add_argument("--format-bnb", action="store_true",
                     help="Output format, include all BNB variables.")
-parser.add_argument("--format-numi", action="store_true",                   
+parser.add_argument("--format-numi", action="store_true",
                     help="Output format, include all NuMI variables.")
 parser.add_argument("--format-all", action="store_true",
                     help="Output format, print all data.")
 parser.add_argument("-v","--version", type=int, default=1,
                     help="Version of the beam quality cut. For pre MCC8.4 use 1, for later 2. This affects BNB, for NuMI v1 and v2 are the same.")
-parser.add_argument("--dbdir",default="/exp/uboone/data/uboonebeam/beamdb/",
+parser.add_argument("--dbdir",default="/exp/uboone/app/users/guzowski/slip_stacking/",
                     help="Should not be changed from default unless you know what you are doing.")
 parser.add_argument("--nthreads", type=int, default=4,
                     help="Run in multiple threads to speed up.")
 parser.add_argument("--noheader",action="store_true",
                     help="Don't print table header.")
-parser.add_argument("--prescale", action="store_true", 
+parser.add_argument("--prescale", action="store_true",
                     help="Apply prescale factor to trigger count. Specify which factor to apply.")
-
+parser.add_argument("--slip", action="store_true",
+                    help="Print POT count per slip-stacking regime")
+parser.add_argument("--horncurr",action="store_true",
+                    help="separate FHC and RHC counts")
 
 args = parser.parse_args()
 dbdir=args.dbdir
 version=args.version
+
+if args.horncurr and args.version < 4:
+    print "Error! running with '--horncurr' but"
+    print "need database version >= 4 to have horn current information"
+    sys.exit(1)
+horncurr = args.horncurr
+
+pre_1970 = make_pre_1970_list(dbdir)
 
 if (args.run is None and args.defname is None and args.where is None and args.file_list is None and args.run_subrun_list is None and args.json_file is None):
     print "Need to specify run (subrun), or SAM definition, or SQL query, or list of files, or list of runs and subruns, or json file(s) with run/subrun info."
@@ -532,8 +634,10 @@ if (args.run is None and args.defname is None and args.where is None and args.fi
 logging.basicConfig(filename="%s/dbquery.log"%dbdir,level=logging.DEBUG,format='%(asctime)s '+str(os.getpid())+' ['+os.environ['USER']+'] %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
 logging.debug(" ".join(sys.argv))
 
+slipStacking=args.slip
+
 res={}
-#cols has to match the dbquerybase (queries in getDataGivenX)
+# cols has to match the dbquerybase (queries in getDataGivenX)
 cols=[]
 if args.format_bnb:
     cols="run:subrun:EXT:Gate2:E1DCNT:tor860:tor875:E1DCNT_wcut:tor860_wcut:tor875_wcut".split(":")
@@ -543,7 +647,6 @@ elif args.format_all:
     cols="run:subrun:EXT:Gate2:E1DCNT:tor860:tor875:E1DCNT_wcut:tor860_wcut:tor875_wcut:Gate1:EA9CNT:tor101:tortgt:EA9CNT_wcut:tor101_wcut:tortgt_wcut".split(":")
 else:
     cols=args.format.split(":")
-
 
 numicols=['EA9CNT_wcut', 'tor101_wcut', 'tortgt_wcut']
 bnbcols =['E1DCNT_wcut', 'tor860_wcut', 'tor875_wcut']
@@ -563,6 +666,19 @@ for icol in cols:
     if "run" not in icol and "time" not in icol:
         res[icol]=0
 
+if args.format_numi and slipStacking:
+    for slip in ['6', '4', 'O']:
+        for var in ['EA9CNT_slip%s_wcut','tor101_slip%s_wcut','tortgt_slip%s_wcut']:
+            res[var%slip]=0
+            if horncurr:
+                for hc in ['f','r']:
+                    for var in ['EA9CNT_slip%s_%shc_wcut','tor101_slip%s_%shc_wcut','tortgt_slip%s_%shc_wcut']:
+                        res[var%(slip,hc)]=0
+if args.format_numi and horncurr:
+    for hc in ['f','r']:
+        for var in ['EA9CNT_%shc_wcut','tor101_%shc_wcut','tortgt_%shc_wcut']:
+            res[var%hc] = 0
+
 prescaleFactor=args.prescale
 runPrescale={}
 
@@ -578,7 +694,7 @@ if args.defname is not None or args.file_list is not None:
     flist_thread=getListForThreads(flist, args.nthreads)
 
     nthreads=min(len(flist_thread),args.nthreads)
-    logging.debug("Running in %i thread(s)"%nthreads)    
+    logging.debug("Running in %i thread(s)"%nthreads)
     threads=[]
     rthread=[]
     for ith in range(0,nthreads):
@@ -622,7 +738,7 @@ elif args.run_subrun_list or args.json_file:
     rslist_thread=getListForThreads(rslist, args.nthreads)
 
     nthreads=min(len(rslist_thread),args.nthreads)
-    logging.debug("Running in %i thread(s)"%nthreads)    
+    logging.debug("Running in %i thread(s)"%nthreads)
     threads=[]
     rthread=[]
 
@@ -665,7 +781,6 @@ else:
         while "subrun" in cols: cols.remove('subrun')
         getDataGivenRun(args.run,res)
 
-
 header=""
 output=""
 for var in cols:
@@ -685,50 +800,87 @@ print output
 
 logging.debug(output)
 
+if args.format_numi and slipStacking:
+    print '------------------------------------------------------------------------------------------------------------------------------'
+    nvars=len(cols)-3
+    varlenstr="%%-%ds"%(14*nvars)
+    for slip in ['6', '4', 'O']:
+        output=varlenstr%("slip stack %s:"%("%s+6"%slip if slip != "O" else "other/unknown/strange"))
+        for var in ['EA9CNT_slip%s_wcut','tor101_slip%s_wcut','tortgt_slip%s_wcut']:
+            if "tor" in var:
+                output+="%14.4g"%(res[var%slip]*1e12)
+            else:
+                output+="%14.1f"%res[var%slip]
+        print output
+
+if args.format_numi and horncurr:
+    print '------------------------------------------------------------------------------------------------------------------------------'
+    nvars=len(cols)-3
+    varlenstr="%%-%ds"%(14*nvars)
+    for hc in ['f', 'r']:
+        output=varlenstr%("%s Horn Current:"%('Forward' if hc=='f' else 'Reverse'))
+        for var in ['EA9CNT_%shc_wcut','tor101_%shc_wcut','tortgt_%shc_wcut']:
+            if "tor" in var:
+                output+="%14.4g"%(res[var%hc]*1e12)
+            else:
+                output+="%14.1f"%res[var%hc]
+        print output
+
+if args.format_numi and horncurr and slipStacking:
+    print '------------------------------------------------------------------------------------------------------------------------------'
+    nvars=len(cols)-3
+    varlenstr="%%-%ds"%(14*nvars)
+    for hc in ['f', 'r']:
+        if hc == 'r': print '------------------------------------------------------------------------------------------------------------------------------'
+        for slip in ['6','4','O']:
+            output=varlenstr%("%s Horn Current, slip stack %s:"%('Forward' if hc=='f' else 'Reverse', "%s+6"%slip if slip != "O" else "other/unknown/strange"))
+            for var in ['EA9CNT_slip%s_%shc_wcut','tor101_slip%s_%shc_wcut','tortgt_slip%s_%shc_wcut']:
+                if "tor" in var:
+                    output+="%14.4g"%(res[var%(slip,hc)]*1e12)
+                else:
+                    output+="%14.1f"%res[var%(slip,hc)]
+            print output
+
 mess=""
-if res['bnbwarn']:
+if 'bnbwarn' in res and res['bnbwarn']:
     mess+="Warning!! BNB data for some of the requested runs/subruns is not in the database.\n"
-if res['numiwarn']:
+if 'numiwarn' in res and res['numiwarn']:
     mess+="Warning!! NuMI data for some of the requsted runs/subruns is not in the database.\n"
-if res['otherwarn']:
+if 'otherwarn' in res and res['otherwarn']:
     mess+="Warning!! EXT data for some of the requested runs/subruns is not in the database.\n"
-if res['prescalewarn']:
+if 'prescalewarn' in res and res['prescalewarn']:
     mess+="Warning!! Prescale data for some of the requested runs/subruns is not in the database.\n"
 
-if res['bnbwarn'] and 'missbnb' in res:
+if 'bnbwarn' in res and res['bnbwarn'] and 'missbnb' in res:
     mess+="%i runs missing BNB data (number of subruns missing the data): "%len(res['missbnb'])
     for k in res['missbnb']:
         mess+="%i (%i),"%(int(k),len(res['missbnb'][k]))
-    mess.rstrip(",")
-    mess+="\n"
-if res['numiwarn'] and 'missnumi' in res:
+    mess=mess.rstrip(",")+"\n"
+if 'numiwarn' in res and res['numiwarn'] and 'missnumi' in res:
     mess+="%i runs missing NuMI data (number of subruns missing the data): "%len(res['missnumi'])
     for k in res['missnumi']:
         mess+="%i (%i),"%(int(k),len(res['missnumi'][k]))
-    mess.rstrip(",")
-    mess+="\n"
-if res['otherwarn'] and 'missother' in res:
+    mess=mess.rstrip(",")+"\n"
+if 'otherwarn' in res and res['otherwarn'] and 'missother' in res:
     mess+="%i runs missing EXT data (number of subruns missing the data): "%len(res['missother'])
     for k in res['missother']:
         mess+="%i (%i),"%(int(k),len(res['missother'][k]))
-    mess.rstrip(",")
-    mess+="\n"
-if res['prescalewarn'] and 'missprescale' in res:
+    mess=mess.rstrip(",")+"\n"
+if 'prescalewarn' in res and res['prescalewarn'] and 'missprescale' in res:
     mess+="%i runs missing prescale data:"%len(res['missprescale'])
     for k in res['missprescale']:
         mess+=" %i,"%(int(k))
-    mess=mess.rstrip(",")
-    mess+="\n"
+    mess=mess.rstrip(",")+"\n"
 
 if args.version==1:
     mess+="Warning!! Beam trigger count and toroid intensity calculated using version 1 beam cuts. These were used for pre MCC8.4 on 5e19 sample. This should not be used on any data after June 2016, nor on any data processed with MCC8.4. Add -v2 for MCC8.4 or later.\n"
 
-for r in res:
-    if "Algo" in r and res[r]>0:
-        mess+="\n\t%-50s %f"%(r,res[r])
+for rr in res:
+    if "Algo" in rr and res[rr]>0:
+        mess+="\n\t%-50s %f"%(rr,res[rr])
 
-if mess is not "":
+if mess != "":
     mess+="\n"
-    print mess 
+    print mess
     logging.warning(mess)
 
