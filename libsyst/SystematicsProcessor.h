@@ -72,31 +72,29 @@ class SystematicsProcessor {
     void clearFutures() { systematic_futures_.variations.clear(); }
 
   private:
-    static void sanitizeMatrix(TMatrixDSym &m) {
-        for (int i = 0; i < m.GetNrows(); ++i) {
-            for (int j = 0; j < m.GetNcols(); ++j) {
-                if (!std::isfinite(m(i, j))) m(i, j) = 0.0;
+    static void sanitizeMatrix(TMatrixDSym &matrix) {
+        const int rows = matrix.GetNrows();
+        const int cols = matrix.GetNcols();
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                if (!std::isfinite(matrix(i, j))) matrix(i, j) = 0.0;
             }
         }
     }
 
     static void combineCovariances(VariableResult &result) {
-        int n_bins = result.total_mc_hist_.getNumberOfBins();
-
+        const int n_bins = result.total_mc_hist_.getNumberOfBins();
         if (n_bins <= 0) return;
 
         result.total_covariance_.ResizeTo(n_bins, n_bins);
         result.total_covariance_ = result.total_mc_hist_.hist.covariance();
 
         log::debug("SystematicsProcessor::combineCovariances", "Combining covariance matrices");
-
         for (const auto &[name, cov_matrix] : result.covariance_matrices_) {
             if (cov_matrix.GetNrows() == n_bins) {
                 TMatrixDSym cov = cov_matrix;
-                SystematicsProcessor::sanitizeMatrix(cov);
-
+                sanitizeMatrix(cov);
                 log::debug("SystematicsProcessor::combineCovariances", "Adding matrix", name.str());
-
                 result.total_covariance_ += cov;
             } else {
                 log::warn("SystematicsProcessor::combineCovariances", "Skipping systematic", name.str(),
@@ -105,8 +103,7 @@ class SystematicsProcessor {
             }
         }
 
-        SystematicsProcessor::sanitizeMatrix(result.total_covariance_);
-
+        sanitizeMatrix(result.total_covariance_);
         result.nominal_with_band_ = result.total_mc_hist_;
         result.nominal_with_band_.hist.shifts.resize(n_bins, 0);
         result.nominal_with_band_.addCovariance(result.total_covariance_);
@@ -115,8 +112,8 @@ class SystematicsProcessor {
     static std::vector<KnobDef> createKnobs(const VariableRegistry &registry) {
         std::vector<KnobDef> out;
         out.reserve(registry.knobVariations().size());
-        for (auto &kv : registry.knobVariations()) {
-            out.push_back({kv.first, kv.second.first, kv.second.second});
+        for (const auto &[name, cols] : registry.knobVariations()) {
+            out.push_back({name, cols.first, cols.second});
         }
         return out;
     }
@@ -124,8 +121,8 @@ class SystematicsProcessor {
     static std::vector<UniverseDef> createUniverses(const VariableRegistry &registry) {
         std::vector<UniverseDef> out;
         out.reserve(registry.multiUniverseVariations().size());
-        for (auto &kv : registry.multiUniverseVariations()) {
-            out.push_back({kv.first, kv.first, kv.second});
+        for (const auto &[name, count] : registry.multiUniverseVariations()) {
+            out.push_back({name, name, count});
         }
         return out;
     }
