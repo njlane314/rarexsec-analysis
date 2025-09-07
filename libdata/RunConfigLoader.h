@@ -15,7 +15,8 @@ namespace analysis {
 class RunConfigLoader {
   public:
     static inline void loadFromJson(const nlohmann::json &data, RunConfigRegistry &registry) {
-        for (auto const &[beam, run_configs] : data.at("run_configurations").items()) {
+        const std::string top_key = data.contains("run_configurations") ? "run_configurations" : "beamlines";
+        for (auto const &[beam, run_configs] : data.at(top_key).items()) {
             for (auto const &[run_period, run_details] : run_configs.items()) {
                 RunConfig config(run_details, beam, run_period);
                 config.validate();

@@ -126,7 +126,7 @@ def process_sample_entry(
             entry["pot"] = run_pot
     elif sample_type in {"data", "ext"}:
         entry["pot"] = run_pot
-        entry["ext_triggers_db"] = ext_triggers
+        entry["triggers"] = ext_triggers
 
     entry.pop("stage_name", None)
     return True
