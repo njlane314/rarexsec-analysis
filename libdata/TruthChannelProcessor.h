@@ -15,7 +15,7 @@ class TruthChannelProcessor : public IEventProcessor {
     explicit TruthChannelProcessor() = default;
     ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
         if (st != SampleOrigin::kMonteCarlo) {
-            return processNonMc(df, st);
+            return this->processNonMc(df, st);
         }
 
         auto counts_df = this->defineCounts(df);
