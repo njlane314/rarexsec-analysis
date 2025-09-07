@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import os
 import re
 import subprocess
 import sys
@@ -132,8 +133,18 @@ def _get_pot_from_getdatainfo(
         command.append("--slip")
 
     print(f"[COMMAND] {' '.join(command)}")
+    env = os.environ.copy()
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+    if shutil.which("samweb") is None:
+        print(
+            "    Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
+            "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
+            "             setup sam_web_client",
+            file=sys.stderr,
+        )
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
@@ -258,7 +269,17 @@ def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
         ]
 
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        env = os.environ.copy()
+        env.pop("PYTHONHOME", None)
+        env.pop("PYTHONPATH", None)
+        if shutil.which("samweb") is None:
+            print(
+                "     Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
+                "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
+                "             setup sam_web_client",
+                file=sys.stderr,
+            )
+        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
