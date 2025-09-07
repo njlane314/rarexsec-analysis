@@ -428,8 +428,7 @@ protected:
         double min_edge;
         double max_edge;
         std::vector<double> orig_edges =
-            this->prepareHistograms(mc_hists, total_mc_events, left_edge,
-                                    right_edge, min_edge, max_edge);
+            this->prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge, min_edge, max_edge);
 
         this->buildLegend(p_legend, mc_hists);
 
@@ -437,8 +436,7 @@ protected:
 
         this->renderCuts(max_y);
 
-        this->configureAxes(orig_edges, left_edge, right_edge, min_edge,
-                            max_edge, max_y);
+        this->configureAxes(orig_edges, left_edge, right_edge, min_edge, max_edge, max_y);
 
         this->drawWatermark(p_main, total_mc_events);
 
@@ -465,6 +463,6 @@ private:
     std::vector<TObject *> cut_visuals_;
 };
 
-} // namespace analysis
+}
 
 #endif
