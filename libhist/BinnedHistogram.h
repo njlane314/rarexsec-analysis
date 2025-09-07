@@ -69,6 +69,7 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
         tmp.hist = hist + s;
         return tmp;
     }
+
     BinnedHistogram operator*(double s) const {
         auto tmp = *this;
         tmp.hist = hist * s;
@@ -82,16 +83,19 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
         tmp.hist = hist + o.hist;
         return tmp;
     }
+
     BinnedHistogram operator-(const BinnedHistogram &o) const {
         auto tmp = *this;
         tmp.hist = hist - o.hist;
         return tmp;
     }
+
     BinnedHistogram operator*(const BinnedHistogram &o) const {
         auto tmp = *this;
         tmp.hist = hist * o.hist;
         return tmp;
     }
+
     BinnedHistogram operator/(const BinnedHistogram &o) const {
         auto tmp = *this;
         tmp.hist = hist / o.hist;
