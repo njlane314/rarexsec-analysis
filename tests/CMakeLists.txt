@@ -17,3 +17,4 @@ catch_discover_tests(test_dynamic_binning)
 add_executable(test_quadtree_binning test_quadtree_binning.cpp)
 target_link_libraries(test_quadtree_binning PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
 catch_discover_tests(test_quadtree_binning)
+
