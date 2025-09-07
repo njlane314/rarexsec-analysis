@@ -79,8 +79,9 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     samples_cfg = {
         "samples": {
-            "ntuple_directory": config["ntuple_base_directory"],
+            "ntupledir": config["ntuple_base_directory"],
             "beamlines": config["run_configurations"],
+            "run_configurations": config["run_configurations"],
         }
     }
     with open(output_path, "w") as f:
