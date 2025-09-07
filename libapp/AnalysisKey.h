@@ -42,7 +42,7 @@ using StratifierKey = AnalysisKey<StratifierKeyTag>;
 using StratumKey = AnalysisKey<StratumKeyTag>;
 using SelectionKey = AnalysisKey<SelectionKeyTag>;
 
-} // namespace analysis
+}
 
 namespace std {
 template <class Tag> struct hash<analysis::AnalysisKey<Tag>> {

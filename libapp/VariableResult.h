@@ -34,6 +34,6 @@ struct VariableResult {
     std::map<SystematicKey, std::vector<BinnedHistogram>> universe_projected_hists_;
 };
 
-} // namespace analysis
+}
 
 #endif
