@@ -165,7 +165,8 @@ def process_sample_entry(
 def main() -> None:
     DEFINITIONS_PATH = "config/data.json"
     XML_PATHS = [
-        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_core.xml",
+        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_detvar.xml",
     ]
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
