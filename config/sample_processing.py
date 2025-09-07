@@ -23,11 +23,20 @@ def run_command(command: list[str], execute: bool) -> bool:
         print("[INFO] Dry run mode. HADD command not executed.")
         return True
 
+    if shutil.which(command[0]) is None:
+        print(
+            f"[ERROR] Command '{command[0]}' not found. Ensure ROOT is set up by running:\n"
+            "             source /cvmfs/larsoft.opensciencegrid.org/products/common/etc/setups\n"
+            "             setup root",
+            file=sys.stderr,
+        )
+        return False
+
     try:
         subprocess.run(command, check=True)
         print("[STATUS] HADD Execution successful.")
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+    except subprocess.CalledProcessError as exc:
         print(f"[ERROR] HADD Execution failed: {exc}", file=sys.stderr)
         return False
 
