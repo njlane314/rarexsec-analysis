@@ -17,7 +17,7 @@ static void plotBeamline(analysis::RunConfigRegistry &run_config_registry,
                          const std::string &beam,
                          const nlohmann::json &runs,
                          const nlohmann::json &plotting,
-                         const analysis::AnalysisResult::BeamResult &beam_result) {
+                         const analysis::AnalysisResult &beam_result) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
 
