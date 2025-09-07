@@ -1,5 +1,13 @@
 # rarexsec_analysis
 
+## Run Periods
+
+1. Run 1 ⇒ 2015-10 to 2016-07
+2. Run 2 ⇒ 2016-10 to 2017-07
+3. Run 3 ⇒ 2017-10 to 2018-07
+4. Run 4 ⇒ 2018-10 to 2019-07
+5. Run 5 ⇒ 2019-10 to 2020-03
+
 ## Building
 ```bash
 source .container.sh
