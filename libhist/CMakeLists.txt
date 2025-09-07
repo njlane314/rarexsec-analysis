@@ -11,4 +11,6 @@ target_link_libraries(libhist
     libutils
     libdata
     nlohmann_json::nlohmann_json
+    Eigen3::Eigen
+    ${ROOT_LIBRARIES}
 )
