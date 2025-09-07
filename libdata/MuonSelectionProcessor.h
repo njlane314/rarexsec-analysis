@@ -16,13 +16,13 @@ class MuonSelectionProcessor : public IEventProcessor {
             return next_ ? next_->process(df, st) : df;
         }
 
-        auto df1 = computeAverageDedx(df);
+        auto dedx_df = this->computeAverageDedx(df);
 
-        auto df2 = buildMuonMask(df1);
+        auto muon_mask_df = this->buildMuonMask(dedx_df);
 
-        auto df3 = extractMuonFeatures(df2);
+        auto muon_features_df = this->extractMuonFeatures(muon_mask_df);
 
-        return next_ ? next_->process(df3, st) : df3;
+        return next_ ? next_->process(muon_features_df, st) : muon_features_df;
     }
 
   private:
