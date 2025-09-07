@@ -7,6 +7,9 @@ from pathlib import Path
 import numpy as np
 import uproot
 
+# Location of the trigger branches within the ROOT files
+TRIGGER_TREE_PATH = "nuselection/EventSelectionFilter"
+
 TRIGGER_BRANCHES = [
     "software_trigger",
     "software_trigger_post",
@@ -21,10 +24,9 @@ def get_trigger_counts_from_single_file(file_path: Path) -> dict[str, int]:
         return counts
     try:
         with uproot.open(file_path) as root_file:
-            tree_path = "nuselection/EventSelectionFilter"
-            if tree_path not in root_file:
+            if TRIGGER_TREE_PATH not in root_file:
                 return counts
-            tree = root_file[tree_path]
+            tree = root_file[TRIGGER_TREE_PATH]
             for branch in TRIGGER_BRANCHES:
                 if branch in tree.keys():
                     data = tree[branch].array(library="np")
