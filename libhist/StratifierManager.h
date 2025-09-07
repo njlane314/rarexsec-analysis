@@ -10,11 +10,10 @@
 #include "IHistogramStratifier.h"
 #include "AnalysisKey.h"
 #include "StratifierRegistry.h"
+#include "ScalarStratifier.h"
+#include "VectorStratifier.h"
 
 namespace analysis {
-
-std::unique_ptr<IHistogramStratifier> makeScalarStratifier(const StratifierKey &key, StratifierRegistry &registry);
-std::unique_ptr<IHistogramStratifier> makeVectorStratifier(const StratifierKey &key, StratifierRegistry &registry);
 
 class StratifierManager {
   public:
