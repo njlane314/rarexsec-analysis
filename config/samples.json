@@ -5,7 +5,6 @@
             "numi_fhc": {
                 "run1": {
                     "nominal_pot": 1e+20,
-                    "nominal_triggers": 1000000.0,
                     "samples": [
                         {
                             "sample_key": "mc_inclusive_run1_fhc",
@@ -20,13 +19,11 @@
                                     "variation_type": "cv",
                                     "active": true,
                                     "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
-                                    "pot": 3.603503124989346e+18,
-                                    "triggers": 1255
+                                    "pot": 3.603503124989346e+18
                                 }
                             ],
                             "relative_path": "mc_inclusive_run1_fhc.root",
-                            "pot": 8.795198459547641e+19,
-                            "triggers": 23210
+                            "pot": 8.795198459547641e+19
                         },
                         {
                             "sample_key": "mc_strangeness_run1_fhc",
@@ -39,29 +36,26 @@
                                     "variation_type": "cv",
                                     "active": true,
                                     "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
-                                    "pot": 3.603503124989346e+18,
-                                    "triggers": 1255
+                                    "pot": 3.603503124989346e+18
                                 }
                             ],
                             "relative_path": "mc_strangeness_run1_fhc.root",
-                            "pot": 1.1750366557570312e+22,
-                            "triggers": 13544
+                            "pot": 1.1750366557570312e+22
                         },
                         {
                             "sample_key": "mc_dirt_run1_fhc",
                             "sample_type": "mc",
                             "active": true,
                             "relative_path": "mc_dirt_run1_fhc.root",
-                            "pot": 1.3691716923392262e+19,
-                            "triggers": 820
+                            "pot": 1.3691716923392262e+19
                         },
                         {
                             "sample_key": "numu_fhc_ext",
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 1e+20,
-                            "triggers": 0
+                            "pot": 0.0,
+                            "ext_triggers_db": 0
                         }
                     ]
                 }
