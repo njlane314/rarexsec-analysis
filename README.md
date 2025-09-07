@@ -15,11 +15,11 @@ python scripts/generate_analysis_config.py
 
 ## Running
 ```bash
-./build/analyse config/config.json config/plugins/selection_efficiency.json output.root
-# The ROOT file is written to /pnfs/uboone/scratch/users/$USER/output.root
-./build/plot /pnfs/uboone/scratch/users/$USER/output.root config/config.json
+./build/analyse config/config.json config/plugins/selection_efficiency.json
+# The ROOT file is written to /pnfs/uboone/scratch/users/$USER/analysis_config_<YYYYMMDD>.root
+./build/plot /pnfs/uboone/scratch/users/$USER/analysis_config_<YYYYMMDD>.root config/config.json
 ```
-`analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
+`analyse` executes the analysis and optional plug-ins. By default the output file is named `analysis_<dataset>_<YYYYMMDD>.root`, where `<dataset>` is derived from the samples configuration filename. `plot` renders figures using the produced ROOT file.
 
 ## Example plug-ins
 The configuration files contain analysis and plotting directives.

@@ -1,5 +1,11 @@
 #include <algorithm>
+#include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <iomanip>
+#include <ctime>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <cstdlib>
@@ -74,10 +80,10 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples,
 int main(int argc, char *argv[]) {
     analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
-    if (argc != 4) {
+    if (argc < 3 || argc > 4) {
         analysis::log::fatal("analyse::main",
                              "Invocation error. Expected:", argv[0],
-                             "<samples.json> <plugins.json> <output.root>");
+                             "<samples.json> <plugins.json> [output.root]");
         return 1;
     }
 
@@ -93,7 +99,25 @@ int main(int argc, char *argv[]) {
             scratch_dir += "unknown";
         }
         scratch_dir += "/";
-        std::string output_path = scratch_dir + argv[3];
+
+        std::string output_name;
+        if (argc == 4) {
+            output_name = argv[3];
+        } else {
+            std::filesystem::path samples_path(argv[1]);
+            std::string dataset = samples_path.stem().string();
+            auto now = std::chrono::system_clock::now();
+            std::time_t t = std::chrono::system_clock::to_time_t(now);
+            std::tm tm = *std::localtime(&t);
+            std::ostringstream oss;
+            oss << std::put_time(&tm, "%Y%m%d");
+            output_name = "analysis_" + dataset + "_" + oss.str() + ".root";
+        }
+
+        std::string output_path = scratch_dir + output_name;
+
+        analysis::log::info("analyse::main", "Writing analysis output to",
+                            output_path);
 
         auto result = runAnalysis(cfg.at("samples"), plg.at("analysis"));
         result.saveToFile(output_path.c_str());
