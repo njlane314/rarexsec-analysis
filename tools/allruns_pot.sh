@@ -127,9 +127,6 @@ bar
 for r in 1 2 3 4 5; do
   S="${RUN_START[$r]}"; E="${RUN_END[$r]}"
 
-  # comma between run objects in JSON
-  [[ $r -gt 1 ]] && echo ',' >> "$OUTPUT_JSON"
-
   # open run object + beams
   {
     printf '    { "index": %d, "start": "%s", "end": "%s", "beams": {\n' "$r" "$S" "$E"
@@ -182,6 +179,11 @@ for r in 1 2 3 4 5; do
   {
     echo   '      }'
     echo   '    }'
+    if [[ $r -lt 5 ]]; then
+      echo   '    },'
+    else
+      echo   '    }'
+    fi
   } >> "$OUTPUT_JSON"
 
   echo
