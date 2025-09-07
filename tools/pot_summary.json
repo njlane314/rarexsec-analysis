@@ -19,7 +19,7 @@
         "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 1509648, "TorA_wcut": 6.27262221626911e+19, "TorB_Target_wcut": 6.26786807437761e+19 }
       }
     }
-,
+    },
     { "index": 2, "start": "2016-10-01T00:00:00", "end": "2017-07-31T23:59:59", "beams": {
       "BNB": {
         "TOTAL": { "EXT": 165820967, "Gate": 75426832, "Cnt": 82583987, "TorA": 3.13471878034212e+20, "TorB_Target": 3.13089048474962e+20, "Cnt_wcut": 72891077, "TorA_wcut": 3.06107689145972e+20, "TorB_Target_wcut": 3.05733789719907e+20 }
@@ -30,7 +30,7 @@
         "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 6225528, "TorA_wcut": 2.98175643392396e+20, "TorB_Target_wcut": 2.97147893414406e+20 }
       }
     }
-,
+    },
     { "index": 3, "start": "2017-10-01T00:00:00", "end": "2018-07-31T23:59:59", "beams": {
       "BNB": {
         "TOTAL": { "EXT": 194770254, "Gate": 78716197, "Cnt": 79304129, "TorA": 3.00958830113234e+20, "TorB_Target": 3.01659929297187e+20, "Cnt_wcut": 63920595, "TorA_wcut": 2.66505873914642e+20, "TorB_Target_wcut": 2.67128525951408e+20 }
@@ -41,7 +41,7 @@
         "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 11438479, "TorA_wcut": 5.40945295654262e+20, "TorB_Target_wcut": 5.38681487402417e+20 }
       }
     }
-,
+    },
     { "index": 4, "start": "2018-10-01T00:00:00", "end": "2019-07-31T23:59:59", "beams": {
       "BNB": {
         "TOTAL": { "EXT": 288582511, "Gate": 84643581, "Cnt": 84077913, "TorA": 3.4777800144919e+20, "TorB_Target": 3.47839756505964e+20, "Cnt_wcut": 75374653, "TorA_wcut": 3.27238112125426e+20, "TorB_Target_wcut": 3.27301243638546e+20 }
@@ -52,7 +52,7 @@
         "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 6771871, "TorA_wcut": 3.13582230730593e+20, "TorB_Target_wcut": 3.11127944481511e+20 }
       }
     }
-,
+    },
     { "index": 5, "start": "2019-10-01T00:00:00", "end": "2020-03-31T23:59:59", "beams": {
       "BNB": {
         "TOTAL": { "EXT": 138338167, "Gate": 46956608, "Cnt": 45827708, "TorA": 1.74088492137994e+20, "TorB_Target": 1.74327268536841e+20, "Cnt_wcut": 32767632, "TorA_wcut": 1.36399885134142e+20, "TorB_Target_wcut": 1.3658566135233e+20 }
@@ -62,6 +62,7 @@
         "FHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 5642795, "TorA_wcut": 2.48691853039027e+20, "TorB_Target_wcut": 2.46081237050133e+20 },
         "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": 94, "TorA_wcut": 4.69764702e+15, "TorB_Target_wcut": 4.644976273e+15 }
       }
+    }
     }
   ]
 }
