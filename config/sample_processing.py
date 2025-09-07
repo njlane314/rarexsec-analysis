@@ -73,9 +73,14 @@ def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
     pairs: set[tuple[int, int]] = set()
     try:
         with uproot.open(file_path) as root_file:
-            if "nuselection/SubRun" not in root_file:
+            tree = None
+            if "nuselection/SubRun" in root_file:
+                tree = root_file["nuselection/SubRun"]
+            elif "nuselection/BlipRecoAlg" in root_file:
+                tree = root_file["nuselection/BlipRecoAlg"]
+            if not tree:
                 return pairs
-            tree = root_file["nuselection/SubRun"]
+
             runs = tree["run"].array(library="np") if "run" in tree else None
             if "sub" in tree:
                 subruns = tree["sub"].array(library="np")
