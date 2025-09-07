@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import os
 import re
 import subprocess
 import sys
@@ -22,11 +23,20 @@ def run_command(command: list[str], execute: bool) -> bool:
         print("[INFO] Dry run mode. HADD command not executed.")
         return True
 
+    if shutil.which(command[0]) is None:
+        print(
+            f"[ERROR] Command '{command[0]}' not found. Ensure ROOT is set up by running:\n"
+            "             source /cvmfs/larsoft.opensciencegrid.org/products/common/etc/setups\n"
+            "             setup root",
+            file=sys.stderr,
+        )
+        return False
+
     try:
         subprocess.run(command, check=True)
         print("[STATUS] HADD Execution successful.")
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+    except subprocess.CalledProcessError as exc:
         print(f"[ERROR] HADD Execution failed: {exc}", file=sys.stderr)
         return False
 
@@ -132,8 +142,18 @@ def _get_pot_from_getdatainfo(
         command.append("--slip")
 
     print(f"[COMMAND] {' '.join(command)}")
+    env = os.environ.copy()
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+    if shutil.which("samweb") is None:
+        print(
+            "    Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
+            "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
+            "             setup sam_web_client",
+            file=sys.stderr,
+        )
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
@@ -258,7 +278,17 @@ def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
         ]
 
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        env = os.environ.copy()
+        env.pop("PYTHONHOME", None)
+        env.pop("PYTHONPATH", None)
+        if shutil.which("samweb") is None:
+            print(
+                "     Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
+                "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
+                "             setup sam_web_client",
+                file=sys.stderr,
+            )
+        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
