@@ -8,6 +8,7 @@
 #include <memory>
 #include <numeric>
 #include <sstream>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -20,11 +21,11 @@
 #include "TLine.h"
 #include "TPad.h"
 
-#include "VariableResult.h"
 #include "HistogramCut.h"
 #include "IHistogramPlot.h"
 #include "RegionAnalysis.h"
 #include "StratifierRegistry.h"
+#include "VariableResult.h"
 
 namespace analysis {
 

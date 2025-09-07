@@ -2,8 +2,8 @@
 #define SELECTIONEFFICIENCYPLOT_H
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "TGraphErrors.h"
 #include "TH1F.h"
@@ -16,7 +16,7 @@
 namespace analysis {
 
 class SelectionEfficiencyPlot : public IHistogramPlot {
-public:
+  public:
     SelectionEfficiencyPlot(std::string plot_name, std::vector<std::string> stages, std::vector<double> efficiencies,
                             std::vector<double> efficiency_errors, std::vector<double> purities,
                             std::vector<double> purity_errors, std::string output_directory = "plots",
@@ -25,7 +25,7 @@ public:
             efficiencies_(std::move(efficiencies)), efficiency_errors_(std::move(efficiency_errors)),
             purities_(std::move(purities)), purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
 
-private:
+  private:
     void draw(TCanvas &canvas) override {
         int n = stages_.size();
         TH1F frame("frame", "", n, 0, n);

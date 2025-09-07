@@ -1,9 +1,13 @@
 #ifndef DETECTORDISPLAY_H
 #define DETECTORDISPLAY_H
 
-#include "IEventDisplay.h"
-#include "TH2F.h"
+#include <string>
 #include <vector>
+
+#include "TCanvas.h"
+#include "TH2F.h"
+
+#include "IEventDisplay.h"
 
 namespace analysis {
 

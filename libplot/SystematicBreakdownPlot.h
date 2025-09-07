@@ -1,19 +1,19 @@
 #ifndef SYSTEMATICBREAKDOWNPLOT_H
 #define SYSTEMATICBREAKDOWNPLOT_H
 
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 
+#include "TCanvas.h"
+#include "TColor.h"
 #include "TH1D.h"
 #include "THStack.h"
 #include "TLegend.h"
-#include "TCanvas.h"
-#include "TColor.h"
 
-#include "VariableResult.h"
 #include "IHistogramPlot.h"
+#include "VariableResult.h"
 
 namespace analysis {
 
