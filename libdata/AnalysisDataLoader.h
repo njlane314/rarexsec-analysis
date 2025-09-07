@@ -9,10 +9,10 @@
 
 #include "ROOT/RDataFrame.hxx"
 
-#include "Logger.h"
+#include "AnalysisKey.h"
 #include "BlipProcessor.h"
 #include "IEventProcessor.h"
-#include "AnalysisKey.h"
+#include "Logger.h"
 #include "MuonSelectionProcessor.h"
 #include "ReconstructionProcessor.h"
 #include "RunConfigRegistry.h"
@@ -31,9 +31,14 @@ class AnalysisDataLoader {
     AnalysisDataLoader(const RunConfigRegistry &run_config_registry, VariableRegistry variable_registry,
                        const std::string &beam_mode, std::vector<std::string> periods,
                        const std::string &ntuple_base_dir, bool blind = true)
-        : run_registry_(run_config_registry), var_registry_(std::move(variable_registry)),
-          ntuple_base_directory_(ntuple_base_dir), beam_(beam_mode), periods_(std::move(periods)), blind_(blind),
-          total_pot_(0.0), total_triggers_(0) {
+        : run_registry_(run_config_registry),
+          var_registry_(std::move(variable_registry)),
+          ntuple_base_directory_(ntuple_base_dir),
+          beam_(beam_mode),
+          periods_(std::move(periods)),
+          blind_(blind),
+          total_pot_(0.0),
+          total_triggers_(0) {
         this->loadAll();
     }
 
@@ -85,23 +90,25 @@ class AnalysisDataLoader {
     const RunConfigRegistry &run_registry_;
     VariableRegistry var_registry_;
     std::string ntuple_base_directory_;
-    SampleFrameMap frames_;
+
     std::string beam_;
     std::vector<std::string> periods_;
     bool blind_;
+
     double total_pot_;
     long total_triggers_;
+
+    SampleFrameMap frames_;
     std::vector<std::unique_ptr<IEventProcessor>> processors_;
     std::unordered_map<SampleKey, const RunConfig *> run_config_cache_;
 
-    template <typename Head, typename... Tail>
-    std::unique_ptr<IEventProcessor> chainEventProcessors(std::unique_ptr<Head> head, std::unique_ptr<Tail>... tail) {
-        if constexpr (sizeof...(tail) == 0) {
-            return head;
-        } else {
-            auto next = this->chainEventProcessors(std::move(tail)...);
-            head->chainNextProcessor(std::move(next));
-            return head;
+    void loadAll() {
+        for (auto &period : periods_) {
+            const auto &rc = run_registry_.get(beam_, period);
+            total_pot_ += rc.nominal_pot;
+            total_triggers_ += rc.nominal_triggers;
+
+            this->processPeriod(period);
         }
     }
 
@@ -131,13 +138,14 @@ class AnalysisDataLoader {
         }
     }
 
-    void loadAll() {
-        for (auto &period : periods_) {
-            const auto &rc = run_registry_.get(beam_, period);
-            total_pot_ += rc.nominal_pot;
-            total_triggers_ += rc.nominal_triggers;
-
-            this->processPeriod(period);
+    template <typename Head, typename... Tail>
+    std::unique_ptr<IEventProcessor> chainEventProcessors(std::unique_ptr<Head> head, std::unique_ptr<Tail>... tail) {
+        if constexpr (sizeof...(tail) == 0) {
+            return head;
+        } else {
+            auto next = this->chainEventProcessors(std::move(tail)...);
+            head->chainNextProcessor(std::move(next));
+            return head;
         }
     }
 };
