@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
         if (user_env) {
             scratch_dir += user_env;
         } else {
-            scratch_dir += "unknown";
+            scratch_dir += "nlane";
         }
-        scratch_dir += "/";
+        scratch_dir += "/results/";
 
         std::string output_name;
         if (argc == 4) {
