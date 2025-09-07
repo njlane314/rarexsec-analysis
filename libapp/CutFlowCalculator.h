@@ -14,9 +14,8 @@
 
 namespace analysis {
 
-template <typename Loader>
-class CutFlowCalculator {
-public:
+template <typename Loader> class CutFlowCalculator {
+  public:
     CutFlowCalculator(Loader &ldr, AnalysisDefinition &def)
         : data_loader_(ldr), analysis_definition_(def) {}
 
@@ -73,7 +72,7 @@ public:
         return filters;
     }
 
-private:
+  private:
     void updateSchemeTallies(
         ROOT::RDF::RNode df,
         const std::vector<std::string> &schemes,
@@ -119,6 +118,6 @@ private:
     AnalysisDefinition &analysis_definition_;
 };
 
-} // namespace analysis
+} 
 
 #endif

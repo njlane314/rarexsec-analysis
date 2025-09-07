@@ -103,6 +103,6 @@ class AnalysisRunner {
         VariableProcessor<SystematicsProcessor> variable_processor_;
 };
 
-} // namespace analysis
+} 
 
 #endif

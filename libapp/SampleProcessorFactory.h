@@ -20,7 +20,7 @@
 namespace analysis {
 
 template <typename Loader> class SampleProcessorFactory {
-public:
+  public:
     explicit SampleProcessorFactory(Loader &ldr) : data_loader_(ldr) {}
 
     auto create(const RegionHandle &region_handle,
@@ -133,10 +133,10 @@ public:
         return true;
     }
 
-private:
+  private:
     Loader &data_loader_;
 };
 
-} // namespace analysis
+} 
 
 #endif
