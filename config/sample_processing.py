@@ -55,28 +55,29 @@ def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dic
         input_dir = input_dir.replace(f"&{name};", value)
     return input_dir
 
+def _iter_ttrees(directory):
+    """Yield all TTree objects within a ROOT file or directory."""
+    for key in directory.keys():
+        obj = directory[key]
+        if isinstance(obj, uproot.behaviors.TTree.TTree):
+            yield obj
+        elif hasattr(obj, "keys"):
+            yield from _iter_ttrees(obj)
+
+
 def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
     pairs: set[tuple[int, int]] = set()
     try:
         with uproot.open(file_path) as root_file:
-            tree = None
-            if "nuselection/SubRun" in root_file:
-                tree = root_file["nuselection/SubRun"]
-            elif "nuselection/BlipRecoAlg" in root_file:
-                tree = root_file["nuselection/BlipRecoAlg"]
-            if not tree:
-                return pairs
-
-            runs = tree["run"].array(library="np") if "run" in tree else None
-            if "sub" in tree:
-                subruns = tree["sub"].array(library="np")
-            elif "subrun" in tree:
-                subruns = tree["subrun"].array(library="np")
-            else:
-                subruns = None
-            if runs is not None and subruns is not None:
-                for r, s in zip(runs, subruns):
-                    pairs.add((int(r), int(s)))
+            for tree in _iter_ttrees(root_file):
+                try:
+                    runs = tree["run"].array(library="np")
+                    subruns = tree["subRun"].array(library="np")
+                except Exception:
+                    continue
+                pairs.update(zip(map(int, runs), map(int, subruns)))
+                if pairs:
+                    break
     except Exception as exc:
         print(f"    Warning: Could not read run/subrun from {file_path}: {exc}", file=sys.stderr)
     return pairs
