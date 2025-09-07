@@ -15,9 +15,9 @@ python scripts/generate_analysis_config.py
 
 ## Running
 ```bash
-./build/analyse config/config.json output.root
 ./build/analyse config/config.json config/plugins/selection_efficiency.json output.root
-./build/plot output.root config/config.json
+# The ROOT file is written to /pnfs/uboone/scratch/users/$USER/output.root
+./build/plot /pnfs/uboone/scratch/users/$USER/output.root config/config.json
 ```
 `analyse` executes the analysis and optional plug-ins. `plot` renders figures using the produced ROOT file.
 

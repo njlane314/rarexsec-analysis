@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 #include <ROOT/RDataFrame.hxx>
 #include <nlohmann/json.hpp>
@@ -83,10 +84,19 @@ int main(int argc, char *argv[]) {
     try {
         nlohmann::json cfg = analysis::loadJson(argv[1]);
         nlohmann::json plg = analysis::loadJson(argv[2]);
-        const char *output_path = argv[3];
+
+        const char *user_env = std::getenv("USER");
+        std::string scratch_dir = "/pnfs/uboone/scratch/users/";
+        if (user_env) {
+            scratch_dir += user_env;
+        } else {
+            scratch_dir += "unknown";
+        }
+        scratch_dir += "/";
+        std::string output_path = scratch_dir + argv[3];
 
         auto result = runAnalysis(cfg.at("samples"), plg.at("analysis"));
-        result.saveToFile(output_path);
+        result.saveToFile(output_path.c_str());
     } catch (const std::exception &e) {
         analysis::log::fatal("analyse::main", "An error occurred:", e.what());
         return 1;
