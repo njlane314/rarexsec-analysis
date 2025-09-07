@@ -15,7 +15,7 @@
 #include "TColor.h"
 
 #include "AnalysisLogger.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 
 namespace analysis {
 

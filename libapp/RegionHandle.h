@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "RegionAnalysis.h"
 #include "Selection.h"
 

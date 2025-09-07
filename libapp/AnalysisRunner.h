@@ -24,7 +24,7 @@
 #include "DataProcessor.h"
 #include "HistogramBooker.h"
 #include "ISampleProcessor.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "MonteCarloProcessor.h"
 #include "SelectionRegistry.h"
 #include "StratifierRegistry.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VariableResult.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 
 #include <map>
 #include <stdexcept>

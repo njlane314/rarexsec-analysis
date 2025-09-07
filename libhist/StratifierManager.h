@@ -8,7 +8,7 @@
 
 #include "AnalysisLogger.h"
 #include "IHistogramStratifier.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
