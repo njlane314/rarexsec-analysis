@@ -60,7 +60,7 @@
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 0.0,
+                            "pot": 1e+20,
                             "triggers": 0
                         }
                     ]

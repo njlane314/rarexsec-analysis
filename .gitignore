@@ -32,7 +32,11 @@ plots/*
 *.png
 *.root
 
+config/__pycache__/
 *.pyc
+
+venv/
+env/
 
 dataset/*
 CMakeFiles/
