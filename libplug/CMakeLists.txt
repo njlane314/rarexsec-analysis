@@ -35,17 +35,17 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-# Analysis plugins
-add_plugin(RegionsPlugin analysis/RegionsPlugin.cc "")
-add_plugin(SnapshotPlugin analysis/SnapshotPlugin.cc "")
-add_plugin(VariablesPlugin analysis/VariablesPlugin.cc "")
+# Analytics plugins
+add_plugin(RegionsPlugin analytics/RegionsPlugin.cc "")
+add_plugin(SnapshotPlugin analytics/SnapshotPlugin.cc "")
+add_plugin(VariablesPlugin analytics/VariablesPlugin.cc "")
 
-# Plot plugins
-add_plugin(EventDisplayPlugin plot/EventDisplayPlugin.cc "")
-add_plugin(CutFlowPlotPlugin plot/CutFlowPlotPlugin.cc "")
-add_plugin(SlipStackingIntensityPlugin plot/SlipStackingIntensityPlugin.cc "")
-add_plugin(StackedHistogramPlugin plot/StackedHistogramPlugin.cc "")
-add_plugin(CutMatrixPlotPlugin plot/CutMatrixPlotPlugin.cc "")
-add_plugin(RocCurvePlugin plot/RocCurvePlugin.cc "")
-add_plugin(SystematicBreakdownPlugin plot/SystematicBreakdownPlugin.cc "")
-add_plugin(UnstackedHistogramPlugin plot/UnstackedHistogramPlugin.cc "")
+# Plotting plugins
+add_plugin(EventDisplayPlugin plotting/EventDisplayPlugin.cc "")
+add_plugin(CutFlowPlotPlugin plotting/CutFlowPlotPlugin.cc "")
+add_plugin(SlipStackingIntensityPlugin plotting/SlipStackingIntensityPlugin.cc "")
+add_plugin(StackedHistogramPlugin plotting/StackedHistogramPlugin.cc "")
+add_plugin(CutMatrixPlotPlugin plotting/CutMatrixPlotPlugin.cc "")
+add_plugin(RocCurvePlugin plotting/RocCurvePlugin.cc "")
+add_plugin(SystematicBreakdownPlugin plotting/SystematicBreakdownPlugin.cc "")
+add_plugin(UnstackedHistogramPlugin plotting/UnstackedHistogramPlugin.cc "")
