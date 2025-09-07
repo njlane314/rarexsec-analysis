@@ -24,9 +24,7 @@ namespace analysis {
 class AnalysisDefinition {
 public:
   AnalysisDefinition(const SelectionRegistry &sel_reg) : sel_reg_(sel_reg) {}
-
-  // -- Variable management -------------------------------------------------
-
+ 
   AnalysisDefinition &addVariable(
       const std::string &key, const std::string &expr, const std::string &lbl,
       const BinningDefinition &bdef, const std::string &strat,
@@ -46,9 +44,7 @@ public:
 
     return *this;
   }
-
-  // -- Region management ---------------------------------------------------
-
+ 
   AnalysisDefinition &
   addRegion(const std::string &key, const std::string &region_name,
             std::string sel_rule_key, double pot = 0.0, bool blinded = true,
@@ -100,26 +96,23 @@ public:
     region_variables_[region_key].emplace_back(variable_key);
   }
 
-  // -- Accessors -----------------------------------------------------------
-
-  [[nodiscard]] RegionHandle region(const RegionKey &key) const {
+  RegionHandle region(const RegionKey &key) const {
     return RegionHandle{key, region_names_, region_selections_,
                         region_analyses_, region_variables_};
   }
 
-  [[nodiscard]] bool includeOobBins(const VariableKey &key) const {
+  bool includeOobBins(const VariableKey &key) const {
     auto it = include_oob_.find(key);
     return it != include_oob_.end() && it->second;
   }
 
-  [[nodiscard]] const std::vector<std::string> &
-  regionClauses(const RegionKey &key) const {
+  const std::vector<std::string> &regionClauses(const RegionKey &key) const {
     static const std::vector<std::string> empty;
     auto it = region_clauses_.find(key);
     return it != region_clauses_.end() ? it->second : empty;
   }
 
-  [[nodiscard]] std::vector<RegionHandle> regions() const {
+  std::vector<RegionHandle> regions() const {
     std::vector<RegionHandle> result;
     result.reserve(region_names_.size());
 
@@ -134,12 +127,12 @@ public:
     variable_binning_[key] = std::move(bdef);
   }
 
-  [[nodiscard]] VariableHandle variable(const VariableKey &key) const {
+  VariableHandle variable(const VariableKey &key) const {
     return VariableHandle{key, variable_expressions_, variable_labels_,
                           variable_binning_, variable_stratifiers_};
   }
 
-  [[nodiscard]] std::vector<VariableHandle> variables() const {
+  std::vector<VariableHandle> variables() const {
     std::vector<VariableHandle> result;
     result.reserve(variable_expressions_.size());
 
@@ -150,20 +143,17 @@ public:
     return result;
   }
 
-  [[nodiscard]] bool isDynamic(const VariableKey &key) const {
+  bool isDynamic(const VariableKey &key) const {
     auto it = is_dynamic_.find(key);
     return it != is_dynamic_.end() && it->second;
   }
 
-  [[nodiscard]] DynamicBinningStrategy
-  dynamicBinningStrategy(const VariableKey &key) const {
+  DynamicBinningStrategy dynamicBinningStrategy(const VariableKey &key) const {
     auto it = dynamic_strategy_.find(key);
     return it != dynamic_strategy_.end() ? it->second
                                          : DynamicBinningStrategy::EqualWeight;
   }
-
-  // -- Dynamic binning -----------------------------------------------------
-
+ 
   void resolveDynamicBinning(AnalysisDataLoader &loader) {
     for (const auto &var_handle : variables()) {
       if (!isDynamic(var_handle.key_))
@@ -197,7 +187,7 @@ public:
       setBinning(var_handle.key_, std::move(new_bins));
     }
   }
-
+ 
 private:
   const SelectionRegistry &sel_reg_;
 
@@ -214,9 +204,7 @@ private:
   std::map<RegionKey, std::unique_ptr<RegionAnalysis>> region_analyses_;
   std::map<RegionKey, std::vector<VariableKey>> region_variables_;
   std::map<RegionKey, std::vector<std::string>> region_clauses_;
-
-  // -- Helper methods -----------------------------------------------------
-
+ 
   bool hasRegion(const RegionKey &key) const {
     return region_analyses_.count(key) != 0;
   }
@@ -263,7 +251,6 @@ private:
         key, label, pot, blinded, std::move(beam_config), std::move(runs));
   }
 };
-
-} // namespace analysis
+}
 
 #endif
