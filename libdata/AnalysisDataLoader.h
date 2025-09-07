@@ -12,7 +12,7 @@
 #include "AnalysisLogger.h"
 #include "BlipProcessor.h"
 #include "IEventProcessor.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "MuonSelectionProcessor.h"
 #include "ReconstructionProcessor.h"
 #include "RunConfigRegistry.h"

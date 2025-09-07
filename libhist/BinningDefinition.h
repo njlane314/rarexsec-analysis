@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "AnalysisLogger.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 
 namespace analysis {
 

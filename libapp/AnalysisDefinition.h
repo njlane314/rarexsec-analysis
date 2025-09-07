@@ -11,7 +11,7 @@
 #include "AnalysisLogger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "RegionAnalysis.h"
 #include "RegionHandle.h"
 #include "SelectionQuery.h"

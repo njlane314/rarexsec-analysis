@@ -1,5 +1,5 @@
 #include "IHistogramStratifier.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "ROOT/RVec.hxx"
 #include "StratifierRegistry.h"
 

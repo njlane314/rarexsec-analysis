@@ -5,7 +5,7 @@
 
 #include "ROOT/RDataFrame.hxx"
 
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "SampleTypes.h"
 
 namespace analysis {

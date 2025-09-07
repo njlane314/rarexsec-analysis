@@ -5,7 +5,7 @@
 #include <string>
 
 #include "BinningDefinition.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 
 namespace analysis {
 

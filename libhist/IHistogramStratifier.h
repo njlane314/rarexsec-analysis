@@ -14,7 +14,7 @@
 #include "AnalysisLogger.h"
 #include "BinnedHistogram.h"
 #include "BinningDefinition.h"
-#include "KeyTypes.h"
+#include "AnalysisKey.h"
 #include "StratifierRegistry.h"
 
 namespace analysis {
