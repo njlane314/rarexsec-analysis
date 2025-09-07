@@ -9,8 +9,8 @@ class DataProcessor : public ISampleProcessor {
   public:
     explicit DataProcessor(SampleDataset dataset) : dataset_(std::move(dataset)) {}
 
-    void book(HistogramBooker &booker, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
-        data_future_ = booker.bookNominalHist(binning, dataset_, model);
+    void book(HistogramFactory &factory, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
+        data_future_ = factory.bookNominalHist(binning, dataset_, model);
     }
 
     void contributeTo(VariableResult &result) override {

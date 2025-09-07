@@ -22,7 +22,7 @@
 #include "SampleDataset.h"
 #include "RegionAnalysis.h"
 #include "DataProcessor.h"
-#include "HistogramBooker.h"
+#include "HistogramFactory.h"
 #include "ISampleProcessor.h"
 #include "KeyTypes.h"
 #include "MonteCarloProcessor.h"
@@ -36,10 +36,10 @@ namespace analysis {
 
 class AnalysisRunner {
   public:
-    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg, std::unique_ptr<HistogramBooker> booker,
+    AnalysisRunner(AnalysisDataLoader &ldr, const VariableRegistry &var_reg, std::unique_ptr<HistogramFactory> factory,
                    SystematicsProcessor &sys_proc, const nlohmann::json &plgn_cfg)
         : data_loader_(ldr), analysis_definition_(selection_registry_, var_reg), systematics_processor_(sys_proc),
-          histogram_booker_(std::move(booker)) {
+          histogram_factory_(std::move(factory)) {
         plugin_manager_.loadPlugins(plgn_cfg, &data_loader_);
     }
 
@@ -260,7 +260,7 @@ class AnalysisRunner {
                       "):", var_key.str());
             log::info("AnalysisRunner::run", "Executing sample processors...");
             tbb::parallel_for_each(sample_processors.begin(), sample_processors.end(),
-                                   [&](auto &p) { p.second->book(*histogram_booker_, binning, model); });
+                                   [&](auto &p) { p.second->book(*histogram_factory_, binning, model); });
 
             log::info("AnalysisRunner::run", "Registering systematic variations...");
             tbb::parallel_for_each(monte_carlo_nodes.begin(), monte_carlo_nodes.end(), [&](auto &p) {
@@ -291,7 +291,7 @@ class AnalysisRunner {
     AnalysisDefinition analysis_definition_;
     SystematicsProcessor &systematics_processor_;
 
-    std::unique_ptr<HistogramBooker> histogram_booker_;
+    std::unique_ptr<HistogramFactory> histogram_factory_;
 };
 
 }

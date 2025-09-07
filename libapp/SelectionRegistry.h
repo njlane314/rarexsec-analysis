@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Selection.h"
+#include "SelectionQuery.h"
 
 namespace analysis {
 
@@ -23,7 +23,7 @@ class SelectionRegistry {
 
     void addRule(std::string key, SelectionRule rule) { rules_.emplace(std::move(key), std::move(rule)); }
 
-    Selection get(const std::string &key) const {
+    SelectionQuery get(const std::string &key) const {
         auto it = rules_.find(key);
         if (it == rules_.end())
             throw std::out_of_range("Unknown selection key: " + key);
@@ -39,11 +39,11 @@ class SelectionRegistry {
     }
 
   private:
-    Selection makeSelection(const SelectionRule &r) const {
+    SelectionQuery makeSelection(const SelectionRule &r) const {
         if (r.clauses.empty())
-            return Selection{};
-        return std::accumulate(std::next(r.clauses.begin()), r.clauses.end(), Selection(r.clauses.front()),
-                               [](Selection a, const std::string &b) { return a && Selection(b); });
+            return SelectionQuery{};
+        return std::accumulate(std::next(r.clauses.begin()), r.clauses.end(), SelectionQuery(r.clauses.front()),
+                               [](SelectionQuery a, const std::string &b) { return a && SelectionQuery(b); });
     }
 
     void registerDefaults() {

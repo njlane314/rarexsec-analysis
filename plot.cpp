@@ -23,7 +23,7 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
     analysis::log::info("plot::runPlotting", "Configuration loaded for", samples.at("beamlines").size(), "beamlines.");
 
     analysis::RunConfigRegistry run_config_registry;
-    analysis::RunConfigLoader::loadRunConfigurations(samples, run_config_registry);
+    analysis::RunConfigLoader::loadFromJson(samples, run_config_registry);
 
     analysis::VariableRegistry variable_registry;
     std::map<std::string, std::unique_ptr<analysis::AnalysisDataLoader>> loaders;

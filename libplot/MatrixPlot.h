@@ -10,7 +10,7 @@
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
 #include "QuadTreeBinning2D.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 
 #include "TCanvas.h"
 #include "TH2F.h"
@@ -24,7 +24,7 @@ class MatrixPlot : public IHistogramPlot {
 public:
   MatrixPlot(std::string plot_name, const VariableResult &x_res,
              const VariableResult &y_res, AnalysisDataLoader &loader,
-             const Selection &selection, std::string output_directory = "plots",
+             const SelectionQuery &selection, std::string output_directory = "plots",
              const std::vector<Cut> &x_cuts = {},
              const std::vector<Cut> &y_cuts = {})
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)) {

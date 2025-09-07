@@ -12,7 +12,7 @@
 #include "HistogramCut.h"
 #include "IHistogramPlot.h"
 #include "MatrixPlot.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 #include "StackedHistogramPlot.h"
 #include "UnstackedHistogramPlot.h"
 
@@ -73,7 +73,7 @@ public:
   void generateMatrixPlot(const AnalysisResult &res,
                           const std::string &x_variable,
                           const std::string &y_variable,
-                          const std::string &region, const Selection &selection,
+                          const std::string &region, const SelectionQuery &selection,
                           const std::vector<Cut> &x_cuts = {},
                           const std::vector<Cut> &y_cuts = {}) const {
     const auto &x_res = this->fetchResult(res, x_variable, region);

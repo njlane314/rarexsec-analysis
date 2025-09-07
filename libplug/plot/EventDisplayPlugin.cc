@@ -12,7 +12,7 @@
 #include "IPlotPlugin.h"
 #include "DetectorDisplay.h"
 #include "SemanticDisplay.h"
-#include "Selection.h"
+#include "SelectionQuery.h"
 #include "SelectionRegistry.h"
 
 namespace analysis {
@@ -22,7 +22,7 @@ class EventDisplayPlugin : public IPlotPlugin {
     struct DisplayConfig {
         std::string sample;
         std::string region;
-        Selection selection;
+        SelectionQuery selection;
         int n_events{1};
         int image_size{800};
         std::filesystem::path output_directory{"./plots/event_displays"};

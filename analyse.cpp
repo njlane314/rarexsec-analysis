@@ -9,7 +9,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisLogger.h"
 #include "AnalysisRunner.h"
-#include "HistogramBooker.h"
+#include "HistogramFactory.h"
 #include "JsonUtils.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
@@ -29,9 +29,9 @@ static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run
     analysis::VariableRegistry variable_registry;
     analysis::SystematicsProcessor systematics_processor(variable_registry);
     analysis::AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam, periods, ntuple_dir, true);
-    auto histogram_booker = std::make_unique<analysis::HistogramBooker>();
-    
-    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_booker), systematics_processor, analysis);
+    auto histogram_factory = std::make_unique<analysis::HistogramFactory>();
+
+    analysis::AnalysisRunner runner(data_loader, variable_registry, std::move(histogram_factory), systematics_processor, analysis);
 
     return runner.run();
 }
@@ -50,7 +50,7 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
     analysis::log::info("analyse::runAnalysis", "Configuration loaded for", samples.at("beamlines").size(), "beamlines.");
 
     analysis::RunConfigRegistry run_config_registry;
-    analysis::RunConfigLoader::loadRunConfigurations(samples, run_config_registry);
+    analysis::RunConfigLoader::loadFromJson(samples, run_config_registry);
 
     analysis::AnalysisResult result;
     for (auto const &[beam, runs] : samples.at("beamlines").items()) {
