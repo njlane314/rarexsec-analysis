@@ -1,17 +1,50 @@
 from __future__ import annotations
 
 import concurrent.futures
-import os
 import re
 import subprocess
 import sys
-import tempfile
 import shutil
-import shlex
 from pathlib import Path
 
 import numpy as np
 import uproot
+
+
+def get_pot_ext_from_summary(
+    pot_summary: dict, run: str, beam: str, horn_current: str | None
+) -> tuple[float, int]:
+    """Extract POT and EXT trigger totals from the pot summary JSON."""
+    run_number = None
+    if run.startswith("run"):
+        try:
+            run_number = int(run[3:])
+        except ValueError:
+            pass
+    if run_number is None:
+        return 0.0, 0
+
+    run_entry = next(
+        (r for r in pot_summary.get("runs", []) if r.get("index") == run_number),
+        None,
+    )
+    if not run_entry:
+        return 0.0, 0
+
+    beam_key = "BNB" if "bnb" in beam.lower() else "NuMI"
+    beam_entry = run_entry.get("beams", {}).get(beam_key, {})
+
+    ext_triggers = int(beam_entry.get("TOTAL", {}).get("EXT", 0))
+
+    pot_entry = beam_entry.get("TOTAL", {})
+    if beam_key == "NuMI":
+        if horn_current == "fhc":
+            pot_entry = beam_entry.get("FHC", pot_entry)
+        elif horn_current == "rhc":
+            pot_entry = beam_entry.get("RHC", pot_entry)
+
+    pot = pot_entry.get("TorB_Target_wcut") or pot_entry.get("TorA_wcut") or 0.0
+    return float(pot), ext_triggers
 
 def get_xml_entities(xml_path: Path) -> dict[str, str]:
     content = xml_path.read_text()
@@ -67,309 +100,6 @@ def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dic
         input_dir = input_dir.replace(f"&{name};", value)
     return input_dir
 
-def _iter_ttrees(directory):
-    """Yield all TTree objects within a ROOT file or directory."""
-    for key in directory.keys():
-        obj = directory[key]
-        if isinstance(obj, uproot.behaviors.TTree.TTree):
-            yield obj
-        elif hasattr(obj, "keys"):
-            yield from _iter_ttrees(obj)
-
-
-def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
-    pairs: set[tuple[int, int]] = set()
-    try:
-        with uproot.open(file_path) as root_file:
-            for tree in _iter_ttrees(root_file):
-                try:
-                    runs = tree["run"].array(library="np")
-                    subruns = tree["subRun"].array(library="np")
-                except Exception:
-                    continue
-                pairs.update(zip(map(int, runs), map(int, subruns)))
-                if pairs:
-                    break
-    except Exception as exc:
-        print(f"    Warning: Could not read run/subrun from {file_path}: {exc}", file=sys.stderr)
-    return pairs
-
-
-def _run_getdatainfo_command(command: list[str], env: dict) -> subprocess.CompletedProcess:
-    """Run getDataInfo.py ensuring the legacy python2 environment is initialised."""
-    cmd_str = " ".join(shlex.quote(c) for c in command)
-    setup = (
-        "source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups && "
-        "setup python v2_7_15a >/dev/null && "
-        "setup sam_web_client >/dev/null && "
-        f"{cmd_str}"
-    )
-    print(f"[COMMAND] {setup}")
-    return subprocess.run(
-        setup,
-        check=True,
-        capture_output=True,
-        text=True,
-        env=env,
-        shell=True,
-        executable="/bin/bash",
-    )
-
-def _get_pot_from_getdatainfo(
-    tmp_path: Path, sample_type: str, beam: str, horn_current: str | None
-) -> float:
-    script_path = Path("/exp/uboone/app/users/guzowski/slip_stacking/getDataInfo.py")
-
-    beam_lower = beam.lower()
-    if "numi" in beam_lower:
-        format_flag = "--format-numi"
-        pot_fields = ["tortgt_wcut", "tor101_wcut", "tortgt", "tor101"]
-        header_keys = ["EXT", "Gate1", "tortgt_wcut"]
-    elif "bnb" in beam_lower:
-        format_flag = "--format-bnb"
-        pot_fields = ["tor875_wcut", "tor860_wcut", "tor875", "tor860"]
-        header_keys = ["EXT", "Gate2", "tor875_wcut"]
-    else:
-        print(f"    Error: Unknown beam type '{beam}'", file=sys.stderr)
-        return 0.0
-
-    python2 = shutil.which("python2")
-    if python2 is None:
-        print(
-            "    Warning: python2 interpreter not found; attempting to run getDataInfo.py directly",
-            file=sys.stderr,
-        )
-        command = [
-            str(script_path),
-            "-v3",
-            format_flag,
-            "--prescale",
-            "--run-subrun-list",
-            str(tmp_path),
-        ]
-    else:
-        command = [
-            python2,
-            str(script_path),
-            "-v3",
-            format_flag,
-            "--prescale",
-            "--run-subrun-list",
-            str(tmp_path),
-        ]
-
-    if "numi" in beam_lower:
-        command.append("--horncurr")
-    if sample_type == "data":
-        command.append("--slip")
-    env = os.environ.copy()
-    env.pop("PYTHONHOME", None)
-    env.pop("PYTHONPATH", None)
-    try:
-        result = _run_getdatainfo_command(command, env)
-        lines = result.stdout.strip().splitlines()
-
-        header_index = -1
-        for i, line in enumerate(lines):
-            if all(key in line for key in header_keys):
-                header_index = i
-                break
-        if header_index == -1:
-            print(
-                "    Warning: Could not find header line in getDataInfo.py output.",
-                file=sys.stderr,
-            )
-            return 0.0
-
-        header = lines[header_index].split()
-
-        data_line: str | None = None
-        if horn_current and "numi" in beam_lower:
-            search_line_start = (
-                "Forward Horn Current:" if horn_current == "fhc" else "Reverse Horn Current:"
-            )
-            for line in lines[header_index + 1 :]:
-                if line.strip().startswith(search_line_start):
-                    data_line = line
-                    break
-        if data_line is None:
-            if header_index + 1 >= len(lines):
-                print(
-                    "    Warning: Found header but no subsequent data line.",
-                    file=sys.stderr,
-                )
-                return 0.0
-            values = lines[header_index + 1].split()
-        else:
-            values = re.findall(r"[-+]?\d+\.?\d*(?:[eE][-+]?\d+)?", data_line)
-
-        for field in pot_fields:
-            if field in header:
-                idx = header.index(field)
-                if idx < len(values):
-                    try:
-                        return float(values[idx])
-                    except ValueError:
-                        return 0.0
-        print(
-            "    Warning: POT field not found in getDataInfo.py output.",
-            file=sys.stderr,
-        )
-        return 0.0
-    except subprocess.CalledProcessError as exc:
-        print(
-            f"    Warning: getDataInfo.py failed with exit code {exc.returncode}",
-            file=sys.stderr,
-        )
-        print(f"    stderr: {exc.stderr.strip()}", file=sys.stderr)
-        return 0.0
-    except Exception as exc:
-        print(
-            f"    Warning: An unexpected error occurred while running getDataInfo.py: {exc}",
-            file=sys.stderr,
-        )
-        return 0.0
-
-def get_data_ext_pot_from_files(
-    file_paths: list[str], sample_type: str, beam: str, horn_current: str | None
-) -> float:
-    pairs: set[tuple[int, int]] = set()
-    for file_path in map(Path, file_paths):
-        pairs.update(_collect_run_subrun_pairs(file_path))
-    if not pairs:
-        print("    Warning: No run/subrun pairs found; skipping getDataInfo.py", file=sys.stderr)
-        return 0.0
-    with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
-        for run, subrun in sorted(pairs):
-            tmp.write(f"{run} {subrun}\n")
-        tmp_path = Path(tmp.name)
-    try:
-        return _get_pot_from_getdatainfo(tmp_path, sample_type, beam, horn_current)
-    finally:
-        try:
-            tmp_path.unlink()
-        except OSError:
-            pass
-
-
-def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
-    """Execute getDataInfo.py and parse the EXT trigger count from its output."""
-    script_path = Path("/exp/uboone/app/users/guzowski/slip_stacking/getDataInfo.py")
-
-    beam_lower = beam.lower()
-    if "numi" in beam_lower:
-        format_flag = "--format-numi"
-        header_keys = ["EXT", "Gate1"]
-    elif "bnb" in beam_lower:
-        format_flag = "--format-bnb"
-        header_keys = ["EXT", "Gate2"]
-    else:
-        print(f"     Error: Unknown beam type '{beam}'", file=sys.stderr)
-        return 0
-
-    python2 = shutil.which("python2")
-    if python2 is None:
-        print(
-            "     Warning: python2 interpreter not found; attempting to run getDataInfo.py directly",
-            file=sys.stderr,
-        )
-        command = [
-            str(script_path),
-            "-v3",
-            format_flag,
-            "--run-subrun-list",
-            str(tmp_path),
-        ]
-    else:
-        command = [
-            python2,
-            str(script_path),
-            "-v3",
-            format_flag,
-            "--run-subrun-list",
-            str(tmp_path),
-        ]
-    try:
-        env = os.environ.copy()
-        env.pop("PYTHONHOME", None)
-        env.pop("PYTHONPATH", None)
-        result = _run_getdatainfo_command(command, env)
-        lines = result.stdout.strip().splitlines()
-
-        header_index = -1
-        for i, line in enumerate(lines):
-            if all(key in line for key in header_keys):
-                header_index = i
-                break
-
-        if header_index == -1:
-            print(
-                "     Warning: Could not find header line in getDataInfo.py output.",
-                file=sys.stderr,
-            )
-            return 0
-        if header_index + 1 >= len(lines):
-            print(
-                "     Warning: Found header but no subsequent data line.",
-                file=sys.stderr,
-            )
-            return 0
-
-        header = lines[header_index].split()
-        values = lines[header_index + 1].split()
-
-        if "EXT" in header:
-            idx = header.index("EXT")
-            try:
-                if idx < len(values):
-                    return int(float(values[idx]))
-                print(
-                    "     Warning: Mismatch between header and data columns.",
-                    file=sys.stderr,
-                )
-            except ValueError:
-                print(
-                    f"     Warning: Could not convert EXT value '{values[idx]}' to int.",
-                    file=sys.stderr,
-                )
-            return 0
-
-        print("     Warning: 'EXT' column not found in the header.", file=sys.stderr)
-        return 0
-
-    except subprocess.CalledProcessError as exc:
-        print(
-            f"     Warning: getDataInfo.py failed with exit code {exc.returncode}",
-            file=sys.stderr,
-        )
-        print(f"     stderr: {exc.stderr.strip()}", file=sys.stderr)
-        return 0
-    except Exception as exc:
-        print(
-            f"     Warning: An unexpected error occurred while running getDataInfo.py: {exc}",
-            file=sys.stderr,
-        )
-        return 0
-
-
-def get_ext_triggers_from_files(file_paths: list[str], beam: str) -> int:
-    pairs: set[tuple[int, int]] = set()
-    for file_path in map(Path, file_paths):
-        pairs.update(_collect_run_subrun_pairs(file_path))
-    if not pairs:
-        return 0
-    with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
-        for run, subrun in sorted(pairs):
-            tmp.write(f"{run} {subrun}\n")
-        tmp_path = Path(tmp.name)
-    try:
-        return _get_ext_triggers_from_getdatainfo(tmp_path, beam)
-    finally:
-        try:
-            tmp_path.unlink()
-        except OSError:
-            pass
-
 def process_sample_entry(
     entry: dict,
     processed_analysis_path: Path,
@@ -378,6 +108,7 @@ def process_sample_entry(
     nominal_pot: float,
     beam: str,
     run: str,
+    pot_summary: dict,
     is_detvar: bool = False,
 ) -> bool:
     execute_hadd = entry.pop("do_hadd", False)
@@ -439,12 +170,9 @@ def process_sample_entry(
         if entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
     elif sample_type in {"data", "ext"}:
-        entry["pot"] = get_data_ext_pot_from_files(
-            source_files, sample_type, beam, horn_current
-        )
-        entry["ext_triggers_db"] = get_ext_triggers_from_files(source_files, beam)
-        if entry["pot"] == 0.0:
-            entry["pot"] = nominal_pot
+        pot, ext = get_pot_ext_from_summary(pot_summary, run, beam, horn_current)
+        entry["pot"] = pot if pot else nominal_pot
+        entry["ext_triggers_db"] = ext
 
     entry.pop("stage_name", None)
     return True
