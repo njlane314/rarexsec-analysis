@@ -22,7 +22,7 @@ class IEventDisplay {
         log::info("EventDisplay", "Saving", tag_, "to", output_directory_);
 
         TCanvas canvas(tag_.c_str(), tag_.c_str(), image_size_, image_size_);
-        draw(canvas);
+        this->draw(canvas);
         canvas.SaveAs((output_directory_ + "/" + tag_ + "." + format).c_str());
     }
 
