@@ -44,9 +44,13 @@ class StratifierRegistry {
   public:
     StratifierRegistry() {
         this->addInclusiveScheme();
+        
         this->addExclusiveScheme();
+        
         this->addBacktrackedPDGScheme();
+        
         this->addBlipPDGScheme();
+        
         this->addBlipProcessCodeScheme();
 
         signal_channel_groups_ = {{"inclusive_strange_channels", {10, 11}},
