@@ -21,14 +21,19 @@ class RegionAnalysis {
     ~RegionAnalysis() = default;
 
     const RegionKey &regionKey() const noexcept { return region_key_; }
+
     const std::string &regionLabel() const noexcept {
         return region_label_.empty() ? region_key_.str() : region_label_;
     }
+
     double protonsOnTarget() const noexcept { return protons_on_target_; }
     void setProtonsOnTarget(double pot) noexcept { protons_on_target_ = pot; }
     void addProtonsOnTarget(double pot) noexcept { protons_on_target_ += pot; }
+
     bool isBlinded() const noexcept { return is_blinded_; }
+
     const std::string &beamConfig() const noexcept { return beam_config_; }
+
     const std::vector<std::string> &runNumbers() const noexcept { return run_numbers_; }
 
     void addFinalVariable(VariableKey v, VariableResult r) {
