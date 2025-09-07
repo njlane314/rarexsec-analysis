@@ -15,23 +15,11 @@ def main() -> None:
     ]
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
-    POT_SUMMARY_PATH = "tools/pot_summary.json"
 
     input_definitions_path = Path(DEFINITIONS_PATH)
 
     with open(input_definitions_path) as f:
         config = json.load(f)
-
-    try:
-        with open(Path(POT_SUMMARY_PATH)) as f:
-            pot_summary = json.load(f)
-    except json.JSONDecodeError:
-        print(
-            f"Error: Failed to decode JSON from '{POT_SUMMARY_PATH}'. "
-            "Try running tools/allruns_pot.sh again or verify the JSON file.",
-            file=sys.stderr,
-        )
-        raise
 
     entities: dict[str, str] = {}
     stage_outdirs: dict[str, str] = {}
@@ -62,15 +50,16 @@ def main() -> None:
 
             print(f"\nProcessing run: {run}")
 
-            nominal_pot = run_details.get("nominal_pot", 0.0)
+            run_pot = run_details.get("torb_target_pot_wcut", 0.0)
+            ext_triggers = int(run_details.get("ext_triggers", 0))
 
-            if nominal_pot == 0.0:
+            if run_pot == 0.0:
                 print(
-                    f"  Warning: No nominal_pot specified for run '{run}'. MC scaling might be incorrect.",
+                    f"  Warning: No torb_target_pot_wcut specified for run '{run}'. MC scaling might be incorrect.",
                     file=sys.stderr,
                 )
             else:
-                print(f"  Using nominal POT for this run: {nominal_pot:.4e}")
+                print(f"  Using run POT: {run_pot:.4e}")
 
             for sample in run_details.get("samples", []):
                 if process_sample_entry(
@@ -78,10 +67,8 @@ def main() -> None:
                     processed_analysis_path,
                     stage_outdirs,
                     entities,
-                    nominal_pot,
-                    beam,
-                    run,
-                    pot_summary,
+                    run_pot,
+                    ext_triggers,
                 ):
                     if "detector_variations" in sample:
                         for detvar_sample in sample["detector_variations"]:
@@ -90,10 +77,8 @@ def main() -> None:
                                 processed_analysis_path,
                                 stage_outdirs,
                                 entities,
-                                nominal_pot,
-                                beam,
-                                run,
-                                pot_summary,
+                                run_pot,
+                                ext_triggers,
                                 is_detvar=True,
                             )
 
