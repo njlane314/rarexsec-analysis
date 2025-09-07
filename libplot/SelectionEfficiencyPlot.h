@@ -16,16 +16,19 @@
 namespace analysis {
 
 class SelectionEfficiencyPlot : public IHistogramPlot {
-  public:
-    SelectionEfficiencyPlot(std::string plot_name, std::vector<std::string> stages, std::vector<double> efficiencies,
-                            std::vector<double> efficiency_errors, std::vector<double> purities,
-                            std::vector<double> purity_errors, std::string output_directory = "plots",
-                            bool use_log_y = false)
-        : IHistogramPlot(std::move(plot_name), std::move(output_directory)), stages_(std::move(stages)),
-            efficiencies_(std::move(efficiencies)), efficiency_errors_(std::move(efficiency_errors)),
-            purities_(std::move(purities)), purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
+public:
+    SelectionEfficiencyPlot(
+        std::string plot_name, std::vector<std::string> stages,
+        std::vector<double> efficiencies, std::vector<double> efficiency_errors,
+        std::vector<double> purities, std::vector<double> purity_errors,
+        std::string output_directory = "plots", bool use_log_y = false)
+        : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
+          stages_(std::move(stages)), efficiencies_(std::move(efficiencies)),
+          efficiency_errors_(std::move(efficiency_errors)),
+          purities_(std::move(purities)),
+          purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
 
-  private:
+protected:
     void draw(TCanvas &canvas) override {
         int n = stages_.size();
         TH1F frame("frame", "", n, 0, n);
@@ -45,6 +48,7 @@ class SelectionEfficiencyPlot : public IHistogramPlot {
         legend.DrawClone();
     }
 
+private:
     void setupFrame(TCanvas &canvas, TH1F &frame) {
         canvas.cd();
         const double log_y_min = 1e-3;
@@ -132,11 +136,13 @@ class SelectionEfficiencyPlot : public IHistogramPlot {
         legend.SetBorderSize(border);
         legend.SetFillStyle(fill);
         legend.SetTextFont(font_style);
-        auto *eff_entry = legend.AddEntry((TObject *)nullptr, "Signal Efficiency", "lep");
+        auto *eff_entry =
+            legend.AddEntry((TObject *)nullptr, "Signal Efficiency", "lep");
         eff_entry->SetLineColor(kBlue + colour_offset);
         eff_entry->SetMarkerColor(kBlue + colour_offset);
         eff_entry->SetMarkerStyle(eff_marker);
-        auto *pur_entry = legend.AddEntry((TObject *)nullptr, "Signal Purity", "lep");
+        auto *pur_entry =
+            legend.AddEntry((TObject *)nullptr, "Signal Purity", "lep");
         pur_entry->SetLineColor(kRed + colour_offset);
         pur_entry->SetMarkerColor(kRed + colour_offset);
         pur_entry->SetMarkerStyle(pur_marker);
@@ -151,6 +157,6 @@ class SelectionEfficiencyPlot : public IHistogramPlot {
     bool use_log_y_;
 };
 
-}
+} // namespace analysis
 
 #endif
