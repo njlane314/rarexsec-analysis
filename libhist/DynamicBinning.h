@@ -23,7 +23,7 @@ namespace analysis {
 enum class DynamicBinningStrategy { EqualWeight, UniformWidth, BayesianBlocks };
 
 class DynamicBinning {
-public:
+  public:
     static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes,
                                        const BinningDefinition &original_bdef,
                                        const std::string &weight_col = "nominal_event_weight",
@@ -505,7 +505,7 @@ private:
     }
 };
 
-} // namespace analysis
+}
 
 #endif
 
