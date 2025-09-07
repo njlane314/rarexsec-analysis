@@ -8,10 +8,10 @@
 #include <vector>
 
 #include "AnalysisDataLoader.h"
-#include "Logger.h"
+#include "AnalysisKey.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
-#include "AnalysisKey.h"
+#include "Logger.h"
 #include "RegionAnalysis.h"
 #include "RegionHandle.h"
 #include "SelectionQuery.h"
@@ -22,190 +22,248 @@
 namespace analysis {
 
 class AnalysisDefinition {
-  public:
-    AnalysisDefinition(const SelectionRegistry &sel_reg, const VariableRegistry &var_reg)
-        : sel_reg_(sel_reg), var_reg_(var_reg) {}
+public:
+  AnalysisDefinition(const SelectionRegistry &sel_reg) : sel_reg_(sel_reg) {}
 
-    AnalysisDefinition &addVariable(const std::string &key, const std::string &expr, const std::string &lbl,
-                                    const BinningDefinition &bdef, const std::string &strat, bool is_dynamic = false,
-                                    bool include_oob_bins = false,
-                                    DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
-        VariableKey var_key{key};
-        if (variable_expressions_.count(var_key))
-            log::fatal("AnalysisDefinition", "duplicate variable:", key);
+  // -- Variable management -------------------------------------------------
 
-        auto valid = VariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
-        if (std::find(valid.begin(), valid.end(), expr) == valid.end())
-            log::fatal("AnalysisDefinition", "unknown expression:", expr);
+  AnalysisDefinition &addVariable(
+      const std::string &key, const std::string &expr, const std::string &lbl,
+      const BinningDefinition &bdef, const std::string &strat,
+      bool is_dynamic = false, bool include_oob_bins = false,
+      DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
+    VariableKey var_key{key};
+    ensureVariableUnique(var_key, key);
+    validateExpression(expr);
 
-        variable_expressions_[var_key] = expr;
-        variable_labels_[var_key] = lbl;
-        variable_binning_[var_key] = bdef;
-        variable_stratifiers_[var_key] = strat;
-        is_dynamic_[var_key] = is_dynamic;
-        include_oob_[var_key] = include_oob_bins;
-        dynamic_strategy_[var_key] = strategy;
+    variable_expressions_.emplace(var_key, expr);
+    variable_labels_.emplace(var_key, lbl);
+    variable_binning_.emplace(var_key, bdef);
+    variable_stratifiers_.emplace(var_key, strat);
+    is_dynamic_.emplace(var_key, is_dynamic);
+    include_oob_.emplace(var_key, include_oob_bins);
+    dynamic_strategy_.emplace(var_key, strategy);
 
-        return *this;
-    }
+    return *this;
+  }
 
-    AnalysisDefinition &addRegion(const std::string &key, const std::string &region_name, std::string sel_rule_key,
-                                  double pot = 0.0, bool blinded = true, std::string beam_config = "",
-                                  std::vector<std::string> runs = {}) {
-        RegionKey region_key{key};
-        if (region_analyses_.count(region_key))
-            log::fatal("AnalysisDefinition", "duplicate region:", key);
+  // -- Region management ---------------------------------------------------
 
-        auto rule = sel_reg_.getRule(sel_rule_key);
-        SelectionQuery sel = sel_reg_.get(sel_rule_key);
-        region_names_[region_key] = region_name;
-        region_selections_[region_key] = std::move(sel);
-        region_clauses_[region_key] = rule.clauses;
+  AnalysisDefinition &
+  addRegion(const std::string &key, const std::string &region_name,
+            std::string sel_rule_key, double pot = 0.0, bool blinded = true,
+            std::string beam_config = "", std::vector<std::string> runs = {}) {
+    RegionKey region_key{key};
+    ensureRegionUnique(region_key, key);
 
-        auto region_analysis = std::make_unique<RegionAnalysis>(region_key, region_name, pot, blinded,
-                                                                std::move(beam_config), std::move(runs));
+    auto rule = sel_reg_.getRule(sel_rule_key);
+    SelectionQuery sel = sel_reg_.get(sel_rule_key);
+    region_names_.emplace(region_key, region_name);
+    region_selections_.emplace(region_key, std::move(sel));
+    region_clauses_.emplace(region_key, rule.clauses);
 
-        region_analyses_[region_key] = std::move(region_analysis);
-        return *this;
-    }
+    region_analyses_.emplace(region_key,
+                             makeRegionAnalysis(region_key, region_name, pot,
+                                                blinded, std::move(beam_config),
+                                                std::move(runs)));
+    return *this;
+  }
 
-    AnalysisDefinition &addRegionExpr(const std::string &key, const std::string &label, std::string raw_expr,
-                                      double pot = 0.0, bool blinded = true, std::string beam_config = "",
-                                      std::vector<std::string> runs = {}) {
-        RegionKey region_key{key};
-        if (region_analyses_.count(region_key))
-            log::fatal("AnalysisDefinition", "duplicate region: " + key);
+  AnalysisDefinition &addRegionExpr(const std::string &key,
+                                    const std::string &label,
+                                    std::string raw_expr, double pot = 0.0,
+                                    bool blinded = true,
+                                    std::string beam_config = "",
+                                    std::vector<std::string> runs = {}) {
+    RegionKey region_key{key};
+    ensureRegionUnique(region_key, key);
 
-        region_names_[region_key] = label;
-        region_selections_[region_key] = SelectionQuery(std::move(raw_expr));
-        region_clauses_[region_key] = {};
+    region_names_.emplace(region_key, label);
+    region_selections_.emplace(region_key, SelectionQuery(std::move(raw_expr)));
+    region_clauses_.emplace(region_key, std::vector<std::string>{});
 
-        auto region_analysis =
-            std::make_unique<RegionAnalysis>(region_key, label, pot, blinded, std::move(beam_config), std::move(runs));
+    region_analyses_.emplace(region_key,
+                             makeRegionAnalysis(region_key, label, pot, blinded,
+                                                std::move(beam_config),
+                                                std::move(runs)));
+    return *this;
+  }
 
-        region_analyses_[region_key] = std::move(region_analysis);
-        return *this;
-    }
+  void addVariableToRegion(const std::string &reg_key,
+                           const std::string &var_key) {
+    RegionKey region_key{reg_key};
+    VariableKey variable_key{var_key};
 
-    void addVariableToRegion(const std::string &reg_key, const std::string &var_key) {
-        RegionKey region_key{reg_key};
-        VariableKey variable_key{var_key};
+    requireRegionExists(region_key, reg_key);
+    requireVariableExists(variable_key, var_key);
 
-        if (!region_analyses_.count(region_key))
-            log::fatal("AnalysisDefinition", "region not found:", reg_key);
+    region_variables_[region_key].emplace_back(variable_key);
+  }
 
-        if (!variable_expressions_.count(variable_key))
-            log::fatal("AnalysisDefinition", "variable not found:", var_key);
+  // -- Accessors -----------------------------------------------------------
 
-        region_variables_[region_key].emplace_back(variable_key);
-    }
+  [[nodiscard]] RegionHandle region(const RegionKey &key) const {
+    return RegionHandle{key, region_names_, region_selections_,
+                        region_analyses_, region_variables_};
+  }
 
-    RegionHandle region(const RegionKey &key) const {
-        return RegionHandle{key, region_names_, region_selections_, region_analyses_, region_variables_};
-    }
+  [[nodiscard]] bool includeOobBins(const VariableKey &key) const {
+    auto it = include_oob_.find(key);
+    return it != include_oob_.end() && it->second;
+  }
 
-    bool includeOobBins(const VariableKey &key) const {
-        auto it = include_oob_.find(key);
-        return it != include_oob_.end() && it->second;
-    }
+  [[nodiscard]] const std::vector<std::string> &
+  regionClauses(const RegionKey &key) const {
+    static const std::vector<std::string> empty;
+    auto it = region_clauses_.find(key);
+    return it != region_clauses_.end() ? it->second : empty;
+  }
 
-    const std::vector<std::string> &regionClauses(const RegionKey &key) const {
-        static const std::vector<std::string> empty;
-        auto it = region_clauses_.find(key);
-        return it != region_clauses_.end() ? it->second : empty;
-    }
+  [[nodiscard]] std::vector<RegionHandle> regions() const {
+    std::vector<RegionHandle> result;
+    result.reserve(region_names_.size());
 
-    std::vector<RegionHandle> regions() const {
-        std::vector<RegionHandle> result;
-        result.reserve(region_names_.size());
+    for (const auto &entry : region_names_)
+      result.emplace_back(entry.first, region_names_, region_selections_,
+                          region_analyses_, region_variables_);
 
-        for (const auto &entry : region_names_)
-            result.emplace_back(entry.first, region_names_, region_selections_, region_analyses_, region_variables_);
+    return result;
+  }
 
-        return result;
-    }
+  void setBinning(const VariableKey &key, BinningDefinition &&bdef) {
+    variable_binning_[key] = std::move(bdef);
+  }
 
-    void setBinning(const VariableKey &key, BinningDefinition &&bdef) { variable_binning_[key] = std::move(bdef); }
+  [[nodiscard]] VariableHandle variable(const VariableKey &key) const {
+    return VariableHandle{key, variable_expressions_, variable_labels_,
+                          variable_binning_, variable_stratifiers_};
+  }
 
-    VariableHandle variable(const VariableKey &key) const {
-        return VariableHandle{key, variable_expressions_, variable_labels_, variable_binning_, variable_stratifiers_};
-    }
+  [[nodiscard]] std::vector<VariableHandle> variables() const {
+    std::vector<VariableHandle> result;
+    result.reserve(variable_expressions_.size());
 
-    std::vector<VariableHandle> variables() const {
-        std::vector<VariableHandle> result;
-        result.reserve(variable_expressions_.size());
+    for (const auto &entry : variable_expressions_)
+      result.emplace_back(entry.first, variable_expressions_, variable_labels_,
+                          variable_binning_, variable_stratifiers_);
 
-        for (const auto &entry : variable_expressions_)
-            result.emplace_back(entry.first, variable_expressions_, variable_labels_, variable_binning_,
-                                 variable_stratifiers_);
+    return result;
+  }
 
-        return result;
-    }
+  [[nodiscard]] bool isDynamic(const VariableKey &key) const {
+    auto it = is_dynamic_.find(key);
+    return it != is_dynamic_.end() && it->second;
+  }
 
-    bool isDynamic(const VariableKey &key) const {
-        auto it = is_dynamic_.find(key);
-        return it != is_dynamic_.end() && it->second;
-    }
+  [[nodiscard]] DynamicBinningStrategy
+  dynamicBinningStrategy(const VariableKey &key) const {
+    auto it = dynamic_strategy_.find(key);
+    return it != dynamic_strategy_.end() ? it->second
+                                         : DynamicBinningStrategy::EqualWeight;
+  }
 
-    bool includeOutOfRangeBins(const VariableKey &key) const {
-        auto it = include_out_of_range_.find(key);
-        return it != include_out_of_range_.end() && it->second;
-    }
+  // -- Dynamic binning -----------------------------------------------------
 
-    DynamicBinningStrategy dynamicBinningStrategy(const VariableKey &key) const {
-        auto it = dynamic_strategy_.find(key);
-        return it != dynamic_strategy_.end() ? it->second : DynamicBinningStrategy::EqualWeight;
-    }
-
-    void resolveDynamicBinning(AnalysisDataLoader &loader) {
-        for (const auto &var_handle : variables()) {
-            if (!isDynamic(var_handle.key_))
-                continue;
-            log::info("AnalysisDefinition::resolveDynamicBinning",
-                      "Deriving dynamic bin schema for variable:", var_handle.key_.str());
-            std::vector<ROOT::RDF::RNode> mc_nodes;
-            for (auto &[sample_key, sample_def] : loader.getSampleFrames()) {
-                if (sample_def.isMc()) {
-                    mc_nodes.emplace_back(sample_def.nominal_node_);
-                }
-            }
-
-            if (mc_nodes.empty()) {
-                log::fatal("AnalysisDefinition::resolveDynamicBinning",
-                           "Cannot perform dynamic binning: No Monte Carlo samples were found!");
-            }
-
-            bool include_oob = includeOobBins(var_handle.key_);
-            auto strategy = dynamicBinningStrategy(var_handle.key_);
-            BinningDefinition new_bins = DynamicBinning::calculate(
-                mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0, include_oob, strategy);
-
-            log::info("AnalysisDefinition::resolveDynamicBinning",
-                      "--> Optimal bin count resolved:", new_bins.getBinNumber());
-
-            setBinning(var_handle.key_, std::move(new_bins));
+  void resolveDynamicBinning(AnalysisDataLoader &loader) {
+    for (const auto &var_handle : variables()) {
+      if (!isDynamic(var_handle.key_))
+        continue;
+      log::info(
+          "AnalysisDefinition::resolveDynamicBinning",
+          "Deriving dynamic bin schema for variable:", var_handle.key_.str());
+      std::vector<ROOT::RDF::RNode> mc_nodes;
+      for (auto &entry : loader.getSampleFrames()) {
+        auto &sample_def = entry.second;
+        if (sample_def.isMc()) {
+          mc_nodes.emplace_back(sample_def.nominal_node_);
         }
+      }
+
+      if (mc_nodes.empty()) {
+        log::fatal("AnalysisDefinition::resolveDynamicBinning",
+                   "Cannot perform dynamic binning: No Monte Carlo samples "
+                   "were found!");
+      }
+
+      bool include_oob = includeOobBins(var_handle.key_);
+      auto strategy = dynamicBinningStrategy(var_handle.key_);
+      BinningDefinition new_bins = DynamicBinning::calculate(
+          mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0,
+          include_oob, strategy);
+
+      log::info("AnalysisDefinition::resolveDynamicBinning",
+                "--> Optimal bin count resolved:", new_bins.getBinNumber());
+
+      setBinning(var_handle.key_, std::move(new_bins));
     }
+  }
 
-  private:
-    const SelectionRegistry &sel_reg_;
-    const VariableRegistry &var_reg_;
+private:
+  const SelectionRegistry &sel_reg_;
 
-    std::map<VariableKey, std::string> variable_expressions_;
-    std::map<VariableKey, std::string> variable_labels_;
-    std::map<VariableKey, BinningDefinition> variable_binning_;
-    std::map<VariableKey, std::string> variable_stratifiers_;
-    std::map<VariableKey, bool> is_dynamic_;
-    std::map<VariableKey, bool> include_oob_;
-    std::map<VariableKey, DynamicBinningStrategy> dynamic_strategy_;
+  std::map<VariableKey, std::string> variable_expressions_;
+  std::map<VariableKey, std::string> variable_labels_;
+  std::map<VariableKey, BinningDefinition> variable_binning_;
+  std::map<VariableKey, std::string> variable_stratifiers_;
+  std::map<VariableKey, bool> is_dynamic_;
+  std::map<VariableKey, bool> include_oob_;
+  std::map<VariableKey, DynamicBinningStrategy> dynamic_strategy_;
 
-    std::map<RegionKey, std::string> region_names_;
-    std::map<RegionKey, SelectionQuery> region_selections_;
-    std::map<RegionKey, std::unique_ptr<RegionAnalysis>> region_analyses_;
-    std::map<RegionKey, std::vector<VariableKey>> region_variables_;
-    std::map<RegionKey, std::vector<std::string>> region_clauses_;
+  std::map<RegionKey, std::string> region_names_;
+  std::map<RegionKey, SelectionQuery> region_selections_;
+  std::map<RegionKey, std::unique_ptr<RegionAnalysis>> region_analyses_;
+  std::map<RegionKey, std::vector<VariableKey>> region_variables_;
+  std::map<RegionKey, std::vector<std::string>> region_clauses_;
+
+  // -- Helper methods -----------------------------------------------------
+
+  bool hasRegion(const RegionKey &key) const {
+    return region_analyses_.count(key) != 0;
+  }
+  bool hasVariable(const VariableKey &key) const {
+    return variable_expressions_.count(key) != 0;
+  }
+
+  void ensureRegionUnique(const RegionKey &key,
+                          const std::string &key_str) const {
+    if (hasRegion(key))
+      log::fatal("AnalysisDefinition", "duplicate region:", key_str);
+  }
+
+  void ensureVariableUnique(const VariableKey &key,
+                            const std::string &key_str) const {
+    if (hasVariable(key))
+      log::fatal("AnalysisDefinition", "duplicate variable:", key_str);
+  }
+
+  void requireRegionExists(const RegionKey &key,
+                           const std::string &key_str) const {
+    if (!hasRegion(key))
+      log::fatal("AnalysisDefinition", "region not found:", key_str);
+  }
+
+  void requireVariableExists(const VariableKey &key,
+                             const std::string &key_str) const {
+    if (!hasVariable(key))
+      log::fatal("AnalysisDefinition", "variable not found:", key_str);
+  }
+
+  void validateExpression(const std::string &expr) const {
+    const auto valid =
+        VariableRegistry::eventVariables(SampleOrigin::kMonteCarlo);
+    if (std::find(valid.begin(), valid.end(), expr) == valid.end())
+      log::fatal("AnalysisDefinition", "unknown expression:", expr);
+  }
+
+  static std::unique_ptr<RegionAnalysis>
+  makeRegionAnalysis(const RegionKey &key, const std::string &label, double pot,
+                     bool blinded, std::string beam_config,
+                     std::vector<std::string> runs) {
+    return std::make_unique<RegionAnalysis>(
+        key, label, pot, blinded, std::move(beam_config), std::move(runs));
+  }
 };
 
-}
+} // namespace analysis
 
 #endif
