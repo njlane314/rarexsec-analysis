@@ -13,10 +13,9 @@ import uproot
 
 from trigger_counts import get_trigger_counts_from_files_parallel
 
-# Map beamlines and run periods to the trigger branch to retain. Update as needed.
 TRIGGER_BRANCH_MAP: dict[str, dict[str, str]] = {
-    "numi": {},
-    "bnb": {},
+    "numi": {"run1": "software_trigger"},
+    "bnb": {"run1": "software_trigger"},
 }
 
 
