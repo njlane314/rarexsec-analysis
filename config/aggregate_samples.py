@@ -151,9 +151,9 @@ def process_sample_entry(
     return True
 
 def main():
-    DEFINITIONS_PATH = "config/sample_definitions.json"
-    XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/numi_fhc_workflow.xml"
-    CONFIG_PATH = "config/config.json"
+    DEFINITIONS_PATH = "config/data.json"
+    XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+    CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
@@ -212,8 +212,14 @@ def main():
 
     output_path = Path(CONFIG_PATH)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    samples_cfg = {
+        "samples": {
+            "ntuple_directory": config["ntuple_base_directory"],
+            "beamlines": config["run_configurations"],
+        }
+    }
     with open(output_path, "w") as f:
-        json.dump({"sample_definitions": config, "plot_configs": {"plugins": []}}, f, indent=4)
+        json.dump(samples_cfg, f, indent=4)
 
     print(f"\n--- Workflow Complete ---")
     print(f"Successfully generated configuration at '{output_path}'")
