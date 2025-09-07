@@ -22,8 +22,16 @@ def main() -> None:
     with open(input_definitions_path) as f:
         config = json.load(f)
 
-    with open(Path(POT_SUMMARY_PATH)) as f:
-        pot_summary = json.load(f)
+    try:
+        with open(Path(POT_SUMMARY_PATH)) as f:
+            pot_summary = json.load(f)
+    except json.JSONDecodeError:
+        print(
+            f"Error: Failed to decode JSON from '{POT_SUMMARY_PATH}'. "
+            "Try running tools/allruns_pot.sh again or verify the JSON file.",
+            file=sys.stderr,
+        )
+        raise
 
     entities: dict[str, str] = {}
     stage_outdirs: dict[str, str] = {}
