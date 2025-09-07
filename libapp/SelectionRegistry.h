@@ -27,7 +27,7 @@ class SelectionRegistry {
         auto it = rules_.find(key);
         if (it == rules_.end())
             throw std::out_of_range("Unknown selection key: " + key);
-        return makeSelection(it->second);
+        return this->makeSelection(it->second);
     }
 
     const SelectionRule &getRule(const std::string &key) const {

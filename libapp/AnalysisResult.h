@@ -24,7 +24,7 @@ class AnalysisResult : public TObject {
     };
 
     AnalysisResult() = default;
-    explicit AnalysisResult(RegionAnalysisMap regions) : regions_(std::move(regions)) { build(); }
+    explicit AnalysisResult(RegionAnalysisMap regions) : regions_(std::move(regions)) { this->build(); }
 
     const RegionAnalysisMap &regions() const noexcept { return regions_; }
     RegionAnalysisMap &regions() noexcept { return regions_; }

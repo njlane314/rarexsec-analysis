@@ -68,7 +68,7 @@ class DetectorSystematicStrategy : public SystematicStrategy {
         return total_detvar_hists;
     }
 
-    std::optional<BinnedHistogram> sanitizeCvHistogram(std::map<SampleVariation, BinnedHistogram> &total_detvar_hists) {
+    std::optional<BinnedHistogram> sanitiseCvHistogram(std::map<SampleVariation, BinnedHistogram> &total_detvar_hists) {
         auto it = total_detvar_hists.find(SampleVariation::kCV);
         if (it == total_detvar_hists.end()) {
             log::warn("DetectorSystematicStrategy::computeCovariance",

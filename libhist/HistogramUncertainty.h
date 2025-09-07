@@ -61,7 +61,7 @@ inline double HistogramUncertainty::err(int i) const {
 inline double HistogramUncertainty::sum() const { return std::accumulate(counts.begin(), counts.end(), 0.0); }
 
 inline double HistogramUncertainty::sumErr() const {
-    int n = size();
+    int n = this->size();
     if (n == 0 || shifts.size() == 0)
         return 0;
     if (shifts.cols() == 1) {
@@ -74,7 +74,7 @@ inline double HistogramUncertainty::sumErr() const {
 }
 
 inline TMatrixDSym HistogramUncertainty::covariance() const {
-    int n = size();
+    int n = this->size();
     TMatrixDSym out(n);
     out.Zero();
     if (shifts.size() == 0)
@@ -96,12 +96,12 @@ inline TMatrixDSym HistogramUncertainty::covariance() const {
 }
 
 inline TMatrixDSym HistogramUncertainty::corrMat() const {
-    int n = size();
-    TMatrixDSym cov = covariance();
+    int n = this->size();
+    TMatrixDSym cov = this->covariance();
     TMatrixDSym out(n);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            double d = err(i) * err(j);
+            double d = this->err(i) * this->err(j);
             out(i, j) = d > 1e-12 ? cov(i, j) / d : (i == j ? 1 : 0);
         }
     }
@@ -109,7 +109,7 @@ inline TMatrixDSym HistogramUncertainty::corrMat() const {
 }
 
 inline void HistogramUncertainty::addCovariance(const TMatrixDSym &cov_to_add) {
-    int n = size();
+    int n = this->size();
     Eigen::MatrixXd cov_e(n, n);
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j)
@@ -149,15 +149,15 @@ inline HistogramUncertainty HistogramUncertainty::operator*(double s) const {
 }
 
 inline HistogramUncertainty HistogramUncertainty::operator+(const HistogramUncertainty &o) const {
-    if (size() <= 0)
+    if (this->size() <= 0)
         return o;
     if (o.size() <= 0)
         return *this;
-    if (size() != o.size()) {
+    if (this->size() != o.size()) {
         log::fatal("HistogramUncertainty::operator+", "Attempting to add histograms with different numbers of bins.");
     }
     auto tmp = *this;
-    int n = size();
+    int n = this->size();
     for (int i = 0; i < n; ++i) {
         tmp.counts[i] += o.counts[i];
     }
@@ -168,7 +168,7 @@ inline HistogramUncertainty HistogramUncertainty::operator+(const HistogramUncer
     }
     Eigen::VectorXd errs(n);
     for (int i = 0; i < n; ++i) {
-        double e1 = err(i);
+        double e1 = this->err(i);
         double e2 = o.err(i);
         errs(i) = std::sqrt(e1 * e1 + e2 * e2);
     }
@@ -177,16 +177,16 @@ inline HistogramUncertainty HistogramUncertainty::operator+(const HistogramUncer
 }
 
 inline HistogramUncertainty HistogramUncertainty::operator-(const HistogramUncertainty &o) const {
-    if (size() <= 0)
+    if (this->size() <= 0)
         return o * -1.0;
     if (o.size() <= 0)
         return *this;
-    if (size() != o.size()) {
+    if (this->size() != o.size()) {
         log::fatal("HistogramUncertainty::operator-", "Attempting to subtract histograms with different numbers "
                                                       "of bins.");
     }
     auto tmp = *this;
-    int n = size();
+    int n = this->size();
     for (int i = 0; i < n; ++i) {
         tmp.counts[i] -= o.counts[i];
     }
@@ -197,7 +197,7 @@ inline HistogramUncertainty HistogramUncertainty::operator-(const HistogramUncer
     }
     Eigen::VectorXd errs(n);
     for (int i = 0; i < n; ++i) {
-        double e1 = err(i);
+        double e1 = this->err(i);
         double e2 = o.err(i);
         errs(i) = std::sqrt(e1 * e1 + e2 * e2);
     }
@@ -206,20 +206,20 @@ inline HistogramUncertainty HistogramUncertainty::operator-(const HistogramUncer
 }
 
 inline HistogramUncertainty HistogramUncertainty::operator*(const HistogramUncertainty &o) const {
-    if (size() <= 0 || o.size() <= 0)
+    if (this->size() <= 0 || o.size() <= 0)
         return HistogramUncertainty();
-    if (size() != o.size()) {
+    if (this->size() != o.size()) {
         log::fatal("HistogramUncertainty::operator*", "Attempting to multiply histograms with different numbers "
                                                       "of bins.");
     }
     auto tmp = *this;
-    int n = size();
+    int n = this->size();
     tmp.shifts = Eigen::VectorXd::Zero(n);
     for (int i = 0; i < n; ++i) {
         tmp.counts[i] *= o.counts[i];
         double v1 = counts[i];
         double v2 = o.counts[i];
-        double e1 = err(i);
+        double e1 = this->err(i);
         double e2 = o.err(i);
         double rel1 = v1 != 0 ? e1 / v1 : 0;
         double rel2 = v2 != 0 ? e2 / v2 : 0;
@@ -230,21 +230,21 @@ inline HistogramUncertainty HistogramUncertainty::operator*(const HistogramUncer
 }
 
 inline HistogramUncertainty HistogramUncertainty::operator/(const HistogramUncertainty &o) const {
-    if (size() <= 0 || o.size() <= 0)
+    if (this->size() <= 0 || o.size() <= 0)
         return HistogramUncertainty();
-    if (size() != o.size()) {
+    if (this->size() != o.size()) {
         log::fatal("HistogramUncertainty::operator/",
                    "Attempting to divide histograms with different numbers of bins.");
     }
     auto tmp = *this;
-    int n = size();
+    int n = this->size();
     tmp.shifts = Eigen::VectorXd::Zero(n);
     for (int i = 0; i < n; ++i) {
         if (o.counts[i] != 0) {
             tmp.counts[i] /= o.counts[i];
             double v1 = counts[i];
             double v2 = o.counts[i];
-            double e1 = err(i);
+            double e1 = this->err(i);
             double e2 = o.err(i);
             double rel1 = v1 != 0 ? e1 / v1 : 0;
             double rel2 = v2 != 0 ? e2 / v2 : 0;
