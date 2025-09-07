@@ -77,7 +77,12 @@ def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
                 return pairs
             tree = root_file["nuselection/SubRun"]
             runs = tree["run"].array(library="np") if "run" in tree else None
-            subruns = tree["sub"].array(library="np") if "sub" in tree else None
+            if "sub" in tree:
+                subruns = tree["sub"].array(library="np")
+            elif "subrun" in tree:
+                subruns = tree["subrun"].array(library="np")
+            else:
+                subruns = None
             if runs is not None and subruns is not None:
                 for r, s in zip(runs, subruns):
                     pairs.add((int(r), int(s)))
@@ -90,6 +95,7 @@ def _get_pot_from_getdatainfo(tmp_path: Path, sample_type: str) -> float:
     command = [str(script_path), "-v3", "--format-numi", "--prescale", "--run-subrun-list", str(tmp_path)]
     if sample_type == "data":
         command.append("--slip")
+    print(f"[COMMAND] {' '.join(command)}")
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         lines = result.stdout.strip().splitlines()
@@ -122,6 +128,7 @@ def get_data_ext_pot_from_files(file_paths: list[str], sample_type: str) -> floa
     for file_path in map(Path, file_paths):
         pairs.update(_collect_run_subrun_pairs(file_path))
     if not pairs:
+        print("    Warning: No run/subrun pairs found; skipping getDataInfo.py", file=sys.stderr)
         return 0.0
     with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
         for run, subrun in sorted(pairs):
