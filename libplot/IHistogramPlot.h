@@ -1,19 +1,21 @@
 #ifndef IHISTOGRAMPLOT_H
 #define IHISTOGRAMPLOT_H
 
-#include "BinnedHistogram.h"
+#include <string>
+#include <sys/stat.h>
+
 #include "TCanvas.h"
 #include "TColor.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TSystem.h"
-#include <string>
-#include <sys/stat.h>
+
+#include "BinnedHistogram.h"
 
 namespace analysis {
 
 class IHistogramPlot {
-public:
+  public:
     IHistogramPlot(std::string plot_name, std::string output_directory = "plots")
         : plot_name_(std::move(plot_name)),
           output_directory_(std::move(output_directory)) {
@@ -38,7 +40,7 @@ public:
         return s;
     }
 
-protected:
+  protected:
     virtual void setGlobalStyle() const {
         const int font_style = 42;
         TStyle *style = new TStyle("PlotterStyle", "Plotter Style");

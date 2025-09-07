@@ -6,22 +6,21 @@
 #include <utility>
 #include <vector>
 
-#include "AnalysisDataLoader.h"
-#include "AnalysisResult.h"
-#include "HistogramCut.h"
-#include "QuadTreeBinning.h"
-#include "SelectionQuery.h"
-
 #include "TCanvas.h"
 #include "TH2F.h"
 #include "TStyle.h"
 
+#include "AnalysisDataLoader.h"
+#include "AnalysisResult.h"
+#include "HistogramCut.h"
 #include "IHistogramPlot.h"
+#include "QuadTreeBinning.h"
+#include "SelectionQuery.h"
 
 namespace analysis {
 
 class MatrixPlot : public IHistogramPlot {
-public:
+  public:
     MatrixPlot(std::string plot_name, const VariableResult &x_res,
                const VariableResult &y_res, AnalysisDataLoader &loader,
                const SelectionQuery &selection,
@@ -49,7 +48,7 @@ public:
 
     ~MatrixPlot() override { delete hist_; }
 
-    private:
+  private:
     static std::pair<std::vector<double>, std::vector<double>>
     determineEdges(AnalysisDataLoader &loader, const VariableResult &x_res,
                    const VariableResult &y_res) {

@@ -19,7 +19,7 @@
 namespace analysis {
 
 class PlotCatalog {
-public:
+  public:
     PlotCatalog(AnalysisDataLoader &loader, int image_size,
                 const std::string &output_directory = "./plots")
         : loader_(loader), image_size_(image_size) {
@@ -29,12 +29,12 @@ public:
     }
 
     void generateStackedPlot(const AnalysisResult &res,
-                                const std::string &variable,
-                                const std::string &region,
-                                const std::string &category_column,
-                                bool overlay_signal = true,
-                                const std::vector<Cut> &cut_list = {},
-                                bool annotate_numbers = true) const {
+                             const std::string &variable,
+                             const std::string &region,
+                             const std::string &category_column,
+                             bool overlay_signal = true,
+                             const std::vector<Cut> &cut_list = {},
+                             bool annotate_numbers = true) const {
         const auto &result = this->fetchResult(res, variable, region);
         std::string name =
             "stacked_" + IHistogramPlot::sanitise(variable) + "_" +
@@ -73,7 +73,8 @@ public:
     void generateMatrixPlot(const AnalysisResult &res,
                             const std::string &x_variable,
                             const std::string &y_variable,
-                            const std::string &region, const SelectionQuery &selection,
+                            const std::string &region,
+                            const SelectionQuery &selection,
                             const std::vector<Cut> &x_cuts = {},
                             const std::vector<Cut> &y_cuts = {}) const {
         const auto &x_res = this->fetchResult(res, x_variable, region);
@@ -89,10 +90,10 @@ public:
         plot.drawAndSave();
     }
 
-private:
+  private:
     const VariableResult &fetchResult(const AnalysisResult &res,
-                                        const std::string &variable,
-                                        const std::string &region) const {
+                                      const std::string &variable,
+                                      const std::string &region) const {
         RegionKey rkey{region};
         VariableKey vkey{variable};
         if (res.hasResult(rkey, vkey)) {

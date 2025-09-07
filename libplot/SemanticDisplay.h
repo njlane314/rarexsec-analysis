@@ -1,21 +1,25 @@
 #ifndef SEMANTICDISPLAY_H
 #define SEMANTICDISPLAY_H
 
-#include "IEventDisplay.h"
+#include <string>
+#include <vector>
+
+#include "TCanvas.h"
 #include "TColor.h"
 #include "TH2F.h"
 #include "TStyle.h"
-#include <vector>
+
+#include "IEventDisplay.h"
 
 namespace analysis {
 
 class SemanticDisplay : public IEventDisplay {
-    public:
-        SemanticDisplay(std::string tag, std::vector<int> data, int image_size, std::string output_directory)
-            : IEventDisplay(std::move(tag), image_size, std::move(output_directory)), data_(std::move(data)) {}
+  public:
+    SemanticDisplay(std::string tag, std::vector<int> data, int image_size, std::string output_directory)
+        : IEventDisplay(std::move(tag), image_size, std::move(output_directory)), data_(std::move(data)) {}
 
-    protected:
-        void draw(TCanvas &) override {
+  protected:
+    void draw(TCanvas &) override {
             const int palette_size = 10;
             const int palette_step = 2;
             const int bin_offset = 1;
@@ -43,8 +47,8 @@ class SemanticDisplay : public IEventDisplay {
             hist.Draw("COL");
         }
 
-    private:
-        std::vector<int> data_;
+  private:
+    std::vector<int> data_;
 };
 
 }

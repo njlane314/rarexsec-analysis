@@ -6,7 +6,9 @@
 #include <map>
 #include <numeric>
 #include <sstream>
+#include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "TArrow.h"
@@ -18,13 +20,14 @@
 #include "TLine.h"
 #include "TPad.h"
 
-#include "VariableResult.h"
 #include "HistogramCut.h"
 #include "IHistogramPlot.h"
 #include "RegionAnalysis.h"
 #include "StratifierRegistry.h"
+#include "VariableResult.h"
 
 namespace analysis {
+
 class StackedHistogramPlot : public IHistogramPlot {
   public:
     StackedHistogramPlot(std::string plot_name, const VariableResult &var_result, const RegionAnalysis &region_info,

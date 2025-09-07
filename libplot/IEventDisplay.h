@@ -1,11 +1,13 @@
 #ifndef IEVENTDISPLAY_H
 #define IEVENTDISPLAY_H
 
-#include "Logger.h"
-#include "TCanvas.h"
-#include "TSystem.h"
 #include <string>
 #include <utility>
+
+#include "TCanvas.h"
+#include "TSystem.h"
+
+#include "Logger.h"
 
 namespace analysis {
 
