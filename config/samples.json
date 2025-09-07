@@ -55,7 +55,7 @@
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
                             "pot": 1e+20,
-                            "ext_triggers_db": 0
+                            "ext_triggers_db": 121734
                         }
                     ]
                 }
@@ -115,7 +115,7 @@
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
                             "pot": 1e+20,
-                            "ext_triggers_db": 0
+                            "ext_triggers_db": 121734
                         }
                     ]
                 }
