@@ -44,7 +44,7 @@ struct TH1DRenderer {
     }
 
     const TH1D *get(const HistogramUncertainty &s) const {
-        sync(s);
+        this->sync(s);
         return hist;
     }
 };
