@@ -8,7 +8,7 @@
                 "samples": [
                     {
                         "sample_key": "mc_inclusive_run1_fhc",
-                        "stage_name": "selection_numi_fhc_run1_beam",
+                        "stage_name": "selection_beam",
                         "sample_type": "mc",
                         "active": true,
                         "do_hadd": true,
@@ -20,14 +20,14 @@
                                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
                                 "stage_name": "selection_detvar_cv",
-                                "active": false,
-                                "do_hadd": false
+                                "active": true,
+                                "do_hadd": true
                             }
                         ]
                     },
                     {
                         "sample_key": "mc_strangeness_run1_fhc",
-                        "stage_name": "selection_numi_fhc_run1_strangeness",
+                        "stage_name": "selection_strangeness",
                         "sample_type": "mc",
                         "active": true,
                         "do_hadd": true,
@@ -36,18 +36,25 @@
                             {
                                 "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
                                 "variation_type": "cv",
-                                "stage_name": "selection_detvar_cv_strangeness",
-                                "active": false,
-                                "do_hadd": false
+                                "stage_name": "selection_detvar_cv",
+                                "active": true,
+                                "do_hadd": true
                             }
                         ]
                     },
                     {
+                        "sample_key": "mc_dirt_run1_fhc",
+                        "stage_name": "selection_dirt",
+                        "sample_type": "mc",
+                        "active": true,
+                        "do_hadd": true
+                    },
+                    {
                         "sample_key": "numu_fhc_ext",
-                        "stage_name": "selection_numi_fhc_run1_ext",
+                        "stage_name": "selection_ext",
                         "sample_type": "ext",
-                        "active": false,
-                        "do_hadd": false
+                        "active": true,
+                        "do_hadd": true
                     }
                 ]
             }
