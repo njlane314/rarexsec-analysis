@@ -10,5 +10,6 @@ target_link_libraries(libplot
   INTERFACE
     libdata
     libutils
+    libhist
     ${ROOT_LIBRARIES}
 )
