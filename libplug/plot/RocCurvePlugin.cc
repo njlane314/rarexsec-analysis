@@ -34,7 +34,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
     explicit RocCurvePlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("roc_curves") || !cfg.at("roc_curves").is_array()) {
-            throw std::onPlottime_error("RocCurvePlugin missing roc_curves");
+            throw std::runtime_error("RocCurvePlugin missing roc_curves");
         }
         for (auto const &p : cfg.at("roc_curves")) {
             PlotConfig pc;

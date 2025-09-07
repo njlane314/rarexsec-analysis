@@ -31,7 +31,7 @@ class UnstackedHistogramPlugin : public IPlotPlugin {
 
     explicit UnstackedHistogramPlugin(const nlohmann::json &cfg) {
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
-            throw std::onPlottime_error("UnstackedHistogramPlugin missing plots");
+            throw std::runtime_error("UnstackedHistogramPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
             PlotConfig pc;
             pc.variable = p.at("variable").get<std::string>();
