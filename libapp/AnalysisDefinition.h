@@ -20,10 +20,6 @@
 #include "VariableRegistry.h"
 
 namespace analysis {
-enum class DynamicBinningStrategy;
-}
-
-namespace analysis {
 
 class AnalysisDefinition {
   public:
@@ -104,9 +100,8 @@ class AnalysisDefinition {
         region_variables_[region_key].emplace_back(variable_key);
     }
 
-    bool isDynamic(const VariableKey &key) const {
-        auto it = is_dynamic_.find(key);
-        return it != is_dynamic_.end() && it->second;
+    RegionHandle region(const RegionKey &key) const {
+        return RegionHandle{key, region_names_, region_selections_, region_analyses_, region_variables_};
     }
 
     bool includeOobBins(const VariableKey &key) const {
@@ -114,25 +109,26 @@ class AnalysisDefinition {
         return it != include_oob_.end() && it->second;
     }
 
-    DynamicBinningStrategy dynamicBinningStrategy(const VariableKey &key) const {
-        auto it = dynamic_strategy_.find(key);
-        return it != dynamic_strategy_.end() ? it->second : DynamicBinningStrategy::EqualWeight;
+    const std::vector<std::string> &regionClauses(const RegionKey &key) const {
+        static const std::vector<std::string> empty;
+        auto it = region_clauses_.find(key);
+        return it != region_clauses_.end() ? it->second : empty;
+    }
+
+    std::vector<RegionHandle> regions() const {
+        std::vector<RegionHandle> result;
+        result.reserve(region_names_.size());
+
+        for (const auto &entry : region_names_)
+            result.emplace_back(entry.first, region_names_, region_selections_, region_analyses_, region_variables_);
+
+        return result;
     }
 
     void setBinning(const VariableKey &key, BinningDefinition &&bdef) { variable_binning_[key] = std::move(bdef); }
 
     VariableHandle variable(const VariableKey &key) const {
         return VariableHandle{key, variable_expressions_, variable_labels_, variable_binning_, variable_stratifiers_};
-    }
-
-    RegionHandle region(const RegionKey &key) const {
-        return RegionHandle{key, region_names_, region_selections_, region_analyses_, region_variables_};
-    }
-
-    const std::vector<std::string> &regionClauses(const RegionKey &key) const {
-        static const std::vector<std::string> empty;
-        auto it = region_clauses_.find(key);
-        return it != region_clauses_.end() ? it->second : empty;
     }
 
     std::vector<VariableHandle> variables() const {
@@ -146,14 +142,19 @@ class AnalysisDefinition {
         return result;
     }
 
-    std::vector<RegionHandle> regions() const {
-        std::vector<RegionHandle> result;
-        result.reserve(region_names_.size());
+    bool isDynamic(const VariableKey &key) const {
+        auto it = is_dynamic_.find(key);
+        return it != is_dynamic_.end() && it->second;
+    }
 
-        for (const auto &entry : region_names_)
-            result.emplace_back(entry.first, region_names_, region_selections_, region_analyses_, region_variables_);
+    bool includeOutOfRangeBins(const VariableKey &key) const {
+        auto it = include_out_of_range_.find(key);
+        return it != include_out_of_range_.end() && it->second;
+    }
 
-        return result;
+    DynamicBinningStrategy dynamicBinningStrategy(const VariableKey &key) const {
+        auto it = dynamic_strategy_.find(key);
+        return it != dynamic_strategy_.end() ? it->second : DynamicBinningStrategy::EqualWeight;
     }
 
     void resolveDynamicBinning(AnalysisDataLoader &loader) {
