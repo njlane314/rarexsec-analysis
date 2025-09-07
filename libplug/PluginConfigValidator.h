@@ -1,6 +1,7 @@
 #ifndef PLUGIN_CONFIG_VALIDATOR_H
 #define PLUGIN_CONFIG_VALIDATOR_H
 
+#include <array>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
@@ -41,53 +42,68 @@ struct PluginConfigValidator {
     inline static const nlohmann::json plot_schema = {{"type", "object"}};
 
     static void validateVariables(const nlohmann::json &cfg) {
-        if (!cfg.is_object())
-            throw std::runtime_error("variables config must be object");
-        if (!cfg.contains("variables") || !cfg.at("variables").is_array())
-            throw std::runtime_error("variables array missing");
-        for (auto const &var : cfg.at("variables")) {
-            if (!var.is_object())
-                throw std::runtime_error("variable entry must be object");
-            if (!var.contains("name") || !var.at("name").is_string())
-                throw std::runtime_error("variable name missing");
-            if (!var.contains("branch") || !var.at("branch").is_string())
-                throw std::runtime_error("variable branch missing");
-            if (!var.contains("label") || !var.at("label").is_string())
-                throw std::runtime_error("variable label missing");
-            if (!var.contains("stratum") || !var.at("stratum").is_string())
-                throw std::runtime_error("variable stratum missing");
-            if (!var.contains("bins"))
-                throw std::runtime_error("variable bins missing");
-            auto const &bins = var.at("bins");
-            bool bins_ok = bins.is_array() || bins.is_object();
-            if (!bins_ok)
-                throw std::runtime_error("variable bins invalid");
+        expectObject(cfg, "variables config must be object");
+        for (const auto &var :
+             expectArrayField(cfg, "variables", "variables array missing")) {
+            expectObject(var, "variable entry must be object");
+            for (const char *field : requiredVariableFields) {
+                expectStringField(var, field,
+                                  std::string("variable ") + field + " missing");
+            }
+            if (!var.contains("bins") ||
+                !(var.at("bins").is_array() || var.at("bins").is_object())) {
+                throw std::runtime_error("variable bins missing or invalid");
+            }
         }
     }
 
     static void validateRegions(const nlohmann::json &cfg) {
-        if (!cfg.is_object())
-            throw std::runtime_error("regions config must be object");
-        if (!cfg.contains("regions") || !cfg.at("regions").is_array())
-            throw std::runtime_error("regions array missing");
-        for (auto const &region : cfg.at("regions")) {
-            if (!region.is_object())
-                throw std::runtime_error("region entry must be object");
-            if (!region.contains("region_key") || !region.at("region_key").is_string())
-                throw std::runtime_error("region_key missing");
-            if (!region.contains("label") || !region.at("label").is_string())
-                throw std::runtime_error("label missing");
-            bool has_rule = region.contains("selection_rule") && region.at("selection_rule").is_string();
-            bool has_expr = region.contains("expression") && region.at("expression").is_string();
-            if (!has_rule && !has_expr)
-                throw std::runtime_error("region requires selection_rule or expression");
+        expectObject(cfg, "regions config must be object");
+        for (const auto &region :
+             expectArrayField(cfg, "regions", "regions array missing")) {
+            expectObject(region, "region entry must be object");
+            expectStringField(region, "region_key", "region_key missing");
+            expectStringField(region, "label", "label missing");
+            bool has_rule = region.contains("selection_rule") &&
+                            region.at("selection_rule").is_string();
+            bool has_expr = region.contains("expression") &&
+                            region.at("expression").is_string();
+            if (!has_rule && !has_expr) {
+                throw std::runtime_error(
+                    "region requires selection_rule or expression");
+            }
         }
     }
 
     static void validatePlot(const nlohmann::json &cfg) {
-        if (!cfg.is_object())
-            throw std::runtime_error("plot config must be object");
+        expectObject(cfg, "plot config must be object");
     }
+
+  private:
+    static void expectObject(const nlohmann::json &j, const std::string &msg) {
+        if (!j.is_object()) {
+            throw std::runtime_error(msg);
+        }
+    }
+
+    static const nlohmann::json &expectArrayField(const nlohmann::json &j,
+                                                  const char *key,
+                                                  const std::string &msg) {
+        if (!j.contains(key) || !j.at(key).is_array()) {
+            throw std::runtime_error(msg);
+        }
+        return j.at(key);
+    }
+
+    static void expectStringField(const nlohmann::json &j, const char *key,
+                                  const std::string &msg) {
+        if (!j.contains(key) || !j.at(key).is_string()) {
+            throw std::runtime_error(msg);
+        }
+    }
+
+    inline static constexpr std::array<const char *, 4> requiredVariableFields{
+        "name", "branch", "label", "stratum"};
 };
 
 }
