@@ -19,7 +19,7 @@
 
 namespace analysis {
 
-enum class DynamicBinningStrategy { EqualWeight, FreedmanDiaconis, Scott, Sturges, Rice, Sqrt, BayesianBlocks };
+enum class DynamicBinningStrategy { EqualWeight, UniformWidth, BayesianBlocks };
 
 class DynamicBinning {
   public:
@@ -267,68 +267,12 @@ class DynamicBinning {
             edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
             break;
         }
-        case DynamicBinningStrategy::FreedmanDiaconis: {
-            auto quant = [&](double q) {
-                double target = q * sumw;
-                double cum = 0.0;
-                for (const auto &p : in_range) {
-                    cum += p.second;
-                    if (cum >= target)
-                        return p.first;
-                }
-                return in_range.back().first;
-            };
-
-            double q1 = quant(0.25);
-            double q3 = quant(0.75);
-            double iqr = q3 - q1;
-            if (!(iqr > 0.0)) {
-                iqr = xmax - xmin;
-            }
-            size_t n = in_range.size();
-            double bin_width = 2.0 * iqr * std::pow(static_cast<double>(n), -1.0 / 3.0);
-            if (!(bin_width > 0.0)) {
-                bin_width = xmax - xmin;
-            }
-            int target_bins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_width)));
+        case DynamicBinningStrategy::UniformWidth: {
+            int target_bins = std::max(1, static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0))));
             add_uniform_edges(target_bins);
             break;
         }
-        case DynamicBinningStrategy::Scott: {
-            double sumwx = 0.0;
-            for (const auto &p : in_range) {
-                sumwx += p.first * p.second;
-            }
-            double mean = sumwx / sumw;
-            double swvar = 0.0;
-            for (const auto &p : in_range) {
-                double diff = p.first - mean;
-                swvar += p.second * diff * diff;
-            }
-            double sigma = std::sqrt(swvar / sumw);
-            double bin_width = 3.5 * sigma * std::pow(neff_total, -1.0 / 3.0);
-            if (!(bin_width > 0.0)) {
-                bin_width = xmax - xmin;
-            }
-            int target_bins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_width)));
-            add_uniform_edges(target_bins);
-            break;
-        }
-        case DynamicBinningStrategy::Sturges: {
-            int target_bins = std::max(1, static_cast<int>(std::ceil(std::log2(neff_total) + 1.0)));
-            add_uniform_edges(target_bins);
-            break;
-        }
-        case DynamicBinningStrategy::Rice: {
-            int target_bins = std::max(1, static_cast<int>(std::ceil(2.0 * std::cbrt(neff_total))));
-            add_uniform_edges(target_bins);
-            break;
-        }
-        case DynamicBinningStrategy::Sqrt: {
-            int target_bins = std::max(1, static_cast<int>(std::ceil(std::sqrt(neff_total))));
-            add_uniform_edges(target_bins);
-            break;
-        }
+        case DynamicBinningStrategy::EqualWeight:
         default: {
             int target_bins = std::max(1, static_cast<int>(std::floor(neff_total / std::max(min_neff_per_bin, 1.0))));
 
