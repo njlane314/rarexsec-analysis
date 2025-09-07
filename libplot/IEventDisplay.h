@@ -34,6 +34,6 @@ class IEventDisplay {
     std::string output_directory_;
 };
 
-} // namespace analysis
+}
 
 #endif

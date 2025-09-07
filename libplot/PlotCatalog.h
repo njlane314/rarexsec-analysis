@@ -109,6 +109,6 @@ private:
   std::filesystem::path output_directory_;
 };
 
-} // namespace analysis
+}
 
 #endif

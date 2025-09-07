@@ -23,6 +23,6 @@ struct SampleDatasetGroup {
 
 using SampleDatasetGroupMap = std::unordered_map<SampleKey, SampleDatasetGroup>;
 
-} // namespace analysis
+}
 
 #endif

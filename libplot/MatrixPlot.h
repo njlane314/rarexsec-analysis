@@ -222,6 +222,6 @@ private:
   TH2F *hist_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -47,6 +47,6 @@ makeVectorStratifier(const StratifierKey &key, StratifierRegistry &registry) {
     return std::make_unique<VectorStratifier>(key, registry);
 }
 
-} // namespace analysis
+}
 
 #endif

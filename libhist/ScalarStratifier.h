@@ -37,6 +37,6 @@ inline std::unique_ptr<IHistogramStratifier> makeScalarStratifier(const Stratifi
     return std::make_unique<ScalarStratifier>(key, registry);
 }
 
-} // namespace analysis
+}
 
 #endif
