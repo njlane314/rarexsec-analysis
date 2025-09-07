@@ -336,19 +336,19 @@ class UnstackedHistogramPlot : public IHistogramPlot {
         log::info("UnstackedHistogramPlot::draw",
                   "X-axis label from result:", variable_result_.binning_.getTexLabel().c_str());
 
-        auto [p_main, p_legend] = setupPads(canvas);
+        auto [p_main, p_legend] = this->setupPads(canvas);
 
-        auto [mc_hists, total_mc_events] = collectHistograms();
+        auto [mc_hists, total_mc_events] = this->collectHistograms();
 
-        buildLegend(p_legend, mc_hists);
+        this->buildLegend(p_legend, mc_hists);
 
-        double max_y = drawHistograms(p_main, mc_hists);
+        double max_y = this->drawHistograms(p_main, mc_hists);
 
-        renderCuts(max_y);
+        this->renderCuts(max_y);
 
-        configureAxes();
+        this->configureAxes();
 
-        drawWatermark(p_main, total_mc_events);
+        this->drawWatermark(p_main, total_mc_events);
 
         p_main->RedrawAxis();
         canvas.Update();

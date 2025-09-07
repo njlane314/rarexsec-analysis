@@ -370,7 +370,7 @@ class StackedHistogramPlot : public IHistogramPlot {
 
         TPad *p_main;
         TPad *p_legend;
-        setupPads(canvas, p_main, p_legend);
+        this->setupPads(canvas, p_main, p_legend);
 
         std::vector<std::pair<ChannelKey, BinnedHistogram>> mc_hists;
         double total_mc_events;
@@ -379,17 +379,17 @@ class StackedHistogramPlot : public IHistogramPlot {
         double min_edge;
         double max_edge;
         std::vector<double> orig_edges =
-            prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge, min_edge, max_edge);
+            this->prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge, min_edge, max_edge);
 
-        buildLegend(p_legend, mc_hists);
+        this->buildLegend(p_legend, mc_hists);
 
-        double max_y = drawStack(p_main, mc_hists, orig_edges);
+        double max_y = this->drawStack(p_main, mc_hists, orig_edges);
 
-        renderCuts(max_y);
+        this->renderCuts(max_y);
 
-        configureAxes(orig_edges, left_edge, right_edge, min_edge, max_edge, max_y);
+        this->configureAxes(orig_edges, left_edge, right_edge, min_edge, max_edge, max_y);
 
-        drawWatermark(p_main, total_mc_events);
+        this->drawWatermark(p_main, total_mc_events);
 
         p_main->RedrawAxis();
         canvas.Update();
