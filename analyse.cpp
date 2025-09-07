@@ -17,8 +17,8 @@
 #include "VariableRegistry.h"
 
 static analysis::AnalysisResult processBeamline(analysis::RunConfigRegistry &run_config_registry,
-                                                const std::string &ntuple_dir, const std::string &beam,
-                                                const nlohmann::json &runs, const nlohmann::json &analysis) {
+                                  const std::string &ntuple_dir, const std::string &beam,
+                                  const nlohmann::json &runs, const nlohmann::json &analysis) {
     std::vector<std::string> periods;
     periods.reserve(runs.size());
 
