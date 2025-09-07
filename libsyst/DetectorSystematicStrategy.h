@@ -39,7 +39,7 @@ class DetectorSystematicStrategy : public SystematicStrategy {
 
         auto total_detvar_hists = this->aggregateVariations(result);
 
-        auto h_det_cv_opt = this->sanitizeCvHistogram(total_detvar_hists);
+        auto h_det_cv_opt = this->sanitiseCvHistogram(total_detvar_hists);
 
         if (!h_det_cv_opt)
             return total_detvar_cov;
@@ -81,7 +81,7 @@ class DetectorSystematicStrategy : public SystematicStrategy {
         return total_detvar_hists;
     }
 
-    std::optional<BinnedHistogram> sanitizeCvHistogram(std::map<SampleVariation, BinnedHistogram> &total_detvar_hists) {
+    std::optional<BinnedHistogram> sanitiseCvHistogram(std::map<SampleVariation, BinnedHistogram> &total_detvar_hists) {
         auto it = total_detvar_hists.find(SampleVariation::kCV);
 
         if (it == total_detvar_hists.end()) {
