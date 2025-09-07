@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
 #include "AnalysisKey.h"

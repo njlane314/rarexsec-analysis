@@ -1,7 +1,7 @@
 #ifndef DETECTOR_SYSTEMATIC_STRATEGY_H
 #define DETECTOR_SYSTEMATIC_STRATEGY_H
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinnedHistogram.h"
 #include "SystematicStrategy.h"
 #include <cmath>

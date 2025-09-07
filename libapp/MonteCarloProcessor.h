@@ -1,7 +1,7 @@
 #ifndef MC_PROCESSOR_H
 #define MC_PROCESSOR_H
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinnedHistogram.h"
 #include "ISampleProcessor.h"
 #include <unordered_map>

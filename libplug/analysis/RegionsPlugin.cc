@@ -1,7 +1,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AnalysisDefinition.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IAnalysisPlugin.h"
 
 namespace analysis {

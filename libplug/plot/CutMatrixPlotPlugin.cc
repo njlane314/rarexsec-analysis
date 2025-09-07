@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "PlotCatalog.h"

@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IHistogramStratifier.h"
 #include "AnalysisKey.h"
 #include "StratifierRegistry.h"

@@ -6,7 +6,7 @@
 
 #include "nlohmann/json.hpp"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "RunConfig.h"
 #include "RunConfigRegistry.h"
 

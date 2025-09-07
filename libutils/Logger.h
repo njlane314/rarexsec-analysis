@@ -1,5 +1,5 @@
-#ifndef ANALYSIS_LOGGER_H
-#define ANALYSIS_LOGGER_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
 #include <chrono>
 #include <cstdlib>
@@ -12,10 +12,10 @@ namespace analysis {
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR, FATAL };
 
-class AnalysisLogger {
+class Logger {
   public:
-    static AnalysisLogger &getInstance() {
-        static AnalysisLogger instance;
+    static Logger &getInstance() {
+        static Logger instance;
         return instance;
     }
 
@@ -43,10 +43,10 @@ class AnalysisLogger {
     }
 
   private:
-    AnalysisLogger() = default;
-    ~AnalysisLogger() = default;
-    AnalysisLogger(const AnalysisLogger &) = delete;
-    AnalysisLogger &operator=(const AnalysisLogger &) = delete;
+    Logger() = default;
+    ~Logger() = default;
+    Logger(const Logger &) = delete;
+    Logger &operator=(const Logger &) = delete;
 
     template <typename T, typename... Args>
     void printArgs(std::ostream &os, const T &first, const Args &...rest) const {
@@ -116,19 +116,19 @@ class AnalysisLogger {
 
 namespace log {
 template <typename... Args> inline void debug(const std::string &ctx, const Args &...args) {
-    AnalysisLogger::getInstance().debug(ctx, args...);
+    Logger::getInstance().debug(ctx, args...);
 }
 template <typename... Args> inline void info(const std::string &ctx, const Args &...args) {
-    AnalysisLogger::getInstance().info(ctx, args...);
+    Logger::getInstance().info(ctx, args...);
 }
 template <typename... Args> inline void warn(const std::string &ctx, const Args &...args) {
-    AnalysisLogger::getInstance().warn(ctx, args...);
+    Logger::getInstance().warn(ctx, args...);
 }
 template <typename... Args> inline void error(const std::string &ctx, const Args &...args) {
-    AnalysisLogger::getInstance().error(ctx, args...);
+    Logger::getInstance().error(ctx, args...);
 }
 template <typename... Args> inline void fatal(const std::string &ctx, const Args &...args) {
-    AnalysisLogger::getInstance().fatal(ctx, args...);
+    Logger::getInstance().fatal(ctx, args...);
 }
 } // namespace log
 

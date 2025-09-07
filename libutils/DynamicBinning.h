@@ -13,7 +13,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BayesianBlocks.h"
 #include "BinningDefinition.h"
 

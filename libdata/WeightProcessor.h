@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IEventProcessor.h"
 #include "SampleTypes.h"
 

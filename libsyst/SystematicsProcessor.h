@@ -10,7 +10,7 @@
 
 #include <TMatrixDSym.h>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinnedHistogram.h"
 #include "DetectorSystematicStrategy.h"
 #include "SystematicStrategy.h"

@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 
 namespace analysis {
 

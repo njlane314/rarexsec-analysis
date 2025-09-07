@@ -8,7 +8,7 @@
 
 #include <TSystem.h>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IPlotPlugin.h"
 #include "UnstackedHistogramPlot.h"
 

@@ -1,7 +1,7 @@
 #ifndef IEVENTDISPLAY_H
 #define IEVENTDISPLAY_H
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include <string>

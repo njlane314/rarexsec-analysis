@@ -14,7 +14,7 @@
 #include "RtypesCore.h"
 #include "TColor.h"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "AnalysisKey.h"
 
 namespace analysis {

@@ -11,7 +11,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 
 #include "AnalysisResult.h"
 #include "IAnalysisPlugin.h"

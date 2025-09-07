@@ -15,7 +15,7 @@
 
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "AnalysisPluginManager.h"
 #include "AnalysisResult.h"
 #include "VariableResult.h"

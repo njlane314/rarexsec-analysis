@@ -3,7 +3,7 @@
 #include <string>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IPlotPlugin.h"
 #include "SlipStackingIntensityPlot.h"
 
