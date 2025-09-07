@@ -8,7 +8,7 @@
 #include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "AnalysisResult.h"
-#include "JsonUtils.h"
+#include "Json.h"
 #include "PlotPluginManager.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
