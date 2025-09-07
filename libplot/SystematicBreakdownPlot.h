@@ -18,7 +18,7 @@
 namespace analysis {
 
 class SystematicBreakdownPlot : public IHistogramPlot {
-public:
+  public:
     SystematicBreakdownPlot(std::string plot_name,
                             const VariableResult &var_result,
                             bool normalise = false,
@@ -35,7 +35,7 @@ public:
         }
     }
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         canvas.cd();
 
@@ -101,7 +101,7 @@ protected:
         legend_->Draw();
     }
 
-private:
+  private:
     const VariableResult &variable_result_;
     bool normalise_;
     THStack *stack_;
@@ -109,6 +109,6 @@ private:
     TLegend *legend_;
 };
 
-} // namespace analysis
+}
 
 #endif

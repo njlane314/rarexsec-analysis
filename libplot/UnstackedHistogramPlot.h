@@ -30,7 +30,7 @@
 namespace analysis {
 
 class UnstackedHistogramPlot : public IHistogramPlot {
-public:
+  public:
     UnstackedHistogramPlot(
         std::string plot_name, const VariableResult &var_result,
         const RegionAnalysis &region_info, std::string category_column,
@@ -48,7 +48,7 @@ public:
 
     void addCut(const Cut &cut) { cuts_.push_back(cut); }
 
-private:
+  private:
     std::vector<std::string>
     formatWatermarkLines(double total_mc_events) const {
         auto format_double = [](double val, int precision) {
@@ -368,7 +368,7 @@ private:
         }
     }
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         log::info("UnstackedHistogramPlot::draw", "X-axis label from result:",
                   variable_result_.binning_.getTexLabel().c_str());
@@ -391,7 +391,7 @@ protected:
         canvas.Update();
     }
 
-private:
+  private:
     const VariableResult &variable_result_;
     const RegionAnalysis &region_analysis_;
     std::string category_column_;
@@ -406,6 +406,6 @@ private:
     std::vector<std::unique_ptr<TObject>> cut_visuals_;
 };
 
-} // namespace analysis
+}
 
 #endif

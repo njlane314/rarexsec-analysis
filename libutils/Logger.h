@@ -130,7 +130,7 @@ template <typename... Args> inline void error(const std::string &ctx, const Args
 template <typename... Args> inline void fatal(const std::string &ctx, const Args &...args) {
     Logger::getInstance().fatal(ctx, args...);
 }
-} // namespace log
+} 
 
 }
 

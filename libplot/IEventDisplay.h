@@ -12,7 +12,7 @@
 namespace analysis {
 
 class IEventDisplay {
-public:
+  public:
     IEventDisplay(std::string tag, int image_size, std::string output_directory)
         : tag_(std::move(tag)), image_size_(image_size),
           output_directory_(std::move(output_directory)) {}
@@ -29,7 +29,7 @@ public:
         canvas.SaveAs((output_directory_ + "/" + tag_ + "." + format).c_str());
     }
 
-protected:
+  protected:
     virtual void draw(TCanvas &canvas) = 0;
 
     std::string tag_;
@@ -37,6 +37,6 @@ protected:
     std::string output_directory_;
 };
 
-} // namespace analysis
+}
 
 #endif

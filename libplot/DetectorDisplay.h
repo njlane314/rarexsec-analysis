@@ -12,14 +12,14 @@
 namespace analysis {
 
 class DetectorDisplay : public IEventDisplay {
-public:
+  public:
     DetectorDisplay(std::string tag, std::vector<float> data, int image_size,
                     std::string output_directory)
         : IEventDisplay(std::move(tag), image_size,
                         std::move(output_directory)),
           data_(std::move(data)) {}
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         const int bin_offset = 1;
         const float threshold = 4;
@@ -49,6 +49,6 @@ private:
     std::vector<float> data_;
 };
 
-} // namespace analysis
+} 
 
 #endif

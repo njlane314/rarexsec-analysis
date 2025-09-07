@@ -15,7 +15,7 @@
 namespace analysis {
 
 class IHistogramPlot {
-public:
+  public:
     IHistogramPlot(std::string plot_name,
                    std::string output_directory = "plots")
         : plot_name_(std::move(plot_name)),
@@ -40,7 +40,7 @@ public:
         return s;
     }
 
-protected:
+  protected:
     virtual void draw(TCanvas &canvas) = 0;
 
     virtual void setGlobalStyle() const {
@@ -85,6 +85,6 @@ protected:
     std::string output_directory_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -29,7 +29,7 @@
 namespace analysis {
 
 class StackedHistogramPlot : public IHistogramPlot {
-public:
+  public:
     StackedHistogramPlot(
         std::string plot_name, const VariableResult &var_result,
         const RegionAnalysis &region_info, std::string category_column,
@@ -58,7 +58,7 @@ public:
 
     void addCut(const Cut &cut) { cuts_.push_back(cut); }
 
-private:
+  private:
     static std::string formatWithCommas(double val, int precision = -1) {
         std::stringstream stream;
         if (precision >= 0) {
@@ -412,7 +412,7 @@ private:
                             1 - pad->GetTopMargin() - 0.27, line5.c_str());
     }
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         log::info("StackedHistogramPlot::draw", "X-axis label from result:",
                   variable_result_.binning_.getTexLabel().c_str());
@@ -444,7 +444,7 @@ protected:
         canvas.Update();
     }
 
-private:
+  private:
     const VariableResult &variable_result_;
     const RegionAnalysis &region_analysis_;
     std::string category_column_;

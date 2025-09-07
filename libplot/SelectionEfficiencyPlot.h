@@ -16,7 +16,7 @@
 namespace analysis {
 
 class SelectionEfficiencyPlot : public IHistogramPlot {
-public:
+  public:
     SelectionEfficiencyPlot(
         std::string plot_name, std::vector<std::string> stages,
         std::vector<double> efficiencies, std::vector<double> efficiency_errors,
@@ -28,7 +28,7 @@ public:
           purities_(std::move(purities)),
           purity_errors_(std::move(purity_errors)), use_log_y_(use_log_y) {}
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         int n = stages_.size();
         TH1F frame("frame", "", n, 0, n);
@@ -48,7 +48,7 @@ protected:
         legend.DrawClone();
     }
 
-private:
+  private:
     void setupFrame(TCanvas &canvas, TH1F &frame) {
         canvas.cd();
         const double log_y_min = 1e-3;
@@ -157,6 +157,6 @@ private:
     bool use_log_y_;
 };
 
-} // namespace analysis
+}
 
 #endif

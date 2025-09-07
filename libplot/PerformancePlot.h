@@ -12,7 +12,7 @@
 namespace analysis {
 
 class PerformancePlot : public IHistogramPlot {
-public:
+  public:
     PerformancePlot(std::string plot_name, std::vector<double> signal_eff,
                     std::vector<double> background_rej,
                     std::string output_directory = "plots")
@@ -20,7 +20,7 @@ public:
           signal_eff_(std::move(signal_eff)),
           background_rej_(std::move(background_rej)) {}
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         canvas.cd();
         int n = signal_eff_.size();
@@ -45,11 +45,11 @@ protected:
         graph.DrawClone("ALP");
     }
 
-private:
+  private:
     std::vector<double> signal_eff_;
     std::vector<double> background_rej_;
 };
 
-} // namespace analysis
+}
 
 #endif

@@ -20,7 +20,7 @@
 namespace analysis {
 
 class MatrixPlot : public IHistogramPlot {
-public:
+  public:
     MatrixPlot(std::string plot_name, const VariableResult &x_res,
                const VariableResult &y_res, AnalysisDataLoader &loader,
                const SelectionQuery &selection,
@@ -48,7 +48,7 @@ public:
 
     ~MatrixPlot() override { delete hist_; }
 
-private:
+  private:
     static std::pair<std::vector<double>, std::vector<double>>
     determineEdges(AnalysisDataLoader &loader, const VariableResult &x_res,
                    const VariableResult &y_res) {
@@ -202,7 +202,7 @@ private:
         }
     }
 
-protected:
+  protected:
     void draw(TCanvas &canvas) override {
         canvas.cd();
         const int stats_off = 0;
@@ -226,6 +226,6 @@ private:
     TH2F *hist_;
 };
 
-} // namespace analysis
+}
 
 #endif

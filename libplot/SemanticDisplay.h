@@ -14,14 +14,14 @@
 namespace analysis {
 
 class SemanticDisplay : public IEventDisplay {
-public:
+  public:
     SemanticDisplay(std::string tag, std::vector<int> data, int image_size,
                     std::string output_directory)
         : IEventDisplay(std::move(tag), image_size,
                         std::move(output_directory)),
           data_(std::move(data)) {}
 
-protected:
+  protected:
     void draw(TCanvas &) override {
         const int palette_size = 10;
         const int palette_step = 2;
@@ -52,10 +52,10 @@ protected:
         hist.Draw("COL");
     }
 
-private:
+  private:
     std::vector<int> data_;
 };
 
-} // namespace analysis
+}
 
 #endif
