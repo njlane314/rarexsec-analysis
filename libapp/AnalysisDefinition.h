@@ -32,7 +32,7 @@ class AnalysisDefinition {
 
     AnalysisDefinition &addVariable(const std::string &key, const std::string &expr, const std::string &lbl,
                                     const BinningDefinition &bdef, const std::string &strat, bool is_dynamic = false,
-                                    bool include_out_of_range_bins = false,
+                                    bool include_oob_bins = false,
                                     DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
         VariableKey var_key{key};
         if (variable_expressions_.count(var_key))
@@ -47,7 +47,7 @@ class AnalysisDefinition {
         variable_binning_[var_key] = bdef;
         variable_stratifiers_[var_key] = strat;
         is_dynamic_[var_key] = is_dynamic;
-        include_out_of_range_[var_key] = include_out_of_range_bins;
+        include_oob_[var_key] = include_oob_bins;
         dynamic_strategy_[var_key] = strategy;
 
         return *this;
@@ -109,9 +109,9 @@ class AnalysisDefinition {
         return it != is_dynamic_.end() && it->second;
     }
 
-    bool includeOutOfRangeBins(const VariableKey &key) const {
-        auto it = include_out_of_range_.find(key);
-        return it != include_out_of_range_.end() && it->second;
+    bool includeOobBins(const VariableKey &key) const {
+        auto it = include_oob_.find(key);
+        return it != include_oob_.end() && it->second;
     }
 
     DynamicBinningStrategy dynamicBinningStrategy(const VariableKey &key) const {
@@ -174,7 +174,7 @@ class AnalysisDefinition {
                            "Cannot perform dynamic binning: No Monte Carlo samples were found!");
             }
 
-            bool include_oob = includeOutOfRangeBins(var_handle.key_);
+            bool include_oob = includeOobBins(var_handle.key_);
             auto strategy = dynamicBinningStrategy(var_handle.key_);
             BinningDefinition new_bins = DynamicBinning::calculate(
                 mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0, include_oob, strategy);
@@ -195,7 +195,7 @@ class AnalysisDefinition {
     std::map<VariableKey, BinningDefinition> variable_binning_;
     std::map<VariableKey, std::string> variable_stratifiers_;
     std::map<VariableKey, bool> is_dynamic_;
-    std::map<VariableKey, bool> include_out_of_range_;
+    std::map<VariableKey, bool> include_oob_;
     std::map<VariableKey, DynamicBinningStrategy> dynamic_strategy_;
 
     std::map<RegionKey, std::string> region_names_;

@@ -30,7 +30,7 @@ The configuration files contain analysis and plotting directives.
     "mode": "dynamic",
     "min": 0.0,
     "max": 3000.0,
-    "include_out_of_range_bins": true,
+    "include_oob_bins": true,
     "strategy": "bayesian_blocks"
   }
 }

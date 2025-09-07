@@ -25,7 +25,7 @@ class DynamicBinning {
   public:
     static BinningDefinition calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &original_bdef,
                                        const std::string &weight_col = "nominal_event_weight",
-                                       double min_neff_per_bin = 400.0, bool include_out_of_range_bins = false,
+                                       double min_neff_per_bin = 400.0, bool include_oob_bins = false,
                                        DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
         if (nodes.empty()) {
             log::warn("DynamicBinning::calculate", "Cannot calculate bins: RNode vector is empty.");
@@ -35,7 +35,7 @@ class DynamicBinning {
         std::string typeName = determineColumnType(nodes, original_bdef);
 
         return dispatchCalculation(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                   include_out_of_range_bins, strategy, typeName);
+                                   include_oob_bins, strategy, typeName);
     }
 
   private:
@@ -48,7 +48,7 @@ class DynamicBinning {
     static BinningDefinition dispatchCalculation(std::vector<ROOT::RDF::RNode> nodes,
                                                  const BinningDefinition &original_bdef,
                                                  const std::string &weight_col, double min_neff_per_bin,
-                                                 bool include_out_of_range_bins, DynamicBinningStrategy strategy,
+                                                 bool include_oob_bins, DynamicBinningStrategy strategy,
                                                  const std::string &typeName) {
         auto match = [&](std::initializer_list<std::string> names) {
             return std::find(names.begin(), names.end(), typeName) != names.end();
@@ -61,43 +61,43 @@ class DynamicBinning {
 
         if (match({"double", "Float64_t", "Double_t"})) {
             return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                            include_out_of_range_bins, strategy);
+                                            include_oob_bins, strategy);
         } else if (match({"float", "Float32_t", "Float_t"})) {
             return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                           include_out_of_range_bins, strategy);
+                                           include_oob_bins, strategy);
         } else if (match({"int", "Int_t"})) {
             return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                         include_out_of_range_bins, strategy);
+                                         include_oob_bins, strategy);
         } else if (match({"unsigned int", "UInt_t"})) {
             return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                  include_out_of_range_bins, strategy);
+                                                  include_oob_bins, strategy);
         } else if (match({"unsigned long", "ULong64_t", "unsigned long long"})) {
             return calculate_scalar<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                        include_out_of_range_bins, strategy);
+                                                        include_oob_bins, strategy);
         } else if (match({"long", "Long64_t", "long long"})) {
             return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                               include_out_of_range_bins, strategy);
+                                               include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<double>", "ROOT::RVec<double>", "vector<double>"})) {
             return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                            include_out_of_range_bins, strategy);
+                                            include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<float>", "ROOT::RVec<float>", "vector<float>"})) {
             return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                           include_out_of_range_bins, strategy);
+                                           include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<int>", "ROOT::RVec<int>", "vector<int>"})) {
             return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                         include_out_of_range_bins, strategy);
+                                         include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<unsigned int>", "ROOT::RVec<unsigned int>", "vector<unsigned int>"})) {
             return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                  include_out_of_range_bins, strategy);
+                                                  include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<unsigned long>", "ROOT::RVec<unsigned long>", "vector<unsigned long>",
                              "vector<ULong64_t>", "ROOT::VecOps::RVec<unsigned long long>",
                              "ROOT::RVec<unsigned long long>", "vector<unsigned long long>"})) {
             return calculate_vector<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                        include_out_of_range_bins, strategy);
+                                                        include_oob_bins, strategy);
         } else if (contains({"ROOT::VecOps::RVec<long long>", "ROOT::RVec<long long>", "vector<long long>",
                              "vector<Long64_t>"})) {
             return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                               include_out_of_range_bins, strategy);
+                                               include_oob_bins, strategy);
         }
 
         log::fatal("DynamicBinning::dispatchCalculation", "Unsupported type for dynamic binning:", typeName);
@@ -108,7 +108,7 @@ class DynamicBinning {
     template <typename T>
     static BinningDefinition calculate_scalar(std::vector<ROOT::RDF::RNode> nodes,
                                               const BinningDefinition &original_bdef, const std::string &weight_col,
-                                              double min_neff_per_bin, bool include_out_of_range_bins,
+                                              double min_neff_per_bin, bool include_oob_bins,
                                               DynamicBinningStrategy strategy) {
         std::vector<std::pair<double, double>> xw;
         xw.reserve(262144);
@@ -141,13 +141,13 @@ class DynamicBinning {
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_oob_bins, strategy);
     }
 
     template <typename T>
     static BinningDefinition calculate_vector(std::vector<ROOT::RDF::RNode> nodes,
                                               const BinningDefinition &original_bdef, const std::string &weight_col,
-                                              double min_neff_per_bin, bool include_out_of_range_bins,
+                                              double min_neff_per_bin, bool include_oob_bins,
                                               DynamicBinningStrategy strategy) {
         std::vector<std::pair<double, double>> xw;
         xw.reserve(262144);
@@ -186,7 +186,7 @@ class DynamicBinning {
                 }
             }
         }
-        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_out_of_range_bins, strategy);
+        return finalize_edges(xw, sumw, sumw2, original_bdef, min_neff_per_bin, include_oob_bins, strategy);
     }
 
     static void filterEntries(std::vector<std::pair<double, double>> &xw) {
@@ -307,7 +307,7 @@ class DynamicBinning {
 
     static std::vector<double> finalizeEdgeList(std::vector<double> edges,
                                                 const std::vector<std::pair<double, double>> &in_range,
-                                                double min_neff_per_bin, bool include_out_of_range_bins, double domain_min,
+                                                double min_neff_per_bin, bool include_oob_bins, double domain_min,
                                                 double domain_max) {
         edges.front() = domain_min;
         edges.back() = domain_max;
@@ -343,7 +343,7 @@ class DynamicBinning {
             }
         }
 
-        if (include_out_of_range_bins) {
+        if (include_oob_bins) {
             double first_width = edges.size() > 1 ? (edges[1] - edges[0]) : (domain_max - domain_min);
             double last_width =
                 edges.size() > 1 ? (edges[edges.size() - 1] - edges[edges.size() - 2]) : (domain_max - domain_min);
@@ -373,7 +373,7 @@ class DynamicBinning {
 
     static BinningDefinition finalize_edges(std::vector<std::pair<double, double>> &xw, double sumw, double sumw2,
                                             const BinningDefinition &original_bdef, double min_neff_per_bin,
-                                            bool include_out_of_range_bins, DynamicBinningStrategy strategy) {
+                                            bool include_oob_bins, DynamicBinningStrategy strategy) {
         const auto &domain_edges = original_bdef.getEdges();
         double domain_min = domain_edges.front();
         double domain_max = domain_edges.back();
@@ -409,7 +409,7 @@ class DynamicBinning {
 
         auto edges = applyStrategy(in_range, sumw, sumw2, xmin, xmax, min_neff_per_bin, strategy);
 
-        edges = finalizeEdgeList(std::move(edges), in_range, min_neff_per_bin, include_out_of_range_bins, domain_min,
+        edges = finalizeEdgeList(std::move(edges), in_range, min_neff_per_bin, include_oob_bins, domain_min,
                                  domain_max);
 
         return BinningDefinition(edges, original_bdef.getVariable(), original_bdef.getTexLabel(), {},

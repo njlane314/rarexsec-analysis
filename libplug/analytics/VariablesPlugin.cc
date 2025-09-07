@@ -37,7 +37,7 @@ class VariablesPlugin : public IAnalysisPlugin {
             } else if (bins_cfg.is_object() && bins_cfg.contains("mode") && bins_cfg.at("mode") == "dynamic") {
                 double domain_min = bins_cfg.value("min", -std::numeric_limits<double>::infinity());
                 double domain_max = bins_cfg.value("max", std::numeric_limits<double>::infinity());
-                bool include_oob = bins_cfg.value("include_out_of_range_bins", true);
+                bool include_oob_bins = bins_cfg.value("include_oob_bins", true);
                 std::string strat_mode = bins_cfg.value("strategy", std::string("equal_weight"));
                 static const std::unordered_map<std::string, DynamicBinningStrategy> strategy_map = {
                     {"equal_weight", DynamicBinningStrategy::EqualWeight},
@@ -49,7 +49,7 @@ class VariablesPlugin : public IAnalysisPlugin {
                     strategy = it->second;
                 }
                 BinningDefinition placeholder_bins({domain_min, domain_max}, branch, label, {}, strat);
-                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob, strategy);
+                def.addVariable(name, branch, label, placeholder_bins, strat, true, include_oob_bins, strategy);
             } else {
                 std::vector<double> edges;
                 if (bins_cfg.is_array()) {

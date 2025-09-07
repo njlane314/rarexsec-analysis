@@ -18,7 +18,7 @@ class QuadTreeBinning {
     static std::pair<BinningDefinition, BinningDefinition>
     calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &xb, const BinningDefinition &yb,
               const std::string &weight_col = "nominal_event_weight", double min_neff_per_bin = 400.0,
-              bool include_out_of_range_bins = false) {
+              bool include_oob_bins = false) {
         double xmin = xb.getEdges().front();
         double xmax = xb.getEdges().back();
         double ymin = yb.getEdges().front();
@@ -31,7 +31,7 @@ class QuadTreeBinning {
 
         subdividePoints(pts, xmin, xmax, ymin, ymax, min_neff_per_bin, xset, yset);
 
-        auto edges = buildEdgeVectors(xset, yset, xmin, xmax, ymin, ymax, include_out_of_range_bins);
+        auto edges = buildEdgeVectors(xset, yset, xmin, xmax, ymin, ymax, include_oob_bins);
         auto xedges = std::move(edges.first);
         auto yedges = std::move(edges.second);
 
@@ -132,7 +132,7 @@ class QuadTreeBinning {
 
     static std::pair<std::vector<double>, std::vector<double>>
     buildEdgeVectors(const std::set<double> &xset, const std::set<double> &yset, double xmin, double xmax, double ymin,
-                     double ymax, bool include_out_of_range_bins) {
+                     double ymax, bool include_oob_bins) {
         std::vector<double> xedges;
         std::vector<double> yedges;
 
@@ -147,7 +147,7 @@ class QuadTreeBinning {
         yedges.insert(yedges.end(), yset.begin(), yset.end());
         yedges.push_back(ymax);
 
-        if (include_out_of_range_bins && xedges.size() > 1 && yedges.size() > 1) {
+        if (include_oob_bins && xedges.size() > 1 && yedges.size() > 1) {
             double first_w = xedges[1] - xedges[0];
             double last_w = xedges[xedges.size() - 1] - xedges[xedges.size() - 2];
             xedges.insert(xedges.begin(), xedges.front() - 0.5 * first_w);

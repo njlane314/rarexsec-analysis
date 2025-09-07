@@ -14,7 +14,7 @@
                 "strategy": "bayesian_blocks",
                 "min": 0.0,
                 "max": 1000.0,
-                "include_out_of_range_bins": false
+                "include_oob_bins": false
               },
               "regions": [
                 "EMPTY"
