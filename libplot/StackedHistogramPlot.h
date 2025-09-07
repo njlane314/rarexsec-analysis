@@ -64,63 +64,6 @@ class StackedHistogramPlot : public IHistogramPlot {
         return s;
     }
 
-    void drawWatermark(TPad *pad, double total_mc_events) const {
-        pad->cd();
-
-        std::string line1 = "#bf{#muBooNE Simulation, Preliminary}";
-
-        std::stringstream pot_stream;
-        pot_stream << std::scientific << std::setprecision(2) << region_analysis_.protonsOnTarget();
-        std::string pot_str = pot_stream.str();
-        size_t e_pos = pot_str.find('e');
-        if (e_pos != std::string::npos) {
-            int exponent = std::stoi(pot_str.substr(e_pos + 1));
-            pot_str = pot_str.substr(0, e_pos);
-            pot_str += " #times 10^{" + std::to_string(exponent) + "}";
-        }
-
-        std::map<std::string, std::string> beam_map = {{"numi_fhc", "NuMI FHC"}, {"numi_rhc", "NuMI RHC"}};
-
-        std::string beam_name = region_analysis_.beamConfig();
-        if (beam_map.count(beam_name)) {
-            beam_name = beam_map.at(beam_name);
-        }
-
-        std::string runs_str;
-        if (!region_analysis_.runNumbers().empty()) {
-            for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
-                std::string run_label = region_analysis_.runNumbers()[i];
-                if (run_label.rfind("run", 0) == 0) {
-                    run_label = run_label.substr(3);
-                }
-                try {
-                    run_label = formatWithCommas(std::stod(run_label), 0);
-                } catch (...) {
-                }
-                runs_str += run_label + (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
-            }
-        } else {
-            runs_str = "N/A";
-        }
-
-        std::string line2 = "Beam: " + beam_name + ", Runs: " + runs_str;
-        std::string line3 = "POT: " + pot_str;
-        std::string line4 = "#it{Analysis Region}: " + region_analysis_.regionLabel();
-        std::string line5 = "#it{Total Entries}: " + formatWithCommas(total_mc_events, 2);
-
-        TLatex watermark;
-        watermark.SetNDC();
-        watermark.SetTextAlign(33);
-        watermark.SetTextFont(62);
-        watermark.SetTextSize(0.05);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, line1.c_str());
-        watermark.SetTextFont(42);
-        watermark.SetTextSize(0.05 * 0.8);
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, line2.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, line3.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, line4.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, line5.c_str());
-    }
     void setupPads(TCanvas &canvas, TPad *&p_main, TPad *&p_legend) const {
         const double PLOT_LEGEND_SPLIT = 0.85;
         canvas.cd();
@@ -357,6 +300,64 @@ class StackedHistogramPlot : public IHistogramPlot {
             of_box->Draw("same");
             cut_visuals_.push_back(of_box);
         }
+    }
+
+    void drawWatermark(TPad *pad, double total_mc_events) const {
+        pad->cd();
+
+        std::string line1 = "#bf{#muBooNE Simulation, Preliminary}";
+
+        std::stringstream pot_stream;
+        pot_stream << std::scientific << std::setprecision(2) << region_analysis_.protonsOnTarget();
+        std::string pot_str = pot_stream.str();
+        size_t e_pos = pot_str.find('e');
+        if (e_pos != std::string::npos) {
+            int exponent = std::stoi(pot_str.substr(e_pos + 1));
+            pot_str = pot_str.substr(0, e_pos);
+            pot_str += " #times 10^{" + std::to_string(exponent) + "}";
+        }
+
+        std::map<std::string, std::string> beam_map = {{"numi_fhc", "NuMI FHC"}, {"numi_rhc", "NuMI RHC"}};
+
+        std::string beam_name = region_analysis_.beamConfig();
+        if (beam_map.count(beam_name)) {
+            beam_name = beam_map.at(beam_name);
+        }
+
+        std::string runs_str;
+        if (!region_analysis_.runNumbers().empty()) {
+            for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
+                std::string run_label = region_analysis_.runNumbers()[i];
+                if (run_label.rfind("run", 0) == 0) {
+                    run_label = run_label.substr(3);
+                }
+                try {
+                    run_label = formatWithCommas(std::stod(run_label), 0);
+                } catch (...) {
+                }
+                runs_str += run_label + (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
+            }
+        } else {
+            runs_str = "N/A";
+        }
+
+        std::string line2 = "Beam: " + beam_name + ", Runs: " + runs_str;
+        std::string line3 = "POT: " + pot_str;
+        std::string line4 = "#it{Analysis Region}: " + region_analysis_.regionLabel();
+        std::string line5 = "#it{Total Entries}: " + formatWithCommas(total_mc_events, 2);
+
+        TLatex watermark;
+        watermark.SetNDC();
+        watermark.SetTextAlign(33);
+        watermark.SetTextFont(62);
+        watermark.SetTextSize(0.05);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.03, line1.c_str());
+        watermark.SetTextFont(42);
+        watermark.SetTextSize(0.05 * 0.8);
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.09, line2.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.15, line3.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.21, line4.c_str());
+        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03, 1 - pad->GetTopMargin() - 0.27, line5.c_str());
     }
 
   protected:
