@@ -18,9 +18,7 @@ TRIGGER_BRANCH_MAP: dict[str, dict[str, str]] = {
     "bnb": {"run1": "software_trigger"},
 }
 
-
 def select_trigger_count(trigger_counts: dict[str, int], beam: str, run: str) -> int:
-    """Choose a single trigger count based on beamline and run period."""
     beam_key = "numi" if "numi" in beam.lower() else "bnb"
     branch = TRIGGER_BRANCH_MAP.get(beam_key, {}).get(run)
     if branch and branch in trigger_counts:
