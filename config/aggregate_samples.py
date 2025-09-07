@@ -15,11 +15,15 @@ def main() -> None:
     ]
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
+    POT_SUMMARY_PATH = "tools/pot_summary.json"
 
     input_definitions_path = Path(DEFINITIONS_PATH)
 
     with open(input_definitions_path) as f:
         config = json.load(f)
+
+    with open(Path(POT_SUMMARY_PATH)) as f:
+        pot_summary = json.load(f)
 
     entities: dict[str, str] = {}
     stage_outdirs: dict[str, str] = {}
@@ -61,7 +65,16 @@ def main() -> None:
                 print(f"  Using nominal POT for this run: {nominal_pot:.4e}")
 
             for sample in run_details.get("samples", []):
-                if process_sample_entry(sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, beam, run):
+                if process_sample_entry(
+                    sample,
+                    processed_analysis_path,
+                    stage_outdirs,
+                    entities,
+                    nominal_pot,
+                    beam,
+                    run,
+                    pot_summary,
+                ):
                     if "detector_variations" in sample:
                         for detvar_sample in sample["detector_variations"]:
                             process_sample_entry(
@@ -72,6 +85,7 @@ def main() -> None:
                                 nominal_pot,
                                 beam,
                                 run,
+                                pot_summary,
                                 is_detvar=True,
                             )
 
