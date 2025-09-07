@@ -33,7 +33,7 @@ class DetectorDisplay : public IEventDisplay {
         hist.SetMaximum(max_val);
         hist.GetXaxis()->SetTitle("Wire");
         hist.GetYaxis()->SetTitle("Time");
-    hist.Draw("COL");
+        hist.Draw("COL");
     }
 
   private:
