@@ -142,27 +142,36 @@ def process_sample_entry(
 
 def main() -> None:
     DEFINITIONS_PATH = "config/data.json"
-    XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+    XML_PATHS = [
+        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+    ]
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
     input_definitions_path = Path(DEFINITIONS_PATH)
-    xml_path = Path(XML_PATH)
 
     with open(input_definitions_path) as f:
         config = json.load(f)
 
-    entities = get_xml_entities(xml_path)
-    tree = ET.parse(xml_path)
-    project_node = tree.find("project")
-    if project_node is None:
-        print("Error: Could not find <project> tag in XML file.", file=sys.stderr)
-        sys.exit(1)
+    entities: dict[str, str] = {}
+    stage_outdirs: dict[str, str] = {}
+    for xml in XML_PATHS:
+        xml_path = Path(xml)
+        entities.update(get_xml_entities(xml_path))
+        tree = ET.parse(xml_path)
+        project_node = tree.find("project")
+        if project_node is None:
+            print(f"Error: Could not find <project> tag in XML file '{xml}'.", file=sys.stderr)
+            continue
+        stage_outdirs.update(
+            {
+                s.get("name"): s.find("outdir").text
+                for s in project_node.findall("stage")
+                if s.find("outdir") is not None
+            }
+        )
 
-    stage_outdirs = {
-        s.get("name"): s.find("outdir").text for s in project_node.findall("stage") if s.find("outdir") is not None
-    }
 
     print("\n===== PART 2: Hadding Files and Calculating Metadata =====")
     processed_analysis_path = Path(config["ntuple_base_directory"])
