@@ -3,7 +3,8 @@
     "run_configurations": {
         "numi_fhc": {
             "run1": {
-                "nominal_pot": 1.0e+20,
+                "torb_target_pot_wcut": 3.922e+20,
+                "ext_triggers": 40062895.0,
                 "samples": [
                     {
                         "sample_key": "mc_inclusive_run1_fhc",
