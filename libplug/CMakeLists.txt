@@ -35,12 +35,10 @@ function(add_plugin NAME SRC EXTRA_LIBS)
   )
 endfunction()
 
-# Analytics plugins
 add_plugin(RegionsPlugin analytics/RegionsPlugin.cc "")
 add_plugin(SnapshotPlugin analytics/SnapshotPlugin.cc "")
 add_plugin(VariablesPlugin analytics/VariablesPlugin.cc "")
 
-# Plotting plugins
 add_plugin(EventDisplayPlugin plotting/EventDisplayPlugin.cc "")
 add_plugin(CutFlowPlotPlugin plotting/CutFlowPlotPlugin.cc "")
 add_plugin(StackedHistogramPlugin plotting/StackedHistogramPlugin.cc "")
