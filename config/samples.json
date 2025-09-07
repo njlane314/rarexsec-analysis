@@ -4,7 +4,8 @@
         "beamlines": {
             "numi_fhc": {
                 "run1": {
-                    "nominal_pot": 1e+20,
+                    "torb_target_pot_wcut": 3.922e+20,
+                    "ext_triggers": 40062895.0,
                     "samples": [
                         {
                             "sample_key": "mc_inclusive_run1_fhc",
@@ -54,8 +55,8 @@
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 1e+20,
-                            "ext_triggers_db": 121734
+                            "pot": 3.922e+20,
+                            "ext_triggers_db": 40062895
                         }
                     ]
                 }
@@ -64,7 +65,8 @@
         "run_configurations": {
             "numi_fhc": {
                 "run1": {
-                    "nominal_pot": 1e+20,
+                    "torb_target_pot_wcut": 3.922e+20,
+                    "ext_triggers": 40062895.0,
                     "samples": [
                         {
                             "sample_key": "mc_inclusive_run1_fhc",
@@ -114,8 +116,8 @@
                             "sample_type": "ext",
                             "active": true,
                             "relative_path": "numu_fhc_ext.root",
-                            "pot": 1e+20,
-                            "ext_triggers_db": 121734
+                            "pot": 3.922e+20,
+                            "ext_triggers_db": 40062895
                         }
                     ]
                 }

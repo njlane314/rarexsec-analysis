@@ -174,15 +174,15 @@ for r in 1 2 3 4 5; do
              "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
     } >> "$OUTPUT_JSON"
   fi
-
-  # close NuMI + beams + run
+ 
+  # --- close NuMI + beams + run ---
   {
-    echo   '      }'
-    echo   '    }'
+    printf '      }\n'        # close "NuMI"
+    printf '    }\n'          # close "beams"
     if [[ $r -lt 5 ]]; then
-      echo   '    },'
+      printf '    },\n'       # close run object, then comma for next element
     else
-      echo   '    }'
+      printf '    }\n'        # close final run object (no trailing comma)
     fi
   } >> "$OUTPUT_JSON"
 
