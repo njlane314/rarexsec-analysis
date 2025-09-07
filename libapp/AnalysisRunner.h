@@ -60,7 +60,8 @@ class AnalysisRunner {
 
             RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
-            auto [sample_processors, monte_carlo_nodes] = this->prepareSampleProcessors(region_handle, region_analysis);
+            auto [sample_processors, monte_carlo_nodes] =
+                this->prepareSampleProcessors(region_handle, region_analysis);
 
             this->computeCutFlow(region_handle, region_analysis);
             this->processVariables(region_handle, region_analysis, sample_processors, monte_carlo_nodes);
@@ -77,6 +78,22 @@ class AnalysisRunner {
     }
 
   private:
+    bool isSampleEligible(const SampleKey &sample_key, const RunConfig *run_config,
+                          const std::string &region_beam,
+                          const std::vector<std::string> &region_runs) const {
+        static_cast<void>(sample_key);
+
+        if (!run_config)
+            return false;
+        if (!region_beam.empty() && run_config->beam_mode != region_beam)
+            return false;
+        if (!region_runs.empty() &&
+            std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
+            return false;
+
+        return true;
+    }
+
     auto prepareSampleProcessors(const RegionHandle &region_handle, RegionAnalysis &region_analysis)
         -> std::pair<std::unordered_map<SampleKey, std::unique_ptr<ISampleProcessor>>,
                      std::unordered_map<SampleKey, ROOT::RDF::RNode>> {
@@ -176,7 +193,8 @@ class AnalysisRunner {
             }
     }
 
-    void calculateWeightsPerStage(const ROOT::RDF::RNode &base_df, const std::vector<std::string> &cumulative_filters,
+    void calculateWeightsPerStage(const ROOT::RDF::RNode &base_df,
+                                  const std::vector<std::string> &cumulative_filters,
                                   std::vector<RegionAnalysis::StageCount> &stage_counts,
                                   const std::vector<std::string> &schemes,
                                   const std::unordered_map<std::string, std::vector<int>> &scheme_keys) {
@@ -223,21 +241,6 @@ class AnalysisRunner {
         }
 
         region_analysis.setCutFlow(std::move(stage_counts));
-    }
-
-    bool isSampleEligible(const SampleKey &sample_key, const RunConfig *run_config, const std::string &region_beam,
-                          const std::vector<std::string> &region_runs) const {
-        static_cast<void>(sample_key);
-
-        if (!run_config)
-            return false;
-        if (!region_beam.empty() && run_config->beam_mode != region_beam)
-            return false;
-        if (!region_runs.empty() &&
-            std::find(region_runs.begin(), region_runs.end(), run_config->run_period) == region_runs.end())
-            return false;
-
-        return true;
     }
 
     void processVariables(const RegionHandle &region_handle, RegionAnalysis &region_analysis,
