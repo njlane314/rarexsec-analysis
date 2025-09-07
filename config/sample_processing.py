@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -100,14 +101,30 @@ def _get_pot_from_getdatainfo(
         print(f"    Error: Unknown beam type '{beam}'", file=sys.stderr)
         return 0.0
 
-    command = [
-        str(script_path),
-        "-v3",
-        format_flag,
-        "--prescale",
-        "--run-subrun-list",
-        str(tmp_path),
-    ]
+    python2 = shutil.which("python2")
+    if python2 is None:
+        print(
+            "    Warning: python2 interpreter not found; attempting to run getDataInfo.py directly",
+            file=sys.stderr,
+        )
+        command = [
+            str(script_path),
+            "-v3",
+            format_flag,
+            "--prescale",
+            "--run-subrun-list",
+            str(tmp_path),
+        ]
+    else:
+        command = [
+            python2,
+            str(script_path),
+            "-v3",
+            format_flag,
+            "--prescale",
+            "--run-subrun-list",
+            str(tmp_path),
+        ]
 
     if "numi" in beam_lower:
         command.append("--horncurr")
@@ -217,13 +234,28 @@ def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
         print(f"     Error: Unknown beam type '{beam}'", file=sys.stderr)
         return 0
 
-    command = [
-        str(script_path),
-        "-v3",
-        format_flag,
-        "--run-subrun-list",
-        str(tmp_path),
-    ]
+    python2 = shutil.which("python2")
+    if python2 is None:
+        print(
+            "     Warning: python2 interpreter not found; attempting to run getDataInfo.py directly",
+            file=sys.stderr,
+        )
+        command = [
+            str(script_path),
+            "-v3",
+            format_flag,
+            "--run-subrun-list",
+            str(tmp_path),
+        ]
+    else:
+        command = [
+            python2,
+            str(script_path),
+            "-v3",
+            format_flag,
+            "--run-subrun-list",
+            str(tmp_path),
+        ]
 
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
