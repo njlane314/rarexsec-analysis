@@ -48,4 +48,4 @@ namespace std {
 template <class Tag> struct hash<analysis::AnalysisKey<Tag>> {
     size_t operator()(const analysis::AnalysisKey<Tag> &k) const noexcept { return std::hash<std::string>()(k.str()); }
 };
-} // namespace std
+}
