@@ -35,7 +35,7 @@ class DetectorSystematicStrategy : public SystematicStrategy {
         }
 
         auto total_detvar_hists = aggregateVariations(result);
-        auto h_det_cv_opt = sanitizeCvHistogram(total_detvar_hists);
+        auto h_det_cv_opt = sanitiseCvHistogram(total_detvar_hists);
         if (!h_det_cv_opt) return total_detvar_cov;
 
         auto h_det_cv = *h_det_cv_opt;

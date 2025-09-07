@@ -72,12 +72,12 @@ class SystematicsProcessor {
     void clearFutures() { systematic_futures_.variations.clear(); }
 
   private:
-    static void sanitiseMatrix(TMatrixDSym &matrix) {
-        const int rows = matrix.GetNrows();
-        const int cols = matrix.GetNcols();
+    static void sanitiseMatrix(TMatrixDSym &m) {
+        const int rows = m.GetNrows();
+        const int cols = m.GetNcols();
         for (int i = 0; i < rows; ++i) {
             for (int j = 0; j < cols; ++j) {
-                if (!std::isfinite(matrix(i, j))) matrix(i, j) = 0.0;
+                if (!std::isfinite(m(i, j))) m(i, j) = 0.0;
             }
         }
     }
