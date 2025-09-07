@@ -21,7 +21,7 @@
 namespace analysis {
 
 class MatrixPlot : public IHistogramPlot {
-    public:
+public:
     MatrixPlot(std::string plot_name, const VariableResult &x_res,
                const VariableResult &y_res, AnalysisDataLoader &loader,
                const SelectionQuery &selection,
@@ -225,6 +225,6 @@ class MatrixPlot : public IHistogramPlot {
     TH2F *hist_;
 };
 
-} // namespace analysis
+} 
 
 #endif
