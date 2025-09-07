@@ -15,19 +15,19 @@
 namespace BayesianBlocks {
 
 namespace bb {
-using array = std::vector<double>;
-using data_array = std::vector<double>;
-using weights_array = std::vector<double>;
-using pair = std::pair<double, double>;
-using clock = std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using us = std::chrono::microseconds;
-} // namespace bb
+    using array = std::vector<double>;
+    using data_array = std::vector<double>;
+    using weights_array = std::vector<double>;
+    using pair = std::pair<double, double>;
+    using clock = std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using us = std::chrono::microseconds;
+} 
 
 bb::array blocks(bb::data_array data, bb::weights_array weights, double p = 0.01, std::function<void(size_t,size_t)> counter = {}, std::function<void(long long,long long,long long)> benchmark = {});
 bb::array blocks(bb::data_array data, double p = 0.01, std::function<void(size_t,size_t)> counter = {}, std::function<void(long long,long long,long long)> benchmark = {});
 
-} // namespace BayesianBlocks
+} 
 
 namespace BayesianBlocks {
 
@@ -114,6 +114,6 @@ bb::array blocks(bb::data_array data, double p, std::function<void(size_t,size_t
     return blocks(x, weights, p, counter, benchmark);
 }
 
-} // namespace BayesianBlocks
+} 
 
 #endif
