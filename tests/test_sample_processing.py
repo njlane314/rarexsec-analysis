@@ -41,3 +41,18 @@ def test_run_command_hadd_fallback(tmp_path, monkeypatch):
     with uproot.open(out) as f:
         arr = f["tree"]["run"].array(library="np")
     assert list(arr) == [1, 2]
+
+
+def test_run_command_hadd_fallback_with_directory(tmp_path, monkeypatch):
+    f1 = tmp_path / "a.root"
+    f2 = tmp_path / "b.root"
+    with uproot.recreate(f1) as f:
+        f["BlipRecoAlg/tree"] = {"run": np.array([1], dtype=np.int32)}
+    with uproot.recreate(f2) as f:
+        f["BlipRecoAlg/tree"] = {"run": np.array([2], dtype=np.int32)}
+    out = tmp_path / "out.root"
+    monkeypatch.setattr(sp.shutil, "which", lambda cmd: None)
+    assert sp.run_command(["hadd", "-f", str(out), str(f1), str(f2)], True)
+    with uproot.open(out) as f:
+        arr = f["BlipRecoAlg/tree"]["run"].array(library="np")
+    assert list(arr) == [1, 2]
