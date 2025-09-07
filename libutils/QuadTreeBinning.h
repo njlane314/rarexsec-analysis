@@ -1,5 +1,5 @@
-#ifndef QUADTREE_BINNING_2D_H
-#define QUADTREE_BINNING_2D_H
+#ifndef QUADTREE_BINNING_H
+#define QUADTREE_BINNING_H
 
 #include <cmath>
 #include <limits>
@@ -13,7 +13,7 @@
 
 namespace analysis {
 
-class QuadTreeBinning2D {
+class QuadTreeBinning {
   public:
     static std::pair<BinningDefinition, BinningDefinition>
     calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &xb, const BinningDefinition &yb,

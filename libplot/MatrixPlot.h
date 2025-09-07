@@ -9,7 +9,7 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisResult.h"
 #include "HistogramCut.h"
-#include "QuadTreeBinning2D.h"
+#include "QuadTreeBinning.h"
 #include "SelectionQuery.h"
 
 #include "TCanvas.h"
@@ -59,8 +59,8 @@ private:
       if (sample.isMc())
         mc_nodes.emplace_back(sample.nominal_node_);
     if (!mc_nodes.empty()) {
-      auto bins = QuadTreeBinning2D::calculate(mc_nodes, x_res.binning_,
-                                               y_res.binning_);
+      auto bins = QuadTreeBinning::calculate(mc_nodes, x_res.binning_,
+                                             y_res.binning_);
       x_edges = bins.first.getEdges();
       y_edges = bins.second.getEdges();
     }
