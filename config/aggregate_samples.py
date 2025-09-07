@@ -11,6 +11,23 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import uproot
 
+from trigger_counts import get_trigger_counts_from_files_parallel
+
+# Map beamlines and run periods to the trigger branch to retain. Update as needed.
+TRIGGER_BRANCH_MAP: dict[str, dict[str, str]] = {
+    "numi": {},
+    "bnb": {},
+}
+
+
+def select_trigger_count(trigger_counts: dict[str, int], beam: str, run: str) -> int:
+    """Choose a single trigger count based on beamline and run period."""
+    beam_key = "numi" if "numi" in beam.lower() else "bnb"
+    branch = TRIGGER_BRANCH_MAP.get(beam_key, {}).get(run)
+    if branch and branch in trigger_counts:
+        return trigger_counts[branch]
+    return next(iter(trigger_counts.values()), 0)
+
 def get_xml_entities(xml_path: Path) -> dict:
     content = xml_path.read_text()
     entity_regex = re.compile(r"<!ENTITY\s+([^\s]+)\s+\"([^\"]+)\">")
@@ -45,46 +62,9 @@ def get_total_pot_from_single_file(file_path: Path) -> float:
         print(f"    Warning: Could not read POT from {file_path}: {exc}", file=sys.stderr)
     return 0.0
 
-def get_total_triggers_from_single_file(file_path: Path) -> int:
-    if not file_path or not file_path.is_file():
-        return 0
-    try:
-        with uproot.open(file_path) as root_file:
-            tree_path = "nuselection/EventSelectionFilter"
-            if tree_path in root_file:
-                tree = root_file[tree_path]
-                if "software_trigger" in tree.keys():
-                    data = tree["software_trigger"].array(library="np")
-                    return int(data.sum())
-
-                algo_branches = [
-                    "software_trigger_post",
-                    "software_trigger_pre",
-                    "software_trigger_post_ext",
-                    "software_trigger_pre_ext",
-                ]
-
-                arrays = [
-                    tree[branch].array(library="np") != 0
-                    for branch in algo_branches
-                    if branch in tree.keys()
-                ]
-                if arrays:
-                    combined = arrays[0]
-                    for arr in arrays[1:]:
-                        combined |= arr
-                    return int(combined.sum())
-    except Exception as exc:
-        print(f"    Warning: Could not read triggers from {file_path}: {exc}", file=sys.stderr)
-    return 0
-
 def get_total_pot_from_files_parallel(file_paths: list[str]) -> float:
     with concurrent.futures.ThreadPoolExecutor() as executor:
         return sum(executor.map(get_total_pot_from_single_file, map(Path, file_paths)))
-
-def get_total_triggers_from_files_parallel(file_paths: list[str]) -> int:
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        return sum(executor.map(get_total_triggers_from_single_file, map(Path, file_paths)))
 
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
@@ -101,6 +81,8 @@ def process_sample_entry(
     stage_outdirs: dict,
     entities: dict,
     nominal_pot: float,
+    beam: str,
+    run: str,
     is_detvar: bool = False,
 ) -> bool:
     execute_hadd = entry.pop("do_hadd", False)
@@ -150,14 +132,17 @@ def process_sample_entry(
 
     source_files = [str(output_file)] if execute_hadd else root_files
 
+    trigger_counts = get_trigger_counts_from_files_parallel(source_files)
+    selected_triggers = select_trigger_count(trigger_counts, beam, run)
+
     if sample_type == "mc" or is_detvar:
         entry["pot"] = get_total_pot_from_files_parallel(source_files)
-        entry["triggers"] = get_total_triggers_from_files_parallel(source_files)
+        entry["triggers"] = selected_triggers
         if entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
     elif sample_type == "data":
         entry["pot"] = nominal_pot
-        entry["triggers"] = get_total_triggers_from_files_parallel(source_files)
+        entry["triggers"] = selected_triggers
 
     entry.pop("stage_name", None)
     return True
@@ -219,7 +204,7 @@ def main() -> None:
                 print(f"  Using nominal POT for this run: {nominal_pot:.4e}")
 
             for sample in run_details.get("samples", []):
-                if process_sample_entry(sample, processed_analysis_path, stage_outdirs, entities, nominal_pot):
+                if process_sample_entry(sample, processed_analysis_path, stage_outdirs, entities, nominal_pot, beam, run):
                     if "detector_variations" in sample:
                         for detvar_sample in sample["detector_variations"]:
                             process_sample_entry(
@@ -228,6 +213,8 @@ def main() -> None:
                                 stage_outdirs,
                                 entities,
                                 nominal_pot,
+                                beam,
+                                run,
                                 is_detvar=True,
                             )
 
