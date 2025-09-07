@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import shutil
+import shlex
 from pathlib import Path
 
 import numpy as np
@@ -93,6 +94,27 @@ def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
         print(f"    Warning: Could not read run/subrun from {file_path}: {exc}", file=sys.stderr)
     return pairs
 
+
+def _run_getdatainfo_command(command: list[str], env: dict) -> subprocess.CompletedProcess:
+    """Run getDataInfo.py ensuring the legacy python2 environment is initialised."""
+    cmd_str = " ".join(shlex.quote(c) for c in command)
+    setup = (
+        "source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups && "
+        "setup python v2_7_15a >/dev/null && "
+        "setup sam_web_client >/dev/null && "
+        f"{cmd_str}"
+    )
+    print(f"[COMMAND] {setup}")
+    return subprocess.run(
+        setup,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+        shell=True,
+        executable="/bin/bash",
+    )
+
 def _get_pot_from_getdatainfo(
     tmp_path: Path, sample_type: str, beam: str, horn_current: str | None
 ) -> float:
@@ -140,20 +162,11 @@ def _get_pot_from_getdatainfo(
         command.append("--horncurr")
     if sample_type == "data":
         command.append("--slip")
-
-    print(f"[COMMAND] {' '.join(command)}")
     env = os.environ.copy()
     env.pop("PYTHONHOME", None)
     env.pop("PYTHONPATH", None)
-    if shutil.which("samweb") is None:
-        print(
-            "    Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
-            "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
-            "             setup sam_web_client",
-            file=sys.stderr,
-        )
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
+        result = _run_getdatainfo_command(command, env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
@@ -276,19 +289,11 @@ def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
             "--run-subrun-list",
             str(tmp_path),
         ]
-
     try:
         env = os.environ.copy()
         env.pop("PYTHONHOME", None)
         env.pop("PYTHONPATH", None)
-        if shutil.which("samweb") is None:
-            print(
-                "     Warning: 'samweb' command not found. Ensure SAM is set up by running:\n"
-                "             source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups\n"
-                "             setup sam_web_client",
-                file=sys.stderr,
-            )
-        result = subprocess.run(command, check=True, capture_output=True, text=True, env=env)
+        result = _run_getdatainfo_command(command, env)
         lines = result.stdout.strip().splitlines()
 
         header_index = -1
