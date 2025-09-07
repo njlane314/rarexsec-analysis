@@ -19,8 +19,11 @@ class TruthChannelProcessor : public IEventProcessor {
         }
 
         auto counts_df = this->defineCounts(df);
+      
         auto incl_df = this->assignInclusiveChannels(counts_df);
+      
         auto excl_df = this->assignExclusiveChannels(incl_df);
+      
         return next_ ? next_->process(excl_df, st) : excl_df;
     }
 
