@@ -10,20 +10,6 @@ from pathlib import Path
 import numpy as np
 import uproot
 
-from trigger_counts import get_trigger_counts_from_files_parallel
-
-TRIGGER_BRANCH_MAP: dict[str, dict[str, str]] = {
-    "numi": {"run1": "software_trigger"},
-    "bnb": {"run1": "software_trigger"},
-}
-
-def select_trigger_count(trigger_counts: dict[str, int], beam: str, run: str) -> int:
-    beam_key = "numi" if "numi" in beam.lower() else "bnb"
-    branch = TRIGGER_BRANCH_MAP.get(beam_key, {}).get(run)
-    if branch and branch in trigger_counts:
-        return trigger_counts[branch]
-    return next(iter(trigger_counts.values()), 0)
-
 def get_xml_entities(xml_path: Path) -> dict[str, str]:
     content = xml_path.read_text()
     entity_regex = re.compile(r"<!ENTITY\s+([^\s]+)\s+\"([^\"]+)\">")
@@ -85,39 +71,106 @@ def _collect_run_subrun_pairs(file_path: Path) -> set[tuple[int, int]]:
         print(f"    Warning: Could not read run/subrun from {file_path}: {exc}", file=sys.stderr)
     return pairs
 
-def _get_pot_from_getdatainfo(tmp_path: Path, sample_type: str) -> float:
+def _get_pot_from_getdatainfo(
+    tmp_path: Path, sample_type: str, beam: str, horn_current: str | None
+) -> float:
     script_path = Path("/exp/uboone/app/users/guzowski/slip_stacking/getDataInfo.py")
-    command = [str(script_path), "-v3", "--format-numi", "--prescale", "--run-subrun-list", str(tmp_path)]
+
+    beam_lower = beam.lower()
+    if "numi" in beam_lower:
+        format_flag = "--format-numi"
+        pot_fields = ["tortgt_wcut", "tor101_wcut", "tortgt", "tor101"]
+        header_keys = ["EXT", "Gate1", "tortgt_wcut"]
+    elif "bnb" in beam_lower:
+        format_flag = "--format-bnb"
+        pot_fields = ["tor875_wcut", "tor860_wcut", "tor875", "tor860"]
+        header_keys = ["EXT", "Gate2", "tor875_wcut"]
+    else:
+        print(f"    Error: Unknown beam type '{beam}'", file=sys.stderr)
+        return 0.0
+
+    command = [
+        str(script_path),
+        "-v3",
+        format_flag,
+        "--prescale",
+        "--run-subrun-list",
+        str(tmp_path),
+    ]
+
+    if "numi" in beam_lower:
+        command.append("--horncurr")
     if sample_type == "data":
         command.append("--slip")
+
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         lines = result.stdout.strip().splitlines()
-        if len(lines) < 2:
+
+        header_index = -1
+        for i, line in enumerate(lines):
+            if all(key in line for key in header_keys):
+                header_index = i
+                break
+        if header_index == -1:
+            print(
+                "    Warning: Could not find header line in getDataInfo.py output.",
+                file=sys.stderr,
+            )
             return 0.0
-        header = lines[-2].split()
-        values = lines[-1].split()
-        pot_fields = [
-            "tortgt_wcut",
-            "tor875_wcut",
-            "tor101_wcut",
-            "tortgt",
-            "tor875",
-            "tor101",
-        ]
+
+        header = lines[header_index].split()
+
+        data_line: str | None = None
+        if horn_current and "numi" in beam_lower:
+            search_line_start = (
+                "Forward Horn Current:" if horn_current == "fhc" else "Reverse Horn Current:"
+            )
+            for line in lines[header_index + 1 :]:
+                if line.strip().startswith(search_line_start):
+                    data_line = line
+                    break
+        if data_line is None:
+            if header_index + 1 >= len(lines):
+                print(
+                    "    Warning: Found header but no subsequent data line.",
+                    file=sys.stderr,
+                )
+                return 0.0
+            values = lines[header_index + 1].split()
+        else:
+            values = re.findall(r"[-+]?\d+\.?\d*(?:[eE][-+]?\d+)?", data_line)
+
         for field in pot_fields:
             if field in header:
                 idx = header.index(field)
-                try:
-                    return float(values[idx])
-                except (ValueError, IndexError):
-                    return 0.0
+                if idx < len(values):
+                    try:
+                        return float(values[idx])
+                    except ValueError:
+                        return 0.0
+        print(
+            "    Warning: POT field not found in getDataInfo.py output.",
+            file=sys.stderr,
+        )
+        return 0.0
+    except subprocess.CalledProcessError as exc:
+        print(
+            f"    Warning: getDataInfo.py failed with exit code {exc.returncode}",
+            file=sys.stderr,
+        )
+        print(f"    stderr: {exc.stderr.strip()}", file=sys.stderr)
         return 0.0
     except Exception as exc:
-        print(f"    Warning: getDataInfo.py failed: {exc}", file=sys.stderr)
+        print(
+            f"    Warning: An unexpected error occurred while running getDataInfo.py: {exc}",
+            file=sys.stderr,
+        )
         return 0.0
 
-def get_data_ext_pot_from_files(file_paths: list[str], sample_type: str) -> float:
+def get_data_ext_pot_from_files(
+    file_paths: list[str], sample_type: str, beam: str, horn_current: str | None
+) -> float:
     pairs: set[tuple[int, int]] = set()
     for file_path in map(Path, file_paths):
         pairs.update(_collect_run_subrun_pairs(file_path))
@@ -128,7 +181,109 @@ def get_data_ext_pot_from_files(file_paths: list[str], sample_type: str) -> floa
             tmp.write(f"{run} {subrun}\n")
         tmp_path = Path(tmp.name)
     try:
-        return _get_pot_from_getdatainfo(tmp_path, sample_type)
+        return _get_pot_from_getdatainfo(tmp_path, sample_type, beam, horn_current)
+    finally:
+        try:
+            tmp_path.unlink()
+        except OSError:
+            pass
+
+
+def _get_ext_triggers_from_getdatainfo(tmp_path: Path, beam: str) -> int:
+    """Execute getDataInfo.py and parse the EXT trigger count from its output."""
+    script_path = Path("/exp/uboone/app/users/guzowski/slip_stacking/getDataInfo.py")
+
+    beam_lower = beam.lower()
+    if "numi" in beam_lower:
+        format_flag = "--format-numi"
+        header_keys = ["EXT", "Gate1"]
+    elif "bnb" in beam_lower:
+        format_flag = "--format-bnb"
+        header_keys = ["EXT", "Gate2"]
+    else:
+        print(f"     Error: Unknown beam type '{beam}'", file=sys.stderr)
+        return 0
+
+    command = [
+        str(script_path),
+        "-v3",
+        format_flag,
+        "--run-subrun-list",
+        str(tmp_path),
+    ]
+
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        lines = result.stdout.strip().splitlines()
+
+        header_index = -1
+        for i, line in enumerate(lines):
+            if all(key in line for key in header_keys):
+                header_index = i
+                break
+
+        if header_index == -1:
+            print(
+                "     Warning: Could not find header line in getDataInfo.py output.",
+                file=sys.stderr,
+            )
+            return 0
+        if header_index + 1 >= len(lines):
+            print(
+                "     Warning: Found header but no subsequent data line.",
+                file=sys.stderr,
+            )
+            return 0
+
+        header = lines[header_index].split()
+        values = lines[header_index + 1].split()
+
+        if "EXT" in header:
+            idx = header.index("EXT")
+            try:
+                if idx < len(values):
+                    return int(float(values[idx]))
+                print(
+                    "     Warning: Mismatch between header and data columns.",
+                    file=sys.stderr,
+                )
+            except ValueError:
+                print(
+                    f"     Warning: Could not convert EXT value '{values[idx]}' to int.",
+                    file=sys.stderr,
+                )
+            return 0
+
+        print("     Warning: 'EXT' column not found in the header.", file=sys.stderr)
+        return 0
+
+    except subprocess.CalledProcessError as exc:
+        print(
+            f"     Warning: getDataInfo.py failed with exit code {exc.returncode}",
+            file=sys.stderr,
+        )
+        print(f"     stderr: {exc.stderr.strip()}", file=sys.stderr)
+        return 0
+    except Exception as exc:
+        print(
+            f"     Warning: An unexpected error occurred while running getDataInfo.py: {exc}",
+            file=sys.stderr,
+        )
+        return 0
+
+
+def get_ext_triggers_from_files(file_paths: list[str], beam: str) -> int:
+    pairs: set[tuple[int, int]] = set()
+    for file_path in map(Path, file_paths):
+        pairs.update(_collect_run_subrun_pairs(file_path))
+    if not pairs:
+        return 0
+    with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
+        for run, subrun in sorted(pairs):
+            tmp.write(f"{run} {subrun}\n")
+        tmp_path = Path(tmp.name)
+    try:
+        return _get_ext_triggers_from_getdatainfo(tmp_path, beam)
     finally:
         try:
             tmp_path.unlink()
@@ -192,17 +347,22 @@ def process_sample_entry(
 
     source_files = [str(output_file)] if execute_hadd else root_files
 
-    trigger_counts = get_trigger_counts_from_files_parallel(source_files)
-    selected_triggers = select_trigger_count(trigger_counts, beam, run)
+    beam_lower = beam.lower()
+    horn_current: str | None = None
+    if "fhc" in beam_lower:
+        horn_current = "fhc"
+    elif "rhc" in beam_lower:
+        horn_current = "rhc"
 
     if sample_type == "mc" or is_detvar:
         entry["pot"] = get_total_pot_from_files_parallel(source_files)
-        entry["triggers"] = selected_triggers
         if entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
     elif sample_type in {"data", "ext"}:
-        entry["pot"] = get_data_ext_pot_from_files(source_files, sample_type)
-        entry["triggers"] = selected_triggers
+        entry["pot"] = get_data_ext_pot_from_files(
+            source_files, sample_type, beam, horn_current
+        )
+        entry["ext_triggers_db"] = get_ext_triggers_from_files(source_files, beam)
         if entry["pot"] == 0.0:
             entry["pot"] = nominal_pot
 
