@@ -18,11 +18,14 @@
 namespace analysis {
 
 class SystematicBreakdownPlot : public IHistogramPlot {
-  public:
-    SystematicBreakdownPlot(std::string plot_name, const VariableResult &var_result, bool normalise = false,
+public:
+    SystematicBreakdownPlot(std::string plot_name,
+                            const VariableResult &var_result,
+                            bool normalise = false,
                             std::string output_directory = "plots")
-        : IHistogramPlot(std::move(plot_name), std::move(output_directory)), variable_result_(var_result),
-          normalise_(normalise), stack_(nullptr), legend_(nullptr) {}
+        : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
+          variable_result_(var_result), normalise_(normalise), stack_(nullptr),
+          legend_(nullptr) {}
 
     ~SystematicBreakdownPlot() override {
         delete stack_;
@@ -32,10 +35,10 @@ class SystematicBreakdownPlot : public IHistogramPlot {
         }
     }
 
-  private:
+protected:
     void draw(TCanvas &canvas) override {
         canvas.cd();
-        
+
         const auto &edges = variable_result_.binning_.getEdges();
         const int nbins = variable_result_.binning_.getBinNumber();
 
@@ -91,11 +94,14 @@ class SystematicBreakdownPlot : public IHistogramPlot {
         }
 
         stack_->Draw("hist");
-        stack_->GetXaxis()->SetTitle(variable_result_.binning_.getTexLabel().c_str());
-        stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution" : "Variance");
+        stack_->GetXaxis()->SetTitle(
+            variable_result_.binning_.getTexLabel().c_str());
+        stack_->GetYaxis()->SetTitle(normalise_ ? "Fractional Contribution"
+                                                : "Variance");
         legend_->Draw();
     }
 
+private:
     const VariableResult &variable_result_;
     bool normalise_;
     THStack *stack_;
@@ -103,6 +109,6 @@ class SystematicBreakdownPlot : public IHistogramPlot {
     TLegend *legend_;
 };
 
-}
+} // namespace analysis
 
 #endif
