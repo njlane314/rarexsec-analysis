@@ -31,8 +31,8 @@ public:
       bool is_dynamic = false, bool include_oob_bins = false,
       DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight) {
     VariableKey var_key{key};
-    ensureVariableUnique(var_key, key);
-    validateExpression(expr);
+    this->ensureVariableUnique(var_key, key);
+    this->validateExpression(expr);
 
     variable_expressions_.emplace(var_key, expr);
     variable_labels_.emplace(var_key, lbl);
@@ -50,7 +50,7 @@ public:
             std::string sel_rule_key, double pot = 0.0, bool blinded = true,
             std::string beam_config = "", std::vector<std::string> runs = {}) {
     RegionKey region_key{key};
-    ensureRegionUnique(region_key, key);
+    this->ensureRegionUnique(region_key, key);
 
     auto rule = sel_reg_.getRule(sel_rule_key);
     SelectionQuery sel = sel_reg_.get(sel_rule_key);
@@ -59,9 +59,9 @@ public:
     region_clauses_.emplace(region_key, rule.clauses);
 
     region_analyses_.emplace(region_key,
-                             makeRegionAnalysis(region_key, region_name, pot,
-                                                blinded, std::move(beam_config),
-                                                std::move(runs)));
+                             this->makeRegionAnalysis(region_key, region_name, pot,
+                                                      blinded, std::move(beam_config),
+                                                      std::move(runs)));
     return *this;
   }
 
@@ -72,16 +72,16 @@ public:
                                     std::string beam_config = "",
                                     std::vector<std::string> runs = {}) {
     RegionKey region_key{key};
-    ensureRegionUnique(region_key, key);
+    this->ensureRegionUnique(region_key, key);
 
     region_names_.emplace(region_key, label);
     region_selections_.emplace(region_key, SelectionQuery(std::move(raw_expr)));
     region_clauses_.emplace(region_key, std::vector<std::string>{});
 
     region_analyses_.emplace(region_key,
-                             makeRegionAnalysis(region_key, label, pot, blinded,
-                                                std::move(beam_config),
-                                                std::move(runs)));
+                             this->makeRegionAnalysis(region_key, label, pot, blinded,
+                                                      std::move(beam_config),
+                                                      std::move(runs)));
     return *this;
   }
 
@@ -90,8 +90,8 @@ public:
     RegionKey region_key{reg_key};
     VariableKey variable_key{var_key};
 
-    requireRegionExists(region_key, reg_key);
-    requireVariableExists(variable_key, var_key);
+    this->requireRegionExists(region_key, reg_key);
+    this->requireVariableExists(variable_key, var_key);
 
     region_variables_[region_key].emplace_back(variable_key);
   }
@@ -155,8 +155,8 @@ public:
   }
  
   void resolveDynamicBinning(AnalysisDataLoader &loader) {
-    for (const auto &var_handle : variables()) {
-      if (!isDynamic(var_handle.key_))
+    for (const auto &var_handle : this->variables()) {
+      if (!this->isDynamic(var_handle.key_))
         continue;
       log::info(
           "AnalysisDefinition::resolveDynamicBinning",
@@ -175,8 +175,8 @@ public:
                    "were found!");
       }
 
-      bool include_oob = includeOobBins(var_handle.key_);
-      auto strategy = dynamicBinningStrategy(var_handle.key_);
+      bool include_oob = this->includeOobBins(var_handle.key_);
+      auto strategy = this->dynamicBinningStrategy(var_handle.key_);
       BinningDefinition new_bins = DynamicBinning::calculate(
           mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0,
           include_oob, strategy);
@@ -184,7 +184,7 @@ public:
       log::info("AnalysisDefinition::resolveDynamicBinning",
                 "--> Optimal bin count resolved:", new_bins.getBinNumber());
 
-      setBinning(var_handle.key_, std::move(new_bins));
+      this->setBinning(var_handle.key_, std::move(new_bins));
     }
   }
  

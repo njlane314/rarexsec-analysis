@@ -72,7 +72,7 @@ class AnalysisDataLoader {
 
     void snapshot(const SelectionQuery &query, const std::string &output_file,
                   const std::vector<std::string> &columns = {}) const {
-        snapshot(query.str(), output_file, columns);
+        this->snapshot(query.str(), output_file, columns);
     }
 
     void printAllBranches() {
