@@ -1,8 +1,17 @@
 #!/bin/bash
-# pot_by_run_polarity.sh (FAST SQL version)
-# Computes BNB & NuMI totals and NuMI FHC/RHC splits using sqlite3 directly.
+
+# Computes BNB & NuMI totals and NuMI FHC/RHC splits using sqlite3 directly,
+# and writes a JSON summary suitable for analysis code.
 
 : "${LC_ALL:=C}"; export LC_ALL
+
+# --- simple arg parsing for JSON path -----------------------------------------
+OUTPUT_JSON="pot_summary.json"
+if [[ $# -ge 2 && ( "$1" == "-o" || "$1" == "--json" ) ]]; then
+  OUTPUT_JSON="$2"; shift 2
+elif [[ $# -ge 1 ]]; then
+  OUTPUT_JSON="$1"; shift 1
+fi
 
 # --- Environment (minimal) ---
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
@@ -13,12 +22,13 @@ DBROOT="/exp/uboone/data/uboonebeam/beamdb"
 SLIP_DIR="/exp/uboone/app/users/guzowski/slip_stacking"
 
 # Prefer v2 DBs
-BNB_DB="$DBROOT/bnb_v2.db";  [[ -f "$BNB_DB"  ]] || BNB_DB="$DBROOT/bnb_v1.db"
+BNB_DB="$DBROOT/bnb_v2.db";   [[ -f "$BNB_DB"  ]] || BNB_DB="$DBROOT/bnb_v1.db"
 NUMI_DB="$DBROOT/numi_v2.db"; [[ -f "$NUMI_DB" ]] || NUMI_DB="$DBROOT/numi_v1.db"
 RUN_DB="$DBROOT/run.db"
 NUMI_V4_DB="$SLIP_DIR/numi_v4.db"
 
 have_numi_v4=false; [[ -f "$NUMI_V4_DB" ]] && have_numi_v4=true
+horns_enabled_json=$($have_numi_v4 && echo true || echo false)
 
 # Run windows
 declare -A RUN_START RUN_END
@@ -90,6 +100,24 @@ WHERE r.begin_time >= '$S' AND r.end_time <= '$E';
 SQL
 }
 
+# --- JSON: header -------------------------------------------------------------
+HOSTNAME="$(hostname 2>/dev/null || echo host)"
+GEN_TS="$(date -Is)"
+{
+  echo '{'
+  printf '  "generated": "%s",\n' "$GEN_TS"
+  printf '  "host": "%s",\n' "$HOSTNAME"
+  printf '  "dbroot": "%s",\n' "$DBROOT"
+  printf '  "run_db": "%s",\n' "$RUN_DB"
+  printf '  "bnb_db": "%s",\n' "$BNB_DB"
+  printf '  "numi_db": "%s",\n' "$NUMI_DB"
+  printf '  "horns_db": "%s",\n' "${NUMI_V4_DB:-}"
+  printf '  "horns_enabled": %s,\n' "$horns_enabled_json"
+  echo  '  "unitsTor": "POT",'
+  echo  '  "runs": ['
+} > "$OUTPUT_JSON"
+
+# --- Human-readable report ----------------------------------------------------
 bar
 echo "BNB & NuMI POT / Toroid by run period"
 echo "FAST SQL path (sqlite3); DBROOT: $DBROOT"
@@ -98,53 +126,73 @@ bar
 
 for r in 1 2 3 4 5; do
   S="${RUN_START[$r]}"; E="${RUN_END[$r]}"
+
+  # comma between run objects in JSON
+  [[ $r -gt 1 ]] && echo ',' >> "$OUTPUT_JSON"
+
+  # open run object + beams
+  {
+    printf '    { "index": %d, "start": "%s", "end": "%s", "beams": {\n' "$r" "$S" "$E"
+    echo   '      "BNB": {'
+  } >> "$OUTPUT_JSON"
+
   echo "Run $r  (${S} → ${E})"
   echo
 
+  # ---- BNB ----
   hdr "BNB"
   IFS='|' read -r EXT Gate2 Cnt TorA TorB CntW TorAW TorBW < <(bnb_totals_sql "$S" "$E")
   row "$r" "TOTAL" "$EXT" "$Gate2" "$Cnt" "$TorA" "$TorB" "$CntW" "$TorAW" "$TorBW"
 
+  {
+    printf '        "TOTAL": { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
+           "$EXT" "$Gate2" "$Cnt" "$TorA" "$TorB" "$CntW" "$TorAW" "$TorBW"
+    echo   '      },'
+    echo   '      "NuMI": {'
+  } >> "$OUTPUT_JSON"
+
   echo
+  # ---- NuMI ----
   hdr "NuMI"
   IFS='|' read -r EXT1 Gate1 CntN Tor101 Tortgt CntNW Tor101W TortgtW < <(numi_totals_sql "$S" "$E")
   row "$r" "TOTAL" "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
 
   if $have_numi_v4; then
     IFS='|' read -r cntF tor101F tortgtF < <(numi_horns_sql "$S" "$E" "FHC")
-    row "$r" "FHC"  0 0 0 0 0 "$cntF" "$tor101F" "$tortgtF"
     IFS='|' read -r cntR tor101R tortgtR < <(numi_horns_sql "$S" "$E" "RHC")
+    row "$r" "FHC"  0 0 0 0 0 "$cntF" "$tor101F" "$tortgtF"
     row "$r" "RHC"  0 0 0 0 0 "$cntR" "$tor101R" "$tortgtR"
+
+    {
+      printf '        "TOTAL": { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
+             "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
+      printf '        "FHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
+             "$cntF" "$tor101F" "$tortgtF"
+      printf '        "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
+             "$cntR" "$tor101R" "$tortgtR"
+    } >> "$OUTPUT_JSON"
+  else
+    {
+      printf '        "TOTAL": { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
+             "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
+    } >> "$OUTPUT_JSON"
   fi
+
+  # close NuMI + beams + run
+  {
+    echo   '      }'
+    echo   '    }'
+  } >> "$OUTPUT_JSON"
 
   echo
   bar
 done
 
-print_legend() {
-  cat <<'LEGEND'
-Legend / definitions
-- Row labels:
-  - BNB rows show TOTAL only (no horn split available in official BNB DBs).
-  - NuMI rows show TOTAL plus FHC and RHC when numi_v4.db is available.
-- Time window: rows integrate runs where r.begin_time >= START and r.end_time <= END for each run period.
-- Columns (BNB uses Gate2; NuMI uses Gate1):
-  - EXT         : SUM(r.EXTTrig)              — number of EXT triggers (from runinfo).
-  - Gate        : SUM(r.Gate2Trig or Gate1Trig) — beam gate triggers (runinfo).
-  - Cnt         : SUM(r.E1DCNT) for BNB, SUM(r.EA9CNT) for NuMI (raw counter, runinfo).
-  - TorA        : SUM(r.tor860)*1e12 (BNB) or SUM(r.tor101)*1e12 (NuMI) — toroid integral from runinfo.
-  - TorB/Target : SUM(r.tor875)*1e12 (BNB) or SUM(r.tortgt)*1e12 (NuMI) — second toroid / target toroid from runinfo.
-  - Cnt_wcut    : SUM(b.E1DCNT) (BNB) or SUM(n.EA9CNT) (NuMI) — after beam-quality cuts (from bnb_v{1,2}.db or numi_v{1,2}.db).
-  - TorA_wcut   : SUM(b.tor860)*1e12 (BNB) or SUM(n.tor101)*1e12 (NuMI) — after beam-quality cuts.
-  - TorB/Target_wcut : SUM(b.tor875)*1e12 (BNB) or SUM(n.tortgt)*1e12 (NuMI) — after beam-quality cuts.
-- Units: toroid sums are multiplied by 1e12 in SQL; values are printed as scientific/float (POT-scale).
-- NuMI FHC/RHC rows: only the *_wcut columns are populated; other columns are printed as 0 by design.
-  Those come from numi_v4.db split fields (EA9CNT_fhc/rhc, tor101_fhc/rhc, tortgt_fhc/rhc) joined on (run,subrun).
-- DB sources:
-  - runinfo table: timing, triggers, and uncuts toroids/counters.
-  - bnb_v{1,2}.db / numi_v{1,2}.db: “_wcut” (beam-quality–cut) totals.
-  - numi_v4.db: NuMI horn-polarity–split “_wcut” totals (FHC/RHC).
-LEGEND
-}
+# --- Close JSON root and announce path ---------------------------------------
+{
+  echo '  ]'
+  echo '}'
+} >> "$OUTPUT_JSON"
 
-print_legend
+echo "JSON written to: $OUTPUT_JSON"
+
