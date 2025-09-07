@@ -54,7 +54,8 @@
                         "stage_name": "selection_ext",
                         "sample_type": "ext",
                         "active": true,
-                        "do_hadd": true
+                        "do_hadd": true,
+                        "ext_triggers": 121734
                     }
                 ]
             }
