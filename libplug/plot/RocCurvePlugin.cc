@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "RocCurvePlot.h"

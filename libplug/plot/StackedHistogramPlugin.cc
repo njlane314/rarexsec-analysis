@@ -6,7 +6,7 @@
 
 #include <TSystem.h>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IPlotPlugin.h"
 #include "StackedHistogramPlot.h"
 

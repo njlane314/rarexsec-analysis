@@ -11,7 +11,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TH1D.h"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinnedHistogram.h"
 #include "BinningDefinition.h"
 #include "AnalysisKey.h"

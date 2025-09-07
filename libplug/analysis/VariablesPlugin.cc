@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "AnalysisDefinition.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
 #include "IAnalysisPlugin.h"

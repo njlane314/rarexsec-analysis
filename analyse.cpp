@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "AnalysisRunner.h"
 #include "HistogramFactory.h"
 #include "JsonUtils.h"
@@ -62,7 +62,7 @@ static analysis::AnalysisResult runAnalysis(const nlohmann::json &samples, const
 }
 
 int main(int argc, char *argv[]) {
-    analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
+    analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
     if (argc != 4) {
         analysis::log::fatal("analyse::main", "Invocation error. Expected:", argv[0], "<samples.json> <plugins.json> <output.root>");

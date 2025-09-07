@@ -9,7 +9,7 @@
 
 #include "ROOT/RDataFrame.hxx"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BlipProcessor.h"
 #include "IEventProcessor.h"
 #include "AnalysisKey.h"

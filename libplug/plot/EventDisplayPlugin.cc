@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IPlotPlugin.h"
 #include "DetectorDisplay.h"
 #include "SemanticDisplay.h"

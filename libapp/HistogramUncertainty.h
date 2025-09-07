@@ -8,7 +8,7 @@
 #include "TMatrixDSym.h"
 #include <Eigen/Dense>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "BinningDefinition.h"
 
 namespace analysis {

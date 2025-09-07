@@ -6,7 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "AnalysisResult.h"
 #include "JsonUtils.h"
 #include "PlotPluginManager.h"
@@ -52,7 +52,7 @@ static int runPlotting(const nlohmann::json &samples, const nlohmann::json &plot
 }
 
 int main(int argc, char *argv[]) {
-    analysis::AnalysisLogger::getInstance().setLevel(analysis::LogLevel::DEBUG);
+    analysis::Logger::getInstance().setLevel(analysis::LogLevel::DEBUG);
 
     if (argc != 4) {
         analysis::log::fatal("plot::main", "Invocation error. Expected:", argv[0], "<samples.json> <plugins.json> <input.root>");

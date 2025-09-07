@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IPlotPlugin.h"
 #include "SelectionEfficiencyPlot.h"
 #include "StratifierRegistry.h"

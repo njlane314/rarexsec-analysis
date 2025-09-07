@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "AnalysisKey.h"
 
 namespace analysis {

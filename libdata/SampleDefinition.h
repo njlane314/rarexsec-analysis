@@ -9,7 +9,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "nlohmann/json.hpp"
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IEventProcessor.h"
 #include "SampleTypes.h"
 #include "VariableRegistry.h"

@@ -1,7 +1,7 @@
 #ifndef HISTOGRAM_FACTORY_H
 #define HISTOGRAM_FACTORY_H
 
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "SampleDataset.h"
 #include "StratifierManager.h"
 #include "StratifierRegistry.h"

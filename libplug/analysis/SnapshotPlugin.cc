@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "AnalysisDataLoader.h"
-#include "AnalysisLogger.h"
+#include "Logger.h"
 #include "IAnalysisPlugin.h"
 #include "SelectionQuery.h"
 
