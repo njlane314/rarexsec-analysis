@@ -20,10 +20,6 @@
 #include "VariableRegistry.h"
 
 namespace analysis {
-enum class DynamicBinningStrategy;
-}
-
-namespace analysis {
 
 class AnalysisDefinition {
   public:
