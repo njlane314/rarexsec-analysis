@@ -21,16 +21,23 @@ def merge_root_files(output_file: str, input_files: list[str]) -> bool:
             # Copy structure from the first file
             with uproot.open(input_files[0]) as first:
                 for path, obj in first.items(recursive=True):
+                    clean_path = path.split(";")[0]
+                    if isinstance(obj, uproot.reading.ReadOnlyDirectory):
+                        continue
                     if isinstance(obj, uproot.behaviors.TTree.TTree):
-                        fout[path] = obj.arrays(library="np")
+                        fout[clean_path] = obj.arrays(library="np")
                     else:
-                        fout[path] = obj
+                        fout[clean_path] = obj
             # Extend TTrees with remaining files
             for fname in input_files[1:]:
                 with uproot.open(fname) as fin:
                     for path, obj in fin.items(recursive=True):
-                        if isinstance(obj, uproot.behaviors.TTree.TTree) and path in fout:
-                            fout[path].extend(obj.arrays(library="np"))
+                        clean_path = path.split(";")[0]
+                        if (
+                            isinstance(obj, uproot.behaviors.TTree.TTree)
+                            and clean_path in fout
+                        ):
+                            fout[clean_path].extend(obj.arrays(library="np"))
         print("[STATUS] Python merge via uproot successful.")
         return True
     except Exception as exc:
