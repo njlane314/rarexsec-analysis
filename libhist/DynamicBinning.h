@@ -312,8 +312,7 @@ private:
             edges.push_back(xmax);
         };
 
-        switch (strategy) {
-        case DynamicBinningStrategy::BayesianBlocks: {
+        if (strategy == DynamicBinningStrategy::BayesianBlocks) {
             std::map<double, double> hist;
             for (const auto &p : in_range)
                 hist[p.first] += p.second;
@@ -327,50 +326,42 @@ private:
             }
             auto bb_edges = BayesianBlocks::blocks(xs, ws);
             edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
-            break;
+            return edges;
         }
-        case DynamicBinningStrategy::UniformWidth: {
-            int target_bins =
-                std::max(1, static_cast<int>(
-                                                std::floor(neff_total /
-                                                           std::max(min_neff_per_bin, 1.0))));
+
+        int target_bins =
+            std::max(1, static_cast<int>(
+                                            std::floor(neff_total /
+                                                       std::max(min_neff_per_bin, 1.0))));
+
+        if (strategy == DynamicBinningStrategy::UniformWidth) {
             add_uniform_edges(target_bins);
-            break;
+            return edges;
         }
-        case DynamicBinningStrategy::EqualWeight:
-        default: {
-            int target_bins =
-                std::max(1, static_cast<int>(
-                                                std::floor(neff_total /
-                                                           std::max(min_neff_per_bin, 1.0))));
 
-            edges.reserve(static_cast<size_t>(target_bins) + 3);
-            edges.push_back(xmin);
+        edges.reserve(static_cast<size_t>(target_bins) + 3);
+        edges.push_back(xmin);
 
-            if (target_bins > 1) {
-                double W = sumw;
-                double cum = 0.0;
-                size_t idx = 0;
-                for (int k = 1; k < target_bins; ++k) {
-                    double thresh =
-                        (static_cast<double>(k) / static_cast<double>(target_bins)) *
-                        W;
-                    while (idx < in_range.size() &&
-                           cum + in_range[idx].second <= thresh) {
-                        cum += in_range[idx].second;
-                        ++idx;
-                    }
-                    if (idx < in_range.size()) {
-                        edges.push_back(in_range[idx].first);
-                    }
+        if (target_bins > 1) {
+            double W = sumw;
+            double cum = 0.0;
+            size_t idx = 0;
+            for (int k = 1; k < target_bins; ++k) {
+                double thresh =
+                    (static_cast<double>(k) / static_cast<double>(target_bins)) *
+                    W;
+                while (idx < in_range.size() &&
+                       cum + in_range[idx].second <= thresh) {
+                    cum += in_range[idx].second;
+                    ++idx;
+                }
+                if (idx < in_range.size()) {
+                    edges.push_back(in_range[idx].first);
                 }
             }
-
-            edges.push_back(xmax);
-            break;
-        }
         }
 
+        edges.push_back(xmax);
         return edges;
     }
 
