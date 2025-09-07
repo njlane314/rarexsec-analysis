@@ -8,14 +8,14 @@
 #include "Logger.h"
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
-#include "RocCurvePlot.h"
+#include "PerformancePlot.h"
 #include "StratifierRegistry.h"
 
 #include "TH1D.h"
 
 namespace analysis {
 
-class RocCurvePlugin : public IPlotPlugin {
+class PerformancePlotPlugin : public IPlotPlugin {
   public:
     struct PlotConfig {
         std::string region;
@@ -24,7 +24,7 @@ class RocCurvePlugin : public IPlotPlugin {
         std::string signal_group;
         std::string variable;
         std::string output_directory{"plots"};
-        std::string plot_name{"roc_curve"};
+        std::string plot_name{"performance_plot"};
         int n_bins{100};
         double min{0.0};
         double max{1.0};
@@ -32,11 +32,11 @@ class RocCurvePlugin : public IPlotPlugin {
         std::vector<std::string> clauses;
     };
 
-    explicit RocCurvePlugin(const nlohmann::json &cfg) {
-        if (!cfg.contains("roc_curves") || !cfg.at("roc_curves").is_array()) {
-            throw std::runtime_error("RocCurvePlugin missing roc_curves");
+    explicit PerformancePlotPlugin(const nlohmann::json &cfg) {
+        if (!cfg.contains("performance_plots") || !cfg.at("performance_plots").is_array()) {
+            throw std::runtime_error("PerformancePlotPlugin missing performance_plots");
         }
-        for (auto const &p : cfg.at("roc_curves")) {
+        for (auto const &p : cfg.at("performance_plots")) {
             PlotConfig pc;
             pc.region = p.at("region").get<std::string>();
             pc.selection_rule = p.value("selection_rule", std::string());
@@ -44,7 +44,7 @@ class RocCurvePlugin : public IPlotPlugin {
             pc.signal_group = p.at("signal_group").get<std::string>();
             pc.variable = p.at("variable").get<std::string>();
             pc.output_directory = p.value("output_directory", std::string{"plots"});
-            pc.plot_name = p.value("plot_name", std::string{"roc_curve"});
+            pc.plot_name = p.value("plot_name", std::string{"performance_plot"});
             pc.n_bins = p.value("n_bins", 100);
             pc.min = p.value("min", 0.0);
             pc.max = p.value("max", 1.0);
@@ -58,7 +58,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
     void onPlot(const AnalysisResult &) override {
         if (!loader_) {
-            log::error("RocCurvePlugin::onPlot", "No AnalysisDataLoader context provided");
+            log::error("PerformancePlotPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
         }
 
@@ -72,7 +72,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
             auto [total_hist, sig_hist] = this->accumulateHistograms(pc, signal_expr, selection_expr);
 
-            auto [efficiencies, rejections] = this->computeRocPoints(pc, total_hist, sig_hist);
+            auto [efficiencies, rejections] = this->computePerformancePoints(pc, total_hist, sig_hist);
 
             this->renderPlot(pc, efficiencies, rejections);
         }
@@ -88,7 +88,7 @@ class RocCurvePlugin : public IPlotPlugin {
         try {
             signal_keys = strat_reg.getSignalKeys(pc.signal_group);
         } catch (const std::exception &e) {
-            log::error("RocCurvePlugin::onPlot", e.what());
+            log::error("PerformancePlotPlugin::onPlot", e.what());
             return false;
         }
 
@@ -131,7 +131,7 @@ class RocCurvePlugin : public IPlotPlugin {
         return {total_hist, sig_hist};
     }
 
-    std::pair<std::vector<double>, std::vector<double>> computeRocPoints(const PlotConfig &pc, const TH1D &total_hist,
+    std::pair<std::vector<double>, std::vector<double>> computePerformancePoints(const PlotConfig &pc, const TH1D &total_hist,
                                                                          const TH1D &sig_hist) const {
         TH1D bkg_hist(total_hist);
         bkg_hist.Add(&sig_hist, -1.0);
@@ -171,7 +171,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
     void renderPlot(const PlotConfig &pc, const std::vector<double> &efficiencies,
                     const std::vector<double> &rejections) const {
-        RocCurvePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
+        PerformancePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
         plot.drawAndSave("pdf");
     }
 
@@ -184,7 +184,7 @@ class RocCurvePlugin : public IPlotPlugin {
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::RocCurvePlugin(cfg);
+    return new analysis::PerformancePlotPlugin(cfg);
 }
-extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::RocCurvePlugin::setLoader(loader); }
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::PerformancePlotPlugin::setLoader(loader); }
 #endif

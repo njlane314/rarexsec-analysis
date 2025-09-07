@@ -109,7 +109,7 @@ package plot #LightGreen {
   class MatrixPlot
   class SelectionEfficiencyPlot
   class SystematicBreakdownPlot
-  class RocCurvePlot
+  class PerformancePlot
 }
 
 IHistogramPlot <|-- StackedHistogramPlot
@@ -117,7 +117,7 @@ IHistogramPlot <|-- UnstackedHistogramPlot
 IHistogramPlot <|-- MatrixPlot
 IHistogramPlot <|-- SelectionEfficiencyPlot
 IHistogramPlot <|-- SystematicBreakdownPlot
-IHistogramPlot <|-- RocCurvePlot
+IHistogramPlot <|-- PerformancePlot
 
 package syst #LightPink {
   top to bottom direction

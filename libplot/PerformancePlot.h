@@ -1,5 +1,5 @@
-#ifndef ROCCURVEPLOT_H
-#define ROCCURVEPLOT_H
+#ifndef PERFORMANCEPLOT_H
+#define PERFORMANCEPLOT_H
 
 #include <string>
 #include <vector>
@@ -11,10 +11,10 @@
 
 namespace analysis {
 
-class RocCurvePlot : public IHistogramPlot {
+class PerformancePlot : public IHistogramPlot {
   public:
-    RocCurvePlot(std::string plot_name, std::vector<double> signal_eff, std::vector<double> background_rej,
-                 std::string output_directory = "plots")
+    PerformancePlot(std::string plot_name, std::vector<double> signal_eff, std::vector<double> background_rej,
+                    std::string output_directory = "plots")
         : IHistogramPlot(std::move(plot_name), std::move(output_directory)), signal_eff_(std::move(signal_eff)),
           background_rej_(std::move(background_rej)) {}
 

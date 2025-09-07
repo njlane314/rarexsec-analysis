@@ -55,8 +55,8 @@ The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_block
 
 ```json
 {
-  "path": "build/RocCurvePlugin.so",
-  "roc_curves": [
+  "path": "build/PerformancePlotPlugin.so",
+  "performance_plots": [
     {
       "region": "REGION_KEY",
       "selection_rule": "NUMU_CC",
@@ -64,7 +64,7 @@ The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_block
       "signal_group": "inclusive_strange_channels",
       "variable": "some_discriminant",
       "output_directory": "./plots",
-      "plot_name": "roc_curve"
+      "plot_name": "performance_plot"
     }
   ]
 }
