@@ -12,38 +12,6 @@ from pathlib import Path
 import numpy as np
 import uproot
 
-def merge_root_files(output_file: str, input_files: list[str]) -> bool:
-    """Merge ROOT files using uproot as a fallback when hadd is unavailable."""
-    try:
-        if not input_files:
-            return False
-        with uproot.recreate(output_file) as fout:
-            # Copy structure from the first file
-            with uproot.open(input_files[0]) as first:
-                for path, obj in first.items(recursive=True):
-                    clean_path = path.split(";")[0]
-                    if isinstance(obj, uproot.reading.ReadOnlyDirectory):
-                        continue
-                    if isinstance(obj, uproot.behaviors.TTree.TTree):
-                        fout[clean_path] = obj.arrays(library="np")
-                    else:
-                        fout[clean_path] = obj
-            # Extend TTrees with remaining files
-            for fname in input_files[1:]:
-                with uproot.open(fname) as fin:
-                    for path, obj in fin.items(recursive=True):
-                        clean_path = path.split(";")[0]
-                        if (
-                            isinstance(obj, uproot.behaviors.TTree.TTree)
-                            and clean_path in fout
-                        ):
-                            fout[clean_path].extend(obj.arrays(library="np"))
-        print("[STATUS] Python merge via uproot successful.")
-        return True
-    except Exception as exc:
-        print(f"[ERROR] Python merge failed: {exc}", file=sys.stderr)
-        return False
-
 def get_xml_entities(xml_path: Path) -> dict[str, str]:
     content = xml_path.read_text()
     entity_regex = re.compile(r"<!ENTITY\s+([^\s]+)\s+\"([^\"]+)\">")
@@ -56,12 +24,6 @@ def run_command(command: list[str], execute: bool) -> bool:
         return True
 
     if shutil.which(command[0]) is None:
-        if command[0] == "hadd":
-            print("[INFO] 'hadd' not found. Using Python-based merge via uproot.")
-            output_idx = 2 if len(command) > 2 and command[1] == "-f" else 1
-            output_file = command[output_idx]
-            input_files = command[output_idx + 1 :]
-            return merge_root_files(output_file, input_files)
         print(
             f"[ERROR] Command '{command[0]}' not found. Ensure ROOT is set up by running:\n"
             "             source /cvmfs/larsoft.opensciencegrid.org/products/common/etc/setups\n"
