@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 #include <ROOT/RDataFrame.hxx>
 #include <nlohmann/json.hpp>

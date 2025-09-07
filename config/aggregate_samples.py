@@ -50,8 +50,30 @@ def get_total_triggers_from_single_file(file_path: Path) -> int:
         return 0
     try:
         with uproot.open(file_path) as root_file:
-            if "nuselection/EventSelectionFilter" in root_file:
-                return int(root_file["nuselection/EventSelectionFilter"].num_entries)
+            tree_path = "nuselection/EventSelectionFilter"
+            if tree_path in root_file:
+                tree = root_file[tree_path]
+                if "software_trigger" in tree.keys():
+                    data = tree["software_trigger"].array(library="np")
+                    return int(data.sum())
+
+                algo_branches = [
+                    "software_trigger_post",
+                    "software_trigger_pre",
+                    "software_trigger_post_ext",
+                    "software_trigger_pre_ext",
+                ]
+
+                arrays = [
+                    tree[branch].array(library="np") != 0
+                    for branch in algo_branches
+                    if branch in tree.keys()
+                ]
+                if arrays:
+                    combined = arrays[0]
+                    for arr in arrays[1:]:
+                        combined |= arr
+                    return int(combined.sum())
     except Exception as exc:
         print(f"    Warning: Could not read triggers from {file_path}: {exc}", file=sys.stderr)
     return 0
@@ -142,27 +164,36 @@ def process_sample_entry(
 
 def main() -> None:
     DEFINITIONS_PATH = "config/data.json"
-    XML_PATH = "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+    XML_PATHS = [
+        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow.xml"
+    ]
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
 
     print("===== PART 1: Loading Configurations =====")
     input_definitions_path = Path(DEFINITIONS_PATH)
-    xml_path = Path(XML_PATH)
 
     with open(input_definitions_path) as f:
         config = json.load(f)
 
-    entities = get_xml_entities(xml_path)
-    tree = ET.parse(xml_path)
-    project_node = tree.find("project")
-    if project_node is None:
-        print("Error: Could not find <project> tag in XML file.", file=sys.stderr)
-        sys.exit(1)
+    entities: dict[str, str] = {}
+    stage_outdirs: dict[str, str] = {}
+    for xml in XML_PATHS:
+        xml_path = Path(xml)
+        entities.update(get_xml_entities(xml_path))
+        tree = ET.parse(xml_path)
+        project_node = tree.find("project")
+        if project_node is None:
+            print(f"Error: Could not find <project> tag in XML file '{xml}'.", file=sys.stderr)
+            continue
+        stage_outdirs.update(
+            {
+                s.get("name"): s.find("outdir").text
+                for s in project_node.findall("stage")
+                if s.find("outdir") is not None
+            }
+        )
 
-    stage_outdirs = {
-        s.get("name"): s.find("outdir").text for s in project_node.findall("stage") if s.find("outdir") is not None
-    }
 
     print("\n===== PART 2: Hadding Files and Calculating Metadata =====")
     processed_analysis_path = Path(config["ntuple_base_directory"])
