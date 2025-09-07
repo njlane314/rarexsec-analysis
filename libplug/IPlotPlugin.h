@@ -8,6 +8,7 @@ namespace analysis {
 class IPlotPlugin {
   public:
     virtual ~IPlotPlugin() = default;
+
     virtual void onPlot(const AnalysisResult &result) = 0;
 };
 
