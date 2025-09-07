@@ -3,12 +3,12 @@
 
 #include <algorithm>
 #include <cmath>
-#include <initializer_list>
 #include <limits>
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
+#include <functional>
+#include <unordered_map>
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
@@ -45,59 +45,91 @@ class DynamicBinning {
         return nodes.front().GetColumnType(branch);
     }
 
+    using Handler = std::function<BinningDefinition(std::vector<ROOT::RDF::RNode>, const BinningDefinition &, const std::string &, double, bool, DynamicBinningStrategy)>;
+
+    template <typename T>
+    static Handler makeScalarHandler() {
+        return [](std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &bdef, const std::string &weight_col,
+                  double min_neff, bool oob, DynamicBinningStrategy strat) {
+            return calculate_scalar<T>(std::move(nodes), bdef, weight_col, min_neff, oob, strat);
+        };
+    }
+
+    template <typename T>
+    static Handler makeVectorHandler() {
+        return [](std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &bdef, const std::string &weight_col,
+                  double min_neff, bool oob, DynamicBinningStrategy strat) {
+            return calculate_vector<T>(std::move(nodes), bdef, weight_col, min_neff, oob, strat);
+        };
+    }
+
     static BinningDefinition dispatchCalculation(std::vector<ROOT::RDF::RNode> nodes,
                                                  const BinningDefinition &original_bdef,
                                                  const std::string &weight_col, double min_neff_per_bin,
                                                  bool include_oob_bins, DynamicBinningStrategy strategy,
                                                  const std::string &typeName) {
-        auto match = [&](std::initializer_list<std::string> names) {
-            return std::find(names.begin(), names.end(), typeName) != names.end();
+        static const std::unordered_map<std::string, Handler> kTypeDispatch = {
+            {"double", makeScalarHandler<double>()},
+            {"Float64_t", makeScalarHandler<double>()},
+            {"Double_t", makeScalarHandler<double>()},
+
+            {"float", makeScalarHandler<float>()},
+            {"Float32_t", makeScalarHandler<float>()},
+            {"Float_t", makeScalarHandler<float>()},
+
+            {"int", makeScalarHandler<int>()},
+            {"Int_t", makeScalarHandler<int>()},
+
+            {"unsigned int", makeScalarHandler<unsigned int>()},
+            {"UInt_t", makeScalarHandler<unsigned int>()},
+
+            {"unsigned long", makeScalarHandler<unsigned long long>()},
+            {"ULong64_t", makeScalarHandler<unsigned long long>()},
+            {"unsigned long long", makeScalarHandler<unsigned long long>()},
+
+            {"long", makeScalarHandler<long long>()},
+            {"Long64_t", makeScalarHandler<long long>()},
+            {"long long", makeScalarHandler<long long>()},
+
+            {"vector<double>", makeVectorHandler<double>()},
+            {"ROOT::RVec<double>", makeVectorHandler<double>()},
+            {"ROOT::VecOps::RVec<double>", makeVectorHandler<double>()},
+
+            {"vector<float>", makeVectorHandler<float>()},
+            {"ROOT::RVec<float>", makeVectorHandler<float>()},
+            {"ROOT::VecOps::RVec<float>", makeVectorHandler<float>()},
+
+            {"vector<int>", makeVectorHandler<int>()},
+            {"ROOT::RVec<int>", makeVectorHandler<int>()},
+            {"ROOT::VecOps::RVec<int>", makeVectorHandler<int>()},
+
+            {"vector<unsigned int>", makeVectorHandler<unsigned int>()},
+            {"ROOT::RVec<unsigned int>", makeVectorHandler<unsigned int>()},
+            {"ROOT::VecOps::RVec<unsigned int>", makeVectorHandler<unsigned int>()},
+
+            {"vector<unsigned long>", makeVectorHandler<unsigned long long>()},
+            {"vector<unsigned long long>", makeVectorHandler<unsigned long long>()},
+            {"vector<ULong64_t>", makeVectorHandler<unsigned long long>()},
+            {"ROOT::RVec<unsigned long>", makeVectorHandler<unsigned long long>()},
+            {"ROOT::RVec<unsigned long long>", makeVectorHandler<unsigned long long>()},
+            {"ROOT::VecOps::RVec<unsigned long>", makeVectorHandler<unsigned long long>()},
+            {"ROOT::VecOps::RVec<unsigned long long>", makeVectorHandler<unsigned long long>()},
+
+            {"vector<long long>", makeVectorHandler<long long>()},
+            {"vector<Long64_t>", makeVectorHandler<long long>()},
+            {"ROOT::RVec<long long>", makeVectorHandler<long long>()},
+            {"ROOT::VecOps::RVec<long long>", makeVectorHandler<long long>()}
         };
 
-        auto contains = [&](std::initializer_list<std::string> names) {
-            return std::any_of(names.begin(), names.end(),
-                               [&](const std::string &s) { return typeName.find(s) != std::string::npos; });
-        };
+        if (auto it = kTypeDispatch.find(typeName); it != kTypeDispatch.end()) {
+            return it->second(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_oob_bins, strategy);
+        }
 
-        if (match({"double", "Float64_t", "Double_t"})) {
-            return calculate_scalar<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                            include_oob_bins, strategy);
-        } else if (match({"float", "Float32_t", "Float_t"})) {
-            return calculate_scalar<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                           include_oob_bins, strategy);
-        } else if (match({"int", "Int_t"})) {
-            return calculate_scalar<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                         include_oob_bins, strategy);
-        } else if (match({"unsigned int", "UInt_t"})) {
-            return calculate_scalar<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                  include_oob_bins, strategy);
-        } else if (match({"unsigned long", "ULong64_t", "unsigned long long"})) {
-            return calculate_scalar<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                        include_oob_bins, strategy);
-        } else if (match({"long", "Long64_t", "long long"})) {
-            return calculate_scalar<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                               include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<double>", "ROOT::RVec<double>", "vector<double>"})) {
-            return calculate_vector<double>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                            include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<float>", "ROOT::RVec<float>", "vector<float>"})) {
-            return calculate_vector<float>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                           include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<int>", "ROOT::RVec<int>", "vector<int>"})) {
-            return calculate_vector<int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                         include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<unsigned int>", "ROOT::RVec<unsigned int>", "vector<unsigned int>"})) {
-            return calculate_vector<unsigned int>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                  include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<unsigned long>", "ROOT::RVec<unsigned long>", "vector<unsigned long>",
-                             "vector<ULong64_t>", "ROOT::VecOps::RVec<unsigned long long>",
-                             "ROOT::RVec<unsigned long long>", "vector<unsigned long long>"})) {
-            return calculate_vector<unsigned long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                                        include_oob_bins, strategy);
-        } else if (contains({"ROOT::VecOps::RVec<long long>", "ROOT::RVec<long long>", "vector<long long>",
-                             "vector<Long64_t>"})) {
-            return calculate_vector<long long>(std::move(nodes), original_bdef, weight_col, min_neff_per_bin,
-                                               include_oob_bins, strategy);
+        for (const auto &entry : kTypeDispatch) {
+            if (typeName.find(entry.first) != std::string::npos) {
+                return entry.second(std::move(nodes), original_bdef, weight_col, min_neff_per_bin, include_oob_bins,
+                                    strategy);
+            }
         }
 
         log::fatal("DynamicBinning::dispatchCalculation", "Unsupported type for dynamic binning:", typeName);
