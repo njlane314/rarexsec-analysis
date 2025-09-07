@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import uproot
 
-# Location of the trigger branches within the ROOT files
 TRIGGER_TREE_PATH = "nuselection/EventSelectionFilter"
 
 TRIGGER_BRANCHES = [
