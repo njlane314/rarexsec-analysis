@@ -50,8 +50,30 @@ def get_total_triggers_from_single_file(file_path: Path) -> int:
         return 0
     try:
         with uproot.open(file_path) as root_file:
-            if "nuselection/EventSelectionFilter" in root_file:
-                return int(root_file["nuselection/EventSelectionFilter"].num_entries)
+            tree_path = "nuselection/EventSelectionFilter"
+            if tree_path in root_file:
+                tree = root_file[tree_path]
+                if "software_trigger" in tree.keys():
+                    data = tree["software_trigger"].array(library="np")
+                    return int(data.sum())
+
+                algo_branches = [
+                    "software_trigger_post",
+                    "software_trigger_pre",
+                    "software_trigger_post_ext",
+                    "software_trigger_pre_ext",
+                ]
+
+                arrays = [
+                    tree[branch].array(library="np") != 0
+                    for branch in algo_branches
+                    if branch in tree.keys()
+                ]
+                if arrays:
+                    combined = arrays[0]
+                    for arr in arrays[1:]:
+                        combined |= arr
+                    return int(combined.sum())
     except Exception as exc:
         print(f"    Warning: Could not read triggers from {file_path}: {exc}", file=sys.stderr)
     return 0
