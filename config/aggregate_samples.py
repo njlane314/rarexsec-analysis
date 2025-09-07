@@ -17,9 +17,7 @@ def get_xml_entities(xml_path: Path) -> dict:
     return {match.group(1): match.group(2) for match in entity_regex.finditer(content)}
 
 def run_command(command: list[str], execute: bool) -> bool:
-    print("--------------------------------------------------")
     print(f"[COMMAND] {' '.join(command)}")
-    print("--------------------------------------------------")
     if not execute:
         print("[INFO] Dry run mode. HADD command not executed.")
         return True
@@ -171,7 +169,6 @@ def main() -> None:
     CONFIG_PATH = "config/samples.json"
     RUNS_PROCESS = ["run1"]
 
-    print("===== PART 1: Loading Configurations =====")
     input_definitions_path = Path(DEFINITIONS_PATH)
 
     with open(input_definitions_path) as f:
@@ -195,8 +192,6 @@ def main() -> None:
             }
         )
 
-
-    print("\n===== PART 2: Hadding Files and Calculating Metadata =====")
     processed_analysis_path = Path(config["ntuple_base_directory"])
     processed_analysis_path.mkdir(parents=True, exist_ok=True)
 
