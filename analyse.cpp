@@ -10,7 +10,7 @@
 #include "Logger.h"
 #include "AnalysisRunner.h"
 #include "HistogramFactory.h"
-#include "JsonUtils.h"
+#include "Json.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
 #include "SystematicsProcessor.h"
