@@ -32,5 +32,7 @@ plots/*
 *.png
 *.root
 
+*.pyc
+
 dataset/*
 CMakeFiles/
