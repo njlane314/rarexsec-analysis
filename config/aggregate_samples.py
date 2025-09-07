@@ -63,9 +63,13 @@ def get_total_pot_from_files_parallel(file_paths: list[str]) -> float:
 
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
-    if not stage_name or stage_name not in stage_outdirs:
+    if not stage_name:
         return None
-    input_dir = stage_outdirs[stage_name]
+
+    input_dir = stage_outdirs.get(stage_name)
+    if not input_dir:
+        return None
+
     for name, value in entities.items():
         input_dir = input_dir.replace(f"&{name};", value)
     return input_dir
