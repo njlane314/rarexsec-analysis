@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "TArrow.h"
-#include "TBox.h"
 #include "TCanvas.h"
 #include "THStack.h"
 #include "TLatex.h"
@@ -95,8 +94,7 @@ class StackedHistogramPlot : public IHistogramPlot {
 
     std::vector<double> prepareHistograms(
         std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists,
-        double &total_mc_events, double &left_edge, double &right_edge,
-        double &min_edge, double &max_edge) {
+        double &total_mc_events, double &left_edge, double &right_edge) {
         mc_stack_ = new THStack("mc_stack", "");
 
         std::vector<double> orig_edges;
@@ -110,16 +108,7 @@ class StackedHistogramPlot : public IHistogramPlot {
         }
 
         left_edge = orig_edges.empty() ? 0.0 : orig_edges.front();
-        right_edge =
-            orig_edges.empty() ? 0.0 : orig_edges[orig_edges.size() - 1];
-        min_edge = left_edge;
-        max_edge = right_edge;
-        if (orig_edges.size() >= 2) {
-            double interior_range = right_edge - left_edge;
-            double edge_width = interior_range * 0.05;
-            min_edge -= edge_width;
-            max_edge += edge_width;
-        }
+        right_edge = orig_edges.empty() ? 0.0 : orig_edges.back();
 
         for (auto const &[key, hist] : variable_result_.strat_hists_)
             if (hist.getSum() > 0)
@@ -288,59 +277,16 @@ class StackedHistogramPlot : public IHistogramPlot {
         }
     }
 
-    void configureAxes(const std::vector<double> &orig_edges, double left_edge,
-                       double right_edge, double min_edge, double max_edge,
-                       double max_y) {
+    void configureAxes(double left_edge, double right_edge) {
         TH1 *frame = mc_stack_->GetHistogram();
         frame->GetXaxis()->SetTitle(
             variable_result_.binning_.getTexLabel().c_str());
         frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
-        frame->GetXaxis()->SetLimits(min_edge, max_edge);
+        frame->GetXaxis()->SetLimits(left_edge, right_edge);
         frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
-
-        if (orig_edges.size() >= 2) {
-            std::ostringstream uf_label;
-            std::ostringstream of_label;
-            uf_label << "<" << this->formatWithCommas(left_edge);
-            of_label << ">" << this->formatWithCommas(right_edge);
-            frame->GetXaxis()->ChangeLabel(1, -1, -1, -1, -1, -1,
-                                           uf_label.str().c_str());
-            frame->GetXaxis()->ChangeLabel(frame->GetXaxis()->GetNbins(), -1,
-                                           -1, -1, -1, -1,
-                                           of_label.str().c_str());
-            double line_min = use_log_y_ ? 0.1 : 0.0;
-            double line_max = max_y * (use_log_y_ ? 10 : 1.3);
-            double tick_max = line_min + (line_max - line_min) * 0.05;
-            TLine *uf_edge =
-                new TLine(left_edge, line_min, left_edge, tick_max);
-            uf_edge->SetLineColorAlpha(kGray + 2, 0.4);
-            uf_edge->SetLineWidth(2);
-            uf_edge->Draw("same");
-            cut_visuals_.push_back(uf_edge);
-            TLine *of_edge =
-                new TLine(right_edge, line_min, right_edge, tick_max);
-            of_edge->SetLineColorAlpha(kGray + 2, 0.4);
-            of_edge->SetLineWidth(2);
-            of_edge->Draw("same");
-            cut_visuals_.push_back(of_edge);
-
-            TBox *uf_box = new TBox(min_edge, line_min, left_edge, line_max);
-            uf_box->SetFillStyle(3345);
-            uf_box->SetFillColorAlpha(kGray + 1, 0.15);
-            uf_box->SetLineColorAlpha(kGray + 1, 0.0);
-            uf_box->Draw("same");
-            cut_visuals_.push_back(uf_box);
-
-            TBox *of_box = new TBox(right_edge, line_min, max_edge, line_max);
-            of_box->SetFillStyle(3345);
-            of_box->SetFillColorAlpha(kGray + 1, 0.15);
-            of_box->SetLineColorAlpha(kGray + 1, 0.0);
-            of_box->Draw("same");
-            cut_visuals_.push_back(of_box);
-        }
     }
 
     void drawWatermark(TPad *pad, double total_mc_events) const {
@@ -425,10 +371,8 @@ class StackedHistogramPlot : public IHistogramPlot {
         double total_mc_events;
         double left_edge;
         double right_edge;
-        double min_edge;
-        double max_edge;
         std::vector<double> orig_edges =
-            this->prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge, min_edge, max_edge);
+            this->prepareHistograms(mc_hists, total_mc_events, left_edge, right_edge);
 
         this->buildLegend(p_legend, mc_hists);
 
@@ -436,7 +380,7 @@ class StackedHistogramPlot : public IHistogramPlot {
 
         this->renderCuts(max_y);
 
-        this->configureAxes(orig_edges, left_edge, right_edge, min_edge, max_edge, max_y);
+        this->configureAxes(left_edge, right_edge);
 
         this->drawWatermark(p_main, total_mc_events);
 
