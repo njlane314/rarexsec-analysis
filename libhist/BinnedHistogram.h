@@ -33,8 +33,9 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
 
     BinnedHistogram(const BinnedHistogram &other) : TNamed(other), TH1DRenderer(other), hist(other.hist) {}
 
-    static BinnedHistogram createFromTH1D(const BinningDefinition &bn, const TH1D &hist, TString nm = "hist",
-                                          TString ti = "", Color_t cl = kBlack, int ht = 0, TString tx = "") {
+    static BinnedHistogram createFromTH1D(const BinningDefinition &bn, const TH1D &hist,
+                                          TString nm = "hist", TString ti = "", Color_t cl = kBlack,
+                                          int ht = 0, TString tx = "") {
         std::vector<double> counts;
         int n = hist.GetNbinsX();
         Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(n);
@@ -42,6 +43,19 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
             counts.push_back(hist.GetBinContent(i));
             sh_vec(i - 1) = hist.GetBinError(i);
         }
+
+        // Include underflow and overflow contents so that events outside the
+        // configured domain still contribute to the total statistics. This is
+        // important for empty selections where all events fall in the ROOT
+        // underflow/overflow bins.
+        if (n > 0) {
+            counts.front() += hist.GetBinContent(0);
+            counts.back()  += hist.GetBinContent(n + 1);
+            sh_vec(0) = std::sqrt(sh_vec(0) * sh_vec(0) + hist.GetBinError(0) * hist.GetBinError(0));
+            sh_vec(n - 1) =
+                std::sqrt(sh_vec(n - 1) * sh_vec(n - 1) + hist.GetBinError(n + 1) * hist.GetBinError(n + 1));
+        }
+
         Eigen::MatrixXd sh = sh_vec;
         return BinnedHistogram(bn, counts, sh, nm, ti, cl, ht, tx);
     }
