@@ -69,6 +69,7 @@ class SnapshotPlugin : public IAnalysisPlugin {
     }
 
     static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
+    static AnalysisDataLoader *legacyLoader() { return legacy_loader_; }
 
   private:
     std::vector<SnapshotConfig> configs_;
@@ -83,7 +84,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const analysis::PluginArgs &args) {
-    return new analysis::SnapshotPlugin(args, analysis::SnapshotPlugin::legacy_loader_);
+    return new analysis::SnapshotPlugin(args, analysis::SnapshotPlugin::legacyLoader());
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *ldr) {
     analysis::SnapshotPlugin::setLegacyLoader(ldr);

@@ -115,6 +115,7 @@ class EventDisplayPlugin : public IPlotPlugin {
     }
 
     static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
+    static AnalysisDataLoader *legacyLoader() { return legacy_loader_; }
 
   private:
     std::vector<DisplayConfig> configs_;
@@ -129,7 +130,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
-    return new analysis::EventDisplayPlugin(args, analysis::EventDisplayPlugin::legacy_loader_);
+    return new analysis::EventDisplayPlugin(args, analysis::EventDisplayPlugin::legacyLoader());
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::EventDisplayPlugin::setLegacyLoader(loader);

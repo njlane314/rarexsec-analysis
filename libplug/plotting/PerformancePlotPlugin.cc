@@ -80,6 +80,7 @@ class PerformancePlotPlugin : public IPlotPlugin {
     }
 
     static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
+    static AnalysisDataLoader *legacyLoader() { return legacy_loader_; }
 
   private:
     bool buildExpressions(const PlotConfig &pc, StratifierRegistry &strat_reg, std::string &signal_expr,
@@ -188,7 +189,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
-    return new analysis::PerformancePlotPlugin(args, analysis::PerformancePlotPlugin::legacy_loader_);
+    return new analysis::PerformancePlotPlugin(args, analysis::PerformancePlotPlugin::legacyLoader());
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::PerformancePlotPlugin::setLegacyLoader(loader);
