@@ -25,10 +25,8 @@ public:
                RegionAnalysis &region_analysis) {
     auto &sample_frames = data_loader_.getSampleFrames();
     auto clauses = analysis_definition_.regionClauses(region_handle.key_);
-    auto cumulative_filters = buildCumulativeFilters(clauses);
 
-    std::vector<RegionAnalysis::StageCount> stage_counts(
-        cumulative_filters.size());
+    std::vector<RegionAnalysis::StageCount> stage_counts(clauses.size() + 1);
 
     StratifierRegistry strat_reg;
     const std::vector<std::string> schemes{"inclusive_strange_channels",
@@ -59,32 +57,31 @@ public:
       auto base_df = sample_def.nominal_node_.Define(
           "w2", "nominal_event_weight*nominal_event_weight");
 
-      calculateWeightsPerStage(base_df, cumulative_filters, stage_counts,
-                               schemes, scheme_keys, scheme_filters);
+      auto cumulative_nodes =
+          buildCumulativeFilters(base_df, clauses);
+
+      calculateWeightsPerStage(cumulative_nodes, stage_counts, schemes,
+                               scheme_keys, scheme_filters);
       log::debug("CutFlowCalculator::compute", "Completed sample", skey.str());
     }
 
     region_analysis.setCutFlow(std::move(stage_counts));
   }
 
-  static std::vector<std::string>
-  buildCumulativeFilters(const std::vector<std::string> &clauses) {
-    const auto expected_size = clauses.size() + 1;
-    std::vector<std::string> filters;
-    filters.reserve(expected_size);
-    filters.emplace_back("");
-    std::string current;
+  static std::vector<ROOT::RDF::RNode>
+  buildCumulativeFilters(const ROOT::RDF::RNode &base_df,
+                         const std::vector<std::string> &clauses) {
+    std::vector<ROOT::RDF::RNode> nodes;
+    nodes.reserve(clauses.size() + 1);
+    nodes.push_back(base_df);
 
+    auto current = base_df;
     for (const auto &clause : clauses) {
-      if (!current.empty()) {
-        current += " && ";
-      }
-
-      current += clause;
-      filters.push_back(current);
+      current = current.Filter(clause);
+      nodes.push_back(current);
     }
 
-    return filters;
+    return nodes;
   }
 
 private:
@@ -121,8 +118,7 @@ private:
   }
 
   void calculateWeightsPerStage(
-      const ROOT::RDF::RNode &base_df,
-      const std::vector<std::string> &cumulative_filters,
+      const std::vector<ROOT::RDF::RNode> &cumulative_nodes,
       std::vector<RegionAnalysis::StageCount> &stage_counts,
       const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
@@ -131,8 +127,8 @@ private:
     std::vector<ROOT::RDF::RResultPtr<double>> results;
     std::vector<std::function<void()>> value_setters;
 
-    for (size_t i = 0; i < cumulative_filters.size(); ++i) {
-      auto df = base_df;
+     for (size_t i = 0; i < cumulative_nodes.size(); ++i) {
+      auto df = cumulative_nodes[i];
       log::debug("CutFlowCalculator::calculateWeightsPerStage", "Stage", i,
                  "Filter", cumulative_filters[i]);
 
