@@ -5,6 +5,8 @@
 #include "BinnedHistogram.h"
 #include "ISampleProcessor.h"
 #include <unordered_map>
+#include <mutex>
+#include <tbb/parallel_for_each.h>
 
 namespace analysis {
 
@@ -29,21 +31,33 @@ class MonteCarloProcessor : public ISampleProcessor {
 
     void contributeTo(VariableResult &result) override {
         log::info("MonteCarloProcessor::contributeTo", "Contributing histograms from sample:", sample_key_.str());
-        for (auto &[stratum_key, future] : nominal_futures_) {
-            if (future.GetPtr()) {
-                auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
-                ChannelKey channel_key{stratum_key.str()};
-                result.strat_hists_[channel_key] = result.strat_hists_[channel_key] + hist;
-                result.total_mc_hist_ = result.total_mc_hist_ + hist;
-            }
-        }
+        std::mutex mtx;
+        tbb::parallel_for_each(
+            nominal_futures_.begin(), nominal_futures_.end(),
+            [&, this](auto &entry) {
+                auto &[stratum_key, future] = entry;
+                if (future.GetPtr()) {
+                    auto hist =
+                        BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
+                    ChannelKey channel_key{stratum_key.str()};
+                    std::lock_guard<std::mutex> lock(mtx);
+                    result.strat_hists_[channel_key] =
+                        result.strat_hists_[channel_key] + hist;
+                    result.total_mc_hist_ = result.total_mc_hist_ + hist;
+                }
+            });
 
-        for (auto &[var_key, future] : variation_futures_) {
-            if (future.GetPtr()) {
-                result.raw_detvar_hists_[sample_key_][var_key] =
-                    BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
-            }
-        }
+        tbb::parallel_for_each(
+            variation_futures_.begin(), variation_futures_.end(),
+            [&, this](auto &entry) {
+                auto &[var_key, future] = entry;
+                if (future.GetPtr()) {
+                    auto hist =
+                        BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
+                    std::lock_guard<std::mutex> lock(mtx);
+                    result.raw_detvar_hists_[sample_key_][var_key] = hist;
+                }
+            });
     }
 
   private:
