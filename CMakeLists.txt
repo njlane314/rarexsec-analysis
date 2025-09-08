@@ -25,7 +25,6 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
     "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
     "${CMAKE_CURRENT_SOURCE_DIR}/libplug"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libpipe"
 )
 
 add_subdirectory(libdata)
