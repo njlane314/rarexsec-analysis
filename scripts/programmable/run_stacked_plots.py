@@ -3,8 +3,8 @@
 
 This script builds a minimal pipeline composed of region, variable,
 and plot presets and executes the analysis runner. The path to the
-sample configuration is hardcoded to ``sample.json`` within this
-directory.
+sample configuration is set to ``configs/sample.json`` at the
+repository root so the example uses the shared configuration file.
 """
 
 import json
@@ -13,7 +13,8 @@ import subprocess
 from typing import Optional, Dict, Any
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-SAMPLE_CFG = os.path.join(ROOT_DIR, "sample.json")
+REPO_ROOT = os.path.abspath(os.path.join(ROOT_DIR, "..", ".."))
+SAMPLE_CFG = os.path.join(REPO_ROOT, "configs", "sample.json")
 
 
 def build_pipeline(preset: str, preset_vars: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
