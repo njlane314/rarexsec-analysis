@@ -72,3 +72,29 @@ ANALYSIS_REGISTER_PRESET(SIGNAL_EVENT_DISPLAY, Target::Plot,
   })
 )
 
+// Preset to configure the CutFlow plot plugin with a single cut flow request.
+// Defaults target the inclusive strange channel scheme and write output to a
+// dedicated directory.
+ANALYSIS_REGISTER_PRESET(CUT_FLOW_PLOT, Target::Plot,
+  ([](const PluginArgs& vars) -> PluginSpecList {
+    auto cfg = vars.plot_configs;
+    nlohmann::json plot = {
+      {"selection_rule", cfg.value("selection_rule", std::string{})},
+      {"region", cfg.value("region", std::string{})},
+      {"signal_group",
+       cfg.value("signal_group", std::string{"inclusive_strange_channels"})},
+      {"channel_column",
+       cfg.value("channel_column", std::string{"channel_definitions"})},
+      {"initial_label", cfg.value("initial_label", std::string{"All events"})},
+      {"plot_name", cfg.value("plot_name", std::string{"cut_flow"})},
+      {"output_directory",
+       cfg.value("output_directory", std::string{"./plots/cut_flow"})},
+      {"log_y", cfg.value("log_y", false)},
+      {"clauses", cfg.value("clauses", nlohmann::json::array())}
+    };
+    PluginArgs args{{"plot_configs",
+                     {{"plots", nlohmann::json::array({plot})}}}};
+    return {{"CutFlowPlotPlugin", args}};
+  })
+)
+
