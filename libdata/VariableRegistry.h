@@ -49,7 +49,20 @@ class VariableRegistry {
     static std::vector<std::string> eventVariables(SampleOrigin type) {
         auto vars = collectBaseGroups();
 
-        if (type == SampleOrigin::kMonteCarlo)
+        // Dirt samples originate from beam interactions occurring outside
+        // of the detector. They are stored in ntuples with the same
+        // structure as regular Monte Carlo events, including truth and
+        // weighting branches.  When the new SampleOrigin::kDirt type was
+        // introduced, this function was left only recognising
+        // SampleOrigin::kMonteCarlo as needing those additional branch
+        // groups.  As a result dirt samples were constructed without the
+        // required columns which later processors expect to exist (e.g.
+        // weighting branches), leading to a segmentation fault when they
+        // were accessed.
+
+        // Treat dirt the same as other Monte Carlo samples to ensure all
+        // necessary variables are loaded.
+        if (type == SampleOrigin::kMonteCarlo || type == SampleOrigin::kDirt)
             appendMonteCarloGroups(vars);
 
         return {vars.begin(), vars.end()};
