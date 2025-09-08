@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDFHelpers.hxx>
-#include <ROOT/RVersion.hxx>
+#include <RVersion.h> 
 
 namespace analysis {
 
