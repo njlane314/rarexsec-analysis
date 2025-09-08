@@ -9,7 +9,9 @@ namespace analysis {
 template <class Tag> class AnalysisKey {
   public:
     AnalysisKey() = default;
-    explicit AnalysisKey(std::string v) : v_(std::move(v)) {}
+    explicit AnalysisKey(const char *v) : v_(v) {}
+    explicit AnalysisKey(const std::string &v) : v_(v) {}
+    explicit AnalysisKey(std::string &&v) : v_(std::move(v)) {}
     explicit AnalysisKey(std::string_view v) : v_(v) {}
     const std::string &str() const noexcept { return v_; }
     const char *c_str() const noexcept { return v_.c_str(); }
