@@ -113,6 +113,10 @@ class AnalysisDataLoader {
             auto key = ext_beam + ":" + period;
             if (run_registry_.all().count(key)) {
                 const auto &ext_rc = run_registry_.get(ext_beam, period);
+                // Include external run totals before building pipelines so
+                // external samples are scaled by the full trigger count.
+                total_pot_ += ext_rc.nominal_pot;
+                total_triggers_ += ext_rc.nominal_triggers;
                 this->processRunConfig(ext_rc);
             }
         }
