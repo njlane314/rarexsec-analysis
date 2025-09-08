@@ -100,6 +100,21 @@ WHERE r.begin_time >= '$S' AND r.end_time <= '$E';
 SQL
 }
 
+# NEW: NuMI EXT split by horns using numi_v4.db mask
+numi_ext_split_sql() {
+  local S="$1" E="$2" which="$3"  # which = FHC or RHC
+  local col_sfx; [[ "$which" == "FHC" ]] && col_sfx="fhc" || col_sfx="rhc"
+  sqlite3 -noheader -list "$RUN_DB" <<SQL
+ATTACH '$NUMI_V4_DB' AS n4;
+SELECT
+  IFNULL(SUM(r.EXTTrig),0.0)
+FROM runinfo AS r
+JOIN n4.numi AS n ON r.run=n.run AND r.subrun=n.subrun
+WHERE r.begin_time >= '$S' AND r.end_time <= '$E'
+  AND IFNULL(n.EA9CNT_${col_sfx},0) > 0;
+SQL
+}
+
 # --- JSON: header -------------------------------------------------------------
 HOSTNAME="$(hostname 2>/dev/null || echo host)"
 GEN_TS="$(date -Is)"
@@ -114,6 +129,7 @@ GEN_TS="$(date -Is)"
   printf '  "horns_db": "%s",\n' "${NUMI_V4_DB:-}"
   printf '  "horns_enabled": %s,\n' "$horns_enabled_json"
   echo  '  "unitsTor": "POT",'
+  echo  '  "note_ext_split": "NuMI FHC/RHC EXT are sums of runinfo.EXTTrig masked by numi_v4.db polarity (EA9CNT_{fhc,rhc} > 0).",'
   echo  '  "runs": ['
 } > "$OUTPUT_JSON"
 
@@ -155,18 +171,24 @@ for r in 1 2 3 4 5; do
   row "$r" "TOTAL" "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
 
   if $have_numi_v4; then
+    # Split counts/pot from horns DB (existing)
     IFS='|' read -r cntF tor101F tortgtF < <(numi_horns_sql "$S" "$E" "FHC")
     IFS='|' read -r cntR tor101R tortgtR < <(numi_horns_sql "$S" "$E" "RHC")
-    row "$r" "FHC"  0 0 0 0 0 "$cntF" "$tor101F" "$tortgtF"
-    row "$r" "RHC"  0 0 0 0 0 "$cntR" "$tor101R" "$tortgtR"
+    # NEW: EXT split by horns mask
+    extF=$(numi_ext_split_sql "$S" "$E" "FHC")
+    extR=$(numi_ext_split_sql "$S" "$E" "RHC")
+
+    # Human-readable rows: put EXT_FHC/EXT_RHC in the first numeric column
+    row "$r" "FHC" "$extF" 0 0 0 0 "$cntF" "$tor101F" "$tortgtF"
+    row "$r" "RHC" "$extR" 0 0 0 0 "$cntR" "$tor101R" "$tortgtR"
 
     {
       printf '        "TOTAL": { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
              "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
-      printf '        "FHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
-             "$cntF" "$tor101F" "$tortgtF"
-      printf '        "RHC":   { "EXT": 0, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
-             "$cntR" "$tor101R" "$tortgtR"
+      printf '        "FHC":   { "EXT": %s, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
+             "$extF" "$cntF" "$tor101F" "$tortgtF"
+      printf '        "RHC":   { "EXT": %s, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
+             "$extR" "$cntR" "$tor101R" "$tortgtR"
     } >> "$OUTPUT_JSON"
   else
     {
@@ -174,15 +196,15 @@ for r in 1 2 3 4 5; do
              "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
     } >> "$OUTPUT_JSON"
   fi
- 
+
   # --- close NuMI + beams + run ---
   {
     printf '      }\n'        # close "NuMI"
     printf '    }\n'          # close "beams"
     if [[ $r -lt 5 ]]; then
-      printf '    },\n'       # close run object, then comma for next element
+      printf '    },\n'
     else
-      printf '    }\n'        # close final run object (no trailing comma)
+      printf '    }\n'
     fi
   } >> "$OUTPUT_JSON"
 
@@ -197,4 +219,3 @@ done
 } >> "$OUTPUT_JSON"
 
 echo "JSON written to: $OUTPUT_JSON"
-
