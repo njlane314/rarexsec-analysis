@@ -70,6 +70,8 @@ inline AnalysisResult runAnalysis(const nlohmann::json &samples,
 
   AnalysisResult result;
   for (auto const &[beam, runs] : samples.at("beamlines").items()) {
+    if (beam == "numi_ext")
+      continue;
     auto beamline_result =
         processBeamline(run_config_registry, ntuple_dir, beam, runs,
                         analysis_specs);
@@ -113,6 +115,8 @@ inline void runPlotting(const nlohmann::json &samples,
   auto result_map = result.resultsByBeam();
   bool plotted = false;
   for (auto const &[beam, runs] : samples.at("beamlines").items()) {
+    if (beam == "numi_ext")
+      continue;
     auto it = result_map.find(beam);
     if (it != result_map.end()) {
       plotBeamline(run_config_registry, ntuple_dir, beam, runs, plot_specs,
