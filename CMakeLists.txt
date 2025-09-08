@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(RareXSec LANGUAGES CXX)
 
+# Use ccache for faster rebuilds when available
+find_program(CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+    message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+endif()
+
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 17)
