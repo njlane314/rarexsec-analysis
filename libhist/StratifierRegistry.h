@@ -157,7 +157,7 @@ private:
     this->addScheme(
         "inclusive_strange_channels", StratifierType::kScalar,
         {{0, "Data", "Data", kBlack, 1001},
-         {1, "External", "External", kGray, 3004},
+         {1, "External", "External", kTeal + 2, 3345},
          {2, "Dirt", "Dirt", kGray + 2, 1001},
          {10, "numu_cc_1s", R"(#nu_{#mu}CC 1s)", kSpring + 5, 1001},
          {11, "numu_cc_ms", R"(#nu_{#mu}CC Ms)", kGreen + 2, 1001},
@@ -167,7 +167,7 @@ private:
          {23, "numu_cc_other", R"(#nu_{#mu}CC Other)", kViolet, 1001},
          {30, "nue_cc", R"(#nu_{e}CC)", kMagenta, 1001},
          {31, "nc", R"(#nu_{x}NC)", kBlue, 1001},
-         {98, "out_fv", "Out FV", kGray + 1, 3004},
+         {98, "out_fv", "Out FV", kYellow - 7, 1001},
          {99, "other", "Other", kCyan, 1001}});
   }
 
@@ -175,7 +175,7 @@ private:
     this->addScheme(
         "exclusive_strange_channels", StratifierType::kScalar,
         {{0, "Data", "Data", kBlack, 1001},
-         {1, "External", "External", kGray, 3004},
+         {1, "External", "External", kTeal + 2, 3345},
          {2, "Dirt", "Dirt", kGray + 2, 1001},
          {30, "nue_cc", R"(#nu_{e}CC)", kGreen + 2, 1001},
          {31, "nc", R"(#nu_{x}NC)", kBlue + 1, 1001},
@@ -201,7 +201,7 @@ private:
           kViolet + 1, 1001},
          {61, "numu_cc_other_strange", R"(#nu_{#mu}CC Other Strange)",
           kPink - 9, 1001},
-         {98, "out_fv", "Out FV", kGray + 1, 3004},
+         {98, "out_fv", "Out FV", kYellow - 7, 1001},
          {99, "other", "Other", kGray + 3, 1001}});
   }
 
