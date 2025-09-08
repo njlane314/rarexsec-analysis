@@ -2,6 +2,10 @@
 
 # Computes BNB & NuMI totals and NuMI FHC/RHC splits using sqlite3 directly,
 # and writes a JSON summary suitable for analysis code.
+#
+# FHC/RHC splits are obtained by masking runinfo counters with numi_v4.db
+# polarity (EA9CNT_{fhc,rhc} > 0). This keeps semantics consistent with your
+# existing "_wcut" SPLIT values which already come from numi_v4.db.
 
 : "${LC_ALL:=C}"; export LC_ALL
 
@@ -44,6 +48,8 @@ hdr() { printf "%-7s | %-6s | %14s %14s %14s %14s %14s %14s %14s %14s\n" \
               "Run" "$1" "EXT" "Gate" "Cnt" "TorA" "TorB/Target" "Cnt_wcut" "TorA_wcut" "TorB/Target_wcut"; }
 row() { printf "%-7s | %-6s | %14.1f %14.1f %14.1f %14.4g %14.4g %14.1f %14.4g %14.4g\n" "$@"; }
 
+# ---------------- SQL helpers ----------------
+
 # BNB totals (joins runinfo with bnb_v{1,2}.db)
 bnb_totals_sql() {
   local S="$1" E="$2"
@@ -84,7 +90,7 @@ WHERE r.begin_time >= '$S' AND r.end_time <= '$E';
 SQL
 }
 
-# NuMI horns (reads wcut split columns from numi_v4.db directly)
+# NuMI horns "wcut" split (from numi_v4.db directly)
 numi_horns_sql() {
   local S="$1" E="$2" which="$3"  # which = FHC or RHC
   local col_sfx; [[ "$which" == "FHC" ]] && col_sfx="fhc" || col_sfx="rhc"
@@ -100,14 +106,31 @@ WHERE r.begin_time >= '$S' AND r.end_time <= '$E';
 SQL
 }
 
-# NEW: NuMI EXT split by horns using numi_v4.db mask
+# NEW: Split EXT by horns mask (EA9CNT_{fhc,rhc} > 0)
 numi_ext_split_sql() {
-  local S="$1" E="$2" which="$3"  # which = FHC or RHC
+  local S="$1" E="$2" which="$3"
+  local col_sfx; [[ "$which" == "FHC" ]] && col_sfx="fhc" || col_sfx="rhc"
+  sqlite3 -noheader -list "$RUN_DB" <<SQL
+ATTACH '$NUMI_V4_DB' AS n4;
+SELECT IFNULL(SUM(r.EXTTrig),0.0)
+FROM runinfo AS r
+JOIN n4.numi AS n ON r.run=n.run AND r.subrun=n.subrun
+WHERE r.begin_time >= '$S' AND r.end_time <= '$E'
+  AND IFNULL(n.EA9CNT_${col_sfx},0) > 0;
+SQL
+}
+
+# NEW: Split runinfo counters (Gate1Trig, EA9CNT, tor101, tortgt) by horns mask
+numi_runinfo_split_sql() {
+  local S="$1" E="$2" which="$3"
   local col_sfx; [[ "$which" == "FHC" ]] && col_sfx="fhc" || col_sfx="rhc"
   sqlite3 -noheader -list "$RUN_DB" <<SQL
 ATTACH '$NUMI_V4_DB' AS n4;
 SELECT
-  IFNULL(SUM(r.EXTTrig),0.0)
+  IFNULL(SUM(r.Gate1Trig),0.0),         -- Gate
+  IFNULL(SUM(r.EA9CNT),0.0),            -- Cnt
+  IFNULL(SUM(r.tor101)*1e12,0.0),       -- TorA
+  IFNULL(SUM(r.tortgt)*1e12,0.0)        -- TorB/Target
 FROM runinfo AS r
 JOIN n4.numi AS n ON r.run=n.run AND r.subrun=n.subrun
 WHERE r.begin_time >= '$S' AND r.end_time <= '$E'
@@ -130,6 +153,7 @@ GEN_TS="$(date -Is)"
   printf '  "horns_enabled": %s,\n' "$horns_enabled_json"
   echo  '  "unitsTor": "POT",'
   echo  '  "note_ext_split": "NuMI FHC/RHC EXT are sums of runinfo.EXTTrig masked by numi_v4.db polarity (EA9CNT_{fhc,rhc} > 0).",'
+  echo  '  "note_split_caveat": "Masked splits may not sum exactly to TOTAL if some subruns have horns-off or mixed activity.",'
   echo  '  "runs": ['
 } > "$OUTPUT_JSON"
 
@@ -171,24 +195,29 @@ for r in 1 2 3 4 5; do
   row "$r" "TOTAL" "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
 
   if $have_numi_v4; then
-    # Split counts/pot from horns DB (existing)
-    IFS='|' read -r cntF tor101F tortgtF < <(numi_horns_sql "$S" "$E" "FHC")
-    IFS='|' read -r cntR tor101R tortgtR < <(numi_horns_sql "$S" "$E" "RHC")
-    # NEW: EXT split by horns mask
+    # Split "wcut" (from horns DB)
+    IFS='|' read -r cntF_w tor101F_w tortgtF_w < <(numi_horns_sql "$S" "$E" "FHC")
+    IFS='|' read -r cntR_w tor101R_w tortgtR_w < <(numi_horns_sql "$S" "$E" "RHC")
+
+    # Split runinfo counters by polarity mask
+    IFS='|' read -r gateF cntF tor101F tortgtF < <(numi_runinfo_split_sql "$S" "$E" "FHC")
+    IFS='|' read -r gateR cntR tor101R tortgtR < <(numi_runinfo_split_sql "$S" "$E" "RHC")
+
+    # Split EXT by polarity mask
     extF=$(numi_ext_split_sql "$S" "$E" "FHC")
     extR=$(numi_ext_split_sql "$S" "$E" "RHC")
 
-    # Human-readable rows: put EXT_FHC/EXT_RHC in the first numeric column
-    row "$r" "FHC" "$extF" 0 0 0 0 "$cntF" "$tor101F" "$tortgtF"
-    row "$r" "RHC" "$extR" 0 0 0 0 "$cntR" "$tor101R" "$tortgtR"
+    # Human-readable FHC/RHC rows
+    row "$r" "FHC" "$extF" "$gateF" "$cntF" "$tor101F" "$tortgtF" "$cntF_w" "$tor101F_w" "$tortgtF_w"
+    row "$r" "RHC" "$extR" "$gateR" "$cntR" "$tor101R" "$tortgtR" "$cntR_w" "$tor101R_w" "$tortgtR_w"
 
     {
       printf '        "TOTAL": { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
              "$EXT1" "$Gate1" "$CntN" "$Tor101" "$Tortgt" "$CntNW" "$Tor101W" "$TortgtW"
-      printf '        "FHC":   { "EXT": %s, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
-             "$extF" "$cntF" "$tor101F" "$tortgtF"
-      printf '        "RHC":   { "EXT": %s, "Gate": 0, "Cnt": 0, "TorA": 0, "TorB_Target": 0, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
-             "$extR" "$cntR" "$tor101R" "$tortgtR"
+      printf '        "FHC":   { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s },\n' \
+             "$extF" "$gateF" "$cntF" "$tor101F" "$tortgtF" "$cntF_w" "$tor101F_w" "$tortgtF_w"
+      printf '        "RHC":   { "EXT": %s, "Gate": %s, "Cnt": %s, "TorA": %s, "TorB_Target": %s, "Cnt_wcut": %s, "TorA_wcut": %s, "TorB_Target_wcut": %s }\n' \
+             "$extR" "$gateR" "$cntR" "$tor101R" "$tortgtR" "$cntR_w" "$tor101R_w" "$tortgtR_w"
     } >> "$OUTPUT_JSON"
   else
     {
@@ -219,3 +248,4 @@ done
 } >> "$OUTPUT_JSON"
 
 echo "JSON written to: $OUTPUT_JSON"
+
