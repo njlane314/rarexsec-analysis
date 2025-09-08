@@ -299,7 +299,7 @@ private:
                "aggregated entries");
     return finaliseEdges(xw, summary.sumw, summary.sumw2, original_bdef,
                          min_neff_per_bin, include_oob_bins, strategy,
-                         bin_resolution);
+                         bin_resolution, summary.xmin, summary.xmax);
   }
 
   template <typename T>
@@ -318,7 +318,7 @@ private:
                "aggregated entries");
     return finaliseEdges(xw, summary.sumw, summary.sumw2, original_bdef,
                          min_neff_per_bin, include_oob_bins, strategy,
-                         bin_resolution);
+                         bin_resolution, summary.xmin, summary.xmax);
   }
 
   static void filterEntries(std::vector<std::pair<double, double>> &xw) {
@@ -577,10 +577,16 @@ private:
   finaliseEdges(std::vector<std::pair<double, double>> &xw, double sumw,
                 double sumw2, const BinningDefinition &original_bdef,
                 double min_neff_per_bin, bool include_oob_bins,
-                DynamicBinningStrategy strategy, double bin_resolution) {
+                DynamicBinningStrategy strategy, double bin_resolution,
+                double data_min, double data_max) {
     const auto &domain_edges = original_bdef.getEdges();
     double domain_min = domain_edges.front();
     double domain_max = domain_edges.back();
+
+    if (!std::isfinite(domain_min))
+      domain_min = data_min;
+    if (!std::isfinite(domain_max))
+      domain_max = data_max;
 
     filterEntries(xw);
 
@@ -593,14 +599,14 @@ private:
       auto mm = std::minmax_element(
           in_range.begin(), in_range.end(),
           [](const auto &a, const auto &b) { return a.first < b.first; });
-      if (!std::isfinite(domain_min))
+      if (!std::isfinite(domain_edges.front()))
         domain_min = mm.first->first;
-      if (!std::isfinite(domain_max))
+      if (!std::isfinite(domain_edges.back()))
         domain_max = mm.second->first;
     } else {
-      if (!std::isfinite(domain_min))
+      if (!std::isfinite(domain_edges.front()))
         domain_min = 0.0;
-      if (!std::isfinite(domain_max))
+      if (!std::isfinite(domain_edges.back()))
         domain_max = 1.0;
     }
 
