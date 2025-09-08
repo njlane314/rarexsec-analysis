@@ -182,6 +182,10 @@ public:
                           "Skipping dynamic binning for variable",
                           var_handle.key_.str(),
                           ": no Monte Carlo samples were found.");
+                for (auto &entry : loader.getSampleFrames()) {
+                    log::warn("AnalysisDefinition::resolveDynamicBinning",
+                              "Available sample:", entry.first.str());
+                }
                 continue;
             }
 
