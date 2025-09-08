@@ -28,6 +28,11 @@ public:
   AnalysisResult run(const nlohmann::json &samples,
                      const std::string &output_path) const;
 
+  // Convenience overload: load the samples configuration from a JSON file
+  // located at \p samples_path before executing the analysis pipeline.
+  AnalysisResult run(const std::string &samples_path,
+                     const std::string &output_path) const;
+
 private:
   PluginSpecList analysis_specs_;
   PluginSpecList plot_specs_;

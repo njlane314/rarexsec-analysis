@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -207,6 +208,13 @@ AnalysisResult PipelineRunner::run(const nlohmann::json &samples,
   result.saveToFile(output_path.c_str());
   runPlotting(samples, plot_specs_, result);
   return result;
+}
+
+AnalysisResult PipelineRunner::run(const std::string &samples_path,
+                                   const std::string &output_path) const {
+  std::ifstream in(samples_path);
+  nlohmann::json samples = nlohmann::json::parse(in, nullptr, true, true);
+  return run(samples, output_path);
 }
 
 } // namespace analysis
