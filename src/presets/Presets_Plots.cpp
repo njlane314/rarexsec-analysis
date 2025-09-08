@@ -7,18 +7,18 @@ using namespace analysis;
 // Presets for plot-specific configuration.
 // Configures stacked histogram plots stratified by the inclusive category scheme.
 ANALYSIS_REGISTER_PRESET(STACKED_PLOTS, Target::Plot,
-  [](const PluginArgs&) -> PluginSpecList {
+  ([](const PluginArgs&) -> PluginSpecList {
     nlohmann::json plot = {{"category_column", "inclusive"}};
     PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({plot})}}}};
     return {{"StackedHistogramPlugin", args}};
-  }
+  })
 )
 
 // Preset to configure the EventDisplay plugin with a single display request.
 // Values are taken from the provided variables or fall back to sensible
 // defaults matching the plugin's own choices.
 ANALYSIS_REGISTER_PRESET(EVENT_DISPLAY, Target::Plot,
-  [](const PluginArgs& vars) -> PluginSpecList {
+  ([](const PluginArgs& vars) -> PluginSpecList {
     auto cfg = vars.plot_configs;
     nlohmann::json ed = {
       {"sample", cfg.value("sample", std::string{})},
@@ -31,6 +31,6 @@ ANALYSIS_REGISTER_PRESET(EVENT_DISPLAY, Target::Plot,
     PluginArgs args{{"plot_configs",
                      {{"event_displays", nlohmann::json::array({ed})}}}};
     return {{"EventDisplayPlugin", args}};
-  }
+  })
 )
 
