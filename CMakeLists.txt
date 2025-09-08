@@ -48,6 +48,7 @@ add_library(analyse STATIC
     ana/presets/Presets_Vertices.cpp
     ana/presets/Presets_Plots.cpp
     ana/presets/Presets_Preselections.cpp
+    ana/presets/Presets_TopologicalScore.cpp
 )
 target_link_libraries(analyse
     PUBLIC
@@ -72,6 +73,7 @@ add_executable(pipeline_runner_example
     ana/presets/Presets_Vertices.cpp
     ana/presets/Presets_Plots.cpp
     ana/presets/Presets_Preselections.cpp
+    ana/presets/Presets_TopologicalScore.cpp
 )
 target_link_libraries(pipeline_runner_example
     PRIVATE
