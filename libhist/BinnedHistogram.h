@@ -36,11 +36,11 @@ class BinnedHistogram : public TNamed, private TH1DRenderer {
     static BinnedHistogram createFromTH1D(const BinningDefinition &bn, const TH1D &hist,
                                           TString nm = "hist", TString ti = "", Color_t cl = kBlack,
                                           int ht = 0, TString tx = "") {
-        std::vector<double> counts;
         int n = hist.GetNbinsX();
+        std::vector<double> counts(n);
         Eigen::VectorXd sh_vec = Eigen::VectorXd::Zero(n);
         for (int i = 1; i <= n; ++i) {
-            counts.push_back(hist.GetBinContent(i));
+            counts[i - 1] = hist.GetBinContent(i);
             sh_vec(i - 1) = hist.GetBinError(i);
         }
 
