@@ -113,6 +113,11 @@ class DetectorSystematicStrategy : public SystematicStrategy {
             result.transfer_ratio_hists_[syst_key] = transfer_ratio;
             result.variation_hists_[syst_key] = h_proj_k;
             result.delta_hists_[syst_key] = delta;
+            for (int i = 0; i < delta.getNumberOfBins(); ++i) {
+                log::debug("DetectorSystematicStrategy::projectVariations",
+                           variationToKey(var_key), "bin", i,
+                           "delta", delta.getBinContent(i));
+            }
         }
     }
 
