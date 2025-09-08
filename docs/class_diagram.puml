@@ -82,21 +82,10 @@ package plug #LightYellow {
     +execute()
   }
 
-  class AnalysisPluginManager {
-    +register()
-  }
-
   interface IPlotPlugin {
     +onPlot()
   }
-
-  class PlotPluginManager {
-    +register()
-  }
 }
-
-AnalysisPluginManager o--> IAnalysisPlugin : manages
-PlotPluginManager o--> IPlotPlugin : manages
 
 package plot #LightGreen {
   top to bottom direction
