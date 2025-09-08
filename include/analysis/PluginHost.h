@@ -18,10 +18,16 @@ public:
   void loadDirectory(const std::string& dir, bool recurse = false) {
     namespace fs = std::filesystem;
     if (!fs::exists(dir)) return;
-    auto walker = recurse ? fs::recursive_directory_iterator(dir) : fs::directory_iterator(dir);
-    for (const auto& entry : walker) {
-      if (!entry.is_regular_file()) continue;
-      if (entry.path().extension() == ".so") openHandle(entry.path().string());
+    if (recurse) {
+      for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        if (!entry.is_regular_file()) continue;
+        if (entry.path().extension() == ".so") openHandle(entry.path().string());
+      }
+    } else {
+      for (const auto& entry : fs::directory_iterator(dir)) {
+        if (!entry.is_regular_file()) continue;
+        if (entry.path().extension() == ".so") openHandle(entry.path().string());
+      }
     }
   }
 

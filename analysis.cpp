@@ -64,14 +64,14 @@ buildPipeline(const nlohmann::json &cfg) {
             PluginArgs vars;
             if (p.contains("vars")) {
                 const auto &vj = p.at("vars");
-                vars = PluginArgs{{"analysis_configs", vj.value("analysis_configs", PluginArgs::object())},
-                                  {"plot_configs", vj.value("plot_configs", PluginArgs::object())}};
+                vars = PluginArgs{{"analysis_configs", vj.value("analysis_configs", nlohmann::json::object())},
+                                  {"plot_configs", vj.value("plot_configs", nlohmann::json::object())}};
             }
             std::unordered_map<std::string, PluginArgs> overrides;
             if (p.contains("overrides")) {
                 for (auto const &[k, v] : p.at("overrides").items()) {
-                    overrides.emplace(k, PluginArgs{{"analysis_configs", v.value("analysis_configs", PluginArgs::object())},
-                                                    {"plot_configs", v.value("plot_configs", PluginArgs::object())}});
+                    overrides.emplace(k, PluginArgs{{"analysis_configs", v.value("analysis_configs", nlohmann::json::object())},
+                                                    {"plot_configs", v.value("plot_configs", nlohmann::json::object())}});
                 }
             }
             std::string kind = p.value("kind", std::string("region"));
@@ -97,8 +97,10 @@ buildPipeline(const nlohmann::json &cfg) {
             PluginArgs args;
             if (p.contains("args")) {
                 const auto &a = p.at("args");
-                args = PluginArgs{{"analysis_configs", a.value("analysis_configs", PluginArgs::object())},
-                                  {"plot_configs", a.value("plot_configs", PluginArgs::object())}};
+                if (a.contains("analysis_configs"))
+                    args.analysis_configs = a.at("analysis_configs");
+                if (a.contains("plot_configs"))
+                    args.plot_configs = a.at("plot_configs");
             }
             builder.add(target, id, args);
         }

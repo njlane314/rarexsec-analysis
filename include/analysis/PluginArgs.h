@@ -31,7 +31,9 @@ struct PluginArgs {
     // Convenience helpers mirroring a subset of the old nlohmann::json API.
     static nlohmann::json object() { return nlohmann::json::object(); }
     static nlohmann::json array(std::initializer_list<nlohmann::json> init = {}) {
-        return nlohmann::json::array(init);
+        nlohmann::json arr = nlohmann::json::array();
+        arr.insert(arr.end(), init.begin(), init.end());
+        return arr;
     }
 };
 

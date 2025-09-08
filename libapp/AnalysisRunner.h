@@ -55,7 +55,12 @@ public:
     if (plgn_cfg.contains("plugins")) {
       for (const auto& p : plgn_cfg.at("plugins")) {
         std::string id = p.at("id").get<std::string>();
-        PluginArgs args = p.value("args", PluginArgs::object());
+        PluginArgs args;
+        if (p.contains("args")) {
+          const auto& jargs = p.at("args");
+          if (jargs.contains("analysis_configs")) args.analysis_configs = jargs.at("analysis_configs");
+          if (jargs.contains("plot_configs")) args.plot_configs = jargs.at("plot_configs");
+        }
         a_host_.add(id, args);
       }
     }
