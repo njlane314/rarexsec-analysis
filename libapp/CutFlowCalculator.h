@@ -2,6 +2,8 @@
 #define CUT_FLOW_CALCULATOR_H
 
 #include <functional>
+#include <iomanip>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -51,14 +53,14 @@ public:
       auto base_df = sample_def.nominal_node_.Define(
           "w2", "nominal_event_weight*nominal_event_weight");
 
-      auto cumulative_nodes =
-          buildCumulativeFilters(base_df, clauses);
+      auto cumulative_nodes = buildCumulativeFilters(base_df, clauses);
 
       calculateWeightsPerStage(cumulative_nodes, stage_counts, schemes,
                                scheme_keys, scheme_filters);
       log::debug("CutFlowCalculator::compute", "Completed sample", skey.str());
     }
 
+    printSummary(region_handle, clauses, stage_counts);
     region_analysis.setCutFlow(std::move(stage_counts));
   }
 
@@ -101,10 +103,9 @@ private:
         results.emplace_back(ch_w);
         results.emplace_back(ch_w2);
 
-        value_setters.emplace_back(
-            [&stage_count, scheme, key, ch_w]() mutable {
-              stage_count.schemes[scheme][key].first += ch_w.GetValue();
-            });
+        value_setters.emplace_back([&stage_count, scheme, key, ch_w]() mutable {
+          stage_count.schemes[scheme][key].first += ch_w.GetValue();
+        });
         value_setters.emplace_back(
             [&stage_count, scheme, key, ch_w2]() mutable {
               stage_count.schemes[scheme][key].second += ch_w2.GetValue();
@@ -151,6 +152,46 @@ private:
     for (auto &setter : value_setters) {
       setter();
     }
+  }
+
+  static void
+  printSummary(const RegionHandle &region_handle,
+               const std::vector<std::string> &clauses,
+               const std::vector<RegionAnalysis::StageCount> &stage_counts) {
+    size_t width = 70;
+    std::string line(width, '=');
+    std::string sub(width, '-');
+
+    std::cout << '\n' << line << '\n';
+    std::cout << std::left << std::setw(width)
+              << ("CutFlow Summary: " + region_handle.key_.str()) << '\n';
+    std::cout << line << '\n';
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << std::left << std::setw(30) << "Stage" << std::right
+              << std::setw(width - 30) << "Total MC Events" << '\n';
+    for (size_t i = 0; i < stage_counts.size(); ++i) {
+      std::string label = i == 0 ? "initial" : clauses[i - 1];
+      std::cout << std::left << std::setw(30) << label << std::right
+                << std::setw(width - 30) << stage_counts[i].total << '\n';
+    }
+
+    std::cout << sub << '\n';
+    std::cout << std::left << std::setw(width)
+              << "Stratum MC Sums (final stage)" << '\n';
+
+    if (!stage_counts.empty()) {
+      const auto &final_stage = stage_counts.back();
+      for (const auto &[scheme, m] : final_stage.schemes) {
+        std::cout << std::left << std::setw(width) << scheme << '\n';
+        for (const auto &[key, pr] : m) {
+          std::cout << std::left << std::setw(30) << key << std::right
+                    << std::setw(width - 30) << pr.first << '\n';
+        }
+      }
+    }
+
+    std::cout << line << "\n";
   }
 
   Loader &data_loader_;
