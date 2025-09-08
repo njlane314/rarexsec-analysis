@@ -47,8 +47,13 @@ public:
       }
     }
 
+    log::debug("CutFlowCalculator::compute", "Processing", sample_frames.size(),
+               "sample frames");
     for (auto &[skey, sample_def] : sample_frames) {
+      log::debug("CutFlowCalculator::compute", "Examining sample", skey.str());
       if (!sample_def.isMc()) {
+        log::debug("CutFlowCalculator::compute", skey.str(),
+                   "is not MC - skipping");
         continue;
       }
 
@@ -57,6 +62,7 @@ public:
 
       calculateWeightsPerStage(base_df, cumulative_filters, stage_counts,
                                schemes, scheme_keys, scheme_filters);
+      log::debug("CutFlowCalculator::compute", "Completed sample", skey.str());
     }
 
     region_analysis.setCutFlow(std::move(stage_counts));
@@ -92,7 +98,9 @@ private:
       std::vector<ROOT::RDF::RResultPtr<double>> &results,
       std::vector<std::function<void()>> &value_setters) {
     for (const auto &scheme : schemes) {
+      log::debug("CutFlowCalculator::updateSchemeTallies", "Scheme", scheme);
       for (int key : scheme_keys.at(scheme)) {
+        log::debug("CutFlowCalculator::updateSchemeTallies", "  Key", key);
         auto ch_df = df.Filter(scheme_filters.at(scheme).at(key));
 
         auto ch_w = ch_df.Sum<double>("nominal_event_weight");
@@ -126,6 +134,8 @@ private:
 
     for (size_t i = 0; i < cumulative_filters.size(); ++i) {
       auto df = base_df;
+      log::debug("CutFlowCalculator::calculateWeightsPerStage", "Stage", i,
+                 "Filter", cumulative_filters[i]);
 
       if (!cumulative_filters[i].empty()) {
         df = df.Filter(cumulative_filters[i]);
