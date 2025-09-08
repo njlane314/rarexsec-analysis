@@ -64,10 +64,28 @@ class SampleDefinition {
     std::map<SampleVariation, ROOT::RDF::RNode> variation_nodes_;
 
     SampleDefinition(const nlohmann::json &j, const nlohmann::json &all_samples_json, const std::string &base_dir,
-                     const VariableRegistry &var_reg, IEventProcessor &processor) {
-        this->parseMetadata(j);
+                     const VariableRegistry &var_reg, IEventProcessor &processor)
+        : sample_key_{j.at("sample_key").get<std::string>()},
+          sample_origin_{[&]() {
+              auto ts = j.at("sample_type").get<std::string>();
+              return (ts == "mc"     ? SampleOrigin::kMonteCarlo
+                      : ts == "data" ? SampleOrigin::kData
+                      : ts == "ext"  ? SampleOrigin::kExternal
+                                      : SampleOrigin::kUnknown);
+          }()},
+          rel_path_{j.value("relative_path", "")},
+          truth_filter_{j.value("truth_filter", "")},
+          truth_exclusions_{j.value("exclusion_truth_filters", std::vector<std::string>{})},
+          pot_{j.value("pot", 0.0)},
+          triggers_{j.value("triggers", 0L)},
+          nominal_node_{makeDataFrame(base_dir, var_reg, processor, rel_path_, all_samples_json)} {
+        if (j.contains("detector_variations")) {
+            for (auto &dv : j.at("detector_variations")) {
+                SampleVariation dvt = this->convertDetVarType(dv.at("variation_type").get<std::string>());
+                var_paths_[dvt] = dv.at("relative_path").get<std::string>();
+            }
+        }
         this->validateFiles(base_dir);
-        nominal_node_ = this->makeDataFrame(base_dir, var_reg, processor, rel_path_, all_samples_json);
         if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto &[dv, path] : var_paths_) {
                 variation_nodes_.emplace(dv, this->makeDataFrame(base_dir, var_reg, processor, path, all_samples_json));
@@ -104,26 +122,6 @@ class SampleDefinition {
 
   private:
     std::map<SampleVariation, std::string> var_paths_;
-
-    void parseMetadata(const nlohmann::json &j) {
-        sample_key_ = SampleKey{j.at("sample_key").get<std::string>()};
-        auto ts = j.at("sample_type").get<std::string>();
-        sample_origin_ = (ts == "mc"     ? SampleOrigin::kMonteCarlo
-                          : ts == "data" ? SampleOrigin::kData
-                          : ts == "ext"  ? SampleOrigin::kExternal
-                                         : SampleOrigin::kUnknown);
-        rel_path_ = j.value("relative_path", "");
-        truth_filter_ = j.value("truth_filter", "");
-        truth_exclusions_ = j.value("exclusion_truth_filters", std::vector<std::string>{});
-        pot_ = j.value("pot", 0.0);
-        triggers_ = j.value("triggers", 0L);
-        if (j.contains("detector_variations")) {
-            for (auto &dv : j.at("detector_variations")) {
-                SampleVariation dvt = this->convertDetVarType(dv.at("variation_type").get<std::string>());
-                var_paths_[dvt] = dv.at("relative_path").get<std::string>();
-            }
-        }
-    }
 
     SampleVariation convertDetVarType(const std::string &s) const {
         if (s == "cv")
