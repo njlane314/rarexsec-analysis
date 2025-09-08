@@ -17,7 +17,7 @@ TEST_CASE("topological_score_preset_generates_variable_spec") {
   auto var = vars.at(0);
   REQUIRE(var.at("name") == "topological_score");
   auto bins = var.at("bins");
-  REQUIRE(bins.at("n") == 10);
+  REQUIRE(bins.at("n") == 100);
   REQUIRE(bins.at("min") == 0.0);
   REQUIRE(bins.at("max") == 1.0);
 }
