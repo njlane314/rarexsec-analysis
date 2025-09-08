@@ -7,10 +7,10 @@
 #include <cmath>
 #include <iostream>
 #include <map>
-#include <numeric>
 #include <stdexcept>
 #include <cassert>
 #include <functional>
+#include <limits>
 
 namespace BayesianBlocks {
 
@@ -39,17 +39,19 @@ static void validate(bb::data_array &data, bb::weights_array &weights) {
 }
 
 static bb::array preprocess(bb::data_array &data, bb::weights_array &weights) {
-    const auto N = data.size();
+    const size_t N = data.size();
 
-    std::vector<bb::pair> hist;
-    hist.reserve(N);
-    for (size_t i = 0; i < N; ++i)
-        hist.emplace_back(data[i], weights[i]);
-    std::sort(hist.begin(), hist.end(), [](bb::pair a, bb::pair b) { return a.first < b.first; });
-
-    for (size_t i = 0; i < N; ++i) {
-        data[i] = hist[i].first;
-        weights[i] = hist[i].second;
+    if (!std::is_sorted(data.begin(), data.end())) {
+        std::vector<bb::pair> hist;
+        hist.reserve(N);
+        for (size_t i = 0; i < N; ++i)
+            hist.emplace_back(data[i], weights[i]);
+        std::sort(hist.begin(), hist.end(),
+                  [](bb::pair a, bb::pair b) { return a.first < b.first; });
+        for (size_t i = 0; i < N; ++i) {
+            data[i] = hist[i].first;
+            weights[i] = hist[i].second;
+        }
     }
 
     bb::array edges(N + 1);
@@ -67,30 +69,41 @@ bb::array blocks(bb::data_array data, bb::weights_array weights, double p, std::
     validate(data, weights);
     auto edges = preprocess(data, weights);
 
-    const auto N = data.size();
+    const size_t N = data.size();
     auto cash = [](double Nk, double Tk) { return Nk * std::log(Nk / Tk); };
-    auto ncp_prior = std::log(73.53 * p * std::pow(N, -0.478)) - 4.0;
-    bb::array last(N);
-    bb::array best(N);
+    double ncp_prior = std::log(73.53 * p * std::pow((double)N, -0.478)) - 4.0;
+
+    std::vector<double> wprefix(N + 1, 0.0);
+    for (size_t i = 0; i < N; ++i) wprefix[i + 1] = wprefix[i] + weights[i];
+
+    std::vector<double> best(N, -std::numeric_limits<double>::infinity());
+    std::vector<size_t> last(N, 0);
+
     auto init_time = bb::duration_cast<bb::us>(bb::clock::now() - start).count();
     start = bb::clock::now();
+
     for (size_t k = 0; k < N; ++k) {
-        bb::array A(k + 1);
+        double best_val = -std::numeric_limits<double>::infinity();
+        size_t best_r = 0;
         for (size_t r = 0; r <= k; ++r) {
-            double Nk = std::accumulate(weights.begin() + r, weights.begin() + k + 1, 0.0);
+            double Nk = wprefix[k + 1] - wprefix[r];
             double Tk = edges[k + 1] - edges[r];
-            A[r] = cash(Nk, Tk) + ncp_prior + (r == 0 ? 0.0 : best[r - 1]);
+            double val = cash(Nk, Tk) + ncp_prior + (r ? best[r - 1] : 0.0);
+            if (val > best_val) {
+                best_val = val;
+                best_r = r;
+            }
         }
-        last[k] = std::distance(A.begin(), std::max_element(A.begin(), A.end()));
-        best[k] = A[last[k]];
+        best[k] = best_val;
+        last[k] = best_r;
         if (counter) counter(k, N);
     }
-    
+
     auto loop_time = bb::duration_cast<bb::us>(bb::clock::now() - start).count();
     start = bb::clock::now();
 
     std::vector<size_t> cp;
-    for (auto i = N; i != 0; i = last[i - 1])
+    for (size_t i = N; i != 0; i = last[i - 1])
         cp.push_back(i);
     cp.push_back(0);
     std::reverse(cp.begin(), cp.end());
