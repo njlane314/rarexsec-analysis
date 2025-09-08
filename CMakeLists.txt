@@ -25,7 +25,7 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
     "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
     "${CMAKE_CURRENT_SOURCE_DIR}/libplug"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/analysis"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libpipeline"
 )
 
 add_subdirectory(libdata)
@@ -37,7 +37,7 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
-add_library(analyse STATIC PipelineRunner.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
+add_library(analyse STATIC src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
 target_link_libraries(analyse
     PUBLIC
         libapp
