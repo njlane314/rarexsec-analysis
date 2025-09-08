@@ -8,7 +8,7 @@ using namespace analysis;
 // Configures stacked histogram plots stratified by the inclusive category scheme.
 ANALYSIS_REGISTER_PRESET(STACKED_PLOTS, Target::Plot,
   ([](const PluginArgs&) -> PluginSpecList {
-    nlohmann::json plot = {{"category_column", "inclusive"}};
+    nlohmann::json plot = {{"category_column", "inclusive_strange_channels"}};
     PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({plot})}}}};
     return {{"StackedHistogramPlugin", args}};
   })
