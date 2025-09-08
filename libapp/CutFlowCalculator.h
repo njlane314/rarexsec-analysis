@@ -39,8 +39,7 @@ public:
         scheme_filters;
 
     for (const auto &scheme : schemes) {
-      for (const auto &key : strat_reg.getAllStratumKeysForScheme(scheme)) {
-        int int_key = std::stoi(key.str());
+      for (int int_key : strat_reg.getAllStratumIntKeysForScheme(scheme)) {
         scheme_keys[scheme].push_back(int_key);
         scheme_filters[scheme][int_key] =
             scheme + " == " + std::to_string(int_key);
