@@ -8,8 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisKey.h"
@@ -26,8 +24,8 @@
 #include "CutFlowCalculator.h"
 #include "VariableProcessor.h"
 
-// NEW
 #include "PluginAliases.h"
+#include "PluginSpec.h"
 
 namespace analysis {
 
@@ -36,7 +34,7 @@ public:
   AnalysisRunner(AnalysisDataLoader &ldr,
                  std::unique_ptr<HistogramFactory> factory,
                  SystematicsProcessor &sys_proc,
-                 const nlohmann::json &plgn_cfg)
+                 const PluginSpecList &specs)
     : a_host_(&ldr),
       p_host_(&ldr),
       data_loader_(ldr),
@@ -51,18 +49,8 @@ public:
     // const char* dir = std::getenv("ANALYSIS_PLUGIN_DIR");
     // if (dir) a_host_.loadDirectory(dir, /*recurse=*/false);
 
-    // Load plugin specs (new format) into analysis host
-    if (plgn_cfg.contains("plugins")) {
-      for (const auto& p : plgn_cfg.at("plugins")) {
-        std::string id = p.at("id").get<std::string>();
-        PluginArgs args;
-        if (p.contains("args")) {
-          const auto& jargs = p.at("args");
-          if (jargs.contains("analysis_configs")) args.analysis_configs = jargs.at("analysis_configs");
-          if (jargs.contains("plot_configs")) args.plot_configs = jargs.at("plot_configs");
-        }
-        a_host_.add(id, args);
-      }
+    for (const auto &s : specs) {
+      a_host_.add(s.id, s.args);
     }
   }
 

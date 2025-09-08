@@ -34,21 +34,6 @@ using analysis::PluginArgs;
 using analysis::PluginSpecList;
 using analysis::Target;
 
-// Convert a list of plugin specifications to the JSON format
-// consumed by AnalysisRunner's constructor.
-static nlohmann::json specsToJson(const PluginSpecList &specs) {
-    nlohmann::json arr = nlohmann::json::array();
-    for (auto const &s : specs) {
-        nlohmann::json arg = nlohmann::json::object();
-        if (!s.args.analysis_configs.is_null() && !s.args.analysis_configs.empty())
-            arg["analysis_configs"] = s.args.analysis_configs;
-        if (!s.args.plot_configs.is_null() && !s.args.plot_configs.empty())
-            arg["plot_configs"] = s.args.plot_configs;
-        arr.push_back({{"id", s.id}, {"args", arg}});
-    }
-    return nlohmann::json{{"plugins", arr}};
-}
-
 // Build separate analysis and plot plugin specification lists using
 // the PipelineBuilder. This supports presets and explicit plugins in
 // the configuration.
@@ -130,9 +115,8 @@ processBeamline(analysis::RunConfigRegistry &run_config_registry,
     auto histogram_factory =
         std::make_unique<analysis::HistogramFactory>();
 
-    nlohmann::json plugin_cfg = specsToJson(analysis_specs);
     analysis::AnalysisRunner runner(data_loader, std::move(histogram_factory),
-                                    systematics_processor, plugin_cfg);
+                                    systematics_processor, analysis_specs);
 
     return runner.run();
 }

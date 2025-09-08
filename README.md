@@ -147,6 +147,20 @@ builder.variable("EMPTY");
 builder.preset("NEUTRINO_VERTEX_STACKED_PLOTS");
 ```
 
+The resulting specification lists can be supplied directly to `AnalysisRunner`
+without writing intermediate JSON:
+
+```cpp
+auto analysis_specs = builder.analysisSpecs();
+// configure data_loader, histogram_factory, and syst_processor
+AnalysisRunner runner(data_loader, std::move(histogram_factory),
+                      syst_processor, analysis_specs);
+auto result = runner.run();
+```
+
+See [`examples/analysis_runner_example.cpp`](examples/analysis_runner_example.cpp)
+for a more complete demonstration.
+
 ## Run Periods
 
 1. Run 1 → October 2015 to July 2016
