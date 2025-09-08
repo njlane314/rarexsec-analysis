@@ -55,3 +55,21 @@ target_link_libraries(analyse
         dl
 )
 
+add_executable(neutrino_vertex_stacked_example examples/neutrino_vertex_stacked_plots.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp)
+target_link_libraries(neutrino_vertex_stacked_example
+    PRIVATE
+        libapp
+        libplug
+        libdata
+        libhist
+        libplot
+        libsyst
+        libutils
+        Eigen3::Eigen
+        nlohmann_json::nlohmann_json
+        ${ROOT_LIBRARIES}
+        TBB::tbb
+        TMVA
+        dl
+)
+
