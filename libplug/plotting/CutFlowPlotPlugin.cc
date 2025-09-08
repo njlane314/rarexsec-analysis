@@ -10,6 +10,7 @@
 #include "IPlotPlugin.h"
 #include "SelectionEfficiencyPlot.h"
 #include "StratifierRegistry.h"
+#include "AnalysisDataLoader.h"
 
 namespace analysis {
 

@@ -8,6 +8,7 @@
 #include "Logger.h"
 #include "IPlotPlugin.h"
 #include "SystematicBreakdownPlot.h"
+#include "AnalysisDataLoader.h"
 
 namespace analysis {
 

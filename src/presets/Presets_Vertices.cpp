@@ -6,7 +6,7 @@ using namespace analysis;
 
 // Preset defining variables for the true neutrino interaction vertex.
 ANALYSIS_REGISTER_PRESET(TRUE_NEUTRINO_VERTEX, Target::Analysis,
-  [](const PluginArgs&) -> PluginSpecList {
+  ([](const PluginArgs&) -> PluginSpecList {
     nlohmann::json vars = nlohmann::json::array({
       {
         {"name", "nu_vtx_x"},
@@ -32,12 +32,12 @@ ANALYSIS_REGISTER_PRESET(TRUE_NEUTRINO_VERTEX, Target::Analysis,
     });
     PluginArgs args{{"analysis_configs", {{"variables", vars}}}};
     return {{"VariablesPlugin", args}};
-  }
+  })
 )
 
 // Preset defining variables for the reconstructed neutrino interaction vertex.
 ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
-  [](const PluginArgs&) -> PluginSpecList {
+  ([](const PluginArgs&) -> PluginSpecList {
     nlohmann::json vars = nlohmann::json::array({
       {
         {"name", "reco_nu_vtx_x"},
@@ -63,7 +63,7 @@ ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
     });
     PluginArgs args{{"analysis_configs", {{"variables", vars}}}};
     return {{"VariablesPlugin", args}};
-  }
+  })
 )
 
 
