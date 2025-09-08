@@ -57,7 +57,10 @@ public:
 
   static std::vector<std::string>
   buildCumulativeFilters(const std::vector<std::string> &clauses) {
-    std::vector<std::string> filters{""};
+    const auto expected_size = clauses.size() + 1;
+    std::vector<std::string> filters;
+    filters.reserve(expected_size);
+    filters.emplace_back("");
     std::string current;
 
     for (const auto &clause : clauses) {
