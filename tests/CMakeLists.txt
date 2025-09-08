@@ -30,6 +30,12 @@ add_executable(test_cut_flow_preset
 target_link_libraries(test_cut_flow_preset PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json)
 catch_discover_tests(test_cut_flow_preset)
 
+add_executable(test_stacked_log_preset
+  test_stacked_log_preset.cpp
+  ${CMAKE_SOURCE_DIR}/ana/presets/Presets_Plots.cpp)
+target_link_libraries(test_stacked_log_preset PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json)
+catch_discover_tests(test_stacked_log_preset)
+
 add_executable(test_pipeline_builder
   test_pipeline_builder.cpp
   ${CMAKE_SOURCE_DIR}/ana/presets/Presets_Standard.cpp
