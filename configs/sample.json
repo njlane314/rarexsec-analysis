@@ -1,0 +1,20 @@
+{
+  "samples": {
+    "ntupledir": "/path/to/ntuples",
+    "beamlines": {
+      "bnb": {
+        "run1": {
+          "samples": [
+            {
+              "sample_key": "mc_example",
+              "sample_type": "mc",
+              "active": true,
+              "relative_path": "mc_example.root",
+              "pot": 1.0
+            }
+          ]
+        }
+      }
+    }
+  }
+}

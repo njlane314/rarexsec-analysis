@@ -1,8 +1,0 @@
-{
-  "ntupledir": "/path/to/ntuples",
-  "beamlines": {
-    "bnb": {
-      "run1": {}
-    }
-  }
-}
