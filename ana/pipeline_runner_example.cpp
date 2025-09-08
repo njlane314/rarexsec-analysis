@@ -14,7 +14,7 @@ int main() {
   builder.variable("TRUE_NEUTRINO_VERTEX");
   builder.variable("RECO_NEUTRINO_VERTEX");
   builder.preset("STACKED_PLOTS");
-  builder.uniqueById();
+  //builder.uniqueById();
 
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();

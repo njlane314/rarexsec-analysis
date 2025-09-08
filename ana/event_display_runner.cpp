@@ -23,7 +23,7 @@ int main() {
                  { {"plot_configs", {{"region", "QUALITY"}, {"n_events", 2}}} });
   builder.preset("SIGNAL_EVENT_DISPLAY",
                  { {"plot_configs", {{"region", "QUALITY"}, {"n_events", 2}}} });
-  builder.uniqueById();
+  //builder.uniqueById();
 
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();
