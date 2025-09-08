@@ -168,12 +168,28 @@ private:
     std::cout << line << '\n';
 
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << std::left << std::setw(30) << "Stage" << std::right
-              << std::setw(width - 30) << "Total MC Events" << '\n';
+    size_t stage_w = 30;
+    size_t total_w = 20;
+    size_t eff_w = 10;
+    std::cout << std::left << std::setw(stage_w) << "Stage" << std::right
+              << std::setw(total_w) << "Total MC"
+              << std::setw(eff_w) << "Cum Eff"
+              << std::setw(eff_w) << "Inc Eff" << '\n';
+
+    double initial_total = stage_counts.empty() ? 0.0 : stage_counts[0].total;
     for (size_t i = 0; i < stage_counts.size(); ++i) {
       std::string label = i == 0 ? "initial" : clauses[i - 1];
-      std::cout << std::left << std::setw(30) << label << std::right
-                << std::setw(width - 30) << stage_counts[i].total << '\n';
+      double cum_eff =
+          initial_total != 0.0 ? stage_counts[i].total / initial_total : 0.0;
+      double prev_total =
+          i == 0 ? stage_counts[0].total : stage_counts[i - 1].total;
+      double inc_eff =
+          prev_total != 0.0 ? stage_counts[i].total / prev_total : 0.0;
+
+      std::cout << std::left << std::setw(stage_w) << label << std::right
+                << std::setw(total_w) << stage_counts[i].total
+                << std::setw(eff_w) << cum_eff
+                << std::setw(eff_w) << inc_eff << '\n';
     }
 
     std::cout << sub << '\n';
@@ -185,8 +201,8 @@ private:
       for (const auto &[scheme, m] : final_stage.schemes) {
         std::cout << std::left << std::setw(width) << scheme << '\n';
         for (const auto &[key, pr] : m) {
-          std::cout << std::left << std::setw(30) << key << std::right
-                    << std::setw(width - 30) << pr.first << '\n';
+          std::cout << std::left << std::setw(stage_w) << key << std::right
+                    << std::setw(width - stage_w) << pr.first << '\n';
         }
       }
     }
