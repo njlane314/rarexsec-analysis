@@ -1,15 +1,16 @@
 #include <cmath>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "PluginRegistry.h"
 #include "Logger.h"
 #include "IPlotPlugin.h"
 #include "SelectionEfficiencyPlot.h"
 #include "StratifierRegistry.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -27,7 +28,9 @@ class CutFlowPlotPlugin : public IPlotPlugin {
         std::vector<std::string> clauses;
     };
 
-    explicit CutFlowPlotPlugin(const nlohmann::json &cfg) {
+    CutFlowPlotPlugin(const PluginArgs &args, AnalysisDataLoader *) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
             throw std::runtime_error("CutFlowPlotPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
@@ -146,10 +149,13 @@ class CutFlowPlotPlugin : public IPlotPlugin {
     std::vector<PlotConfig> plots_;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "CutFlowPlotPlugin", analysis::CutFlowPlotPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::CutFlowPlotPlugin(cfg);
+    return new analysis::CutFlowPlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}}, nullptr);
 }
 #endif

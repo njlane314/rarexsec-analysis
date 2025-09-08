@@ -1,15 +1,16 @@
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <utility>
 
+#include "PluginRegistry.h"
 #include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "PerformancePlot.h"
 #include "StratifierRegistry.h"
+#include "PluginConfigValidator.h"
 
 #include "TH1D.h"
 
@@ -32,7 +33,9 @@ class PerformancePlotPlugin : public IPlotPlugin {
         std::vector<std::string> clauses;
     };
 
-    explicit PerformancePlotPlugin(const nlohmann::json &cfg) {
+    PerformancePlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("performance_plots") || !cfg.at("performance_plots").is_array()) {
             throw std::runtime_error("PerformancePlotPlugin missing performance_plots");
         }
@@ -78,7 +81,7 @@ class PerformancePlotPlugin : public IPlotPlugin {
         }
     }
 
-    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
+    static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
 
   private:
     bool buildExpressions(const PlotConfig &pc, StratifierRegistry &strat_reg, std::string &signal_expr,
@@ -176,15 +179,21 @@ class PerformancePlotPlugin : public IPlotPlugin {
     }
 
     std::vector<PlotConfig> plots_;
-
-    inline static AnalysisDataLoader *loader_ = nullptr;
+    AnalysisDataLoader *loader_;
+    inline static AnalysisDataLoader *legacy_loader_ = nullptr;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "PerformancePlotPlugin", analysis::PerformancePlotPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::PerformancePlotPlugin(cfg);
+    return new analysis::PerformancePlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
+                                               analysis::PerformancePlotPlugin::legacy_loader_);
 }
-extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::PerformancePlotPlugin::setLoader(loader); }
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
+    analysis::PerformancePlotPlugin::setLegacyLoader(loader);
+}
 #endif

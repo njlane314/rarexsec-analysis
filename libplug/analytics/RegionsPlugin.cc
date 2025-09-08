@@ -1,14 +1,17 @@
-#include <nlohmann/json.hpp>
-
+#include "PluginRegistry.h"
 #include "AnalysisDefinition.h"
 #include "Logger.h"
 #include "IAnalysisPlugin.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
 class RegionsPlugin : public IAnalysisPlugin {
   public:
-    explicit RegionsPlugin(const nlohmann::json &cfg) : config_(cfg) {}
+    RegionsPlugin(const PluginArgs &args, AnalysisDataLoader *)
+        : config_(args.value("analysis_configs", PluginArgs::object())) {
+        PluginConfigValidator::validateRegions(config_);
+    }
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("RegionsPlugin::onInitialisation", "Defining regions...");
@@ -39,13 +42,16 @@ class RegionsPlugin : public IAnalysisPlugin {
     void onFinalisation(const AnalysisResult &) override {}
 
   private:
-    nlohmann::json config_;
+    PluginArgs config_;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader,
+                         "RegionsPlugin", analysis::RegionsPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createRegionsPlugin(const nlohmann::json &cfg) {
-    return new analysis::RegionsPlugin(cfg);
+    return new analysis::RegionsPlugin(analysis::PluginArgs{{"analysis_configs", cfg}}, nullptr);
 }
 #endif

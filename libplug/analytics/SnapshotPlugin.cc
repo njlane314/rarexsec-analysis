@@ -1,9 +1,9 @@
 #include <filesystem>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "PluginRegistry.h"
 #include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "IAnalysisPlugin.h"
@@ -20,7 +20,8 @@ class SnapshotPlugin : public IAnalysisPlugin {
         std::vector<std::string> columns;
     };
 
-    explicit SnapshotPlugin(const nlohmann::json &cfg) {
+    SnapshotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
+        auto cfg = args.value("analysis_configs", PluginArgs::object());
         if (!cfg.contains("snapshots") || !cfg.at("snapshots").is_array()) {
             throw std::runtime_error("SnapshotPlugin missing snapshots configuration");
         }
@@ -67,19 +68,25 @@ class SnapshotPlugin : public IAnalysisPlugin {
         }
     }
 
-    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
+    static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
 
   private:
     std::vector<SnapshotConfig> configs_;
-
-    inline static AnalysisDataLoader *loader_ = nullptr;
+    AnalysisDataLoader *loader_;
+    inline static AnalysisDataLoader *legacy_loader_ = nullptr;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader,
+                         "SnapshotPlugin", analysis::SnapshotPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
-    return new analysis::SnapshotPlugin(cfg);
+    return new analysis::SnapshotPlugin(analysis::PluginArgs{{"analysis_configs", cfg}},
+                                        analysis::SnapshotPlugin::legacy_loader_);
 }
-extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) { analysis::SnapshotPlugin::setLoader(loader); }
+extern "C" void setPluginContext(analysis::AnalysisDataLoader *ldr) {
+    analysis::SnapshotPlugin::setLegacyLoader(ldr);
+}
 #endif
