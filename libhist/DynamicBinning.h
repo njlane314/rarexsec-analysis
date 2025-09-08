@@ -595,15 +595,7 @@ private:
     log::info("DynamicBinning::finaliseEdges",
               "In-range entries:", in_range.size());
 
-    if (!in_range.empty()) {
-      auto mm = std::minmax_element(
-          in_range.begin(), in_range.end(),
-          [](const auto &a, const auto &b) { return a.first < b.first; });
-      if (!std::isfinite(domain_edges.front()))
-        domain_min = mm.first->first;
-      if (!std::isfinite(domain_edges.back()))
-        domain_max = mm.second->first;
-    } else {
+    if (in_range.empty()) {
       if (!std::isfinite(domain_edges.front()))
         domain_min = 0.0;
       if (!std::isfinite(domain_edges.back()))
