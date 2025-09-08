@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -14,64 +16,58 @@
 #include "HistogramFactory.h"
 #include "Logger.h"
 #include "PipelineBuilder.h"
-#include "PipelineRunner.h"
 #include "PluginAliases.h"
+#include "PluginSpec.h"
 #include "RunConfigLoader.h"
 #include "RunConfigRegistry.h"
 #include "SystematicsProcessor.h"
 #include "VariableRegistry.h"
 
-using analysis::PluginArgs;
-using analysis::PluginSpecList;
-using analysis::Target;
+namespace analysis {
 
-namespace {
+namespace detail {
 
-// Process a single beamline given a list of plugin specifications.
-analysis::AnalysisResult processBeamline(
-    analysis::RunConfigRegistry &run_config_registry,
-    const std::string &ntuple_dir, const std::string &beam,
-    const nlohmann::json &runs, const PluginSpecList &analysis_specs) {
+inline AnalysisResult processBeamline(
+    RunConfigRegistry &run_config_registry, const std::string &ntuple_dir,
+    const std::string &beam, const nlohmann::json &runs,
+    const PluginSpecList &analysis_specs) {
   std::vector<std::string> periods;
   periods.reserve(runs.size());
   for (auto const &[period, _] : runs.items())
     periods.emplace_back(period);
 
-  analysis::VariableRegistry variable_registry;
-  analysis::SystematicsProcessor systematics_processor(variable_registry);
-  analysis::AnalysisDataLoader data_loader(run_config_registry,
-                                           variable_registry, beam, periods,
-                                           ntuple_dir, true);
-  auto histogram_factory =
-      std::make_unique<analysis::HistogramFactory>();
+  VariableRegistry variable_registry;
+  SystematicsProcessor systematics_processor(variable_registry);
+  AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam,
+                                 periods, ntuple_dir, true);
+  auto histogram_factory = std::make_unique<HistogramFactory>();
 
-  analysis::AnalysisRunner runner(data_loader, std::move(histogram_factory),
-                                  systematics_processor, analysis_specs);
+  AnalysisRunner runner(data_loader, std::move(histogram_factory),
+                        systematics_processor, analysis_specs);
 
   return runner.run();
 }
 
-void aggregateResults(analysis::AnalysisResult &result,
-                      const analysis::AnalysisResult &beamline_result) {
+inline void aggregateResults(AnalysisResult &result,
+                             const AnalysisResult &beamline_result) {
   for (auto &kv : beamline_result.regions())
     result.regions().insert(kv);
 }
 
-analysis::AnalysisResult runAnalysis(const nlohmann::json &samples,
-                                     const PluginSpecList &analysis_specs) {
+inline AnalysisResult runAnalysis(const nlohmann::json &samples,
+                                  const PluginSpecList &analysis_specs) {
   ROOT::EnableImplicitMT();
-  analysis::log::info("analysis::runAnalysis",
-                      "Implicit multithreading engaged across",
-                      ROOT::GetThreadPoolSize(), "threads.");
+  log::info("analysis::runAnalysis", "Implicit multithreading engaged across",
+            ROOT::GetThreadPoolSize(), "threads.");
 
   std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
-  analysis::log::info("analysis::runAnalysis", "Configuration loaded for",
-                      samples.at("beamlines").size(), "beamlines.");
+  log::info("analysis::runAnalysis", "Configuration loaded for",
+            samples.at("beamlines").size(), "beamlines.");
 
-  analysis::RunConfigRegistry run_config_registry;
-  analysis::RunConfigLoader::loadFromJson(samples, run_config_registry);
+  RunConfigRegistry run_config_registry;
+  RunConfigLoader::loadFromJson(samples, run_config_registry);
 
-  analysis::AnalysisResult result;
+  AnalysisResult result;
   for (auto const &[beam, runs] : samples.at("beamlines").items()) {
     auto beamline_result =
         processBeamline(run_config_registry, ntuple_dir, beam, runs,
@@ -82,36 +78,36 @@ analysis::AnalysisResult runAnalysis(const nlohmann::json &samples,
   return result;
 }
 
-void plotBeamline(analysis::RunConfigRegistry &run_config_registry,
-                  const std::string &ntuple_dir, const std::string &beam,
-                  const nlohmann::json &runs, const PluginSpecList &plot_specs,
-                  const analysis::AnalysisResult &beam_result) {
+inline void plotBeamline(RunConfigRegistry &run_config_registry,
+                         const std::string &ntuple_dir,
+                         const std::string &beam, const nlohmann::json &runs,
+                         const PluginSpecList &plot_specs,
+                         const AnalysisResult &beam_result) {
   std::vector<std::string> periods;
   periods.reserve(runs.size());
   for (auto const &[period, _] : runs.items())
     periods.emplace_back(period);
 
-  analysis::VariableRegistry variable_registry;
-  analysis::AnalysisDataLoader data_loader(run_config_registry,
-                                           variable_registry, beam, periods,
-                                           ntuple_dir, true);
+  VariableRegistry variable_registry;
+  AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam,
+                                 periods, ntuple_dir, true);
 
-  analysis::PlotPluginHost p_host(&data_loader);
+  PlotPluginHost p_host(&data_loader);
   for (auto const &spec : plot_specs)
     p_host.add(spec.id, spec.args);
 
-  p_host.forEach([&](analysis::IPlotPlugin &pl) { pl.onPlot(beam_result); });
+  p_host.forEach([&](IPlotPlugin &pl) { pl.onPlot(beam_result); });
 }
 
-void runPlotting(const nlohmann::json &samples,
-                 const PluginSpecList &plot_specs,
-                 const analysis::AnalysisResult &result) {
+inline void runPlotting(const nlohmann::json &samples,
+                        const PluginSpecList &plot_specs,
+                        const AnalysisResult &result) {
   std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
-  analysis::log::info("analysis::runPlotting", "Configuration loaded for",
-                      samples.at("beamlines").size(), "beamlines.");
+  log::info("analysis::runPlotting", "Configuration loaded for",
+            samples.at("beamlines").size(), "beamlines.");
 
-  analysis::RunConfigRegistry run_config_registry;
-  analysis::RunConfigLoader::loadFromJson(samples, run_config_registry);
+  RunConfigRegistry run_config_registry;
+  RunConfigLoader::loadFromJson(samples, run_config_registry);
 
   auto result_map = result.resultsByBeam();
   for (auto const &[beam, runs] : samples.at("beamlines").items()) {
@@ -122,15 +118,15 @@ void runPlotting(const nlohmann::json &samples,
     }
   }
 
-  analysis::log::info("analysis::runPlotting",
-                      "Plotting routine terminated nominally.");
+  log::info("analysis::runPlotting", "Plotting routine terminated nominally.");
 }
 
-} // namespace
+} // namespace detail
 
-namespace analysis {
-
-std::pair<PluginSpecList, PluginSpecList>
+// Helper function to build analysis and plot pipelines from a JSON
+// description. The returned pair contains analysis plugin specs and
+// plot plugin specs respectively.
+inline std::pair<PluginSpecList, PluginSpecList>
 buildPipeline(const nlohmann::json &cfg) {
   AnalysisPluginHost a_host; // dummy hosts
   PlotPluginHost p_host;
@@ -196,18 +192,30 @@ buildPipeline(const nlohmann::json &cfg) {
   return {a_specs, p_specs};
 }
 
-PipelineRunner::PipelineRunner(PluginSpecList analysis_specs,
-                               PluginSpecList plot_specs)
-    : analysis_specs_(std::move(analysis_specs)),
-      plot_specs_(std::move(plot_specs)) {}
+// PipelineRunner orchestrates the execution of the analysis and optional
+// plotting stages once a pipeline has been constructed.
+class PipelineRunner {
+public:
+  PipelineRunner(PluginSpecList analysis_specs,
+                 PluginSpecList plot_specs)
+      : analysis_specs_(std::move(analysis_specs)),
+        plot_specs_(std::move(plot_specs)) {}
 
-AnalysisResult PipelineRunner::run(const nlohmann::json &samples,
-                                   const std::string &output_path) const {
-  auto result = runAnalysis(samples, analysis_specs_);
-  result.saveToFile(output_path.c_str());
-  runPlotting(samples, plot_specs_, result);
-  return result;
-}
+  // Execute the analysis and plotting for the provided samples
+  // configuration. The analysis result is written to \p output_path and
+  // returned to the caller.
+  inline AnalysisResult run(const nlohmann::json &samples,
+                            const std::string &output_path) const {
+    auto result = detail::runAnalysis(samples, analysis_specs_);
+    result.saveToFile(output_path.c_str());
+    detail::runPlotting(samples, plot_specs_, result);
+    return result;
+  }
+
+private:
+  PluginSpecList analysis_specs_;
+  PluginSpecList plot_specs_;
+};
 
 } // namespace analysis
 
