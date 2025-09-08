@@ -37,28 +37,21 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
-set(ANALYSIS_EXECUTABLES
-    analyse
-    plot
+add_executable(analyse analysis.cpp src/presets/Presets_Standard.cpp)
+target_link_libraries(analyse
+    PRIVATE
+        libapp
+        libplug
+        libdata
+        libhist
+        libplot
+        libsyst
+        libutils
+        Eigen3::Eigen
+        nlohmann_json::nlohmann_json
+        ${ROOT_LIBRARIES}
+        TBB::tbb
+        TMVA
+        dl
 )
-
-foreach(exe ${ANALYSIS_EXECUTABLES})
-    add_executable(${exe} ${exe}.cpp src/presets/Presets_Standard.cpp)
-    target_link_libraries(${exe}
-        PRIVATE
-            libapp
-            libplug
-            libdata
-            libhist
-            libplot
-            libsyst
-            libutils
-            Eigen3::Eigen
-            nlohmann_json::nlohmann_json
-            ${ROOT_LIBRARIES}
-            TBB::tbb
-            TMVA
-            dl
-    )
-endforeach()
 
