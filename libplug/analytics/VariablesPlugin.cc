@@ -20,7 +20,7 @@ class VariablesPlugin : public IAnalysisPlugin {
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("VariablesPlugin::onInitialisation", "Defining variables...");
         if (!config_.contains("variables"))
-            return;
+            log::fatal("VariablesPlugin::onInitialisation", "no variables configured");
 
         for (auto const &var_cfg : config_.at("variables")) {
 

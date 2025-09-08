@@ -13,7 +13,7 @@ class RegionsPlugin : public IAnalysisPlugin {
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("RegionsPlugin::onInitialisation", "Defining regions...");
         if (!config_.contains("regions"))
-            return;
+            log::fatal("RegionsPlugin::onInitialisation", "no regions configured");
 
         for (auto const &region_cfg : config_.at("regions")) {
 
