@@ -123,6 +123,8 @@ class AnalysisDataLoader {
     }
 
     void processRunConfig(const RunConfig &rc) {
+        processors_.reserve(processors_.size() + rc.samples.size());
+        // SampleFrameMap is a std::map, which does not support reserve.
         for (auto &sample_json : rc.samples) {
             if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
                 log::info("AnalysisDataLoader::processRunConfig",
