@@ -81,3 +81,26 @@ target_link_libraries(pipeline_runner_example
         dl
 )
 
+add_executable(event_display_runner
+    ana/event_display_runner.cpp
+    ana/presets/Presets_Standard.cpp
+    ana/presets/Presets_Vertices.cpp
+    ana/presets/Presets_Plots.cpp
+)
+target_link_libraries(event_display_runner
+    PRIVATE
+        libapp
+        libplug
+        libdata
+        libhist
+        libplot
+        libsyst
+        libutils
+        Eigen3::Eigen
+        nlohmann_json::nlohmann_json
+        ${ROOT_LIBRARIES}
+        TBB::tbb
+        TMVA
+        dl
+)
+
