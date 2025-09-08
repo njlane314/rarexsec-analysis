@@ -57,6 +57,8 @@ class SelectionRegistry {
                "selection_pass",
                "optical_filter_pe_beam > 20"}}},
 
+            {"MUON", {"Muon Selection", {"has_muon"}}},
+
             {"NUMU_CC", {"NuMu CC Selection", {"has_muon", "n_pfps_gen2 > 1"}}},
 
             {"NUMU_CC_BREAKDOWN",
