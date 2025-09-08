@@ -44,9 +44,18 @@ public:
       // numeric vector types we expect.
       if (col_type == "ROOT::VecOps::RVec<float>") {
         auto weight = [u](const ROOT::RVec<float> &weights) {
-          if (u < weights.size()) {
-            return static_cast<double>(weights[u]);
-          }
+          if (weights.empty())
+            return 1.0;
+
+          double central = 0.0;
+          for (const auto &w : weights)
+            central += w;
+          central /= static_cast<double>(weights.size());
+          if (central == 0.0)
+            return 1.0;
+
+          if (u < weights.size())
+            return static_cast<double>(weights[u]) / central;
           return 1.0;
         };
         auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
@@ -54,9 +63,18 @@ public:
             node.Histo1D(model, binning.getVariable(), uni_weight_name);
       } else if (col_type == "ROOT::VecOps::RVec<double>") {
         auto weight = [u](const ROOT::RVec<double> &weights) {
-          if (u < weights.size()) {
-            return static_cast<double>(weights[u]);
-          }
+          if (weights.empty())
+            return 1.0;
+
+          double central = 0.0;
+          for (const auto &w : weights)
+            central += w;
+          central /= static_cast<double>(weights.size());
+          if (central == 0.0)
+            return 1.0;
+
+          if (u < weights.size())
+            return static_cast<double>(weights[u]) / central;
           return 1.0;
         };
         auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
@@ -64,9 +82,18 @@ public:
             node.Histo1D(model, binning.getVariable(), uni_weight_name);
       } else if (col_type == "ROOT::VecOps::RVec<unsigned short>") {
         auto weight = [u](const ROOT::RVec<unsigned short> &weights) {
-          if (u < weights.size()) {
-            return static_cast<double>(weights[u]);
-          }
+          if (weights.empty())
+            return 1.0;
+
+          double central = 0.0;
+          for (const auto &w : weights)
+            central += w;
+          central /= static_cast<double>(weights.size());
+          if (central == 0.0)
+            return 1.0;
+
+          if (u < weights.size())
+            return static_cast<double>(weights[u]) / central;
           return 1.0;
         };
         auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
