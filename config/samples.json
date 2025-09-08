@@ -67,62 +67,6 @@
                             "triggers": 40062895
                         }
                     ]
-                },
-                "run2": {
-                    "nominal_pot": 4.827e+20,
-                    "nominal_triggers": 165820967,
-                    "samples": [
-                        {
-                            "sample_key": "numi_ext_run2",
-                            "sample_type": "ext",
-                            "active": true,
-                            "relative_path": "numi_ext_run2.root",
-                            "pot": 4.827e+20,
-                            "triggers": 165820967
-                        }
-                    ]
-                },
-                "run3": {
-                    "nominal_pot": 5.392e+20,
-                    "nominal_triggers": 194770254,
-                    "samples": [
-                        {
-                            "sample_key": "numi_ext_run3",
-                            "sample_type": "ext",
-                            "active": true,
-                            "relative_path": "numi_ext_run3.root",
-                            "pot": 5.392e+20,
-                            "triggers": 194770254
-                        }
-                    ]
-                },
-                "run4": {
-                    "nominal_pot": 5.232e+20,
-                    "nominal_triggers": 288582511,
-                    "samples": [
-                        {
-                            "sample_key": "numi_ext_run4",
-                            "sample_type": "ext",
-                            "active": true,
-                            "relative_path": "numi_ext_run4.root",
-                            "pot": 5.232e+20,
-                            "triggers": 288582511
-                        }
-                    ]
-                },
-                "run5": {
-                    "nominal_pot": 2.493e+20,
-                    "nominal_triggers": 138338167,
-                    "samples": [
-                        {
-                            "sample_key": "numi_ext_run5",
-                            "sample_type": "ext",
-                            "active": true,
-                            "relative_path": "numi_ext_run5.root",
-                            "pot": 2.493e+20,
-                            "triggers": 138338167
-                        }
-                    ]
                 }
             }
         }
