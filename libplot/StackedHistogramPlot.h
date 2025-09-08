@@ -328,7 +328,7 @@ class StackedHistogramPlot : public IHistogramPlot {
         frame->GetYaxis()->SetTitle(y_axis_label_.c_str());
         frame->GetXaxis()->SetTitleOffset(1.0);
         frame->GetYaxis()->SetTitleOffset(1.0);
-        frame->GetXaxis()->SetLimits(left_edge, right_edge);
+        frame->GetXaxis()->SetRangeUser(left_edge, right_edge);
         frame->GetXaxis()->SetNdivisions(520);
         frame->GetXaxis()->SetTickLength(0.02);
     }
