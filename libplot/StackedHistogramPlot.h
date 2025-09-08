@@ -132,8 +132,31 @@ class StackedHistogramPlot : public IHistogramPlot {
         const std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists) {
         StratifierRegistry registry;
 
+        std::map<std::string, std::string> beam_map = {
+            {"numi_fhc", "NuMI FHC"}, {"numi_rhc", "NuMI RHC"}};
+
+        std::string beam_name = region_analysis_.beamConfig();
+        if (beam_map.count(beam_name))
+            beam_name = beam_map.at(beam_name);
+        if (beam_name.empty())
+            beam_name = "N/A";
+
+        std::string runs_str;
+        if (!region_analysis_.runNumbers().empty()) {
+            for (size_t i = 0; i < region_analysis_.runNumbers().size(); ++i) {
+                std::string run_label = region_analysis_.runNumbers()[i];
+                if (run_label.rfind("run", 0) == 0)
+                    run_label = run_label.substr(3);
+                runs_str +=
+                    run_label +
+                    (i < region_analysis_.runNumbers().size() - 1 ? ", " : "");
+            }
+        } else {
+            runs_str = "N/A";
+        }
+
         p_legend->cd();
-        legend_ = new TLegend(0.12, 0.0, 0.95, 1.0);
+        legend_ = new TLegend(0.12, 0.0, 0.95, 0.75);
         legend_->SetBorderSize(0);
         legend_->SetFillStyle(0);
         legend_->SetTextFont(42);
@@ -172,6 +195,14 @@ class StackedHistogramPlot : public IHistogramPlot {
         }
 
         legend_->Draw();
+
+        TLatex header;
+        header.SetNDC();
+        header.SetTextFont(42);
+        header.SetTextAlign(13);
+        header.SetTextSize(0.05);
+        header.DrawLatex(0.12, 0.93, ("Beam: " + beam_name).c_str());
+        header.DrawLatex(0.12, 0.80, ("Runs: " + runs_str).c_str());
     }
 
     double drawStack(
