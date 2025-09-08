@@ -57,4 +57,3 @@ ANALYSIS_REGISTER_PRESET(MUON, Target::Analysis,
     return {{"RegionsPlugin", args}};
   }
 )
-
