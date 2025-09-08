@@ -57,3 +57,27 @@ ANALYSIS_REGISTER_PRESET(MUON, Target::Analysis,
     return {{"RegionsPlugin", args}};
   }
 )
+
+ANALYSIS_REGISTER_PRESET(NUMU_CC, Target::Analysis,
+  [](const PluginArgs&) -> PluginSpecList {
+    nlohmann::json region = {
+      {"region_key", "NUMU_CC"},
+      {"label", "NuMu CC Selection"},
+      {"selection_rule", "NUMU_CC"}
+    };
+    PluginArgs args{{"analysis_configs", {{"regions", nlohmann::json::array({region})}}}};
+    return {{"RegionsPlugin", args}};
+  }
+)
+
+ANALYSIS_REGISTER_PRESET(QUALITY_NUMU_CC, Target::Analysis,
+  [](const PluginArgs&) -> PluginSpecList {
+    nlohmann::json region = {
+      {"region_key", "QUALITY_NUMU_CC"},
+      {"label", "Quality + NuMu CC Selection"},
+      {"selection_rule", "QUALITY_NUMU_CC"}
+    };
+    PluginArgs args{{"analysis_configs", {{"regions", nlohmann::json::array({region})}}}};
+    return {{"RegionsPlugin", args}};
+  }
+)
