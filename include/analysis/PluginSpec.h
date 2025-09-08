@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "PluginArgs.h"
 
@@ -17,18 +18,19 @@ using PluginSpecList = std::vector<PluginSpec>;
 // individually, preserving the behaviour that configuration blocks in later
 // specifications override or extend earlier ones.
 inline PluginArgs deepMerge(PluginArgs lhs, const PluginArgs& rhs) {
-  auto merge = [](nlohmann::json l, const nlohmann::json& r) {
-    if (!l.is_object() || !r.is_object()) return r;
-    for (auto it = r.begin(); it != r.end(); ++it) {
-      const auto& k = it.key();
-      if (l.contains(k) && l[k].is_object() && it.value().is_object()) {
-        l[k] = merge(l[k], it.value());
-      } else {
-        l[k] = it.value();
-      }
-    }
-    return l;
-  };
+  std::function<nlohmann::json(nlohmann::json, const nlohmann::json&)> merge =
+      [&](nlohmann::json l, const nlohmann::json& r) -> nlohmann::json {
+        if (!l.is_object() || !r.is_object()) return r;
+        for (auto it = r.begin(); it != r.end(); ++it) {
+          const auto& k = it.key();
+          if (l.contains(k) && l[k].is_object() && it.value().is_object()) {
+            l[k] = merge(l[k], it.value());
+          } else {
+            l[k] = it.value();
+          }
+        }
+        return l;
+      };
 
   lhs.analysis_configs = merge(lhs.analysis_configs, rhs.analysis_configs);
   lhs.plot_configs     = merge(lhs.plot_configs, rhs.plot_configs);

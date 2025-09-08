@@ -77,7 +77,7 @@ class VariablesPlugin : public IAnalysisPlugin {
     void onFinalisation(const AnalysisResult &) override {}
 
   private:
-    PluginArgs config_;
+    nlohmann::json config_;
 };
 
 } // namespace analysis
