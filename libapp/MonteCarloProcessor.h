@@ -6,6 +6,8 @@
 #include "ISampleProcessor.h"
 #include <unordered_map>
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDFHelpers.hxx>
+#include <ROOT/RVersion.hxx>
 
 namespace analysis {
 
@@ -30,6 +32,26 @@ class MonteCarloProcessor : public ISampleProcessor {
 
     void contributeTo(VariableResult &result) override {
         log::info("MonteCarloProcessor::contributeTo", "Contributing histograms from sample:", sample_key_.str());
+
+        std::vector<ROOT::RDF::RResultHandle> handles;
+        handles.reserve(nominal_futures_.size() + variation_futures_.size());
+        for (auto &pair : nominal_futures_) {
+            handles.emplace_back(pair.second.GetHandle());
+        }
+        for (auto &pair : variation_futures_) {
+            handles.emplace_back(pair.second.GetHandle());
+        }
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 0)
+        ROOT::RDF::RunGraphs(handles);
+#else
+        for (auto &pair : nominal_futures_) {
+            pair.second.GetValue();
+        }
+        for (auto &pair : variation_futures_) {
+            pair.second.GetValue();
+        }
+#endif
 
         for (auto &[stratum_key, future] : nominal_futures_) {
             if (future.GetPtr()) {
