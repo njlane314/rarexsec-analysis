@@ -44,7 +44,11 @@ public:
       }
       CreateFn create = reinterpret_cast<CreateFn>(dlsym(handle, "createPlugin"));
       if (!create) {
-        std::string sym = "create" + name + "Plugin";
+        std::string sym = "create" + name;
+        create = reinterpret_cast<CreateFn>(dlsym(handle, sym.c_str()));
+      }
+      if (!create && endsWith(name, "Plugin")) {
+        std::string sym = "create" + name.substr(0, name.size() - 6) + "Plugin";
         create = reinterpret_cast<CreateFn>(dlsym(handle, sym.c_str()));
       }
       if (create) {
@@ -66,6 +70,10 @@ public:
     std::string base = dir ? dir : "build";
     // soft dlopen (ok if missing) — plugin might be statically linked
     handle = openHandle(base + "/" + nameOrPath + ".so", /*soft=*/true);
+    // If not found and no custom directory provided, try current directory.
+    if (!handle && !dir) {
+      handle = openHandle(nameOrPath + std::string{".so"}, /*soft=*/true);
+    }
     addByName(nameOrPath, args, handle);
   }
 
