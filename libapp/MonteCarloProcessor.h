@@ -5,7 +5,6 @@
 #include "BinnedHistogram.h"
 #include "ISampleProcessor.h"
 #include <unordered_map>
-#include <vector>
 #include <ROOT/RDataFrame.hxx>
 
 namespace analysis {
@@ -32,12 +31,6 @@ class MonteCarloProcessor : public ISampleProcessor {
     void contributeTo(VariableResult &result) override {
         log::info("MonteCarloProcessor::contributeTo", "Contributing histograms from sample:", sample_key_.str());
 
-        std::vector<ROOT::RDF::RResultPtr<TH1D>> nominal_vec;
-        nominal_vec.reserve(nominal_futures_.size());
-        for (auto &entry : nominal_futures_) {
-            nominal_vec.push_back(entry.second);
-        }
-        ROOT::RDF::RunGraphs(nominal_vec);
         for (auto &[stratum_key, future] : nominal_futures_) {
             if (future.GetPtr()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
@@ -47,12 +40,6 @@ class MonteCarloProcessor : public ISampleProcessor {
             }
         }
 
-        std::vector<ROOT::RDF::RResultPtr<TH1D>> variation_vec;
-        variation_vec.reserve(variation_futures_.size());
-        for (auto &entry : variation_futures_) {
-            variation_vec.push_back(entry.second);
-        }
-        ROOT::RDF::RunGraphs(variation_vec);
         for (auto &[var_key, future] : variation_futures_) {
             if (future.GetPtr()) {
                 auto hist = BinnedHistogram::createFromTH1D(result.binning_, *future.GetPtr());
