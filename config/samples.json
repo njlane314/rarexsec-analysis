@@ -20,11 +20,11 @@
                                     "variation_type": "cv",
                                     "active": true,
                                     "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
-                                    "pot": 3.603503124989346e+18
+                                    "pot": 3.0470412137616795e+20
                                 }
                             ],
                             "relative_path": "mc_inclusive_run1_fhc.root",
-                            "pot": 8.795198459547641e+19
+                            "pot": 1.3308774439702065e+21
                         },
                         {
                             "sample_key": "mc_strangeness_run1_fhc",
@@ -37,26 +37,19 @@
                                     "variation_type": "cv",
                                     "active": true,
                                     "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
-                                    "pot": 3.603503124989346e+18
+                                    "pot": 3.0470412137616795e+20
                                 }
                             ],
                             "relative_path": "mc_strangeness_run1_fhc.root",
-                            "pot": 1.1750366557570312e+22
-                        },
-                        {
-                            "sample_key": "mc_dirt_run1_fhc",
-                            "sample_type": "dirt",
-                            "active": true,
-                            "relative_path": "mc_dirt_run1_fhc.root",
-                            "pot": 1.3691716923392262e+19
+                            "pot": 1.4322893371238489e+23
                         }
                     ]
                 }
             },
             "numi_ext": {
                 "run1": {
+                    "nominal_triggers": 40062895.0,
                     "nominal_pot": 4.565e+20,
-                    "nominal_triggers": 40062895,
                     "samples": [
                         {
                             "sample_key": "numi_ext_run1",
