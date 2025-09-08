@@ -31,11 +31,29 @@ class TruthChannelProcessor : public IEventProcessor {
     ROOT::RDF::RNode processNonMc(ROOT::RDF::RNode df, SampleOrigin st) const {
         auto mode_df = df.Define("genie_int_mode", []() { return -1; });
 
-        auto incl_df = mode_df.Define("incl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }); // Data or External
+        auto incl_df = mode_df.Define(
+            "incl_channel", [c = st]() {
+                if (c == SampleOrigin::kData)
+                    return 0; // Data
+                if (c == SampleOrigin::kExternal)
+                    return 1; // External
+                if (c == SampleOrigin::kDirt)
+                    return 2; // Dirt
+                return 99; // Other / Unknown
+            });
 
         auto incl_alias_df = incl_df.Define("inclusive_strange_channels", "incl_channel");
 
-        auto excl_df = incl_alias_df.Define("excl_channel", [c = st]() { return c == SampleOrigin::kData ? 0 : 1; }); // Data or External
+        auto excl_df = incl_alias_df.Define(
+            "excl_channel", [c = st]() {
+                if (c == SampleOrigin::kData)
+                    return 0; // Data
+                if (c == SampleOrigin::kExternal)
+                    return 1; // External
+                if (c == SampleOrigin::kDirt)
+                    return 2; // Dirt
+                return 99; // Other / Unknown
+            });
 
         auto excl_alias_df = excl_df.Define("exclusive_strange_channels", "excl_channel");
 
