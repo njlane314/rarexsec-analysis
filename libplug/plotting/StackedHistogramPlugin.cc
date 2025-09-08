@@ -64,8 +64,8 @@ class StackedHistogramPlugin : public IPlotPlugin {
     }
 
     void onPlot(const AnalysisResult &result) override {
-        gSystem->mkdir("plots", true);
         for (auto const &pc : plots_) {
+            gSystem->mkdir(pc.output_directory.c_str(), true);
             std::vector<RegionKey> regions;
             if (pc.region.empty()) {
                 for (const auto &kv : result.regions())
@@ -95,10 +95,15 @@ class StackedHistogramPlugin : public IPlotPlugin {
                         continue;
                     }
                     const auto &variable_result = result.result(rkey, vkey);
-                    StackedHistogramPlot plot("stack_" + vkey.str() + "_" + rkey.str(), variable_result,
-                                              region_analysis, pc.category_column, pc.output_directory,
-                                              pc.overlay_signal, pc.cut_list, pc.annotate_numbers, pc.use_log_y,
-                                              pc.y_axis_label, pc.n_bins, pc.min, pc.max);
+                    std::string plot_name =
+                        "stack_" + IHistogramPlot::sanitise(vkey.str()) + "_" +
+                        IHistogramPlot::sanitise(rkey.str());
+                    StackedHistogramPlot plot(plot_name, variable_result,
+                                              region_analysis, pc.category_column,
+                                              pc.output_directory, pc.overlay_signal,
+                                              pc.cut_list, pc.annotate_numbers,
+                                              pc.use_log_y, pc.y_axis_label, pc.n_bins,
+                                              pc.min, pc.max);
                     plot.drawAndSave("pdf");
                 }
             }
