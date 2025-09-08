@@ -9,9 +9,9 @@ TEST_CASE("pipeline_builder_requires_region_and_variable") {
     PlotPluginHost p_host;
     PipelineBuilder builder(a_host, p_host);
 
-    builder.region("TRUE_NEUTRINO_VERTEX");
+    builder.region("EMPTY");
     REQUIRE_THROWS(builder.analysisSpecs());
 
-    builder.variable("EMPTY");
+    builder.variable("TRUE_NEUTRINO_VERTEX");
     REQUIRE_NOTHROW(builder.analysisSpecs());
 }

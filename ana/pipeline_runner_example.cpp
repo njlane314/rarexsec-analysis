@@ -11,9 +11,9 @@ int main() {
   PipelineBuilder builder(analysis_host, plot_host);
 
   // Build a simple pipeline programmatically
-  builder.region("TRUE_NEUTRINO_VERTEX");
-  builder.region("RECO_NEUTRINO_VERTEX");
-  builder.variable("EMPTY");
+  builder.region("EMPTY");
+  builder.variable("TRUE_NEUTRINO_VERTEX");
+  builder.variable("RECO_NEUTRINO_VERTEX");
   builder.preset("STACKED_PLOTS");
   builder.uniqueById();
 

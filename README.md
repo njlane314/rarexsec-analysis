@@ -141,10 +141,10 @@ structure explicit:
 
 ```cpp
 PipelineBuilder builder(analysis_host, plot_host);
-builder.region("TRUE_NEUTRINO_VERTEX");
-builder.region("RECO_NEUTRINO_VERTEX");
-builder.variable("EMPTY");
-builder.preset("NEUTRINO_VERTEX_STACKED_PLOTS");
+builder.region("EMPTY");
+builder.variable("TRUE_NEUTRINO_VERTEX");
+builder.variable("RECO_NEUTRINO_VERTEX");
+builder.preset("STACKED_PLOTS");
 ```
 
 The resulting specification lists can be supplied directly to `AnalysisRunner`
