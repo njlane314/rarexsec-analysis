@@ -37,7 +37,7 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
-add_executable(analyse analysis.cpp src/presets/Presets_Standard.cpp)
+add_executable(analyse analysis.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp)
 target_link_libraries(analyse
     PRIVATE
         libapp
