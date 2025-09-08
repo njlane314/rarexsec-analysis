@@ -73,8 +73,8 @@
                         "sample_key": "numi_ext_run2",
                         "stage_name": "selection_ext",
                         "sample_type": "ext",
-                        "active": true,
-                        "do_hadd": true
+                        "active": false,
+                        "do_hadd": false
                     }
                 ]
             },
@@ -86,8 +86,8 @@
                         "sample_key": "numi_ext_run3",
                         "stage_name": "selection_ext",
                         "sample_type": "ext",
-                        "active": true,
-                        "do_hadd": true
+                        "active": false,
+                        "do_hadd": false
                     }
                 ]
             },
@@ -99,8 +99,8 @@
                         "sample_key": "numi_ext_run4",
                         "stage_name": "selection_ext",
                         "sample_type": "ext",
-                        "active": true,
-                        "do_hadd": true
+                        "active": false,
+                        "do_hadd": false
                     }
                 ]
             },
@@ -112,8 +112,8 @@
                         "sample_key": "numi_ext_run5",
                         "stage_name": "selection_ext",
                         "sample_type": "ext",
-                        "active": true,
-                        "do_hadd": true
+                        "active": false,
+                        "do_hadd": false
                     }
                 ]
             }
