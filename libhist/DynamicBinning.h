@@ -299,8 +299,15 @@ private:
         DynamicBinningStrategy strategy) {
         std::vector<double> edges;
 
+        log::info("DynamicBinning::applyStrategy", "Starting with", in_range.size(),
+                  "entries spanning", xmin, "to", xmax, "strategy",
+                  static_cast<int>(strategy));
+
         double neff_total =
             (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
+
+        log::info("DynamicBinning::applyStrategy", "Effective entries:", neff_total,
+                  "min_neff_per_bin:", min_neff_per_bin);
 
         auto add_uniform_edges = [&](int target_bins) {
             edges.reserve(static_cast<size_t>(target_bins) + 1);
@@ -326,6 +333,8 @@ private:
             }
             auto bb_edges = BayesianBlocks::blocks(xs, ws);
             edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
+            log::info("DynamicBinning::applyStrategy",
+                      "BayesianBlocks produced", edges.size() - 1, "bins");
             return edges;
         }
 
@@ -334,8 +343,12 @@ private:
                                             std::floor(neff_total /
                                                        std::max(min_neff_per_bin, 1.0))));
 
+        log::info("DynamicBinning::applyStrategy", "Target bins:", target_bins);
+
         if (strategy == DynamicBinningStrategy::UniformWidth) {
             add_uniform_edges(target_bins);
+            log::info("DynamicBinning::applyStrategy",
+                      "UniformWidth produced", edges.size() - 1, "bins");
             return edges;
         }
 
@@ -362,6 +375,8 @@ private:
         }
 
         edges.push_back(xmax);
+        log::info("DynamicBinning::applyStrategy", "EqualWeight produced",
+                  edges.size() - 1, "bins");
         return edges;
     }
 
@@ -370,6 +385,9 @@ private:
                      const std::vector<std::pair<double, double>> &in_range,
                      double min_neff_per_bin, bool include_oob_bins,
                      double domain_min, double domain_max) {
+        log::info("DynamicBinning::finaliseEdgeList", "Starting with",
+                  edges.size(), "edges");
+
         edges.front() = domain_min;
         edges.back() = domain_max;
 
@@ -399,6 +417,9 @@ private:
                         } else {
                             edges.erase(edges.begin() + i);
                         }
+                        log::info("DynamicBinning::finaliseEdgeList",
+                                  "Merged bin", i,
+                                  "; remaining bins", edges.size() - 1);
                         merged = true;
                         break;
                     }
@@ -438,6 +459,9 @@ private:
             }
         }
 
+        log::info("DynamicBinning::finaliseEdgeList", "Finished with",
+                  edges.size() - 1, "bins");
+
         return edges;
     }
 
@@ -453,6 +477,9 @@ private:
         filterEntries(xw);
 
         auto in_range = splitRangeEntries(xw, domain_min, domain_max);
+
+        log::info("DynamicBinning::finaliseEdges", "In-range entries:",
+                  in_range.size());
 
         if (in_range.size() < 2) {
             return BinningDefinition({domain_min, domain_max},
@@ -484,11 +511,18 @@ private:
         log::info("DynamicBinning::finaliseEdges", "Using fixed data range for",
                   original_bdef.getVariable(), ":", xmin, "to", xmax);
 
-        auto edges = applyStrategy(in_range, sumw, sumw2, xmin, xmax,
-                                   min_neff_per_bin, strategy);
+        auto edges =
+            applyStrategy(in_range, sumw, sumw2, xmin, xmax, min_neff_per_bin,
+                          strategy);
+
+        log::info("DynamicBinning::finaliseEdges", "applyStrategy returned",
+                  edges.size(), "edges");
 
         edges = finaliseEdgeList(std::move(edges), in_range, min_neff_per_bin,
                                  include_oob_bins, domain_min, domain_max);
+
+        log::info("DynamicBinning::finaliseEdges", "finaliseEdgeList returned",
+                  edges.size(), "edges");
 
         return BinningDefinition(edges, original_bdef.getVariable(),
                                  original_bdef.getTexLabel(), {},
