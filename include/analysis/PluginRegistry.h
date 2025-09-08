@@ -58,7 +58,11 @@ private:
       );                                                                      \
     }                                                                         \
   };                                                                          \
-  static Registrar registrar_instance;                                        \
+#if defined(__GNUC__) || defined(__clang__)                                   \
+  static Registrar registrar_instance __attribute__((used));                  \
+#else                                                                        \
+  static Registrar registrar_instance;                                       \
+#endif                                                                       \
   }
 
 } // namespace analysis
