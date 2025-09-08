@@ -1,0 +1,22 @@
+{
+  "pipeline": {
+    "presets": [
+      {
+        "name": "TRUE_NEUTRINO_VERTEX",
+        "kind": "region"
+      },
+      {
+        "name": "RECO_NEUTRINO_VERTEX",
+        "kind": "region"
+      },
+      {
+        "name": "EMPTY",
+        "kind": "variable"
+      },
+      {
+        "name": "STACKED_PLOTS",
+        "kind": "preset"
+      }
+    ]
+  }
+}

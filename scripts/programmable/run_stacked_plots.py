@@ -14,7 +14,7 @@ from typing import Optional, Dict, Any
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(ROOT_DIR, "..", ".."))
-SAMPLE_CFG = os.path.join(REPO_ROOT, "configs", "sample.json")
+SAMPLE_CFG = os.path.join(REPO_ROOT, "config", "sample.json")
 
 
 def build_pipeline(preset: str, preset_vars: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
