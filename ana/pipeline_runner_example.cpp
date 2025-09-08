@@ -1,5 +1,6 @@
 #include "PipelineBuilder.h"
 #include "PipelineRunner.h"
+#include <string>
 
 int main() {
   using namespace analysis;
@@ -19,7 +20,7 @@ int main() {
   auto plot_specs = builder.plotSpecs();
 
   PipelineRunner runner(analysis_specs, plot_specs);
-  runner.run("config/samples.json", "/tmp/output.root");
+  runner.run(std::string{"config/samples.json"}, std::string{"/tmp/output.root"});
 
   return 0;
 }
