@@ -66,16 +66,5 @@ ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
   }
 )
 
-// Preset configuring stacked histogram plots for both true and reconstructed
-// neutrino vertices using the regions supplied by other presets.  Combine this
-// with TRUE_NEUTRINO_VERTEX and RECO_NEUTRINO_VERTEX along with a region preset
-// such as EMPTY to automatically generate stacked histograms stratified by the
-// inclusive category scheme without specifying variables or regions here.
-ANALYSIS_REGISTER_PRESET(NEUTRINO_VERTEX_STACKED_PLOTS, Target::Plot,
-  [](const PluginArgs&) -> PluginSpecList {
-    nlohmann::json plot = {{"category_column", "inclusive"}};
-    PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({plot})}}}};
-    return {{"StackedHistogramPlugin", args}};
-  }
-)
+
 
