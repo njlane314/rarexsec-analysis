@@ -81,15 +81,15 @@ class Logger {
     const char *levelToString(LogLevel level) const {
         switch (level) {
         case LogLevel::DEBUG:
-            return "DEBUG";
+            return "DEBG";
         case LogLevel::INFO:
             return "INFO";
         case LogLevel::WARN:
             return "WARN";
         case LogLevel::ERROR:
-            return "ERROR";
+            return "EROR";
         case LogLevel::FATAL:
-            return "FATAL";
+            return "FATL";
         }
         return "UNKNOWN";
     }
