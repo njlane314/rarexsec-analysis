@@ -8,7 +8,7 @@
 
 using namespace analysis;
 
-TEST_CASE("MonteCarloProcessor parallel contributeTo") {
+TEST_CASE("MonteCarloProcessor contributeTo") {
     std::vector<double> edges{0.0, 1.0, 2.0};
     BinningDefinition binning(edges, "x", "x", {}, "inclusive_strange_channels");
     auto model = binning.toTH1DModel();
