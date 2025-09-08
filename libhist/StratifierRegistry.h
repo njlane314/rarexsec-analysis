@@ -1,7 +1,9 @@
 #ifndef STRATIFIER_REGISTRY_H
 #define STRATIFIER_REGISTRY_H
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -83,8 +85,14 @@ public:
                            const std::string &stratum_name) const {
     auto scheme_it = scheme_definitions_.find(scheme_name);
     if (scheme_it != scheme_definitions_.end()) {
+      std::string target = stratum_name;
+      std::transform(target.begin(), target.end(), target.begin(),
+                     [](unsigned char c) { return std::tolower(c); });
       for (const auto &[key, props] : scheme_it->second.strata) {
-        if (props.plain_name == stratum_name) {
+        std::string name = props.plain_name;
+        std::transform(name.begin(), name.end(), name.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (name == target) {
           return key;
         }
       }
