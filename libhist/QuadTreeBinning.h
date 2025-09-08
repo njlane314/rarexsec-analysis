@@ -52,6 +52,17 @@ class QuadTreeBinning {
         std::vector<Point> pts;
         pts.reserve(262144);
 
+        const double float_low =
+            static_cast<double>(std::numeric_limits<float>::lowest());
+        const double float_high =
+            static_cast<double>(std::numeric_limits<float>::max());
+        const double double_low = std::numeric_limits<double>::lowest();
+        const double double_high = std::numeric_limits<double>::max();
+        auto is_extreme = [&](double v) {
+            return v == float_low || v == float_high || v == double_low ||
+                   v == double_high;
+        };
+
         for (auto &n : nodes) {
             bool has_w = n.HasColumn(weight_col);
             auto xv = n.Take<double>(xb.getVariable());
@@ -62,15 +73,17 @@ class QuadTreeBinning {
                     double x = (*xv)[i];
                     double y = (*yv)[i];
                     double w = (*wv)[i];
-                    if (std::isfinite(x) && std::isfinite(y) && std::isfinite(w) && w > 0.0 && x >= xmin && x <= xmax &&
-                        y >= ymin && y <= ymax)
+                    if (std::isfinite(x) && std::isfinite(y) && std::isfinite(w) && w > 0.0 &&
+                        x >= xmin && x <= xmax && y >= ymin && y <= ymax &&
+                        !is_extreme(x) && !is_extreme(y))
                         pts.push_back({x, y, w});
                 }
             } else {
                 for (size_t i = 0; i < xv->size(); ++i) {
                     double x = (*xv)[i];
                     double y = (*yv)[i];
-                    if (std::isfinite(x) && std::isfinite(y) && x >= xmin && x <= xmax && y >= ymin && y <= ymax)
+                    if (std::isfinite(x) && std::isfinite(y) && x >= xmin && x <= xmax &&
+                        y >= ymin && y <= ymax && !is_extreme(x) && !is_extreme(y))
                         pts.push_back({x, y, 1.0});
                 }
             }
