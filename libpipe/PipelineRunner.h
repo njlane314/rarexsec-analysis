@@ -111,12 +111,21 @@ inline void runPlotting(const nlohmann::json &samples,
   RunConfigLoader::loadFromJson(samples, run_config_registry);
 
   auto result_map = result.resultsByBeam();
+  bool plotted = false;
   for (auto const &[beam, runs] : samples.at("beamlines").items()) {
     auto it = result_map.find(beam);
     if (it != result_map.end()) {
       plotBeamline(run_config_registry, ntuple_dir, beam, runs, plot_specs,
                    it->second);
+      plotted = true;
     }
+  }
+
+  if (!plotted) {
+    PlotPluginHost p_host; // No data loader context available
+    for (auto const &spec : plot_specs)
+      p_host.add(spec.id, spec.args);
+    p_host.forEach([&](IPlotPlugin &pl) { pl.onPlot(result); });
   }
 
   log::info("analysis::runPlotting", "Plotting routine terminated nominally.");
