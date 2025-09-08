@@ -33,10 +33,15 @@ public:
                                            "exclusive_strange_channels",
                                            "channel_definitions"};
     std::unordered_map<std::string, std::vector<int>> scheme_keys;
+    std::unordered_map<std::string, std::unordered_map<int, std::string>>
+        scheme_filters;
 
     for (const auto &scheme : schemes) {
       for (const auto &key : strat_reg.getAllStratumKeysForScheme(scheme)) {
-        scheme_keys[scheme].push_back(std::stoi(key.str()));
+        int int_key = std::stoi(key.str());
+        scheme_keys[scheme].push_back(int_key);
+        scheme_filters[scheme][int_key] =
+            scheme + " == " + std::to_string(int_key);
       }
     }
 
@@ -49,7 +54,7 @@ public:
           "w2", "nominal_event_weight*nominal_event_weight");
 
       calculateWeightsPerStage(base_df, cumulative_filters, stage_counts,
-                               schemes, scheme_keys);
+                               schemes, scheme_keys, scheme_filters);
     }
 
     region_analysis.setCutFlow(std::move(stage_counts));
@@ -79,10 +84,13 @@ private:
   void updateSchemeTallies(
       ROOT::RDF::RNode df, const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
+      const std::unordered_map<std::string,
+                               std::unordered_map<int, std::string>>
+          &scheme_filters,
       RegionAnalysis::StageCount &stage_count) {
     for (const auto &scheme : schemes) {
       for (int key : scheme_keys.at(scheme)) {
-        auto ch_df = df.Filter(scheme + " == " + std::to_string(key));
+        auto ch_df = df.Filter(scheme_filters.at(scheme).at(key));
 
         auto ch_w = ch_df.Sum<double>("nominal_event_weight");
         auto ch_w2 = ch_df.Sum<double>("w2");
@@ -98,7 +106,10 @@ private:
       const std::vector<std::string> &cumulative_filters,
       std::vector<RegionAnalysis::StageCount> &stage_counts,
       const std::vector<std::string> &schemes,
-      const std::unordered_map<std::string, std::vector<int>> &scheme_keys) {
+      const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
+      const std::unordered_map<std::string,
+                               std::unordered_map<int, std::string>>
+          &scheme_filters) {
     for (size_t i = 0; i < cumulative_filters.size(); ++i) {
       auto df = base_df;
 
@@ -112,7 +123,8 @@ private:
       stage_counts[i].total += tot_w.GetValue();
       stage_counts[i].total_w2 += tot_w2.GetValue();
 
-      updateSchemeTallies(df, schemes, scheme_keys, stage_counts[i]);
+      updateSchemeTallies(df, schemes, scheme_keys, scheme_filters,
+                          stage_counts[i]);
     }
   }
 
