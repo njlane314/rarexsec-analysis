@@ -5,7 +5,6 @@
 #include <cmath>
 #include <functional>
 #include <limits>
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -320,22 +319,39 @@ private:
         };
 
         if (strategy == DynamicBinningStrategy::BayesianBlocks) {
-            std::map<double, double> hist;
-            for (const auto &p : in_range)
-                hist[p.first] += p.second;
             std::vector<double> xs;
             std::vector<double> ws;
-            xs.reserve(hist.size());
-            ws.reserve(hist.size());
-            for (auto &kv : hist) {
-                xs.push_back(kv.first);
-                ws.push_back(kv.second);
+            xs.reserve(in_range.size());
+            ws.reserve(in_range.size());
+            if (!in_range.empty()) {
+                double current_x = in_range[0].first;
+                double current_w = in_range[0].second;
+                for (size_t i = 1; i < in_range.size(); ++i) {
+                    if (in_range[i].first == current_x) {
+                        current_w += in_range[i].second;
+                    } else {
+                        xs.push_back(current_x);
+                        ws.push_back(current_w);
+                        current_x = in_range[i].first;
+                        current_w = in_range[i].second;
+                    }
+                }
+                xs.push_back(current_x);
+                ws.push_back(current_w);
             }
-            auto bb_edges = BayesianBlocks::blocks(xs, ws);
-            edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
-            log::info("DynamicBinning::applyStrategy",
-                      "BayesianBlocks produced", edges.size() - 1, "bins");
-            return edges;
+            if (xs.size() > 30000) {
+                log::warn("DynamicBinning::applyStrategy",
+                          "too many unique values for BayesianBlocks (",
+                          xs.size(),
+                          ") falling back to EqualWeight");
+                strategy = DynamicBinningStrategy::EqualWeight;
+            } else {
+                auto bb_edges = BayesianBlocks::blocks(xs, ws);
+                edges.insert(edges.end(), bb_edges.begin(), bb_edges.end());
+                log::info("DynamicBinning::applyStrategy",
+                          "BayesianBlocks produced", edges.size() - 1, "bins");
+                return edges;
+            }
         }
 
         int target_bins =
