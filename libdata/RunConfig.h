@@ -24,8 +24,15 @@ struct RunConfig {
     json samples;
 
     RunConfig(const json &j, std::string bm, std::string pr)
-        : beam_mode(std::move(bm)), run_period(std::move(pr)), nominal_pot(j.value("nominal_pot", 0.0)),
-          nominal_triggers(j.value("nominal_triggers", 0L)), samples(j.at("samples")) {}
+        : beam_mode(std::move(bm)),
+          run_period(std::move(pr)),
+          nominal_pot(j.value("nominal_pot",
+                              j.value("pot_target_wcut_total",
+                                      j.value("torb_target_pot_wcut", 0.0))),
+          nominal_triggers(j.value("nominal_triggers",
+                                   j.value("ext_triggers_total",
+                                           j.value("ext_triggers", 0L)))),
+          samples(j.at("samples")) {}
 
     std::string label() const { return beam_mode + ":" + run_period; }
 
