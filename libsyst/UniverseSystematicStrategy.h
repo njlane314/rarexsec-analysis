@@ -2,10 +2,12 @@
 #define UNIVERSE_SYSTEMATIC_STRATEGY_H
 
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include <ROOT/RVec.hxx>
 #include <TMatrixDSym.h>
 
 #include "BinnedHistogram.h"
@@ -31,31 +33,49 @@ public:
                       SystematicFutures &futures) override {
     log::debug("UniverseSystematicStrategy::bookVariations", identifier_,
                "sample", sample_key.str(), "universes", n_universes_);
+    auto col_type = rnode.GetColumnType(vector_name_);
     for (unsigned u = 0; u < n_universes_; ++u) {
       const SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));
-      // Use a generic lambda so that we correctly handle the underlying
-      // type of the weight vector.  The systematic weight branches in
-      // the input ROOT files are stored as floating point numbers, but
-      // the previous implementation hard-coded the type as
-      // `unsigned short`.  This caused the bit patterns of the floats to
-      // be reinterpreted as integers, producing enormously large weights
-      // and, consequently, inflated covariance values.
-      //
-      // By accepting the vector by `auto` we allow `ROOT::RVec<float>`,
-      // `ROOT::RVec<double>` or any other numeric type to be passed in
-      // transparently.  We simply cast the selected universe weight to a
-      // `double`, preserving the true value of the weight.
-      const auto weight = [u](const auto &weights) {
-        if (u < weights.size()) {
-          return static_cast<double>(weights[u]);
-        }
-        return 1.0;
-      };
-
       const auto uni_weight_name = "_uni_w_" + std::to_string(u);
-      auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
-      futures.variations[uni_key][sample_key] =
-          node.Histo1D(model, binning.getVariable(), uni_weight_name);
+
+      // Determine the column type and dispatch to a typed lambda. ROOT's
+      // RDataFrame cannot handle a generic lambda (with templated
+      // arguments) in Define, so provide explicit overloads for the
+      // numeric vector types we expect.
+      if (col_type == "ROOT::VecOps::RVec<float>") {
+        auto weight = [u](const ROOT::RVec<float> &weights) {
+          if (u < weights.size()) {
+            return static_cast<double>(weights[u]);
+          }
+          return 1.0;
+        };
+        auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
+        futures.variations[uni_key][sample_key] =
+            node.Histo1D(model, binning.getVariable(), uni_weight_name);
+      } else if (col_type == "ROOT::VecOps::RVec<double>") {
+        auto weight = [u](const ROOT::RVec<double> &weights) {
+          if (u < weights.size()) {
+            return static_cast<double>(weights[u]);
+          }
+          return 1.0;
+        };
+        auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
+        futures.variations[uni_key][sample_key] =
+            node.Histo1D(model, binning.getVariable(), uni_weight_name);
+      } else if (col_type == "ROOT::VecOps::RVec<unsigned short>") {
+        auto weight = [u](const ROOT::RVec<unsigned short> &weights) {
+          if (u < weights.size()) {
+            return static_cast<double>(weights[u]);
+          }
+          return 1.0;
+        };
+        auto node = rnode.Define(uni_weight_name, weight, {vector_name_});
+        futures.variations[uni_key][sample_key] =
+            node.Histo1D(model, binning.getVariable(), uni_weight_name);
+      } else {
+        throw std::runtime_error("Unsupported weight vector type: " +
+                                 std::string(col_type));
+      }
     }
   }
 
