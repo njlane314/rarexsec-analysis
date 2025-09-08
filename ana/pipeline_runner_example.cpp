@@ -13,7 +13,7 @@ int main() {
   builder.region("EMPTY");
   builder.variable("TEST_TOPOLOGICAL_SCORE");
   //builder.variable("RECO_NEUTRINO_VERTEX");
-  builder.preset("STACKED_PLOTS");
+  builder.preset("STACKED_PLOTS_LOG");
   //builder.uniqueById();
 
   auto analysis_specs = builder.analysisSpecs();
