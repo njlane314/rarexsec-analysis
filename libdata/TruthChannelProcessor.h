@@ -220,30 +220,38 @@ private:
   }
 
   ROOT::RDF::RNode assignChannelDefinitions(ROOT::RDF::RNode df) const {
-    auto chan_df = df.Define("channel_def",
-                             [](bool fv, int nu, int cc, int s, int npi, int np,
-                                int npi0, int ngamma) {
-                               if (!fv)
-                                 return 1; // Cosmic / Dirt
-                               if (cc == 1)
-                                 return 14; // NC
-                               if (s > 0)
-                                 return 15; // Signal (strange)
-                               if (std::abs(nu) == 14 && cc == 0) {
-                                 if (npi == 0 && np > 0)
-                                   return 10; // CC0pi (mu + Np)
-                                 if (npi == 1 && npi0 == 0)
-                                   return 11; // CC1pi±
-                                 if (npi0 > 0 || ngamma >= 2)
-                                   return 12; // CCpi0/gg
-                                 if (npi > 1)
-                                   return 13; // CC multi-pi
-                               }
-                               return 99; // Other
-                             },
-                             {"in_fiducial", "neutrino_pdg", "interaction_ccnc",
-                              "mc_n_strange", "mc_n_pion", "mc_n_proton",
-                              "count_pi_zero", "count_gamma"});
+    auto chan_df =
+        df.Define("channel_def", [](bool fv, int nu, int cc, int s, int npi,
+                                     int np, int npi0, int ngamma) {
+          if (!fv) {
+            if (nu == 0)
+              return 1; // Cosmic / Dirt
+            return 2;   // Outside FV
+          }
+          if (cc == 1)
+            return 14; // NC
+          if (cc == 0 && s > 0) {
+            if (s == 1)
+              return 15; // CC single strange
+            return 16;   // CC associated strange
+          }
+          if (std::abs(nu) == 12 && cc == 0)
+            return 17; // nue CC
+          if (std::abs(nu) == 14 && cc == 0) {
+            if (npi == 0 && np > 0)
+              return 10; // CC0pi (mu + Np)
+            if (npi == 1 && npi0 == 0)
+              return 11; // CC1pi±
+            if (npi0 > 0 || ngamma >= 2)
+              return 12; // CCpi0/gg
+            if (npi > 1)
+              return 13; // CC multi-pi
+          }
+          return 99; // Other
+        },
+                   {"in_fiducial", "neutrino_pdg", "interaction_ccnc",
+                    "mc_n_strange", "mc_n_pion", "mc_n_proton",
+                    "count_pi_zero", "count_gamma"});
 
     auto chan_alias_df = chan_df.Define("channel_definitions", "channel_def");
 

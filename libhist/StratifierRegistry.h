@@ -338,12 +338,15 @@ private:
         "channel_definitions", StratifierType::kScalar,
         {{0, "data", "Data", kBlack, 1001},
          {1, "cosmic_dirt", "Cosmic/Dirt", kGray + 2, 1001},
+         {2, "out_fv", "Outside FV", kGray + 1, 1001},
          {10, "cc0pi", R"(CC0#pi(#mu+Np))", kRed, 1001},
          {11, "cc1pipm", R"(CC1#pi^{#pm})", kOrange - 3, 1001},
          {12, "ccpi0_gg", R"(CC#pi^{0}/#gamma#gamma)", kYellow - 7, 1001},
          {13, "cc_multi_pi", R"(CC multi-#pi)", kGreen + 2, 1001},
          {14, "nc", "NC", kBlue, 1001},
-         {15, "signal", "Signal", kMagenta + 2, 1001},
+         {15, "cc_single_strange", "CC single s", kMagenta + 2, 1001},
+         {16, "cc_assoc_strange", "CC assoc s", kMagenta - 2, 1001},
+         {17, "nue_cc", R"(#nu_{e} CC)", kAzure + 2, 1001},
          {99, "other", "Other", kCyan + 2, 1001}});
   }
 
