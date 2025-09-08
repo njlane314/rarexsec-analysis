@@ -27,7 +27,7 @@ public:
       std::vector<ROOT::RDF::RNode> nodes,
       const BinningDefinition &original_bdef,
       const std::string &weight_col = "nominal_event_weight",
-      double min_neff_per_bin = 400.0, bool include_oob_bins = false,
+      double min_neff_per_bin = 0.0, bool include_oob_bins = false,
       DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight,
       double bin_resolution = 0.0) {
     if (nodes.empty()) {

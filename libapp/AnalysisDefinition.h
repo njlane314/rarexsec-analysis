@@ -30,7 +30,7 @@ public:
       const BinningDefinition &bdef, const std::string &strat,
       bool is_dynamic = false, bool include_oob_bins = false,
       DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight,
-      double bin_resolution = 0.0) {
+      double bin_resolution = 0.0, double min_neff_per_bin = 0.0) {
     VariableKey var_key{key};
     this->ensureVariableUnique(var_key, key);
     this->validateExpression(expr);
@@ -43,6 +43,7 @@ public:
     include_oob_.emplace(var_key, include_oob_bins);
     dynamic_strategy_.emplace(var_key, strategy);
     dynamic_resolution_.emplace(var_key, bin_resolution);
+    dynamic_min_neff_.emplace(var_key, min_neff_per_bin);
 
     return *this;
   }
@@ -161,6 +162,11 @@ public:
     return it != dynamic_resolution_.end() ? it->second : 0.0;
   }
 
+  double dynamicBinningMinNeff(const VariableKey &key) const {
+    auto it = dynamic_min_neff_.find(key);
+    return it != dynamic_min_neff_.end() ? it->second : 0.0;
+  }
+
   void resolveDynamicBinning(AnalysisDataLoader &loader) {
     for (const auto &var_handle : this->variables()) {
       if (!this->isDynamic(var_handle.key_))
@@ -191,8 +197,9 @@ public:
       bool include_oob = this->includeOobBins(var_handle.key_);
       auto strategy = this->dynamicBinningStrategy(var_handle.key_);
       double bin_res = this->dynamicBinningResolution(var_handle.key_);
+      double min_neff = this->dynamicBinningMinNeff(var_handle.key_);
       BinningDefinition new_bins = DynamicBinning::calculate(
-          mc_nodes, var_handle.binning(), "nominal_event_weight", 400.0,
+          mc_nodes, var_handle.binning(), "nominal_event_weight", min_neff,
           include_oob, strategy, bin_res);
 
       log::info("AnalysisDefinition::resolveDynamicBinning",
@@ -213,6 +220,7 @@ private:
   std::map<VariableKey, bool> include_oob_;
   std::map<VariableKey, DynamicBinningStrategy> dynamic_strategy_;
   std::map<VariableKey, double> dynamic_resolution_;
+  std::map<VariableKey, double> dynamic_min_neff_;
 
   std::map<RegionKey, std::string> region_names_;
   std::map<RegionKey, SelectionQuery> region_selections_;

@@ -17,7 +17,7 @@ class QuadTreeBinning {
   public:
     static std::pair<BinningDefinition, BinningDefinition>
     calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &xb, const BinningDefinition &yb,
-              const std::string &weight_col = "nominal_event_weight", double min_neff_per_bin = 400.0,
+              const std::string &weight_col = "nominal_event_weight", double min_neff_per_bin = 0.0,
               bool include_oob_bins = false) {
         double xmin = xb.getEdges().front();
         double xmax = xb.getEdges().back();
