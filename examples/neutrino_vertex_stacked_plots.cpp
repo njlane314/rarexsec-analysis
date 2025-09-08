@@ -11,10 +11,10 @@ int main() {
     PipelineBuilder builder(analysis_host, plot_host);
 
     // Mix variable and region presets with the stacked histogram preset
-    builder.use("TRUE_NEUTRINO_VERTEX");
-    builder.use("RECO_NEUTRINO_VERTEX");
-    builder.use("EMPTY");
-    builder.use("NEUTRINO_VERTEX_STACKED_PLOTS");
+    builder.region("TRUE_NEUTRINO_VERTEX");
+    builder.region("RECO_NEUTRINO_VERTEX");
+    builder.variable("EMPTY");
+    builder.preset("NEUTRINO_VERTEX_STACKED_PLOTS");
 
     builder.uniqueById();
 
