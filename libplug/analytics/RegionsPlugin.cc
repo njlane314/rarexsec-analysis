@@ -2,16 +2,13 @@
 #include "AnalysisDefinition.h"
 #include "Logger.h"
 #include "IAnalysisPlugin.h"
-#include "PluginConfigValidator.h"
 
 namespace analysis {
 
 class RegionsPlugin : public IAnalysisPlugin {
   public:
     RegionsPlugin(const PluginArgs &args, AnalysisDataLoader *)
-        : config_(args.value("analysis_configs", PluginArgs::object())) {
-        PluginConfigValidator::validateRegions(config_);
-    }
+        : config_(args.analysis_configs) {}
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("RegionsPlugin::onInitialisation", "Defining regions...");
@@ -51,7 +48,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader
                          "RegionsPlugin", analysis::RegionsPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createRegionsPlugin(const nlohmann::json &cfg) {
-    return new analysis::RegionsPlugin(analysis::PluginArgs{{"analysis_configs", cfg}}, nullptr);
+extern "C" analysis::IAnalysisPlugin *createRegionsPlugin(const analysis::PluginArgs &args) {
+    return new analysis::RegionsPlugin(args, nullptr);
 }
 #endif

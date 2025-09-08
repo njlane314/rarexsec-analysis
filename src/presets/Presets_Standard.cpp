@@ -1,43 +1,20 @@
 #include "PresetRegistry.h"
 #include "PluginSpec.h"
+
 using namespace analysis;
 
-// Baseline analysis preset
+// Placeholder preset registrations.  The detailed JSON-driven implementations
+// were removed as PluginArgs now exposes explicit fields and validation occurs
+// in plugin code.  These presets can be expanded as needed by providing
+// PluginSpecLists constructed from the strongly typed PluginArgs structure.
 ANALYSIS_REGISTER_PRESET(BaselineAnalysis, Target::Analysis,
-  [](const PluginArgs& vars) -> PluginSpecList {
-    PluginArgs varCfg = {
-      {"analysis_configs", {
-        {"variables", vars.value("variables", PluginArgs::array({ "muon_pt", "pion_count" })) }
-      }}
-    };
-    PluginArgs regCfg = {
-      {"analysis_configs", {
-        {"regions", vars.value("regions", PluginArgs::array({ "signal", "control" })) }
-      }}
-    };
-    return {
-      {"VariablesPlugin", varCfg},
-      {"RegionsPlugin",   regCfg}
-    };
-  }
+  [](const PluginArgs&) -> PluginSpecList { return {}; }
 )
 
-// Truth metrics preset
 ANALYSIS_REGISTER_PRESET(TruthMetrics, Target::Analysis,
-  [](const PluginArgs& vars) -> PluginSpecList {
-    return {
-      {"TruthMatchingPlugin", {{"threshold", vars.value("threshold", 0.5)}}},
-      {"EfficiencyPlugin",    {{"by", "hits"}}}
-    };
-  }
+  [](const PluginArgs&) -> PluginSpecList { return {}; }
 )
 
-// Plot preset
 ANALYSIS_REGISTER_PRESET(StandardPlots, Target::Plot,
-  [](const PluginArgs& vars) -> PluginSpecList {
-    return {
-      {"CutFlowPlot",     {{"plot_configs", {{"style", "stacked"}}}}},
-      {"KinematicsPlots", {{"plot_configs", {{"pt_bins", vars.value("pt_bins", PluginArgs::array({0,5,10,20,40}))}}}}}
-    };
-  }
+  [](const PluginArgs&) -> PluginSpecList { return {}; }
 )

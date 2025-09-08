@@ -10,7 +10,6 @@
 #include "IPlotPlugin.h"
 #include "SelectionEfficiencyPlot.h"
 #include "StratifierRegistry.h"
-#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -29,8 +28,7 @@ class CutFlowPlotPlugin : public IPlotPlugin {
     };
 
     CutFlowPlotPlugin(const PluginArgs &args, AnalysisDataLoader *) {
-        auto cfg = args.value("plot_configs", PluginArgs::object());
-        PluginConfigValidator::validatePlot(cfg);
+        const auto &cfg = args.plot_configs;
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
             throw std::runtime_error("CutFlowPlotPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
@@ -155,7 +153,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "CutFlowPlotPlugin", analysis::CutFlowPlotPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::CutFlowPlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}}, nullptr);
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return new analysis::CutFlowPlotPlugin(args, nullptr);
 }
 #endif
