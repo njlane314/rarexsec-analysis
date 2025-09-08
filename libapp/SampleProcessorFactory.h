@@ -68,7 +68,9 @@ template <typename Loader> class SampleProcessorFactory {
             ++sample_index;
 
             if (accounted_runs.insert(run_config->label()).second) {
-                region_analysis.addProtonsOnTarget(run_config->nominal_pot);
+                if (run_config->beam_mode != "numi_ext") {
+                    region_analysis.addProtonsOnTarget(run_config->nominal_pot);
+                }
             }
             log::info("SampleProcessorFactory::create",
                       "--> Conditioning sample (", sample_index, "/",
