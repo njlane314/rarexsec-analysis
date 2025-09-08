@@ -14,7 +14,7 @@ int main() {
     builder.use("TRUE_NEUTRINO_VERTEX");
     builder.use("RECO_NEUTRINO_VERTEX");
     builder.use("EMPTY");
-    builder.use("NEUTRINO_VERTEX_STACKED_PLOTS");
+    builder.use("STACKED_PLOTS");
 
     builder.uniqueById();
 

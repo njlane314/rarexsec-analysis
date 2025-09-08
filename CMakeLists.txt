@@ -37,7 +37,7 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
-add_executable(analyse analysis.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp)
+add_executable(analyse analysis.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
 target_link_libraries(analyse
     PRIVATE
         libapp
@@ -55,7 +55,7 @@ target_link_libraries(analyse
         dl
 )
 
-add_executable(neutrino_vertex_stacked_example examples/neutrino_vertex_stacked_plots.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp)
+add_executable(neutrino_vertex_stacked_example examples/neutrino_vertex_stacked_plots.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
 target_link_libraries(neutrino_vertex_stacked_example
     PRIVATE
         libapp
