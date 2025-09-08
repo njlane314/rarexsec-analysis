@@ -1,6 +1,7 @@
 #ifndef QUADTREE_BINNING_H
 #define QUADTREE_BINNING_H
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <set>
@@ -17,8 +18,7 @@ class QuadTreeBinning {
   public:
     static std::pair<BinningDefinition, BinningDefinition>
     calculate(std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &xb, const BinningDefinition &yb,
-              const std::string &weight_col = "nominal_event_weight", double min_neff_per_bin = 0.0,
-              bool include_oob_bins = false) {
+              const std::string &weight_col = "nominal_event_weight", bool include_oob_bins = false) {
         double xmin = xb.getEdges().front();
         double xmax = xb.getEdges().back();
         double ymin = yb.getEdges().front();
@@ -29,7 +29,9 @@ class QuadTreeBinning {
         std::set<double> xset;
         std::set<double> yset;
 
-        subdividePoints(pts, xmin, xmax, ymin, ymax, min_neff_per_bin, xset, yset);
+        int max_depth = static_cast<int>(std::ceil(std::log2(
+            std::max(xb.getBinNumber(), yb.getBinNumber()))));
+        subdividePoints(pts, xmin, xmax, ymin, ymax, xset, yset, max_depth, 0);
 
         auto edges = buildEdgeVectors(xset, yset, xmin, xmax, ymin, ymax, include_oob_bins);
         auto xedges = std::move(edges.first);
@@ -93,16 +95,10 @@ class QuadTreeBinning {
     }
 
     static void
-    subdividePoints(std::vector<Point> &v, double x0, double x1, double y0, double y1, double min_neff_per_bin,
-                    std::set<double> &xset, std::set<double> &yset) {
-        double sw = 0.0;
-        double sw2 = 0.0;
-        for (auto &p : v) {
-            sw += p.w;
-            sw2 += p.w * p.w;
-        }
-        double neff = (sw * sw) / std::max(sw2, std::numeric_limits<double>::min());
-        if (neff <= min_neff_per_bin || v.size() <= 1)
+    subdividePoints(std::vector<Point> &v, double x0, double x1, double y0, double y1,
+                    std::set<double> &xset, std::set<double> &yset, int max_depth,
+                    int depth) {
+        if (depth >= max_depth || v.size() <= 1)
             return;
 
         double xm = 0.5 * (x0 + x1);
@@ -137,10 +133,10 @@ class QuadTreeBinning {
             }
         }
 
-        subdividePoints(q1, x0, xm, y0, ym, min_neff_per_bin, xset, yset);
-        subdividePoints(q2, x0, xm, ym, y1, min_neff_per_bin, xset, yset);
-        subdividePoints(q3, xm, x1, y0, ym, min_neff_per_bin, xset, yset);
-        subdividePoints(q4, xm, x1, ym, y1, min_neff_per_bin, xset, yset);
+        subdividePoints(q1, x0, xm, y0, ym, xset, yset, max_depth, depth + 1);
+        subdividePoints(q2, x0, xm, ym, y1, xset, yset, max_depth, depth + 1);
+        subdividePoints(q3, xm, x1, y0, ym, xset, yset, max_depth, depth + 1);
+        subdividePoints(q4, xm, x1, ym, y1, xset, yset, max_depth, depth + 1);
     }
 
     static std::pair<std::vector<double>, std::vector<double>>

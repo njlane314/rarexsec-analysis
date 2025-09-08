@@ -27,7 +27,7 @@ public:
       std::vector<ROOT::RDF::RNode> nodes,
       const BinningDefinition &original_bdef,
       const std::string &weight_col = "nominal_event_weight",
-      double min_neff_per_bin = 0.0, bool include_oob_bins = false,
+      bool include_oob_bins = false,
       DynamicBinningStrategy strategy = DynamicBinningStrategy::EqualWeight,
       double bin_resolution = 0.0) {
     if (nodes.empty()) {
@@ -39,32 +39,31 @@ public:
     const std::string type_name = columnType(nodes, original_bdef);
 
     return dispatch(std::move(nodes), original_bdef, weight_col,
-                    min_neff_per_bin, include_oob_bins, strategy,
-                    bin_resolution, type_name);
+                    include_oob_bins, strategy, bin_resolution, type_name);
   }
 
 private:
   using Handler = std::function<BinningDefinition(
       std::vector<ROOT::RDF::RNode>, const BinningDefinition &,
-      const std::string &, double, bool, DynamicBinningStrategy, double)>;
+      const std::string &, bool, DynamicBinningStrategy, double)>;
 
   template <typename T> static Handler scalarHandler() {
     return
         [](std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &bdef,
-           const std::string &weight_col, double min_neff, bool oob,
+           const std::string &weight_col, bool oob,
            DynamicBinningStrategy strat, double bin_res) {
-          return calculateScalar<T>(std::move(nodes), bdef, weight_col,
-                                    min_neff, oob, strat, bin_res);
+          return calculateScalar<T>(std::move(nodes), bdef, weight_col, oob,
+                                    strat, bin_res);
         };
   }
 
   template <typename T> static Handler vectorHandler() {
     return
         [](std::vector<ROOT::RDF::RNode> nodes, const BinningDefinition &bdef,
-           const std::string &weight_col, double min_neff, bool oob,
+           const std::string &weight_col, bool oob,
            DynamicBinningStrategy strat, double bin_res) {
-          return calculateVector<T>(std::move(nodes), bdef, weight_col,
-                                    min_neff, oob, strat, bin_res);
+          return calculateVector<T>(std::move(nodes), bdef, weight_col, oob,
+                                    strat, bin_res);
         };
   }
 
@@ -77,9 +76,9 @@ private:
   static BinningDefinition
   dispatch(std::vector<ROOT::RDF::RNode> nodes,
            const BinningDefinition &original_bdef,
-           const std::string &weight_col, double min_neff_per_bin,
-           bool include_oob_bins, DynamicBinningStrategy strategy,
-           double bin_resolution, const std::string &type_name) {
+           const std::string &weight_col, bool include_oob_bins,
+           DynamicBinningStrategy strategy, double bin_resolution,
+           const std::string &type_name) {
     static const std::unordered_map<std::string, Handler> kTypeDispatch = {
         {"double", scalarHandler<double>()},
         {"Float64_t", scalarHandler<double>()},
@@ -136,15 +135,13 @@ private:
 
     if (auto it = kTypeDispatch.find(type_name); it != kTypeDispatch.end()) {
       return it->second(std::move(nodes), original_bdef, weight_col,
-                        min_neff_per_bin, include_oob_bins, strategy,
-                        bin_resolution);
+                        include_oob_bins, strategy, bin_resolution);
     }
 
     for (const auto &entry : kTypeDispatch) {
       if (type_name.find(entry.first) != std::string::npos) {
         return entry.second(std::move(nodes), original_bdef, weight_col,
-                            min_neff_per_bin, include_oob_bins, strategy,
-                            bin_resolution);
+                            include_oob_bins, strategy, bin_resolution);
       }
     }
 
@@ -157,13 +154,11 @@ private:
   static BinningDefinition
   calculateScalar(std::vector<ROOT::RDF::RNode> nodes,
                   const BinningDefinition &original_bdef,
-                  const std::string &weight_col, double min_neff_per_bin,
-                  bool include_oob_bins, DynamicBinningStrategy strategy,
-                  double bin_resolution) {
+                  const std::string &weight_col, bool include_oob_bins,
+                  DynamicBinningStrategy strategy, double bin_resolution) {
     std::vector<std::pair<double, double>> xw;
     xw.reserve(262144);
     double sumw = 0.0;
-    double sumw2 = 0.0;
     const std::string &branch = original_bdef.getVariable();
 
     for (auto &n : nodes) {
@@ -177,7 +172,6 @@ private:
           if (std::isfinite(x) && std::isfinite(w) && w > 0.0) {
             xw.emplace_back(x, w);
             sumw += w;
-            sumw2 += w * w;
           }
         }
       } else {
@@ -186,28 +180,25 @@ private:
           if (std::isfinite(x)) {
             xw.emplace_back(x, 1.0);
             sumw += 1.0;
-            sumw2 += 1.0;
           }
         }
       }
     }
     log::debug("DynamicBinning::calculateScalar", "Processed", xw.size(),
                "entries");
-    return finaliseEdges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                         include_oob_bins, strategy, bin_resolution);
+    return finaliseEdges(xw, sumw, original_bdef, include_oob_bins, strategy,
+                         bin_resolution);
   }
 
   template <typename T>
   static BinningDefinition
   calculateVector(std::vector<ROOT::RDF::RNode> nodes,
                   const BinningDefinition &original_bdef,
-                  const std::string &weight_col, double min_neff_per_bin,
-                  bool include_oob_bins, DynamicBinningStrategy strategy,
-                  double bin_resolution) {
+                  const std::string &weight_col, bool include_oob_bins,
+                  DynamicBinningStrategy strategy, double bin_resolution) {
     std::vector<std::pair<double, double>> xw;
     xw.reserve(262144);
     double sumw = 0.0;
-    double sumw2 = 0.0;
     const std::string &branch = original_bdef.getVariable();
 
     for (auto &n : nodes) {
@@ -224,7 +215,6 @@ private:
             if (std::isfinite(x)) {
               xw.emplace_back(x, w);
               sumw += w;
-              sumw2 += w * w;
             }
           }
         }
@@ -235,7 +225,6 @@ private:
             if (std::isfinite(x)) {
               xw.emplace_back(x, 1.0);
               sumw += 1.0;
-              sumw2 += 1.0;
             }
           }
         }
@@ -243,8 +232,8 @@ private:
     }
     log::debug("DynamicBinning::calculateVector", "Processed", xw.size(),
                "entries");
-    return finaliseEdges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                         include_oob_bins, strategy, bin_resolution);
+    return finaliseEdges(xw, sumw, original_bdef, include_oob_bins, strategy,
+                         bin_resolution);
   }
 
   static void filterEntries(std::vector<std::pair<double, double>> &xw) {
@@ -311,20 +300,13 @@ private:
 
   static std::vector<double>
   applyStrategy(const std::vector<std::pair<double, double>> &in_range,
-                double sumw, double sumw2, double xmin, double xmax,
-                double min_neff_per_bin, DynamicBinningStrategy strategy,
-                double bin_resolution) {
+                double sumw, double xmin, double xmax, int target_bins,
+                DynamicBinningStrategy strategy, double bin_resolution) {
     std::vector<double> edges;
 
     log::info("DynamicBinning::applyStrategy", "Starting with", in_range.size(),
               "entries spanning", xmin, "to", xmax, "strategy",
               static_cast<int>(strategy));
-
-    double neff_total =
-        (sumw * sumw) / std::max(sumw2, std::numeric_limits<double>::min());
-
-    log::info("DynamicBinning::applyStrategy", "Effective entries:", neff_total,
-              "min_neff_per_bin:", min_neff_per_bin);
 
     auto add_uniform_edges = [&](int target_bins) {
       edges.reserve(static_cast<size_t>(target_bins) + 1);
@@ -379,9 +361,7 @@ private:
       }
     }
 
-    int target_bins =
-        std::max(1, static_cast<int>(std::floor(
-                        neff_total / std::max(min_neff_per_bin, 1.0))));
+    target_bins = std::max(1, target_bins);
 
     log::info("DynamicBinning::applyStrategy", "Target bins:", target_bins);
 
@@ -419,49 +399,13 @@ private:
   }
 
   static std::vector<double>
-  finaliseEdgeList(std::vector<double> edges,
-                   const std::vector<std::pair<double, double>> &in_range,
-                   double min_neff_per_bin, bool include_oob_bins,
+  finaliseEdgeList(std::vector<double> edges, bool include_oob_bins,
                    double domain_min, double domain_max) {
     log::info("DynamicBinning::finaliseEdgeList", "Starting with", edges.size(),
               "edges");
 
     edges.front() = domain_min;
     edges.back() = domain_max;
-
-    if (min_neff_per_bin > 0.0 && edges.size() > 2) {
-      bool merged = true;
-      while (merged && edges.size() > 2) {
-        merged = false;
-        size_t nbins = edges.size() - 1;
-        std::vector<double> sw(nbins, 0.0), sw2(nbins, 0.0);
-        size_t bin = 0;
-        for (const auto &p : in_range) {
-          double x = p.first;
-          double w = p.second;
-          while (bin < nbins - 1 && x >= edges[bin + 1]) {
-            ++bin;
-          }
-          sw[bin] += w;
-          sw2[bin] += w * w;
-        }
-        for (size_t i = 0; i < nbins; ++i) {
-          double neff = (sw[i] * sw[i]) /
-                        std::max(sw2[i], std::numeric_limits<double>::min());
-          if (neff < min_neff_per_bin) {
-            if (i < nbins - 1) {
-              edges.erase(edges.begin() + i + 1);
-            } else {
-              edges.erase(edges.begin() + i);
-            }
-            log::info("DynamicBinning::finaliseEdgeList", "Merged bin", i,
-                      "; remaining bins", edges.size() - 1);
-            merged = true;
-            break;
-          }
-        }
-      }
-    }
 
     if (include_oob_bins) {
       double first_width =
@@ -501,8 +445,7 @@ private:
 
   static BinningDefinition
   finaliseEdges(std::vector<std::pair<double, double>> &xw, double sumw,
-                double sumw2, const BinningDefinition &original_bdef,
-                double min_neff_per_bin, bool include_oob_bins,
+                const BinningDefinition &original_bdef, bool include_oob_bins,
                 DynamicBinningStrategy strategy, double bin_resolution) {
     const auto &domain_edges = original_bdef.getEdges();
     double domain_min = domain_edges.front();
@@ -541,10 +484,8 @@ private:
               [](const auto &a, const auto &b) { return a.first < b.first; });
 
     sumw = 0.0;
-    sumw2 = 0.0;
     for (const auto &p : in_range) {
       sumw += p.second;
-      sumw2 += p.second * p.second;
     }
 
     if (sumw <= 0.0) {
@@ -560,14 +501,16 @@ private:
     log::info("DynamicBinning::finaliseEdges", "Using fixed data range for",
               original_bdef.getVariable(), ":", xmin, "to", xmax);
 
-    auto edges = applyStrategy(in_range, sumw, sumw2, xmin, xmax,
-                               min_neff_per_bin, strategy, bin_resolution);
+    int target_bins = original_bdef.getBinNumber();
+    auto edges =
+        applyStrategy(in_range, sumw, xmin, xmax, target_bins, strategy,
+                      bin_resolution);
 
     log::info("DynamicBinning::finaliseEdges", "applyStrategy returned",
               edges.size(), "edges");
 
-    edges = finaliseEdgeList(std::move(edges), in_range, min_neff_per_bin,
-                             include_oob_bins, domain_min, domain_max);
+    edges = finaliseEdgeList(std::move(edges), include_oob_bins, domain_min,
+                             domain_max);
 
     log::info("DynamicBinning::finaliseEdges", "finaliseEdgeList returned",
               edges.size(), "edges");
