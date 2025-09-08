@@ -74,7 +74,13 @@ buildPipeline(const nlohmann::json &cfg) {
                                                     {"plot_configs", v.value("plot_configs", PluginArgs::object())}});
                 }
             }
-            builder.use(name, vars, overrides);
+            std::string kind = p.value("kind", std::string("region"));
+            if (kind == "variable")
+                builder.variable(name, vars, overrides);
+            else if (kind == "preset")
+                builder.preset(name, vars, overrides);
+            else
+                builder.region(name, vars, overrides);
         }
     }
 
