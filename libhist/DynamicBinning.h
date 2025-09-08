@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "TH1D.h"
+
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
 
@@ -66,6 +68,134 @@ private:
           return calculateVector<T>(std::move(nodes), bdef, weight_col,
                                     min_neff, oob, strat, bin_res);
         };
+  }
+
+  struct Summary {
+    std::vector<std::pair<double, double>> xw;
+    double sumw = 0.0;
+    double sumw2 = 0.0;
+    double xmin = 0.0;
+    double xmax = 0.0;
+  };
+
+  static inline std::unordered_map<std::string, Summary> s_summaries;
+
+  template <typename T, bool IsVector>
+  static Summary buildSummary(std::vector<ROOT::RDF::RNode> &nodes,
+                              const std::string &branch,
+                              const std::string &weight_col,
+                              double bin_resolution) {
+    Summary s;
+    double xmin = std::numeric_limits<double>::infinity();
+    double xmax = -std::numeric_limits<double>::infinity();
+
+    for (auto &n : nodes) {
+      if constexpr (IsVector) {
+        n.Foreach([&](const ROOT::RVec<T> &vals) {
+          for (auto v : vals) {
+            double x = static_cast<double>(v);
+            if (std::isfinite(x)) {
+              xmin = std::min(xmin, x);
+              xmax = std::max(xmax, x);
+            }
+          }
+        }, {branch});
+      } else {
+        n.Foreach([&](T v) {
+          double x = static_cast<double>(v);
+          if (std::isfinite(x)) {
+            xmin = std::min(xmin, x);
+            xmax = std::max(xmax, x);
+          }
+        }, {branch});
+      }
+    }
+
+    if (!std::isfinite(xmin) || !std::isfinite(xmax) || xmin >= xmax) {
+      xmin = 0.0;
+      xmax = 1.0;
+    }
+
+    int nbins = 10000;
+    if (bin_resolution > 0.0) {
+      nbins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_resolution)));
+    }
+
+    ROOT::TH1D hist("dynamic_binning_tmp", "", nbins, xmin, xmax);
+    hist.Sumw2();
+
+    for (auto &n : nodes) {
+      if constexpr (IsVector) {
+        if (n.HasColumn(weight_col)) {
+          n.Foreach([
+                        &hist
+                    ](const ROOT::RVec<T> &vals, double w) {
+            if (!std::isfinite(w) || w <= 0.0)
+              return;
+            for (auto v : vals) {
+              double x = static_cast<double>(v);
+              if (std::isfinite(x))
+                hist.Fill(x, w);
+            }
+          }, {branch, weight_col});
+        } else {
+          n.Foreach([&hist](const ROOT::RVec<T> &vals) {
+            for (auto v : vals) {
+              double x = static_cast<double>(v);
+              if (std::isfinite(x))
+                hist.Fill(x);
+            }
+          }, {branch});
+        }
+      } else {
+        if (n.HasColumn(weight_col)) {
+          n.Foreach([
+                        &hist
+                    ](T v, double w) {
+            double x = static_cast<double>(v);
+            if (std::isfinite(x) && std::isfinite(w) && w > 0.0)
+              hist.Fill(x, w);
+          }, {branch, weight_col});
+        } else {
+          n.Foreach([&hist](T v) {
+            double x = static_cast<double>(v);
+            if (std::isfinite(x))
+              hist.Fill(x);
+          }, {branch});
+        }
+      }
+    }
+
+    s.sumw = hist.GetSumOfWeights();
+    s.sumw2 = 0.0;
+    s.xw.reserve(nbins);
+    for (int i = 1; i <= nbins; ++i) {
+      double w = hist.GetBinContent(i);
+      if (w <= 0.0)
+        continue;
+      double x = hist.GetBinCenter(i);
+      s.xw.emplace_back(x, w);
+      double w2 = std::pow(hist.GetBinError(i), 2);
+      s.sumw2 += w2;
+    }
+    s.xmin = xmin;
+    s.xmax = xmax;
+    return s;
+  }
+
+  template <typename T, bool IsVector>
+  static Summary getSummary(std::vector<ROOT::RDF::RNode> &nodes,
+                            const std::string &branch,
+                            const std::string &weight_col,
+                            double bin_resolution) {
+    auto it = s_summaries.find(branch);
+    if (it != s_summaries.end()) {
+      return it->second;
+    }
+    auto summary = buildSummary<T, IsVector>(nodes, branch, weight_col,
+                                             bin_resolution);
+    s_summaries.emplace(branch, summary);
+    return summary;
   }
 
   static std::string columnType(std::vector<ROOT::RDF::RNode> &nodes,
@@ -160,41 +290,16 @@ private:
                   const std::string &weight_col, double min_neff_per_bin,
                   bool include_oob_bins, DynamicBinningStrategy strategy,
                   double bin_resolution) {
-    std::vector<std::pair<double, double>> xw;
-    xw.reserve(262144);
-    double sumw = 0.0;
-    double sumw2 = 0.0;
     const std::string &branch = original_bdef.getVariable();
 
-    for (auto &n : nodes) {
-      bool has_w = n.HasColumn(weight_col);
-      auto vals = n.template Take<T>(branch);
-      if (has_w) {
-        auto ws = n.template Take<double>(weight_col);
-        for (size_t i = 0; i < vals->size(); ++i) {
-          double x = static_cast<double>((*vals)[i]);
-          double w = (*ws)[i];
-          if (std::isfinite(x) && std::isfinite(w) && w > 0.0) {
-            xw.emplace_back(x, w);
-            sumw += w;
-            sumw2 += w * w;
-          }
-        }
-      } else {
-        for (size_t i = 0; i < vals->size(); ++i) {
-          double x = static_cast<double>((*vals)[i]);
-          if (std::isfinite(x)) {
-            xw.emplace_back(x, 1.0);
-            sumw += 1.0;
-            sumw2 += 1.0;
-          }
-        }
-      }
-    }
+    auto summary = getSummary<T, false>(nodes, branch, weight_col, bin_resolution);
+
+    auto xw = summary.xw; // copy since finaliseEdges mutates
     log::debug("DynamicBinning::calculateScalar", "Processed", xw.size(),
-               "entries");
-    return finaliseEdges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                         include_oob_bins, strategy, bin_resolution);
+               "aggregated entries");
+    return finaliseEdges(xw, summary.sumw, summary.sumw2, original_bdef,
+                         min_neff_per_bin, include_oob_bins, strategy,
+                         bin_resolution);
   }
 
   template <typename T>
@@ -204,47 +309,16 @@ private:
                   const std::string &weight_col, double min_neff_per_bin,
                   bool include_oob_bins, DynamicBinningStrategy strategy,
                   double bin_resolution) {
-    std::vector<std::pair<double, double>> xw;
-    xw.reserve(262144);
-    double sumw = 0.0;
-    double sumw2 = 0.0;
     const std::string &branch = original_bdef.getVariable();
 
-    for (auto &n : nodes) {
-      bool has_w = n.HasColumn(weight_col);
-      auto vecs = n.template Take<ROOT::RVec<T>>(branch);
-      if (has_w) {
-        auto ws = n.template Take<double>(weight_col);
-        for (size_t i = 0; i < vecs->size(); ++i) {
-          double w = (*ws)[i];
-          if (!std::isfinite(w) || w <= 0.0)
-            continue;
-          for (auto val : (*vecs)[i]) {
-            double x = static_cast<double>(val);
-            if (std::isfinite(x)) {
-              xw.emplace_back(x, w);
-              sumw += w;
-              sumw2 += w * w;
-            }
-          }
-        }
-      } else {
-        for (size_t i = 0; i < vecs->size(); ++i) {
-          for (auto val : (*vecs)[i]) {
-            double x = static_cast<double>(val);
-            if (std::isfinite(x)) {
-              xw.emplace_back(x, 1.0);
-              sumw += 1.0;
-              sumw2 += 1.0;
-            }
-          }
-        }
-      }
-    }
+    auto summary = getSummary<T, true>(nodes, branch, weight_col, bin_resolution);
+
+    auto xw = summary.xw; // copy since finaliseEdges mutates
     log::debug("DynamicBinning::calculateVector", "Processed", xw.size(),
-               "entries");
-    return finaliseEdges(xw, sumw, sumw2, original_bdef, min_neff_per_bin,
-                         include_oob_bins, strategy, bin_resolution);
+               "aggregated entries");
+    return finaliseEdges(xw, summary.sumw, summary.sumw2, original_bdef,
+                         min_neff_per_bin, include_oob_bins, strategy,
+                         bin_resolution);
   }
 
   static void filterEntries(std::vector<std::pair<double, double>> &xw) {
