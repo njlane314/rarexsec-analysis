@@ -115,7 +115,10 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "StackedHistogramPlugin", analysis::StackedHistogramPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+extern "C" analysis::IPlotPlugin *createStackedHistogramPlugin(const analysis::PluginArgs &args) {
     return new analysis::StackedHistogramPlugin(args, nullptr);
+}
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return createStackedHistogramPlugin(args);
 }
 #endif
