@@ -11,7 +11,7 @@ int main() {
 
   // Build a simple pipeline programmatically
   builder.region("EMPTY");
-  builder.variable("TRUE_NEUTRINO_VERTEX");
+  builder.variable("TEST_TOPOLOGICAL_SCORE");
   //builder.variable("RECO_NEUTRINO_VERTEX");
   builder.preset("STACKED_PLOTS");
   //builder.uniqueById();
