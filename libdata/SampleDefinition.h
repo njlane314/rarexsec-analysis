@@ -64,12 +64,12 @@ class SampleDefinition {
     std::map<SampleVariation, ROOT::RDF::RNode> variation_nodes_;
 
     SampleDefinition(const nlohmann::json &j, const nlohmann::json &all_samples_json, const std::string &base_dir,
-                     const VariableRegistry &var_reg, IEventProcessor &processor)
-        : sample_key_(SampleKey{j.at("sample_key").get<std::string>()}),
-          nominal_node_(this->makeDataFrame(base_dir, var_reg, processor, this->parseMetadata(j), all_samples_json)) {
+                     const VariableRegistry &var_reg, IEventProcessor &processor) {
+        this->parseMetadata(j);
+        this->validateFiles(base_dir);
+        nominal_node_ = this->makeDataFrame(base_dir, var_reg, processor, rel_path_, all_samples_json);
         if (sample_origin_ == SampleOrigin::kMonteCarlo) {
             for (auto &[dv, path] : var_paths_) {
-                SampleKey dataset_key{sample_key_.str() + "_" + variationToKey(dv)};
                 variation_nodes_.emplace(dv, this->makeDataFrame(base_dir, var_reg, processor, path, all_samples_json));
             }
         }
@@ -105,7 +105,7 @@ class SampleDefinition {
   private:
     std::map<SampleVariation, std::string> var_paths_;
 
-    const std::string &parseMetadata(const nlohmann::json &j) {
+    void parseMetadata(const nlohmann::json &j) {
         sample_key_ = SampleKey{j.at("sample_key").get<std::string>()};
         auto ts = j.at("sample_type").get<std::string>();
         sample_origin_ = (ts == "mc"     ? SampleOrigin::kMonteCarlo
@@ -123,7 +123,6 @@ class SampleDefinition {
                 var_paths_[dvt] = dv.at("relative_path").get<std::string>();
             }
         }
-        return rel_path_;
     }
 
     SampleVariation convertDetVarType(const std::string &s) const {
