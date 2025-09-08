@@ -252,12 +252,24 @@ private:
     log::debug("DynamicBinning::filterEntries", "Starting with", before,
                "entries");
 
+    const double float_low =
+        static_cast<double>(std::numeric_limits<float>::lowest());
+    const double float_high =
+        static_cast<double>(std::numeric_limits<float>::max());
+    const double double_low = std::numeric_limits<double>::lowest();
+    const double double_high = std::numeric_limits<double>::max();
+
     xw.erase(std::remove_if(xw.begin(), xw.end(),
                             [&](const auto &p) {
                               double x = p.first;
                               double w = p.second;
-                              return !std::isfinite(x) || !std::isfinite(w) ||
-                                     w <= 0.0;
+                              bool invalid_x =
+                                  !std::isfinite(x) || x == float_low ||
+                                  x == float_high || x == double_low ||
+                                  x == double_high;
+                              bool invalid_w =
+                                  !std::isfinite(w) || w <= 0.0;
+                              return invalid_x || invalid_w;
                             }),
              xw.end());
 
