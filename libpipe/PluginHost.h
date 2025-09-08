@@ -44,7 +44,11 @@ public:
       }
       CreateFn create = reinterpret_cast<CreateFn>(dlsym(handle, "createPlugin"));
       if (!create) {
-        std::string sym = "create" + name + "Plugin";
+        std::string sym = "create" + name;
+        create = reinterpret_cast<CreateFn>(dlsym(handle, sym.c_str()));
+      }
+      if (!create && endsWith(name, "Plugin")) {
+        std::string sym = "create" + name.substr(0, name.size() - 6) + "Plugin";
         create = reinterpret_cast<CreateFn>(dlsym(handle, sym.c_str()));
       }
       if (create) {
