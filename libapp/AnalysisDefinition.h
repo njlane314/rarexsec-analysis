@@ -162,29 +162,36 @@ public:
   }
 
   void resolveDynamicBinning(AnalysisDataLoader &loader) {
+    std::vector<ROOT::RDF::RNode> mc_nodes;
+    for (auto &entry : loader.getSampleFrames()) {
+      auto &sample_def = entry.second;
+      if (sample_def.isMc()) {
+        mc_nodes.emplace_back(sample_def.nominal_node_);
+      }
+    }
+
+    bool has_mc = !mc_nodes.empty();
+    if (!has_mc) {
+      log::warn("AnalysisDefinition::resolveDynamicBinning",
+                "No Monte Carlo samples were found. Dynamic binning will be skipped.");
+      for (auto &entry : loader.getSampleFrames()) {
+        log::warn("AnalysisDefinition::resolveDynamicBinning",
+                  "Available sample:", entry.first.str());
+      }
+    }
+
     for (const auto &var_handle : this->variables()) {
       if (!this->isDynamic(var_handle.key_))
         continue;
       log::info(
           "AnalysisDefinition::resolveDynamicBinning",
           "Deriving dynamic bin schema for variable:", var_handle.key_.str());
-      std::vector<ROOT::RDF::RNode> mc_nodes;
-      for (auto &entry : loader.getSampleFrames()) {
-        auto &sample_def = entry.second;
-        if (sample_def.isMc()) {
-          mc_nodes.emplace_back(sample_def.nominal_node_);
-        }
-      }
 
-      if (mc_nodes.empty()) {
+      if (!has_mc) {
         log::warn("AnalysisDefinition::resolveDynamicBinning",
                   "Skipping dynamic binning for variable",
                   var_handle.key_.str(),
                   ": no Monte Carlo samples were found.");
-        for (auto &entry : loader.getSampleFrames()) {
-          log::warn("AnalysisDefinition::resolveDynamicBinning",
-                    "Available sample:", entry.first.str());
-        }
         continue;
       }
 
