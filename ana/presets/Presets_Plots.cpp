@@ -14,6 +14,18 @@ ANALYSIS_REGISTER_PRESET(STACKED_PLOTS, Target::Plot,
   })
 )
 
+// Preset for stacked histogram plots with a logarithmic y-axis.
+ANALYSIS_REGISTER_PRESET(STACKED_PLOTS_LOG, Target::Plot,
+  ([](const PluginArgs&) -> PluginSpecList {
+    nlohmann::json plot = {
+      {"category_column", "channel_definitions"},
+      {"log_y", true}
+    };
+    PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({plot})}}}};
+    return {{"StackedHistogramPlugin", args}};
+  })
+)
+
 // Preset to configure the EventDisplay plugin with a single display request.
 // Values are taken from the provided variables or fall back to sensible
 // defaults matching the plugin's own choices.

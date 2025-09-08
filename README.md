@@ -149,6 +149,8 @@ builder.variable("RECO_NEUTRINO_VERTEX");
 builder.preset("STACKED_PLOTS");
 ```
 
+The `STACKED_PLOTS_LOG` preset offers the same configuration but uses a logarithmic y-axis.
+
 The resulting specification lists can be supplied directly to `AnalysisRunner`
 without writing intermediate JSON:
 
