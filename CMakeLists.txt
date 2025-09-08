@@ -37,7 +37,11 @@ add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
 
-add_library(analyse STATIC src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
+add_library(analyse STATIC
+    ana/presets/Presets_Standard.cpp
+    ana/presets/Presets_Vertices.cpp
+    ana/presets/Presets_Plots.cpp
+)
 target_link_libraries(analyse
     PUBLIC
         libapp
@@ -55,25 +59,12 @@ target_link_libraries(analyse
         dl
 )
 
-add_executable(neutrino_vertex_stacked_example src/analysis/neutrino_vertex_stacked_plots.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
-target_link_libraries(neutrino_vertex_stacked_example
-    PRIVATE
-        libapp
-        libplug
-        libdata
-        libhist
-        libplot
-        libsyst
-        libutils
-        Eigen3::Eigen
-        nlohmann_json::nlohmann_json
-        ${ROOT_LIBRARIES}
-        TBB::tbb
-        TMVA
-        dl
+add_executable(pipeline_runner_example
+    ana/pipeline_runner_example.cpp
+    ana/presets/Presets_Standard.cpp
+    ana/presets/Presets_Vertices.cpp
+    ana/presets/Presets_Plots.cpp
 )
-
-add_executable(pipeline_runner_example src/analysis/pipeline_runner_example.cpp src/presets/Presets_Standard.cpp src/presets/Presets_Vertices.cpp src/presets/Presets_Plots.cpp)
 target_link_libraries(pipeline_runner_example
     PRIVATE
         libapp
