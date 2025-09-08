@@ -194,6 +194,8 @@ private:
                 }
             }
         }
+        log::debug("DynamicBinning::calculateScalar", "Processed", xw.size(),
+                    "entries");
         return finaliseEdges(xw, sumw, sumw2, original_bdef,
                              min_neff_per_bin, include_oob_bins, strategy);
     }
@@ -242,17 +244,22 @@ private:
                 }
             }
         }
+        log::debug("DynamicBinning::calculateVector", "Processed", xw.size(),
+                    "entries");
         return finaliseEdges(xw, sumw, sumw2, original_bdef,
                              min_neff_per_bin, include_oob_bins, strategy);
     }
 
     static void filterEntries(std::vector<std::pair<double, double>> &xw) {
         size_t before = xw.size();
+        log::debug("DynamicBinning::filterEntries", "Starting with", before,
+                    "entries");
 
         xw.erase(std::remove_if(xw.begin(), xw.end(), [&](const auto &p) {
                                     double x = p.first;
                                     double w = p.second;
-                                    return !std::isfinite(x) || !std::isfinite(w) || w <= 0.0;
+                                    return !std::isfinite(x) || !std::isfinite(w) ||
+                                           w <= 0.0;
                                 }),
                  xw.end());
 
