@@ -8,7 +8,7 @@ using namespace analysis;
 // Allows an optional `region` override via PluginArgs.
 ANALYSIS_REGISTER_PRESET(
     PRESELECTION_VARIABLES, Target::Analysis,
-    [](const PluginArgs &vars) -> PluginSpecList {
+    ([](const PluginArgs &vars) -> PluginSpecList {
       std::string region =
           vars.analysis_configs.value("region", std::string{"EMPTY"});
       auto regions = PluginArgs::array({region});
@@ -59,4 +59,4 @@ ANALYSIS_REGISTER_PRESET(
 
       PluginArgs args{{"analysis_configs", {{"variables", var_defs}}}};
       return {{"VariablesPlugin", args}};
-    });
+    }));
