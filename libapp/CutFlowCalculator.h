@@ -47,11 +47,6 @@ public:
                "sample frames");
     for (auto &[skey, sample_def] : sample_frames) {
       log::debug("CutFlowCalculator::compute", "Examining sample", skey.str());
-      if (!sample_def.isMc()) {
-        log::debug("CutFlowCalculator::compute", skey.str(),
-                   "is not MC - skipping");
-        continue;
-      }
 
       auto base_df = sample_def.nominal_node_.Define(
           "w2", "nominal_event_weight*nominal_event_weight");
