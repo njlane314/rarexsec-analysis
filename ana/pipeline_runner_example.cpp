@@ -1,5 +1,3 @@
-#include <nlohmann/json.hpp>
-
 #include "PipelineBuilder.h"
 #include "PipelineRunner.h"
 
@@ -20,13 +18,8 @@ int main() {
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();
 
-  // Minimal sample configuration
-  nlohmann::json samples = {
-      {"ntupledir", "/path/to/ntuples"},
-      {"beamlines", {{"bnb", {{"run1", {}}}}}}};
-
   PipelineRunner runner(analysis_specs, plot_specs);
-  runner.run(samples, "/tmp/output.root");
+  runner.run("config/samples.json", "/tmp/output.root");
 
   return 0;
 }
