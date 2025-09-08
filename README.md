@@ -111,6 +111,21 @@ events to a ROOT file in the `snapshots` directory:
 
 The output file is named `<beam>_<periods>_NUMU_CC_snapshot.root`.
 
+## PipelineBuilder usage
+
+When constructing a pipeline with presets, the `PipelineBuilder` now requires
+at least one variable and one region preset before adding plot presets. Region
+and variable presets are added with dedicated calls to make the intended
+structure explicit:
+
+```cpp
+PipelineBuilder builder(analysis_host, plot_host);
+builder.region("TRUE_NEUTRINO_VERTEX");
+builder.region("RECO_NEUTRINO_VERTEX");
+builder.variable("EMPTY");
+builder.preset("NEUTRINO_VERTEX_STACKED_PLOTS");
+```
+
 ## Run Periods
 
 1. Run 1 → October 2015 to July 2016
