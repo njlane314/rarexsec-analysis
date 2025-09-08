@@ -95,6 +95,22 @@ They are enabled in the `presets` block of the configuration:
 Each preset configures the `RegionsPlugin` with an analysis region matching the
 given selection rule.
 
+## Snapshot preset
+
+To write out events that satisfy the νµ charged‑current selection, enable the
+`NUMU_CC_SNAPSHOT` preset. It wires the `SnapshotPlugin` to dump the selected
+events to a ROOT file in the `snapshots` directory:
+
+```json
+{
+  "presets": [
+    { "name": "NUMU_CC_SNAPSHOT" }
+  ]
+}
+```
+
+The output file is named `<beam>_<periods>_NUMU_CC_snapshot.root`.
+
 ## Run Periods
 
 1. Run 1 → October 2015 to July 2016

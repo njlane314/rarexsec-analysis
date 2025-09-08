@@ -81,3 +81,15 @@ ANALYSIS_REGISTER_PRESET(QUALITY_NUMU_CC, Target::Analysis,
     return {{"RegionsPlugin", args}};
   }
 )
+
+// Preset to snapshot events passing the NuMu CC selection
+ANALYSIS_REGISTER_PRESET(NUMU_CC_SNAPSHOT, Target::Analysis,
+  [](const PluginArgs&) -> PluginSpecList {
+    nlohmann::json snap = {
+      {"selection_rule", "NUMU_CC"},
+      {"output_directory", "snapshots"}
+    };
+    PluginArgs args{{"analysis_configs", {{"snapshots", nlohmann::json::array({snap})}}}};
+    return {{"SnapshotPlugin", args}};
+  }
+)
