@@ -1,12 +1,15 @@
 #ifndef SYSTEMATICS_PROCESSOR_H
 #define SYSTEMATICS_PROCESSOR_H
 
+#include <algorithm>
 #include <cmath>
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 
 #include <TMatrixDSym.h>
 
@@ -75,11 +78,16 @@ class SystematicsProcessor {
     static void sanitiseMatrix(TMatrixDSym &m) {
         const int rows = m.GetNrows();
         const int cols = m.GetNcols();
-        for (int i = 0; i < rows; ++i) {
-            for (int j = 0; j < cols; ++j) {
-                if (!std::isfinite(m(i, j))) m(i, j) = 0.0;
+        tbb::parallel_for(tbb::blocked_range<int>(0, rows),
+                          [&](const tbb::blocked_range<int> &r) {
+            for (int i = r.begin(); i != r.end(); ++i) {
+                const int max_col = std::min(i + 1, cols);
+                for (int j = 0; j < max_col; ++j) {
+                    double &val = m(i, j);
+                    if (!std::isfinite(val)) val = 0.0;
+                }
             }
-        }
+        });
     }
 
     static void combineCovariances(VariableResult &result) {
