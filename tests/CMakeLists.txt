@@ -42,3 +42,7 @@ add_executable(test_topological_score_preset
   ${CMAKE_SOURCE_DIR}/ana/presets/Presets_TopologicalScore.cpp)
 target_link_libraries(test_topological_score_preset PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json)
 catch_discover_tests(test_topological_score_preset)
+
+add_executable(test_monte_carlo_processor test_monte_carlo_processor.cpp)
+target_link_libraries(test_monte_carlo_processor PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} TBB::tbb)
+catch_discover_tests(test_monte_carlo_processor)
