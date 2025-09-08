@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "PluginRegistry.h"
 #include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "IPlotPlugin.h"
@@ -14,6 +14,7 @@
 #include "SemanticDisplay.h"
 #include "SelectionQuery.h"
 #include "SelectionRegistry.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -28,7 +29,9 @@ class EventDisplayPlugin : public IPlotPlugin {
         std::filesystem::path output_directory{"./plots/event_displays"};
     };
 
-    explicit EventDisplayPlugin(const nlohmann::json &cfg) {
+    EventDisplayPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
             throw std::runtime_error("EventDisplayPlugin missing event_displays");
         }
@@ -113,21 +116,25 @@ class EventDisplayPlugin : public IPlotPlugin {
         }
     }
 
-    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
+    static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
 
   private:
     std::vector<DisplayConfig> configs_;
-
-    inline static AnalysisDataLoader *loader_ = nullptr;
+    AnalysisDataLoader *loader_;
+    inline static AnalysisDataLoader *legacy_loader_ = nullptr;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "EventDisplayPlugin", analysis::EventDisplayPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::EventDisplayPlugin(cfg);
+    return new analysis::EventDisplayPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
+                                            analysis::EventDisplayPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
-    analysis::EventDisplayPlugin::setLoader(loader);
+    analysis::EventDisplayPlugin::setLegacyLoader(loader);
 }
 #endif

@@ -1,6 +1,4 @@
-#ifndef ANALYSIS_RUNNER_H
-#define ANALYSIS_RUNNER_H
-
+#pragma once
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -15,7 +13,6 @@
 #include "AnalysisDataLoader.h"
 #include "AnalysisDefinition.h"
 #include "AnalysisKey.h"
-#include "AnalysisPluginManager.h"
 #include "AnalysisResult.h"
 #include "HistogramFactory.h"
 #include "Logger.h"
@@ -29,80 +26,102 @@
 #include "CutFlowCalculator.h"
 #include "VariableProcessor.h"
 
+// NEW
+#include "PluginAliases.h"
+
 namespace analysis {
 
 class AnalysisRunner {
-    public:
-        AnalysisRunner(AnalysisDataLoader &ldr,
-                       std::unique_ptr<HistogramFactory> factory,
-                       SystematicsProcessor &sys_proc,
-                       const nlohmann::json &plgn_cfg)
-            : data_loader_(ldr),
-              analysis_definition_(selection_registry_),
-              systematics_processor_(sys_proc),
-              sample_processor_factory_(data_loader_),
-              cut_flow_calculator_(data_loader_, analysis_definition_),
-              histogram_factory_(std::move(factory)),
-              variable_processor_(analysis_definition_, systematics_processor_,
-                                  *histogram_factory_) {
-            plugin_manager_.loadPlugins(plgn_cfg, &data_loader_);
-        }
+public:
+  AnalysisRunner(AnalysisDataLoader &ldr,
+                 std::unique_ptr<HistogramFactory> factory,
+                 SystematicsProcessor &sys_proc,
+                 const nlohmann::json &plgn_cfg)
+    : a_host_(&ldr),
+      p_host_(&ldr),
+      data_loader_(ldr),
+      analysis_definition_(selection_registry_),
+      systematics_processor_(sys_proc),
+      sample_processor_factory_(data_loader_),
+      cut_flow_calculator_(data_loader_, analysis_definition_),
+      histogram_factory_(std::move(factory)),
+      variable_processor_(analysis_definition_, systematics_processor_, *histogram_factory_) {
 
-        AnalysisResult run() {
-            log::info("AnalysisRunner::run",
-                      "Initiating orchestrated analysis run...");
-            plugin_manager_.notifyInitialisation(analysis_definition_,
-                                                 selection_registry_);
+    // Optional: preload .so directory
+    // const char* dir = std::getenv("ANALYSIS_PLUGIN_DIR");
+    // if (dir) a_host_.loadDirectory(dir, /*recurse=*/false);
 
-            analysis_definition_.resolveDynamicBinning(data_loader_);
-            RegionAnalysisMap analysis_regions;
+    // Load plugin specs (new format) into analysis host
+    if (plgn_cfg.contains("plugins")) {
+      for (const auto& p : plgn_cfg.at("plugins")) {
+        std::string id = p.at("id").get<std::string>();
+        PluginArgs args = p.value("args", PluginArgs::object());
+        a_host_.add(id, args);
+      }
+    }
+  }
 
-            const auto &regions = analysis_definition_.regions();
-            size_t region_count = regions.size();
-            size_t region_index = 0;
-            for (const auto &region_handle : regions) {
-                ++region_index;
-                log::info("AnalysisRunner::run",
-                          "Engaging region protocol (",
-                          region_index, "/", region_count,
-                          "):", region_handle.key_.str());
+  AnalysisResult run() {
+    log::info("AnalysisRunner::run", "Initiating orchestrated analysis run...");
 
-                RegionAnalysis region_analysis = std::move(*region_handle.analysis());
+    // Initialisation callback
+    a_host_.forEach([&](IAnalysisPlugin& pl){
+      pl.onInitialisation(analysis_definition_, selection_registry_);
+    });
 
-                auto [sample_processors, monte_carlo_nodes] =
-                    sample_processor_factory_.create(region_handle, region_analysis);
+    analysis_definition_.resolveDynamicBinning(data_loader_);
+    RegionAnalysisMap analysis_regions;
 
-                cut_flow_calculator_.compute(region_handle, region_analysis);
-                variable_processor_.process(region_handle, region_analysis,
-                                            sample_processors, monte_carlo_nodes);
+    const auto &regions = analysis_definition_.regions();
+    size_t region_count = regions.size();
+    size_t region_index = 0;
+    for (const auto &region_handle : regions) {
+      ++region_index;
+      log::info("AnalysisRunner::run",
+                "Engaging region protocol (", region_index, "/", region_count, "):",
+                region_handle.key_.str());
 
-                analysis_regions[region_handle.key_] = std::move(region_analysis);
+      RegionAnalysis region_analysis = std::move(*region_handle.analysis());
 
-                log::info("AnalysisRunner::run",
-                          "Region protocol complete (",
-                          region_index, "/", region_count,
-                          "):", region_handle.key_.str());
-            }
+      auto [sample_processors, monte_carlo_nodes] =
+          sample_processor_factory_.create(region_handle, region_analysis);
 
-            AnalysisResult result(std::move(analysis_regions));
-            plugin_manager_.notifyFinalisation(result);
-            return result;
-        }
+      cut_flow_calculator_.compute(region_handle, region_analysis);
+      variable_processor_.process(region_handle, region_analysis,
+                                  sample_processors, monte_carlo_nodes);
 
-    private:
-        AnalysisPluginManager plugin_manager_;
-        SelectionRegistry selection_registry_;
+      analysis_regions[region_handle.key_] = std::move(region_analysis);
 
-        AnalysisDataLoader &data_loader_;
-        AnalysisDefinition analysis_definition_;
-        SystematicsProcessor &systematics_processor_;
+      log::info("AnalysisRunner::run",
+                "Region protocol complete (", region_index, "/", region_count, "):",
+                region_handle.key_.str());
+    }
 
-        SampleProcessorFactory<AnalysisDataLoader> sample_processor_factory_;
-        CutFlowCalculator<AnalysisDataLoader> cut_flow_calculator_;
-        std::unique_ptr<HistogramFactory> histogram_factory_;
-        VariableProcessor<SystematicsProcessor> variable_processor_;
+    AnalysisResult result(std::move(analysis_regions));
+
+    // Finalisation callback
+    a_host_.forEach([&](IAnalysisPlugin& pl){ pl.onFinalisation(result); });
+
+    // Optional: plot host hook if you wire plot specs elsewhere
+    // p_host_.forEach([&](IPlotPlugin& pp){ pp.onPlot(result); });
+
+    return result;
+  }
+
+private:
+  AnalysisPluginHost a_host_;
+  PlotPluginHost     p_host_; // present for future use
+
+  SelectionRegistry selection_registry_;
+
+  AnalysisDataLoader &data_loader_;
+  AnalysisDefinition analysis_definition_;
+  SystematicsProcessor &systematics_processor_;
+
+  SampleProcessorFactory<AnalysisDataLoader> sample_processor_factory_;
+  CutFlowCalculator<AnalysisDataLoader> cut_flow_calculator_;
+  std::unique_ptr<HistogramFactory> histogram_factory_;
+  VariableProcessor<SystematicsProcessor> variable_processor_;
 };
 
-} 
-
-#endif
+} // namespace analysis

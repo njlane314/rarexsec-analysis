@@ -1,16 +1,16 @@
 #include <map>
 #include <regex>
-#include <stdexcept>
+#include <std::runtime_error>
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
+#include "PluginRegistry.h"
 #include <TSystem.h>
 
 #include "Logger.h"
 #include "IPlotPlugin.h"
 #include "UnstackedHistogramPlot.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -29,7 +29,9 @@ class UnstackedHistogramPlugin : public IPlotPlugin {
         bool area_normalise = false;
     };
 
-    explicit UnstackedHistogramPlugin(const nlohmann::json &cfg) {
+    UnstackedHistogramPlugin(const PluginArgs &args, AnalysisDataLoader *) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
             throw std::runtime_error("UnstackedHistogramPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
@@ -104,10 +106,13 @@ class UnstackedHistogramPlugin : public IPlotPlugin {
     std::map<RegionKey, std::map<std::string, std::vector<Cut>>> region_cuts_;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "UnstackedHistogramPlugin", analysis::UnstackedHistogramPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::UnstackedHistogramPlugin(cfg);
+    return new analysis::UnstackedHistogramPlugin(analysis::PluginArgs{{"plot_configs", cfg}}, nullptr);
 }
 #endif

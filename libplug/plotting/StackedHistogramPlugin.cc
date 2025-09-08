@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
+#include "PluginRegistry.h"
 #include <TSystem.h>
 
 #include "Logger.h"
 #include "IPlotPlugin.h"
 #include "StackedHistogramPlot.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -30,7 +30,9 @@ class StackedHistogramPlugin : public IPlotPlugin {
         double max{0.0};
     };
 
-    explicit StackedHistogramPlugin(const nlohmann::json &cfg) {
+    StackedHistogramPlugin(const PluginArgs &args, AnalysisDataLoader *) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("plots") || !cfg.at("plots").is_array())
             throw std::runtime_error("StackedHistogramPlugin missing plots");
         for (auto const &p : cfg.at("plots")) {
@@ -81,10 +83,13 @@ class StackedHistogramPlugin : public IPlotPlugin {
     std::vector<PlotConfig> plots_;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "StackedHistogramPlugin", analysis::StackedHistogramPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::StackedHistogramPlugin(cfg);
+    return new analysis::StackedHistogramPlugin(analysis::PluginArgs{{"plot_configs", cfg}}, nullptr);
 }
 #endif

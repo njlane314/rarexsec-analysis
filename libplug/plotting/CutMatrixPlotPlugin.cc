@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
+#include "PluginRegistry.h"
 #include "Logger.h"
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "PlotCatalog.h"
 #include "SelectionQuery.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -24,7 +24,9 @@ class CutMatrixPlotPlugin : public IPlotPlugin {
         std::vector<Cut> y_cuts;
     };
 
-    explicit CutMatrixPlotPlugin(const nlohmann::json &cfg) {
+    CutMatrixPlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
+        auto cfg = args.value("plot_configs", PluginArgs::object());
+        PluginConfigValidator::validatePlot(cfg);
         if (!cfg.contains("cut_matrix_plots") || !cfg.at("cut_matrix_plots").is_array())
             throw std::runtime_error("CutMatrixPlotPlugin missing cut_matrix_plots");
         for (auto const &p : cfg.at("cut_matrix_plots")) {
@@ -70,21 +72,25 @@ class CutMatrixPlotPlugin : public IPlotPlugin {
         }
     }
 
-    static void setLoader(AnalysisDataLoader *loader) { loader_ = loader; }
+    static void setLegacyLoader(AnalysisDataLoader *ldr) { legacy_loader_ = ldr; }
 
   private:
     std::vector<PlotConfig> plots_;
-
-    inline static AnalysisDataLoader *loader_ = nullptr;
+    AnalysisDataLoader *loader_;
+    inline static AnalysisDataLoader *legacy_loader_ = nullptr;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
+                         "CutMatrixPlotPlugin", analysis::CutMatrixPlotPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::CutMatrixPlotPlugin(cfg);
+    return new analysis::CutMatrixPlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
+                                             analysis::CutMatrixPlotPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
-    analysis::CutMatrixPlotPlugin::setLoader(loader);
+    analysis::CutMatrixPlotPlugin::setLegacyLoader(loader);
 }
 #endif

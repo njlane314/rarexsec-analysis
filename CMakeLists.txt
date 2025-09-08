@@ -25,6 +25,7 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
     "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
     "${CMAKE_CURRENT_SOURCE_DIR}/libplug"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/analysis"
 )
 
 add_subdirectory(libdata)
@@ -42,7 +43,7 @@ set(ANALYSIS_EXECUTABLES
 )
 
 foreach(exe ${ANALYSIS_EXECUTABLES})
-    add_executable(${exe} ${exe}.cpp)
+    add_executable(${exe} ${exe}.cpp src/presets/Presets_Standard.cpp)
     target_link_libraries(${exe}
         PRIVATE
             libapp

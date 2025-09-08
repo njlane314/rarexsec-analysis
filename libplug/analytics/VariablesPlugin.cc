@@ -1,20 +1,24 @@
 #include <limits>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "PluginRegistry.h"
 #include "AnalysisDefinition.h"
 #include "Logger.h"
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
 #include "IAnalysisPlugin.h"
+#include "PluginConfigValidator.h"
 
 namespace analysis {
 
 class VariablesPlugin : public IAnalysisPlugin {
   public:
-    explicit VariablesPlugin(const nlohmann::json &cfg) : config_(cfg) {}
+    VariablesPlugin(const PluginArgs &args, AnalysisDataLoader *)
+        : config_(args.value("analysis_configs", PluginArgs::object())) {
+        PluginConfigValidator::validateVariables(config_);
+    }
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("VariablesPlugin::onInitialisation", "Defining variables...");
@@ -76,13 +80,16 @@ class VariablesPlugin : public IAnalysisPlugin {
     void onFinalisation(const AnalysisResult &) override {}
 
   private:
-    nlohmann::json config_;
+    PluginArgs config_;
 };
 
-}
+} // namespace analysis
+
+ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader,
+                         "VariablesPlugin", analysis::VariablesPlugin)
 
 #ifdef BUILD_PLUGIN
 extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
-    return new analysis::VariablesPlugin(cfg);
+    return new analysis::VariablesPlugin(analysis::PluginArgs{{"analysis_configs", cfg}}, nullptr);
 }
 #endif
