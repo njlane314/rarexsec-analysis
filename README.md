@@ -53,6 +53,27 @@ The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_block
 }
 ```
 
+The same configuration can be enabled via the `EVENT_DISPLAY` preset:
+
+```json
+{
+  "presets": [
+    {
+      "name": "EVENT_DISPLAY",
+      "vars": {
+        "plot_configs": {
+          "sample": "sample",
+          "region": "REGION_KEY",
+          "n_events": 5,
+          "image_size": 800,
+          "output_directory": "./plots"
+        }
+      }
+    }
+  ]
+}
+```
+
 ```json
 {
   "path": "build/PerformancePlotPlugin.so",
