@@ -2,7 +2,6 @@
 #define CUT_FLOW_CALCULATOR_H
 
 #include <functional>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,12 +106,14 @@ private:
         results.emplace_back(ch_w);
         results.emplace_back(ch_w2);
 
-        value_setters.emplace_back([&stage_count, scheme, key, ch_w]() {
-          stage_count.schemes[scheme][key].first += ch_w.GetValue();
-        });
-        value_setters.emplace_back([&stage_count, scheme, key, ch_w2]() {
-          stage_count.schemes[scheme][key].second += ch_w2.GetValue();
-        });
+        value_setters.emplace_back(
+            [&stage_count, scheme, key, ch_w]() mutable {
+              stage_count.schemes[scheme][key].first += ch_w.GetValue();
+            });
+        value_setters.emplace_back(
+            [&stage_count, scheme, key, ch_w2]() mutable {
+              stage_count.schemes[scheme][key].second += ch_w2.GetValue();
+            });
       }
     }
   }
@@ -127,14 +128,9 @@ private:
     std::vector<ROOT::RDF::RResultPtr<double>> results;
     std::vector<std::function<void()>> value_setters;
 
-     for (size_t i = 0; i < cumulative_nodes.size(); ++i) {
+    for (size_t i = 0; i < cumulative_nodes.size(); ++i) {
       auto df = cumulative_nodes[i];
-      log::debug("CutFlowCalculator::calculateWeightsPerStage", "Stage", i,
-                 "Filter", cumulative_filters[i]);
-
-      if (!cumulative_filters[i].empty()) {
-        df = df.Filter(cumulative_filters[i]);
-      }
+      log::debug("CutFlowCalculator::calculateWeightsPerStage", "Stage", i);
 
       auto tot_w = df.Sum<double>("nominal_event_weight");
       auto tot_w2 = df.Sum<double>("w2");
@@ -142,10 +138,10 @@ private:
       results.emplace_back(tot_w);
       results.emplace_back(tot_w2);
 
-      value_setters.emplace_back([&stage_counts, i, tot_w]() {
+      value_setters.emplace_back([&stage_counts, i, tot_w]() mutable {
         stage_counts[i].total += tot_w.GetValue();
       });
-      value_setters.emplace_back([&stage_counts, i, tot_w2]() {
+      value_setters.emplace_back([&stage_counts, i, tot_w2]() mutable {
         stage_counts[i].total_w2 += tot_w2.GetValue();
       });
 
@@ -153,10 +149,8 @@ private:
                           stage_counts[i], results, value_setters);
     }
 
-    {
-      static std::mutex run_graphs_mutex;
-      std::lock_guard<std::mutex> lock(run_graphs_mutex);
-      ROOT::RDF::RunGraphs(results);
+    for (auto &res : results) {
+      res.GetValue();
     }
 
     for (auto &setter : value_setters) {
