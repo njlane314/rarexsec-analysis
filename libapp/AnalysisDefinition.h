@@ -178,10 +178,11 @@ public:
             }
 
             if (mc_nodes.empty()) {
-                log::fatal("AnalysisDefinition::resolveDynamicBinning",
-                           "Cannot perform dynamic binning: No Monte Carlo "
-                           "samples "
-                           "were found!");
+                log::warn("AnalysisDefinition::resolveDynamicBinning",
+                          "Skipping dynamic binning for variable",
+                          var_handle.key_.str(),
+                          ": no Monte Carlo samples were found.");
+                continue;
             }
 
             bool include_oob = this->includeOobBins(var_handle.key_);
