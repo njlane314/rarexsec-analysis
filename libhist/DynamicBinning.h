@@ -121,7 +121,7 @@ private:
       nbins = std::max(1, static_cast<int>(std::ceil((xmax - xmin) / bin_resolution)));
     }
 
-    ROOT::TH1D hist("dynamic_binning_tmp", "", nbins, xmin, xmax);
+    TH1D hist("dynamic_binning_tmp", "", nbins, xmin, xmax);
     hist.Sumw2();
 
     for (auto &n : nodes) {
