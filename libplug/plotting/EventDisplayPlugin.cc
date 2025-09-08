@@ -129,8 +129,13 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "EventDisplayPlugin", analysis::EventDisplayPlugin)
 
 #ifdef BUILD_PLUGIN
+extern "C" analysis::IPlotPlugin *createEventDisplayPlugin(
+    const analysis::PluginArgs &args) {
+    return new analysis::EventDisplayPlugin(args,
+                                           analysis::EventDisplayPlugin::legacyLoader());
+}
 extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
-    return new analysis::EventDisplayPlugin(args, analysis::EventDisplayPlugin::legacyLoader());
+    return createEventDisplayPlugin(args);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::EventDisplayPlugin::setLegacyLoader(loader);
