@@ -10,8 +10,8 @@ namespace analysis {
 // stores a JSON object, but the separation of categories provides a clear,
 // compile-time view of what settings are available.
 struct PluginArgs {
-    nlohmann::json plot_configs{};     // configuration for plotting plugins
-    nlohmann::json analysis_configs{}; // configuration for analysis plugins
+    nlohmann::json plot_configs = nlohmann::json::object();     // configuration for plotting plugins
+    nlohmann::json analysis_configs = nlohmann::json::object(); // configuration for analysis plugins
 
     PluginArgs() = default;
 
