@@ -7,15 +7,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 include(Catch)
 add_executable(test_systematics test_systematics.cpp)
-target_link_libraries(test_systematics PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+target_link_libraries(test_systematics PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} TBB::tbb)
 catch_discover_tests(test_systematics)
 
 add_executable(test_dynamic_binning test_dynamic_binning.cpp)
-target_link_libraries(test_dynamic_binning PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+target_link_libraries(test_dynamic_binning PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} TBB::tbb)
 catch_discover_tests(test_dynamic_binning)
 
 add_executable(test_quadtree_binning test_quadtree_binning.cpp)
-target_link_libraries(test_quadtree_binning PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+target_link_libraries(test_quadtree_binning PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} TBB::tbb)
 catch_discover_tests(test_quadtree_binning)
 
 add_executable(test_event_display_preset
@@ -34,5 +34,5 @@ add_executable(test_pipeline_builder
   test_pipeline_builder.cpp
   ${CMAKE_SOURCE_DIR}/ana/presets/Presets_Standard.cpp
   ${CMAKE_SOURCE_DIR}/ana/presets/Presets_Vertices.cpp)
-target_link_libraries(test_pipeline_builder PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain nlohmann_json::nlohmann_json ${ROOT_LIBRARIES} ${CMAKE_DL_LIBS})
+target_link_libraries(test_pipeline_builder PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain nlohmann_json::nlohmann_json ${ROOT_LIBRARIES} TBB::tbb ${CMAKE_DL_LIBS})
 catch_discover_tests(test_pipeline_builder)
