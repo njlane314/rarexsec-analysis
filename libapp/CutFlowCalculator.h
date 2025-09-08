@@ -1,6 +1,8 @@
 #ifndef CUT_FLOW_CALCULATOR_H
 #define CUT_FLOW_CALCULATOR_H
 
+#include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -84,10 +86,11 @@ private:
   void updateSchemeTallies(
       ROOT::RDF::RNode df, const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
-      const std::unordered_map<std::string,
-                               std::unordered_map<int, std::string>>
-          &scheme_filters,
-      RegionAnalysis::StageCount &stage_count) {
+      const std::unordered_map<
+          std::string, std::unordered_map<int, std::string>> &scheme_filters,
+      RegionAnalysis::StageCount &stage_count,
+      std::vector<ROOT::RDF::RResultPtr<double>> &results,
+      std::vector<std::function<void()>> &value_setters) {
     for (const auto &scheme : schemes) {
       for (int key : scheme_keys.at(scheme)) {
         auto ch_df = df.Filter(scheme_filters.at(scheme).at(key));
@@ -95,8 +98,17 @@ private:
         auto ch_w = ch_df.Sum<double>("nominal_event_weight");
         auto ch_w2 = ch_df.Sum<double>("w2");
 
-        stage_count.schemes[scheme][key].first += ch_w.GetValue();
-        stage_count.schemes[scheme][key].second += ch_w2.GetValue();
+        stage_count.schemes[scheme][key];
+
+        results.emplace_back(ch_w);
+        results.emplace_back(ch_w2);
+
+        value_setters.emplace_back([&stage_count, scheme, key, ch_w]() {
+          stage_count.schemes[scheme][key].first += ch_w.GetValue();
+        });
+        value_setters.emplace_back([&stage_count, scheme, key, ch_w2]() {
+          stage_count.schemes[scheme][key].second += ch_w2.GetValue();
+        });
       }
     }
   }
@@ -107,9 +119,11 @@ private:
       std::vector<RegionAnalysis::StageCount> &stage_counts,
       const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
-      const std::unordered_map<std::string,
-                               std::unordered_map<int, std::string>>
-          &scheme_filters) {
+      const std::unordered_map<
+          std::string, std::unordered_map<int, std::string>> &scheme_filters) {
+    std::vector<ROOT::RDF::RResultPtr<double>> results;
+    std::vector<std::function<void()>> value_setters;
+
     for (size_t i = 0; i < cumulative_filters.size(); ++i) {
       auto df = base_df;
 
@@ -120,11 +134,28 @@ private:
       auto tot_w = df.Sum<double>("nominal_event_weight");
       auto tot_w2 = df.Sum<double>("w2");
 
-      stage_counts[i].total += tot_w.GetValue();
-      stage_counts[i].total_w2 += tot_w2.GetValue();
+      results.emplace_back(tot_w);
+      results.emplace_back(tot_w2);
+
+      value_setters.emplace_back([&stage_counts, i, tot_w]() {
+        stage_counts[i].total += tot_w.GetValue();
+      });
+      value_setters.emplace_back([&stage_counts, i, tot_w2]() {
+        stage_counts[i].total_w2 += tot_w2.GetValue();
+      });
 
       updateSchemeTallies(df, schemes, scheme_keys, scheme_filters,
-                          stage_counts[i]);
+                          stage_counts[i], results, value_setters);
+    }
+
+    {
+      static std::mutex run_graphs_mutex;
+      std::lock_guard<std::mutex> lock(run_graphs_mutex);
+      ROOT::RDF::RunGraphs(results);
+    }
+
+    for (auto &setter : value_setters) {
+      setter();
     }
   }
 
