@@ -34,7 +34,13 @@ class RegionAnalysis {
 
     const std::string &beamConfig() const noexcept { return beam_config_; }
 
+    void setBeamConfig(std::string bc) { beam_config_ = std::move(bc); }
+
     const std::vector<std::string> &runNumbers() const noexcept { return run_numbers_; }
+
+    void setRunNumbers(std::vector<std::string> runs) {
+        run_numbers_ = std::move(runs);
+    }
 
     void addFinalVariable(VariableKey v, VariableResult r) {
         final_variables_.insert_or_assign(std::move(v), std::move(r));
