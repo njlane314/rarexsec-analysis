@@ -45,8 +45,16 @@ inline AnalysisResult processBeamline(
 
   AnalysisRunner runner(data_loader, std::move(histogram_factory),
                         systematics_processor, analysis_specs);
+  auto result = runner.run();
 
-  return runner.run();
+  for (auto &kv : result.regions()) {
+    if (kv.second.beamConfig().empty()) {
+      kv.second.setBeamConfig(beam);
+      kv.second.setRunNumbers(periods);
+    }
+  }
+
+  return result;
 }
 
 inline void aggregateResults(AnalysisResult &result,
