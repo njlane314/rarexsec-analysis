@@ -107,3 +107,27 @@ target_link_libraries(event_display_runner
         dl
 )
 
+add_executable(cut_flow_plot_runner
+    ana/cut_flow_plot_runner.cpp
+    ana/presets/Presets_Standard.cpp
+    ana/presets/Presets_Vertices.cpp
+    ana/presets/Presets_Plots.cpp
+    ana/presets/Presets_Preselections.cpp
+)
+target_link_libraries(cut_flow_plot_runner
+    PRIVATE
+        libapp
+        libplug
+        libdata
+        libhist
+        libplot
+        libsyst
+        libutils
+        Eigen3::Eigen
+        nlohmann_json::nlohmann_json
+        ${ROOT_LIBRARIES}
+        TBB::tbb
+        TMVA
+        dl
+)
+
