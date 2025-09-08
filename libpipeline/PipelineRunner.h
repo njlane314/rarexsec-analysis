@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <fstream>
 
 #include <ROOT/RDataFrame.hxx>
 #include <nlohmann/json.hpp>
@@ -210,6 +211,18 @@ public:
     result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
     return result;
+  }
+
+  // Convenience overload that loads the samples configuration from a
+  // JSON file located at \p samples_path before executing the analysis and
+  // plotting stages. The analysis result is written to \p output_path and
+  // returned to the caller.
+  inline AnalysisResult run(const std::string &samples_path,
+                            const std::string &output_path) const {
+    std::ifstream in(samples_path);
+    nlohmann::json samples;
+    in >> samples;
+    return run(samples, output_path);
   }
 
 private:
