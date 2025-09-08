@@ -66,6 +66,10 @@ public:
     std::string base = dir ? dir : "build";
     // soft dlopen (ok if missing) — plugin might be statically linked
     handle = openHandle(base + "/" + nameOrPath + ".so", /*soft=*/true);
+    // If not found and no custom directory provided, try current directory.
+    if (!handle && !dir) {
+      handle = openHandle(nameOrPath + std::string{".so"}, /*soft=*/true);
+    }
     addByName(nameOrPath, args, handle);
   }
 
