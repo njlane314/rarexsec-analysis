@@ -72,12 +72,14 @@ The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_block
 
 ## Region presets
 
-Common selection regions can be added via presets. The framework provides three
-basic options:
+Common selection regions can be added via presets. The framework provides a
+number of built‑in options:
 
 - `EMPTY` – no event selection (`NONE` rule)
 - `QUALITY` – requires the `quality_event` preselection
 - `MUON` – selects events containing a reconstructed muon
+- `NUMU_CC` – selects charged-current νµ events
+- `QUALITY_NUMU_CC` – combines the quality preselection with the νµ CC rule
 
 They are enabled in the `presets` block of the configuration:
 
@@ -85,7 +87,7 @@ They are enabled in the `presets` block of the configuration:
 {
   "presets": [
     { "name": "QUALITY" },
-    { "name": "MUON" }
+    { "name": "NUMU_CC" }
   ]
 }
 ```
