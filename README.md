@@ -70,6 +70,29 @@ The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_block
 }
 ```
 
+## Region presets
+
+Common selection regions can be added via presets. The framework provides three
+basic options:
+
+- `EMPTY` – no event selection (`NONE` rule)
+- `QUALITY` – requires the `quality_event` preselection
+- `MUON` – selects events containing a reconstructed muon
+
+They are enabled in the `presets` block of the configuration:
+
+```json
+{
+  "presets": [
+    { "name": "QUALITY" },
+    { "name": "MUON" }
+  ]
+}
+```
+
+Each preset configures the `RegionsPlugin` with an analysis region matching the
+given selection rule.
+
 ## Run Periods
 
 1. Run 1 → October 2015 to July 2016
