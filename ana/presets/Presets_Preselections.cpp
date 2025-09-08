@@ -14,13 +14,7 @@ ANALYSIS_REGISTER_PRESET(
       auto regions = PluginArgs::array({region});
 
       nlohmann::json var_defs = PluginArgs::array(
-          {{{"name", "topological_score"},
-            {"branch", "topological_score"},
-            {"label", "Topological score"},
-            {"stratum", "channel_definitions"},
-            {"regions", regions},
-            {"bins", {{"mode", "dynamic"}, {"strategy", "bayesian_blocks"}}}},
-           {{"name", "neutrino_energy"},
+          {{{"name", "neutrino_energy"},
             {"branch", "neutrino_energy"},
             {"label", "Neutrino energy [GeV]"},
             {"stratum", "channel_definitions"},
