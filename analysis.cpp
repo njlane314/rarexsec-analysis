@@ -39,7 +39,12 @@ using analysis::Target;
 static nlohmann::json specsToJson(const PluginSpecList &specs) {
     nlohmann::json arr = nlohmann::json::array();
     for (auto const &s : specs) {
-        arr.push_back({{"id", s.id}, {"args", s.args}});
+        nlohmann::json arg = nlohmann::json::object();
+        if (!s.args.analysis_configs.is_null() && !s.args.analysis_configs.empty())
+            arg["analysis_configs"] = s.args.analysis_configs;
+        if (!s.args.plot_configs.is_null() && !s.args.plot_configs.empty())
+            arg["plot_configs"] = s.args.plot_configs;
+        arr.push_back({{"id", s.id}, {"args", arg}});
     }
     return nlohmann::json{{"plugins", arr}};
 }
@@ -56,11 +61,17 @@ buildPipeline(const nlohmann::json &cfg) {
     if (cfg.contains("presets")) {
         for (auto const &p : cfg.at("presets")) {
             std::string name = p.at("name").get<std::string>();
-            PluginArgs vars = p.value("vars", PluginArgs::object());
+            PluginArgs vars;
+            if (p.contains("vars")) {
+                const auto &vj = p.at("vars");
+                vars = PluginArgs{{"analysis_configs", vj.value("analysis_configs", PluginArgs::object())},
+                                  {"plot_configs", vj.value("plot_configs", PluginArgs::object())}};
+            }
             std::unordered_map<std::string, PluginArgs> overrides;
             if (p.contains("overrides")) {
                 for (auto const &[k, v] : p.at("overrides").items()) {
-                    overrides.emplace(k, v);
+                    overrides.emplace(k, PluginArgs{{"analysis_configs", v.value("analysis_configs", PluginArgs::object())},
+                                                    {"plot_configs", v.value("plot_configs", PluginArgs::object())}});
                 }
             }
             builder.use(name, vars, overrides);
@@ -77,7 +88,12 @@ buildPipeline(const nlohmann::json &cfg) {
                 target = Target::Both;
 
             std::string id = p.at("id").get<std::string>();
-            PluginArgs args = p.value("args", PluginArgs::object());
+            PluginArgs args;
+            if (p.contains("args")) {
+                const auto &a = p.at("args");
+                args = PluginArgs{{"analysis_configs", a.value("analysis_configs", PluginArgs::object())},
+                                  {"plot_configs", a.value("plot_configs", PluginArgs::object())}};
+            }
             builder.add(target, id, args);
         }
     }

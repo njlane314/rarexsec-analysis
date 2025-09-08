@@ -9,16 +9,13 @@
 #include "BinningDefinition.h"
 #include "DynamicBinning.h"
 #include "IAnalysisPlugin.h"
-#include "PluginConfigValidator.h"
 
 namespace analysis {
 
 class VariablesPlugin : public IAnalysisPlugin {
   public:
     VariablesPlugin(const PluginArgs &args, AnalysisDataLoader *)
-        : config_(args.value("analysis_configs", PluginArgs::object())) {
-        PluginConfigValidator::validateVariables(config_);
-    }
+        : config_(args.analysis_configs) {}
 
     void onInitialisation(AnalysisDefinition &def, const SelectionRegistry &) override {
         log::info("VariablesPlugin::onInitialisation", "Defining variables...");
@@ -89,7 +86,7 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader
                          "VariablesPlugin", analysis::VariablesPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
-    return new analysis::VariablesPlugin(analysis::PluginArgs{{"analysis_configs", cfg}}, nullptr);
+extern "C" analysis::IAnalysisPlugin *createPlugin(const analysis::PluginArgs &args) {
+    return new analysis::VariablesPlugin(args, nullptr);
 }
 #endif

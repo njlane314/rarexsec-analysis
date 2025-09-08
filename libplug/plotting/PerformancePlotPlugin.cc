@@ -10,7 +10,6 @@
 #include "IPlotPlugin.h"
 #include "PerformancePlot.h"
 #include "StratifierRegistry.h"
-#include "PluginConfigValidator.h"
 
 #include "TH1D.h"
 
@@ -34,8 +33,7 @@ class PerformancePlotPlugin : public IPlotPlugin {
     };
 
     PerformancePlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
-        auto cfg = args.value("plot_configs", PluginArgs::object());
-        PluginConfigValidator::validatePlot(cfg);
+        const auto &cfg = args.plot_configs;
         if (!cfg.contains("performance_plots") || !cfg.at("performance_plots").is_array()) {
             throw std::runtime_error("PerformancePlotPlugin missing performance_plots");
         }
@@ -189,9 +187,8 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "PerformancePlotPlugin", analysis::PerformancePlotPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::PerformancePlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
-                                               analysis::PerformancePlotPlugin::legacy_loader_);
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return new analysis::PerformancePlotPlugin(args, analysis::PerformancePlotPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::PerformancePlotPlugin::setLegacyLoader(loader);

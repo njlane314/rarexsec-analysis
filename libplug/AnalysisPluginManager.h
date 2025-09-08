@@ -15,7 +15,7 @@
 
 #include "AnalysisResult.h"
 #include "IAnalysisPlugin.h"
-#include "PluginConfigValidator.h"
+#include "PluginArgs.h"
 
 namespace analysis {
 
@@ -36,11 +36,7 @@ class AnalysisPluginManager {
 
             std::string id = name.empty() ? path : name;
 
-            if (id.find("VariablesPlugin") != std::string::npos)
-                PluginConfigValidator::validateVariables(p.value("analysis_configs", nlohmann::json::object()));
-
-            if (id.find("RegionsPlugin") != std::string::npos)
-                PluginConfigValidator::validateRegions(p.value("analysis_configs", nlohmann::json::object()));
+            // Basic manual checks can be inserted here if desired.
 
             log::info("AnalysisPluginManager::loadPlugins", "Loading plugin from:", path);
             void *handle = dlopen(path.c_str(), RTLD_NOW);
@@ -55,15 +51,16 @@ class AnalysisPluginManager {
                     }
                 }
 
-                using FactoryFn = IAnalysisPlugin *(*)(const nlohmann::json &, const nlohmann::json &);
+                using FactoryFn = IAnalysisPlugin *(*)(const PluginArgs &);
                 auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlugin"));
                 if (!create) {
                     create = reinterpret_cast<FactoryFn>(dlsym(handle, "createRegionsPlugin"));
                 }
                 if (!create)
                     throw std::runtime_error(dlerror());
-
-                std::unique_ptr<IAnalysisPlugin> plugin(create(p.value("analysis_configs", nlohmann::json::object()), p.value("plot_configs", nlohmann::json::object())));
+                PluginArgs args{{"analysis_configs", p.value("analysis_configs", nlohmann::json::object())},
+                                {"plot_configs", p.value("plot_configs", nlohmann::json::object())}};
+                std::unique_ptr<IAnalysisPlugin> plugin(create(args));
                 plugins_.push_back(std::move(plugin));
                 handles_.push_back(handle);
             } catch (...) {

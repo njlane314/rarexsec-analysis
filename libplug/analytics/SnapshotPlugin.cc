@@ -21,7 +21,7 @@ class SnapshotPlugin : public IAnalysisPlugin {
     };
 
     SnapshotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
-        auto cfg = args.value("analysis_configs", PluginArgs::object());
+        const auto &cfg = args.analysis_configs;
         if (!cfg.contains("snapshots") || !cfg.at("snapshots").is_array()) {
             throw std::runtime_error("SnapshotPlugin missing snapshots configuration");
         }
@@ -82,9 +82,8 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IAnalysisPlugin, analysis::AnalysisDataLoader
                          "SnapshotPlugin", analysis::SnapshotPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IAnalysisPlugin *createPlugin(const nlohmann::json &cfg) {
-    return new analysis::SnapshotPlugin(analysis::PluginArgs{{"analysis_configs", cfg}},
-                                        analysis::SnapshotPlugin::legacy_loader_);
+extern "C" analysis::IAnalysisPlugin *createPlugin(const analysis::PluginArgs &args) {
+    return new analysis::SnapshotPlugin(args, analysis::SnapshotPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *ldr) {
     analysis::SnapshotPlugin::setLegacyLoader(ldr);

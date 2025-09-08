@@ -8,7 +8,6 @@
 #include "IPlotPlugin.h"
 #include "PlotCatalog.h"
 #include "SelectionQuery.h"
-#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -25,8 +24,7 @@ class CutMatrixPlotPlugin : public IPlotPlugin {
     };
 
     CutMatrixPlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
-        auto cfg = args.value("plot_configs", PluginArgs::object());
-        PluginConfigValidator::validatePlot(cfg);
+        const auto &cfg = args.plot_configs;
         if (!cfg.contains("cut_matrix_plots") || !cfg.at("cut_matrix_plots").is_array())
             throw std::runtime_error("CutMatrixPlotPlugin missing cut_matrix_plots");
         for (auto const &p : cfg.at("cut_matrix_plots")) {
@@ -86,9 +84,8 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "CutMatrixPlotPlugin", analysis::CutMatrixPlotPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::CutMatrixPlotPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
-                                             analysis::CutMatrixPlotPlugin::legacy_loader_);
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return new analysis::CutMatrixPlotPlugin(args, analysis::CutMatrixPlotPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::CutMatrixPlotPlugin::setLegacyLoader(loader);

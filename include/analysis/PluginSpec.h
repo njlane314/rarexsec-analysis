@@ -1,30 +1,37 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
+
+#include "PluginArgs.h"
 
 namespace analysis {
 
-using PluginArgs = nlohmann::json;
-
 struct PluginSpec {
   std::string id;     // plugin name or path to .so
-  PluginArgs  args{}; // free-form args for that plugin
+  PluginArgs  args{}; // structured args for that plugin
 };
 
 using PluginSpecList = std::vector<PluginSpec>;
 
-// Deep-merge JSON objects: rhs overrides/extends lhs
+// Deep-merge plugin argument structures. Each JSON blob is merged
+// individually, preserving the behaviour that configuration blocks in later
+// specifications override or extend earlier ones.
 inline PluginArgs deepMerge(PluginArgs lhs, const PluginArgs& rhs) {
-  if (!lhs.is_object() || !rhs.is_object()) return rhs;
-  for (auto it = rhs.begin(); it != rhs.end(); ++it) {
-    const auto& k = it.key();
-    if (lhs.contains(k) && lhs[k].is_object() && it.value().is_object()) {
-      lhs[k] = deepMerge(lhs[k], it.value());
-    } else {
-      lhs[k] = it.value();
+  auto merge = [](nlohmann::json l, const nlohmann::json& r) {
+    if (!l.is_object() || !r.is_object()) return r;
+    for (auto it = r.begin(); it != r.end(); ++it) {
+      const auto& k = it.key();
+      if (l.contains(k) && l[k].is_object() && it.value().is_object()) {
+        l[k] = merge(l[k], it.value());
+      } else {
+        l[k] = it.value();
+      }
     }
-  }
+    return l;
+  };
+
+  lhs.analysis_configs = merge(lhs.analysis_configs, rhs.analysis_configs);
+  lhs.plot_configs     = merge(lhs.plot_configs, rhs.plot_configs);
   return lhs;
 }
 

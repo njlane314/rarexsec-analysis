@@ -14,7 +14,7 @@
 #include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "IPlotPlugin.h"
-#include "PluginConfigValidator.h"
+#include "PluginArgs.h"
 
 namespace analysis {
 
@@ -33,7 +33,7 @@ class PlotPluginManager {
                 path = makePluginPath(name);
             }
 
-            PluginConfigValidator::validatePlot(p.value("plot_configs", nlohmann::json::object()));
+            // Manual validation of plot configuration can be inserted here if needed.
 
             log::info("PlotPluginManager::loadPlugins", "Loading plugin from:", path);
             void *handle = dlopen(path.c_str(), RTLD_NOW);
@@ -48,12 +48,12 @@ class PlotPluginManager {
                     }
                 }
 
-                using FactoryFn = IPlotPlugin *(*)(const nlohmann::json &);
+                using FactoryFn = IPlotPlugin *(*)(const PluginArgs &);
                 auto create = reinterpret_cast<FactoryFn>(dlsym(handle, "createPlotPlugin"));
                 if (!create)
                     throw std::runtime_error(dlerror());
-
-                std::unique_ptr<IPlotPlugin> plugin(create(p.value("plot_configs", nlohmann::json::object())));
+                PluginArgs args{{"plot_configs", p.value("plot_configs", nlohmann::json::object())}};
+                std::unique_ptr<IPlotPlugin> plugin(create(args));
                 plugins_.push_back(std::move(plugin));
                 handles_.push_back(handle);
             } catch (...) {

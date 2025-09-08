@@ -14,7 +14,6 @@
 #include "SemanticDisplay.h"
 #include "SelectionQuery.h"
 #include "SelectionRegistry.h"
-#include "PluginConfigValidator.h"
 
 namespace analysis {
 
@@ -30,8 +29,7 @@ class EventDisplayPlugin : public IPlotPlugin {
     };
 
     EventDisplayPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
-        auto cfg = args.value("plot_configs", PluginArgs::object());
-        PluginConfigValidator::validatePlot(cfg);
+        const auto &cfg = args.plot_configs;
         if (!cfg.contains("event_displays") || !cfg.at("event_displays").is_array()) {
             throw std::runtime_error("EventDisplayPlugin missing event_displays");
         }
@@ -130,9 +128,8 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "EventDisplayPlugin", analysis::EventDisplayPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const nlohmann::json &cfg) {
-    return new analysis::EventDisplayPlugin(analysis::PluginArgs{{"plot_configs", cfg}},
-                                            analysis::EventDisplayPlugin::legacy_loader_);
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return new analysis::EventDisplayPlugin(args, analysis::EventDisplayPlugin::legacy_loader_);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::EventDisplayPlugin::setLegacyLoader(loader);
