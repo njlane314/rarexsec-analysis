@@ -31,23 +31,42 @@ public:
     }
   }
 
-  void addByName(const std::string& name, const PluginArgs& args = {}) {
+  void addByName(const std::string& name, const PluginArgs& args = {},
+                 void* handle = nullptr) {
     auto plugin = Registry<Interface, Ctx>::instance().make(name, args, ctx_);
+    if (!plugin && handle) {
+      using SetCtxFn = void (*)(Ctx*);
+      using CreateFn = Interface* (*)(const PluginArgs&);
+      if (ctx_) {
+        if (auto setctx = reinterpret_cast<SetCtxFn>(dlsym(handle, "setPluginContext"))) {
+          setctx(ctx_);
+        }
+      }
+      CreateFn create = reinterpret_cast<CreateFn>(dlsym(handle, "createPlugin"));
+      if (!create) {
+        std::string sym = "create" + name + "Plugin";
+        create = reinterpret_cast<CreateFn>(dlsym(handle, sym.c_str()));
+      }
+      if (create) {
+        plugin.reset(create(args));
+      }
+    }
     if (!plugin) throw std::runtime_error("No registered plugin: " + name);
     plugins_.push_back(std::move(plugin));
   }
 
   void add(const std::string& nameOrPath, const PluginArgs& args = {}) {
+    void* handle = nullptr;
     if (looksLikePath(nameOrPath)) {
-      openHandle(nameOrPath);
-      addByName(stripName(nameOrPath), args);
+      handle = openHandle(nameOrPath);
+      addByName(stripName(nameOrPath), args, handle);
       return;
     }
     const char* dir = std::getenv("ANALYSIS_PLUGIN_DIR");
     std::string base = dir ? dir : "build";
     // soft dlopen (ok if missing) — plugin might be statically linked
-    openHandle(base + "/" + nameOrPath + ".so", /*soft=*/true);
-    addByName(nameOrPath, args);
+    handle = openHandle(base + "/" + nameOrPath + ".so", /*soft=*/true);
+    addByName(nameOrPath, args, handle);
   }
 
   template <class F> void forEach(F&& fn) { for (auto& p : plugins_) fn(*p); }
@@ -69,14 +88,15 @@ private:
     return base;
   }
 
-  void openHandle(const std::string& path, bool soft=false) {
+  void* openHandle(const std::string& path, bool soft=false) {
     log::info("PluginHost", "dlopen:", path);
     void* h = dlopen(path.c_str(), RTLD_NOW);
     if (!h) {
-      if (soft) return;
+      if (soft) return nullptr;
       throw std::runtime_error(dlerror());
     }
     handles_.push_back(h); // triggers static registrars in the .so
+    return h;
   }
 
   Ctx* ctx_{};
