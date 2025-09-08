@@ -22,3 +22,31 @@ TEST_CASE("event_display_preset_generates_plugin_spec") {
     REQUIRE(ed.at("image_size") == 800);
     REQUIRE(ed.at("output_directory") == "./plots/event_displays");
 }
+
+TEST_CASE("background_event_display_preset_defaults") {
+    auto pr = PresetRegistry::instance().find("BACKGROUND_EVENT_DISPLAY");
+    REQUIRE(pr != nullptr);
+    auto list = pr->make({});
+    REQUIRE(list.size() == 1);
+    auto spec = list.front();
+    REQUIRE(spec.id == "EventDisplayPlugin");
+    auto eds = spec.args.plot_configs.at("event_displays");
+    auto ed = eds.at(0);
+    REQUIRE(ed.at("sample") == "mc_inclusive_run1_fhc");
+    REQUIRE(ed.at("n_events") == 1);
+    REQUIRE(ed.at("output_directory") == "./plots/background_event_displays");
+}
+
+TEST_CASE("signal_event_display_preset_defaults") {
+    auto pr = PresetRegistry::instance().find("SIGNAL_EVENT_DISPLAY");
+    REQUIRE(pr != nullptr);
+    auto list = pr->make({});
+    REQUIRE(list.size() == 1);
+    auto spec = list.front();
+    REQUIRE(spec.id == "EventDisplayPlugin");
+    auto eds = spec.args.plot_configs.at("event_displays");
+    auto ed = eds.at(0);
+    REQUIRE(ed.at("sample") == "mc_strangeness_run1_fhc");
+    REQUIRE(ed.at("n_events") == 1);
+    REQUIRE(ed.at("output_directory") == "./plots/signal_event_displays");
+}
