@@ -24,6 +24,8 @@ class HistogramFactory {
     bookStratifiedHists(const BinningDefinition &binning, const SampleDataset &dataset,
                         const ROOT::RDF::TH1DModel &model) {
         analysis::log::info("HistogramFactory::bookStratifiedHists", "Calling stratifier manager...");
+        analysis::log::debug("HistogramFactory::bookStratifiedHists", "Binning requests stratifier key:",
+                             binning.getStratifierKey().str());
         auto &stratifier = stratifier_manager_.get(binning.getStratifierKey());
 
         analysis::log::info("HistogramFactory::bookStratifiedHists", "Creating stratified hists.");

@@ -16,6 +16,7 @@ class MonteCarloProcessor : public ISampleProcessor {
 
     void book(HistogramFactory &factory, const BinningDefinition &binning, const ROOT::RDF::TH1DModel &model) override {
         analysis::log::info("MonteCarloProcessor::book", "Beginning stratification...");
+        analysis::log::debug("MonteCarloProcessor::book", "Requested stratifier key:", binning.getStratifierKey().str());
         nominal_futures_ = factory.bookStratifiedHists(binning, nominal_dataset_, model);
 
         analysis::log::info("MonteCarloProcessor::book", "Booking nominals...");

@@ -36,6 +36,15 @@ class StratifierManager {
             } else if (type == StratifierType::kVector) {
                 stratifier = makeVectorStratifier(key, registry_);
             } else {
+                auto available = registry_.getRegisteredSchemeNames();
+                std::string joined;
+                for (const auto &name : available) {
+                    joined += name + ",";
+                }
+                if (!joined.empty()) {
+                    joined.pop_back();
+                }
+                log::warn("StratifierManager::get", "Available stratifier schemes:", joined);
                 log::fatal("StratifierManager::get", "Unknown or unregistered stratifier configuration:", key.str());
             }
 

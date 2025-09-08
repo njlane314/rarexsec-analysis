@@ -104,6 +104,15 @@ class StratifierRegistry {
         return keys;
     }
 
+    std::vector<std::string> getRegisteredSchemeNames() const {
+        std::vector<std::string> names;
+        names.reserve(scheme_definitions_.size());
+        for (const auto &pair : scheme_definitions_) {
+            names.push_back(pair.first);
+        }
+        return names;
+    }
+
     StratifierType findSchemeType(const StratifierKey &key) const {
         auto it = scheme_definitions_.find(key.str());
         if (it != scheme_definitions_.end()) {
