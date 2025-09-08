@@ -44,7 +44,7 @@
                     {
                         "sample_key": "mc_dirt_run1_fhc",
                         "stage_name": "selection_dirt",
-                        "sample_type": "mc",
+                        "sample_type": "dirt",
                         "active": true,
                         "do_hadd": true
                     }

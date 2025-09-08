@@ -27,7 +27,7 @@ class WeightProcessor : public IEventProcessor {
     }
 
     ROOT::RDF::RNode process(ROOT::RDF::RNode df, SampleOrigin st) const override {
-        if (st == SampleOrigin::kMonteCarlo) {
+        if (st == SampleOrigin::kMonteCarlo || st == SampleOrigin::kDirt) {
             double scale = 1.0;
             if (sample_pot_ > 0.0 && total_run_pot_ > 0.0) {
                 scale = total_run_pot_ / sample_pot_;
