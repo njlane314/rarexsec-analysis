@@ -13,6 +13,7 @@ ANALYSIS_REGISTER_PRESET(TRUE_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "neutrino_vertex_x"},
         {"label", "True #nu Vertex X [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 26}, {"min", 0.0}, {"max", 260.0}}}
       },
       {
@@ -20,6 +21,7 @@ ANALYSIS_REGISTER_PRESET(TRUE_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "neutrino_vertex_y"},
         {"label", "True #nu Vertex Y [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 24}, {"min", -120.0}, {"max", 120.0}}}
       },
       {
@@ -27,6 +29,7 @@ ANALYSIS_REGISTER_PRESET(TRUE_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "neutrino_vertex_z"},
         {"label", "True #nu Vertex Z [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 52}, {"min", 0.0}, {"max", 1040.0}}}
       }
     });
@@ -44,6 +47,7 @@ ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "reco_neutrino_vertex_x"},
         {"label", "Reco #nu Vertex X [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 26}, {"min", 0.0}, {"max", 260.0}}}
       },
       {
@@ -51,6 +55,7 @@ ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "reco_neutrino_vertex_y"},
         {"label", "Reco #nu Vertex Y [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 24}, {"min", -120.0}, {"max", 120.0}}}
       },
       {
@@ -58,6 +63,7 @@ ANALYSIS_REGISTER_PRESET(RECO_NEUTRINO_VERTEX, Target::Analysis,
         {"branch", "reco_neutrino_vertex_z"},
         {"label", "Reco #nu Vertex Z [cm]"},
         {"stratum", "event"},
+        {"regions", {"EMPTY"}},
         {"bins", {{"n", 52}, {"min", 0.0}, {"max", 1040.0}}}
       }
     });
