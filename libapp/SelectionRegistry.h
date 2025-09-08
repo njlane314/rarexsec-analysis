@@ -23,22 +23,30 @@ class SelectionRegistry {
 
     void addRule(std::string key, SelectionRule rule) { rules_.emplace(std::move(key), std::move(rule)); }
 
+    /// Return a SelectionQuery representing the rule identified by `key`.
+    /// Throws std::out_of_range if the rule is not registered.
     SelectionQuery get(const std::string &key) const {
-        auto it = rules_.find(key);
-        if (it == rules_.end())
+        const SelectionRule *rule = this->findRule(key);
+        if (!rule)
             throw std::out_of_range("Unknown selection key: " + key);
-        return this->makeSelection(it->second);
+        return this->makeSelection(*rule);
     }
 
+    /// Retrieve the SelectionRule identified by `key` without constructing a
+    /// SelectionQuery. Throws std::out_of_range if the rule is not registered.
     const SelectionRule &getRule(const std::string &key) const {
-        auto it = rules_.find(key);
-        if (it == rules_.end()) {
+        const SelectionRule *rule = this->findRule(key);
+        if (!rule)
             throw std::out_of_range("unknown selection rule: " + key);
-        }
-        return it->second;
+        return *rule;
     }
 
   private:
+    const SelectionRule *findRule(const std::string &key) const {
+        auto it = rules_.find(key);
+        return it == rules_.end() ? nullptr : &it->second;
+    }
+
     SelectionQuery makeSelection(const SelectionRule &r) const {
         if (r.clauses.empty())
             return SelectionQuery{};
