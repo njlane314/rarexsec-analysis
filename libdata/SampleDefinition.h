@@ -71,6 +71,7 @@ class SampleDefinition {
               return (ts == "mc"     ? SampleOrigin::kMonteCarlo
                       : ts == "data" ? SampleOrigin::kData
                       : ts == "ext"  ? SampleOrigin::kExternal
+                      : ts == "dirt" ? SampleOrigin::kDirt
                                       : SampleOrigin::kUnknown);
           }()},
           rel_path_{j.value("relative_path", "")},
@@ -102,8 +103,10 @@ class SampleDefinition {
             log::fatal("SampleDefinition::validateFiles", "empty sample_key_");
         if (sample_origin_ == SampleOrigin::kUnknown)
             log::fatal("SampleDefinition::validateFiles", "unknown sample_origin_ for", sample_key_.str());
-        if (sample_origin_ == SampleOrigin::kMonteCarlo && pot_ <= 0)
-            log::fatal("SampleDefinition::validateFiles", "invalid pot_ for MC", sample_key_.str());
+        if ((sample_origin_ == SampleOrigin::kMonteCarlo ||
+             sample_origin_ == SampleOrigin::kDirt) &&
+            pot_ <= 0)
+            log::fatal("SampleDefinition::validateFiles", "invalid pot_ for MC/Dirt", sample_key_.str());
         if (sample_origin_ == SampleOrigin::kData && triggers_ <= 0)
             log::fatal("SampleDefinition::validateFiles", "invalid triggers_ for Data", sample_key_.str());
         if (sample_origin_ != SampleOrigin::kData && rel_path_.empty())

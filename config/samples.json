@@ -45,7 +45,7 @@
                         },
                         {
                             "sample_key": "mc_dirt_run1_fhc",
-                            "sample_type": "mc",
+                            "sample_type": "dirt",
                             "active": true,
                             "relative_path": "mc_dirt_run1_fhc.root",
                             "pot": 1.3691716923392262e+19
