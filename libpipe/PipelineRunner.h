@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -210,6 +211,18 @@ public:
     result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
     return result;
+  }
+
+  // Convenience overload that reads the samples configuration from a JSON
+  // file located at \p samples_path before executing the pipeline.
+  inline AnalysisResult run(const std::string &samples_path,
+                            const std::string &output_path) const {
+    std::ifstream in(samples_path);
+    nlohmann::json samples;
+    in >> samples;
+    if (samples.contains("samples"))
+      samples = samples.at("samples");
+    return run(samples, output_path);
   }
 
 private:
