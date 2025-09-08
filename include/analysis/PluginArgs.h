@@ -31,11 +31,14 @@ struct PluginArgs {
     // Convenience helpers mirroring a subset of the old nlohmann::json API.
     static nlohmann::json object() { return nlohmann::json::object(); }
     static nlohmann::json array(std::initializer_list<nlohmann::json> init = {}) {
-        // nlohmann::json does not provide an insert overload that accepts
-        // iterators from a std::initializer_list.  Construct the array directly
-        // from the initializer list instead, which works for any mix of JSON
-        // values without requiring manual insertion.
-        return nlohmann::json::array(init);
+        // nlohmann::json::array(initializer_list) expects a list of json_ref
+        // objects, which cannot be constructed implicitly from a list of
+        // ``nlohmann::json`` values.  Build the array manually instead.
+        auto arr = nlohmann::json::array();
+        for (const auto &el : init) {
+            arr.push_back(el);
+        }
+        return arr;
     }
 };
 
