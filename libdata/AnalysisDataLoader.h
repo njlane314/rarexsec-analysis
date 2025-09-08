@@ -103,21 +103,25 @@ class AnalysisDataLoader {
     std::unordered_map<SampleKey, const RunConfig *> run_config_cache_;
 
     void loadAll() {
+        const std::string ext_beam{"numi_ext"};
         for (auto &period : periods_) {
             const auto &rc = run_registry_.get(beam_, period);
             total_pot_ += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
+            this->processRunConfig(rc);
 
-            this->processPeriod(period);
+            auto key = ext_beam + ":" + period;
+            if (run_registry_.all().count(key)) {
+                const auto &ext_rc = run_registry_.get(ext_beam, period);
+                this->processRunConfig(ext_rc);
+            }
         }
     }
 
-    void processPeriod(const std::string &period) {
-        const auto &rc = run_registry_.get(beam_, period);
-
+    void processRunConfig(const RunConfig &rc) {
         for (auto &sample_json : rc.samples) {
             if (sample_json.contains("active") && !sample_json.at("active").get<bool>()) {
-                log::info("AnalysisDataLoader::processPeriod",
+                log::info("AnalysisDataLoader::processRunConfig",
                           "Skipping inactive sample: ", sample_json.at("sample_key").get<std::string>());
                 continue;
             }
