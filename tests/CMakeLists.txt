@@ -25,5 +25,5 @@ target_link_libraries(test_event_display_preset PRIVATE Catch2::Catch2WithMain n
 catch_discover_tests(test_event_display_preset)
 
 add_executable(test_pipeline_builder test_pipeline_builder.cpp)
-target_link_libraries(test_pipeline_builder PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES})
+target_link_libraries(test_pipeline_builder PRIVATE libapp libhist libutils libsyst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} ${CMAKE_DL_LIBS})
 catch_discover_tests(test_pipeline_builder)
