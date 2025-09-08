@@ -40,6 +40,12 @@ private:
   std::unordered_map<std::string, Factory> factories_;
 };
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define ANALYSIS_PLUGIN_USED __attribute__((used))
+#else
+#  define ANALYSIS_PLUGIN_USED
+#endif
+
 #define ANALYSIS_REGISTER_PLUGIN(Interface, Ctx, NameStr, Concrete)           \
   namespace {                                                                 \
   /*
@@ -58,11 +64,7 @@ private:
       );                                                                      \
     }                                                                         \
   };                                                                          \
-#if defined(__GNUC__) || defined(__clang__)                                   \
-  static Registrar registrar_instance __attribute__((used));                  \
-#else                                                                        \
-  static Registrar registrar_instance;                                       \
-#endif                                                                       \
+  static Registrar registrar_instance ANALYSIS_PLUGIN_USED;                   \
   }
 
 } // namespace analysis
