@@ -47,6 +47,8 @@ class WeightSystematicStrategy : public SystematicStrategy {
         std::vector<double> diff(n);
         for (int i = 0; i < n; ++i) {
             diff[i] = 0.5 * (hu.getBinContent(i) - hd.getBinContent(i));
+            log::debug("WeightSystematicStrategy::computeCovariance", identifier_,
+                       "bin", i, "diff", diff[i]);
             for (int j = 0; j <= i; ++j) {
                 const double val = diff[i] * diff[j];
                 cov(i, j) = val;

@@ -183,6 +183,8 @@ private:
     for (int i = 0; i < n; ++i) {
       const double di =
           h_universe.getBinContent(i) - nominal_hist.getBinContent(i);
+      log::debug("UniverseSystematicStrategy::updateCovarianceMatrix",
+                 identifier_, "bin", i, "delta", di);
       for (int j = 0; j <= i; ++j) {
         const double dj =
             h_universe.getBinContent(j) - nominal_hist.getBinContent(j);
