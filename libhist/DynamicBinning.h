@@ -136,7 +136,8 @@ private:
 
     if (auto it = kTypeDispatch.find(type_name); it != kTypeDispatch.end()) {
       return it->second(std::move(nodes), original_bdef, weight_col,
-                        min_neff_per_bin, include_oob_bins, strategy);
+                        min_neff_per_bin, include_oob_bins, strategy,
+                        bin_resolution);
     }
 
     for (const auto &entry : kTypeDispatch) {
