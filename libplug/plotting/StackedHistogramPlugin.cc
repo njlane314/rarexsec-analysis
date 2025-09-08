@@ -5,6 +5,7 @@
 #include "PluginRegistry.h"
 #include <TSystem.h>
 
+#include "AnalysisDataLoader.h"
 #include "Logger.h"
 #include "IPlotPlugin.h"
 #include "StackedHistogramPlot.h"
