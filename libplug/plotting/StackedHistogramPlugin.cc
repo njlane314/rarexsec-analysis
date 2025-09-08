@@ -89,12 +89,20 @@ class StackedHistogramPlugin : public IPlotPlugin {
                 }
 
                 for (const auto &vkey : variables) {
-                    if (!result.hasResult(rkey, vkey)) {
-                        log::error("StackedHistogramPlugin::onPlot", "Could not find variable", vkey.str(),
+                    // Fetch the variable result directly from the RegionAnalysis.
+                    // In some scenarios the AnalysisResult's internal cache can
+                    // miss entries even though the RegionAnalysis still holds
+                    // them.  By querying the region object directly we ensure
+                    // that valid variables are not mistakenly reported as
+                    // missing.
+                    if (!region_analysis.hasFinalVariable(vkey)) {
+                        log::error("StackedHistogramPlugin::onPlot",
+                                   "Could not find variable", vkey.str(),
                                    "in region", rkey.str());
                         continue;
                     }
-                    const auto &variable_result = result.result(rkey, vkey);
+                    const auto &variable_result =
+                        region_analysis.getFinalVariable(vkey);
                     std::string plot_name =
                         "stack_" + IHistogramPlot::sanitise(vkey.str()) + "_" +
                         IHistogramPlot::sanitise(rkey.str());
