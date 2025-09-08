@@ -37,7 +37,11 @@ public:
         scheme_filters;
 
     for (const auto &scheme : schemes) {
-      for (const auto &key : strat_reg.getAllStratumKeysForScheme(scheme)) {
+      auto stratum_keys = strat_reg.getAllStratumKeysForScheme(scheme);
+      const auto num_keys = stratum_keys.size();
+      scheme_keys[scheme].reserve(num_keys);
+      scheme_filters[scheme].reserve(num_keys);
+      for (const auto &key : stratum_keys) {
         int int_key = std::stoi(key.str());
         scheme_keys[scheme].push_back(int_key);
         scheme_filters[scheme][int_key] =
@@ -84,9 +88,8 @@ private:
   void updateSchemeTallies(
       ROOT::RDF::RNode df, const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
-      const std::unordered_map<std::string,
-                               std::unordered_map<int, std::string>>
-          &scheme_filters,
+      const std::unordered_map<
+          std::string, std::unordered_map<int, std::string>> &scheme_filters,
       RegionAnalysis::StageCount &stage_count) {
     for (const auto &scheme : schemes) {
       for (int key : scheme_keys.at(scheme)) {
@@ -107,9 +110,8 @@ private:
       std::vector<RegionAnalysis::StageCount> &stage_counts,
       const std::vector<std::string> &schemes,
       const std::unordered_map<std::string, std::vector<int>> &scheme_keys,
-      const std::unordered_map<std::string,
-                               std::unordered_map<int, std::string>>
-          &scheme_filters) {
+      const std::unordered_map<
+          std::string, std::unordered_map<int, std::string>> &scheme_filters) {
     for (size_t i = 0; i < cumulative_filters.size(); ++i) {
       auto df = base_df;
 
