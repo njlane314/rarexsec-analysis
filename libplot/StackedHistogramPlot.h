@@ -201,8 +201,21 @@ class StackedHistogramPlot : public IHistogramPlot {
         header.SetTextFont(42);
         header.SetTextAlign(13);
         header.SetTextSize(0.05);
-        header.DrawLatex(0.12, 0.93, ("Beam: " + beam_name).c_str());
-        header.DrawLatex(0.12, 0.80, ("Runs: " + runs_str).c_str());
+
+        std::stringstream pot_stream;
+        pot_stream << std::scientific << std::setprecision(2)
+                   << region_analysis_.protonsOnTarget();
+        std::string pot_str = pot_stream.str();
+        size_t e_pos = pot_str.find('e');
+        if (e_pos != std::string::npos) {
+            int exponent = std::stoi(pot_str.substr(e_pos + 1));
+            pot_str = pot_str.substr(0, e_pos);
+            pot_str += " #times 10^{" + std::to_string(exponent) + "}";
+        }
+
+        std::string header_text = "Beam: " + beam_name + ", Runs: " + runs_str +
+                                  " [POT: " + pot_str + "]";
+        header.DrawLatex(0.12, 0.85, header_text.c_str());
     }
 
     double drawStack(
@@ -363,12 +376,13 @@ class StackedHistogramPlot : public IHistogramPlot {
             runs_str = "N/A";
         }
 
-        std::string line2 = "Beam: " + beam_name + ", Runs: " + runs_str;
-        std::string line3 = "POT: " + pot_str;
-        std::string line4 =
-            "#it{Analysis Region}: " + region_analysis_.regionLabel();
-        std::string line5 =
-            "#it{Total Entries}: " + this->formatWithCommas(total_mc_events, 2);
+        std::string line2 =
+            "Beam: " + beam_name + ", Runs: " + runs_str +
+            " [POT: " + pot_str + "]";
+        std::string line3 = "#it{Analysis Region}: " +
+                             region_analysis_.regionLabel() +
+                             " [#it{Total Entries}: " +
+                             this->formatWithCommas(total_mc_events, 2) + "]";
 
         TLatex watermark;
         watermark.SetNDC();
@@ -383,10 +397,6 @@ class StackedHistogramPlot : public IHistogramPlot {
                             1 - pad->GetTopMargin() - 0.09, line2.c_str());
         watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03,
                             1 - pad->GetTopMargin() - 0.15, line3.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03,
-                            1 - pad->GetTopMargin() - 0.21, line4.c_str());
-        watermark.DrawLatex(1 - pad->GetRightMargin() - 0.03,
-                            1 - pad->GetTopMargin() - 0.27, line5.c_str());
     }
 
   protected:
