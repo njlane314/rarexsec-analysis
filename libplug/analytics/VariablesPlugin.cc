@@ -70,6 +70,12 @@ class VariablesPlugin : public IAnalysisPlugin {
                 for (auto const &region_name : var_cfg.at("regions")) {
                     def.addVariableToRegion(region_name.get<std::string>(), name);
                 }
+            } else {
+                // No default region assignment: skip this variable and warn so the
+                // configuration can be fixed explicitly.
+                log::warn("VariablesPlugin::onInitialisation",
+                          "Variable '{}' has no 'regions' field and will not be attached to any regions",
+                          name);
             }
         }
     }
