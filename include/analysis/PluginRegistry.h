@@ -42,8 +42,14 @@ private:
 
 #define ANALYSIS_REGISTER_PLUGIN(Interface, Ctx, NameStr, Concrete)           \
   namespace {                                                                 \
-  struct Concrete##_Registrar {                                               \
-    Concrete##_Registrar() {                                                  \
+  /*
+   * Use a generic registrar name inside an anonymous namespace so that the
+   * macro works even when Concrete is a fully qualified type (e.g.
+   * analysis::Foo).  The anonymous namespace ensures each translation unit
+   * gets its own instance without symbol clashes.
+   */                                                                        \
+  struct Registrar {                                                          \
+    Registrar() {                                                             \
       ::analysis::Registry<Interface, Ctx>::instance().registerFactory(       \
         NameStr,                                                              \
         [](const ::analysis::PluginArgs& args, Ctx* ctx) {                    \
@@ -52,7 +58,7 @@ private:
       );                                                                      \
     }                                                                         \
   };                                                                          \
-  static Concrete##_Registrar Concrete##_Registrar_Instance;                  \
+  static Registrar registrar_instance;                                        \
   }
 
 } // namespace analysis
