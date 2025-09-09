@@ -20,6 +20,7 @@ class StackedHistogramPlugin : public IPlotPlugin {
         std::string category_column{"inclusive"};
         std::string output_directory = "plots";
         bool overlay_signal = true;
+        std::string signal_group{"inclusive_strange_channels"};
         std::vector<Cut> cut_list;
         bool annotate_numbers = true;
         bool use_log_y = false;
@@ -40,6 +41,9 @@ class StackedHistogramPlugin : public IPlotPlugin {
                 pc.category_column = p.value("category_column", std::string("inclusive"));
                 pc.output_directory = p.value("output_directory", std::string("plots"));
                 pc.overlay_signal = p.value("overlay_signal", true);
+                pc.signal_group =
+                    p.value("signal_group",
+                             std::string{"inclusive_strange_channels"});
                 pc.annotate_numbers = p.value("annotate_numbers", true);
                 pc.use_log_y = p.value("log_y", false);
                 pc.y_axis_label = p.value("y_axis_label", "Events");
@@ -109,8 +113,9 @@ class StackedHistogramPlugin : public IPlotPlugin {
                     StackedHistogramPlot plot(plot_name, variable_result,
                                               region_analysis, pc.category_column,
                                               pc.output_directory, pc.overlay_signal,
-                                              pc.cut_list, pc.annotate_numbers,
-                                              pc.use_log_y, pc.y_axis_label, pc.n_bins,
+                                              pc.signal_group, pc.cut_list,
+                                              pc.annotate_numbers, pc.use_log_y,
+                                              pc.y_axis_label, pc.n_bins,
                                               pc.min, pc.max);
                     plot.drawAndSave("pdf");
                 }

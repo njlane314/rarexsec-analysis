@@ -33,6 +33,7 @@ class StackedHistogramPlot : public IHistogramPlot {
         std::string plot_name, const VariableResult &var_result,
         const RegionAnalysis &region_info, std::string category_column,
         std::string output_directory = "plots", bool overlay_signal = true,
+        std::string signal_group = "inclusive_strange_channels",
         std::vector<Cut> cut_list = {}, bool annotate_numbers = true,
         bool use_log_y = false, std::string y_axis_label = "Events",
         int uniform_bins = -1, double uniform_min = 0.0,
@@ -40,9 +41,9 @@ class StackedHistogramPlot : public IHistogramPlot {
         : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
           variable_result_(var_result), region_analysis_(region_info),
           category_column_(std::move(category_column)),
-          overlay_signal_(overlay_signal), cuts_(cut_list),
-          annotate_numbers_(annotate_numbers), use_log_y_(use_log_y),
-          y_axis_label_(std::move(y_axis_label)),
+          overlay_signal_(overlay_signal), signal_group_(std::move(signal_group)),
+          cuts_(cut_list), annotate_numbers_(annotate_numbers),
+          use_log_y_(use_log_y), y_axis_label_(std::move(y_axis_label)),
           use_uniform_binning_(uniform_bins > 0), uniform_bins_(uniform_bins),
           uniform_min_(uniform_min), uniform_max_(uniform_max) {}
 
@@ -50,6 +51,7 @@ class StackedHistogramPlot : public IHistogramPlot {
         delete total_mc_hist_;
         delete mc_stack_;
         delete legend_;
+        delete signal_hist_;
         for (auto vis : cut_visuals_) {
             delete vis;
         }
@@ -194,6 +196,26 @@ class StackedHistogramPlot : public IHistogramPlot {
             legend_->AddEntry(h_unc, total_label.c_str(), "f");
         }
 
+        if (overlay_signal_) {
+            TH1D *h_sig = new TH1D();
+            Color_t col = kRed;
+            try {
+                auto sig_keys = registry.getSignalKeys(signal_group_);
+                if (!sig_keys.empty()) {
+                    col =
+                        registry.getStratumProperties(category_column_,
+                                                     sig_keys.front())
+                            .fill_colour;
+                }
+            } catch (...) {
+            }
+            h_sig->SetLineColor(col);
+            h_sig->SetLineWidth(2);
+            h_sig->SetFillStyle(0);
+            legend_->AddEntry(h_sig, "Signal (overlay)", "l");
+            cut_visuals_.push_back(h_sig);
+        }
+
         legend_->Draw();
     }
 
@@ -204,6 +226,21 @@ class StackedHistogramPlot : public IHistogramPlot {
         StratifierRegistry registry;
 
         p_main->cd();
+
+        std::vector<int> sig_keys;
+        Color_t sig_color = kRed;
+        if (overlay_signal_) {
+            try {
+                sig_keys = registry.getSignalKeys(signal_group_);
+                if (!sig_keys.empty()) {
+                    sig_color =
+                        registry.getStratumProperties(category_column_,
+                                                      sig_keys.front())
+                            .fill_colour;
+                }
+            } catch (...) {
+            }
+        }
 
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h = (TH1D *)hist.get()->Clone();
@@ -227,6 +264,17 @@ class StackedHistogramPlot : public IHistogramPlot {
                 total_mc_hist_->SetDirectory(0);
             } else {
                 total_mc_hist_->Add(h);
+            }
+
+            if (overlay_signal_ &&
+                std::find(sig_keys.begin(), sig_keys.end(),
+                          std::stoi(key.str())) != sig_keys.end()) {
+                if (!signal_hist_) {
+                    signal_hist_ = (TH1D *)h->Clone("signal_overlay");
+                    signal_hist_->SetDirectory(0);
+                } else {
+                    signal_hist_->Add(h);
+                }
             }
         }
 
@@ -261,6 +309,13 @@ class StackedHistogramPlot : public IHistogramPlot {
             total_mc_hist_->SetLineWidth(1);
             total_mc_hist_->Draw("E2 SAME");
             total_mc_hist_->Draw("E1 SAME");
+        }
+
+        if (overlay_signal_ && signal_hist_) {
+            signal_hist_->SetLineColor(sig_color);
+            signal_hist_->SetLineWidth(2);
+            signal_hist_->SetFillStyle(0);
+            signal_hist_->Draw("HIST SAME");
         }
 
         return max_y;
@@ -413,6 +468,7 @@ class StackedHistogramPlot : public IHistogramPlot {
     const RegionAnalysis &region_analysis_;
     std::string category_column_;
     bool overlay_signal_;
+    std::string signal_group_;
     std::vector<Cut> cuts_;
     bool annotate_numbers_;
     bool use_log_y_;
@@ -422,6 +478,7 @@ class StackedHistogramPlot : public IHistogramPlot {
     double uniform_min_;
     double uniform_max_;
     TH1D *total_mc_hist_ = nullptr;
+    TH1D *signal_hist_ = nullptr;
     THStack *mc_stack_ = nullptr;
     TLegend *legend_ = nullptr;
     std::vector<TObject *> cut_visuals_;

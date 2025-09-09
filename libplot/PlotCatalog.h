@@ -33,6 +33,8 @@ class PlotCatalog {
                              const std::string &region,
                              const std::string &category_column,
                              bool overlay_signal = true,
+                             const std::string &signal_group =
+                                 "inclusive_strange_channels",
                              const std::vector<Cut> &cut_list = {},
                              bool annotate_numbers = true) const {
         const auto &result = this->fetchResult(res, variable, region);
@@ -44,8 +46,9 @@ class PlotCatalog {
         const RegionAnalysis &region_info = res.region(RegionKey{region});
 
         StackedHistogramPlot plot(std::move(name), result, region_info,
-                                    category_column, output_directory_.string(),
-                                    overlay_signal, cut_list, annotate_numbers);
+                                  category_column, output_directory_.string(),
+                                  overlay_signal, signal_group, cut_list,
+                                  annotate_numbers);
         plot.drawAndSave();
     }
 

@@ -13,7 +13,11 @@ int main() {
   builder.region("EMPTY");
   builder.variable("TEST_TOPOLOGICAL_SCORE");
   //builder.variable("RECO_NEUTRINO_VERTEX");
-  builder.preset("STACKED_PLOTS_LOG");
+  builder.preset("STACKED_PLOTS_LOG",
+                 {{"plot_configs",
+                   {{"plots",
+                     PluginArgs::array({{{"signal_group",
+                                           "inclusive_strange_channels"}}})}}}});
   //builder.uniqueById();
 
   auto analysis_specs = builder.analysisSpecs();
