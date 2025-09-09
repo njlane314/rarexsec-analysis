@@ -14,7 +14,7 @@ class DataProcessor : public ISampleProcessor {
     }
 
     void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) override {
-        handles.emplace_back(data_future_.GetHandle());
+        handles.emplace_back(data_future_);
     }
 
     void contributeTo(VariableResult &result) override {
