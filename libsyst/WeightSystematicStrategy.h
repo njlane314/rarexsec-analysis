@@ -44,13 +44,15 @@ class WeightSystematicStrategy : public SystematicStrategy {
         result.variation_hists_[up_key] = hu;
         result.variation_hists_[dn_key] = hd;
 
-        std::vector<double> diff(n);
+        std::vector<double> diff_up(n), diff_dn(n);
         for (int i = 0; i < n; ++i) {
-            diff[i] = 0.5 * (hu.getBinContent(i) - hd.getBinContent(i));
+            diff_up[i] = hu.getBinContent(i) - nominal_hist.getBinContent(i);
+            diff_dn[i] = hd.getBinContent(i) - nominal_hist.getBinContent(i);
             log::debug("WeightSystematicStrategy::computeCovariance", identifier_,
-                       "bin", i, "diff", diff[i]);
+                       "bin", i, "diff_up", diff_up[i], "diff_down", diff_dn[i]);
             for (int j = 0; j <= i; ++j) {
-                const double val = diff[i] * diff[j];
+                const double val = 0.5 *
+                                   (diff_up[i] * diff_up[j] + diff_dn[i] * diff_dn[j]);
                 cov(i, j) = val;
                 cov(j, i) = val;
             }
