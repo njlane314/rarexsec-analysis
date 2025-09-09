@@ -17,7 +17,7 @@ class ISampleProcessor {
 
     virtual void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) = 0;
 
-    virtual void contributeTo(VariableResult &result) = 0;
+    virtual VariableResult contribute(const BinningDefinition &binning) = 0;
 };
 
 }
