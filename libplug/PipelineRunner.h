@@ -229,7 +229,7 @@ public:
   inline AnalysisResult run(const nlohmann::json &samples,
                             const std::string &output_path) const {
     auto result = detail::runAnalysis(samples, analysis_specs_);
-    result.saveToFile(output_path.c_str());
+    //result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
     return result;
   }
