@@ -421,11 +421,11 @@ class StackedHistogramPlot : public IHistogramPlot {
 
         std::string line2 =
             "Beam, Runs: " + beam_name + ", " + runs_str +
-            " [" + pot_str + " pot]";
+            " (" + pot_str + " pot)";
         std::string line3 = "Analysis Region: " +
                              region_analysis_.regionLabel() +
-                             " [" +
-                             this->formatWithCommas(total_mc_events, 2) + " events]";
+                             " (" +
+                             this->formatWithCommas(total_mc_events, 2) + " events)";
 
         TLatex watermark;
         watermark.SetNDC();
