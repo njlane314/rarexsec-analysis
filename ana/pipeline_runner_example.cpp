@@ -12,13 +12,17 @@ int main() {
   // Build a simple pipeline programmatically
   builder.region("EMPTY");
   builder.variable("TEST_TOPOLOGICAL_SCORE");
-  //builder.variable("RECO_NEUTRINO_VERTEX");
-  builder.preset("STACKED_PLOTS_LOG",
-                 {{"plot_configs",
-                   {{"plots",
-                     PluginArgs::array({{{"signal_group",
-                                           "inclusive_strange_channels"}}})}}}});
-  //builder.uniqueById();
+  // Configure a performance plot for the topological score
+  builder.add(
+      Target::Plot, "PerformancePlotPlugin",
+      {{"plot_configs",
+        {{"performance_plots",
+          PluginArgs::array({{{"region", "EMPTY"},
+                               {"channel_column", "channel_definitions"},
+                               {"signal_group", "inclusive_strange_channels"},
+                               {"variable", "topological_score"},
+                               {"plot_name", "topological_score_performance"},
+                               {"output_directory", "./plots"}}})}}}});
 
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();

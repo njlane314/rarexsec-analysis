@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cmath>
 
 #include "PluginRegistry.h"
 #include "AnalysisDataLoader.h"
@@ -9,6 +10,7 @@
 #include "HistogramCut.h"
 #include "IPlotPlugin.h"
 #include "PerformancePlot.h"
+#include "SignificanceImprovementPlot.h"
 #include "StratifierRegistry.h"
 
 #include "TH1D.h"
@@ -74,8 +76,10 @@ class PerformancePlotPlugin : public IPlotPlugin {
             auto [total_hist, sig_hist] = this->accumulateHistograms(pc, signal_expr, selection_expr);
 
             auto [efficiencies, rejections] = this->computePerformancePoints(pc, total_hist, sig_hist);
+            auto sic = this->computeSIC(efficiencies, rejections);
+            double auc = this->computeAUC(efficiencies, rejections);
 
-            this->renderPlot(pc, efficiencies, rejections);
+            this->renderPlot(pc, efficiencies, rejections, auc, sic);
         }
     }
 
@@ -171,10 +175,40 @@ class PerformancePlotPlugin : public IPlotPlugin {
         return {efficiencies, rejections};
     }
 
+    std::vector<double> computeSIC(const std::vector<double> &efficiencies,
+                                   const std::vector<double> &rejections) const {
+        std::vector<double> sic;
+        sic.reserve(efficiencies.size());
+        for (size_t i = 0; i < efficiencies.size(); ++i) {
+            double bkg_eff = 1.0 - rejections[i];
+            double val = bkg_eff > 0.0 ? efficiencies[i] / std::sqrt(bkg_eff) : 0.0;
+            sic.push_back(val);
+        }
+        return sic;
+    }
+
+    double computeAUC(const std::vector<double> &efficiencies,
+                      const std::vector<double> &rejections) const {
+        if (efficiencies.size() < 2)
+            return 0.0;
+        double auc = 0.0;
+        for (size_t i = 1; i < efficiencies.size(); ++i) {
+            double x1 = 1.0 - rejections[i - 1];
+            double x2 = 1.0 - rejections[i];
+            double y1 = efficiencies[i - 1];
+            double y2 = efficiencies[i];
+            auc += 0.5 * (x2 - x1) * (y1 + y2);
+        }
+        return auc;
+    }
+
     void renderPlot(const PlotConfig &pc, const std::vector<double> &efficiencies,
-                    const std::vector<double> &rejections) const {
-        PerformancePlot plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory);
-        plot.drawAndSave("pdf");
+                    const std::vector<double> &rejections, double auc,
+                    const std::vector<double> &sic) const {
+        PerformancePlot roc_plot(pc.plot_name + "_" + pc.region, efficiencies, rejections, pc.output_directory, auc);
+        roc_plot.drawAndSave("pdf");
+        SignificanceImprovementPlot sic_plot(pc.plot_name + "_sic_" + pc.region, efficiencies, sic, pc.output_directory);
+        sic_plot.drawAndSave("pdf");
     }
 
     std::vector<PlotConfig> plots_;
