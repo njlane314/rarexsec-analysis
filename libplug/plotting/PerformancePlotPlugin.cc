@@ -222,8 +222,11 @@ ANALYSIS_REGISTER_PLUGIN(analysis::IPlotPlugin, analysis::AnalysisDataLoader,
                          "PerformancePlotPlugin", analysis::PerformancePlotPlugin)
 
 #ifdef BUILD_PLUGIN
-extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+extern "C" analysis::IPlotPlugin *createPerformancePlotPlugin(const analysis::PluginArgs &args) {
     return new analysis::PerformancePlotPlugin(args, analysis::PerformancePlotPlugin::legacyLoader());
+}
+extern "C" analysis::IPlotPlugin *createPlotPlugin(const analysis::PluginArgs &args) {
+    return createPerformancePlotPlugin(args);
 }
 extern "C" void setPluginContext(analysis::AnalysisDataLoader *loader) {
     analysis::PerformancePlotPlugin::setLegacyLoader(loader);
