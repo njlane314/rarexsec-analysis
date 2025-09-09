@@ -64,7 +64,7 @@ private:
       if (c == SampleOrigin::kData)
         return 0; // Data
       if (c == SampleOrigin::kExternal || c == SampleOrigin::kDirt)
-        return 1; // Cosmic / Dirt
+        return 1; // External
       return 99;  // Other / Unknown
     });
 
@@ -225,29 +225,29 @@ private:
                                      int np, int npi0, int ngamma) {
           if (!fv) {
             if (nu == 0)
-              return 1; // Cosmic / Dirt
-            return 2;   // Outside FV
+              return 1; // External
+            return 2;   // Out FV
           }
           if (cc == 1)
-            return 14; // NC
+            return 14; // nc
           if (cc == 0 && s > 0) {
             if (s == 1)
-              return 15; // CC single strange
-            return 16;   // CC associated strange
+              return 15; // numu_cc_1s
+            return 16;   // numu_cc_ms
           }
           if (std::abs(nu) == 12 && cc == 0)
-            return 17; // nue CC
+            return 17; // nue_cc
           if (std::abs(nu) == 14 && cc == 0) {
             if (npi == 0 && np > 0)
-              return 10; // CC0pi (mu + Np)
+              return 10; // numu_cc_np0pi
             if (npi == 1 && npi0 == 0)
-              return 11; // CC1pi±
+              return 11; // numu_cc_0pnpi
             if (npi0 > 0 || ngamma >= 2)
-              return 12; // CCpi0/gg
+              return 12; // numu_cc_pi0gg
             if (npi > 1)
-              return 13; // CC multi-pi
+              return 13; // numu_cc_npnpi
           }
-          return 99; // Other
+          return 99; // other
         },
                    {"in_fiducial", "neutrino_pdg", "interaction_ccnc",
                     "mc_n_strange", "mc_n_pion", "mc_n_proton",
