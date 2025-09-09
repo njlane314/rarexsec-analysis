@@ -14,7 +14,7 @@
 #include "RegionHandle.h"
 #include "VariableResult.h"
 
-#include <tbb/parallel_for_each.h>
+#include <ROOT/RDataFrame.hxx>
 
 namespace analysis {
     
@@ -51,29 +51,25 @@ template <typename SysProc> class VariableProcessor {
                         "):", var_key.str());
 
             log::info("VariableProcessor::process", "Executing sample processors...");
-            tbb::parallel_for_each(
-                sample_processors.begin(),
-                sample_processors.end(),
-                [&](auto& entry) {
-                    entry.second->book(histogram_factory_, binning, model);
-                });
+            for (auto &entry : sample_processors) {
+                entry.second->book(histogram_factory_, binning, model);
+            }
 
             log::info("VariableProcessor::process", "Registering systematic variations...");
-            tbb::parallel_for_each(
-                monte_carlo_nodes.begin(),
-                monte_carlo_nodes.end(),
-                [&](auto& entry) {
-                    systematics_processor_.bookSystematics(
-                        entry.first, entry.second, binning, model);
-                });
+            for (auto &entry : monte_carlo_nodes) {
+                systematics_processor_.bookSystematics(
+                    entry.first, entry.second, binning, model);
+            }
 
             log::info("VariableProcessor::process", "Persisting results...");
-            tbb::parallel_for_each(
-                sample_processors.begin(),
-                sample_processors.end(),
-                [&](auto& entry) {
-                    entry.second->contributeTo(result);
-                });
+            std::vector<ROOT::RDF::RResultHandle> handles;
+            for (auto &entry : sample_processors) {
+                entry.second->collectHandles(handles);
+            }
+            ROOT::RDF::RunGraphs(handles);
+            for (auto &entry : sample_processors) {
+                entry.second->contributeTo(result);
+            }
 
             log::info("VariableProcessor::process",
                         "Computing systematic covariances");

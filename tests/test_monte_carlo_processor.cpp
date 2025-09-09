@@ -5,6 +5,8 @@
 #include "SampleDataset.h"
 #include <catch2/catch_test_macros.hpp>
 #include <ROOT/RDataFrame.hxx>
+#include <unordered_map>
+#include <vector>
 
 using namespace analysis;
 
@@ -35,6 +37,15 @@ TEST_CASE("MonteCarloProcessor parallel contributeTo") {
 
     VariableResult result;
     result.binning_ = binning;
+    std::vector<ROOT::RDF::RResultHandle> handles;
+    proc.collectHandles(handles);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 0)
+    ROOT::RDF::RunGraphs(handles);
+#else
+    for (auto &h : handles) {
+        h.GetResultPtr();
+    }
+#endif
     proc.contributeTo(result);
 
     ChannelKey c10{StratumKey{"10"}.str()};

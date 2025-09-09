@@ -13,6 +13,10 @@ class DataProcessor : public ISampleProcessor {
         data_future_ = factory.bookNominalHist(binning, dataset_, model);
     }
 
+    void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) override {
+        handles.emplace_back(data_future_.GetHandle());
+    }
+
     void contributeTo(VariableResult &result) override {
         if (data_future_.GetPtr()) {
             result.data_hist_ =
