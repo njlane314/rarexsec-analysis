@@ -2,6 +2,7 @@
 #define VARIABLE_PROCESSOR_H
 
 #include <algorithm>
+#include <tbb/task.h>
 #include <execution>
 #include <memory>
 #include <unordered_map>
