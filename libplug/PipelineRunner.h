@@ -227,7 +227,7 @@ public:
   // configuration. The analysis result is written to \p output_path and
   // returned to the caller.
   inline AnalysisResult run(const nlohmann::json &samples,
-                            const std::string) const {
+                            const std::string /*&output_path*/) const {
     auto result = detail::runAnalysis(samples, analysis_specs_);
     //result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
