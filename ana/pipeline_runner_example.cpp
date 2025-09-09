@@ -9,20 +9,27 @@ int main() {
   PlotPluginHost plot_host;
   PipelineBuilder builder(analysis_host, plot_host);
 
-  // Build a simple pipeline programmatically
-  builder.region("EMPTY");
-  builder.variable("TEST_TOPOLOGICAL_SCORE");
-  // Configure a performance plot for the topological score
-  builder.add(
-      Target::Plot, "PerformancePlotPlugin",
-      {{"plot_configs",
-        {{"performance_plots",
-          PluginArgs::array({{{"region", "EMPTY"},
-                               {"channel_column", "channel_definitions"},
-                               {"signal_group", "inclusive_strange_channels"},
-                               {"variable", "topological_score"},
-                               {"plot_name", "topological_score_performance"},
-                               {"output_directory", "./plots"}}})}}}});
+  // Build a pipeline examining the topological score before its quality cut
+  builder.region("EMPTY",
+                 {{"analysis_configs",
+                   {{"regions",
+                     PluginArgs::array({{{"region_key", "PRE_TOPO"},
+                                          {"label", "Pre-topo quality"},
+                                          {"expression",
+                                           "in_reco_fiducial && num_slices == 1 && optical_filter_pe_beam > 20"}}})}}}});
+
+  // Register the topological score variable in that region
+  builder.variable("TEST_TOPOLOGICAL_SCORE",
+                   {{"analysis_configs", {{"region", "PRE_TOPO"}}}});
+
+  // Produce a stacked histogram with a logarithmic y-axis
+  builder.preset("STACKED_PLOTS_LOG",
+                 {{"plot_configs",
+                   {{"plots",
+                     PluginArgs::array({{{"variable", "topological_score"},
+                                          {"region", "PRE_TOPO"},
+                                          {"signal_group",
+                                           "inclusive_strange_channels"}}})}}}});
 
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();
