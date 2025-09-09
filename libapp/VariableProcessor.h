@@ -71,9 +71,14 @@ template <typename SysProc> class VariableProcessor {
                 entry.second->contributeTo(result);
             }
 
-            log::info("VariableProcessor::process",
-                        "Computing systematic covariances");
-            systematics_processor_.processSystematics(result);
+            if (systematics_processor_.hasSystematics() || !result.raw_detvar_hists_.empty()) {
+                log::info("VariableProcessor::process",
+                          "Computing systematic covariances");
+                systematics_processor_.processSystematics(result);
+            } else {
+                log::info("VariableProcessor::process",
+                          "No systematics found. Skipping covariance calculation.");
+            }
             systematics_processor_.clearFutures();
 
             AnalysisResult::printSummary(result);

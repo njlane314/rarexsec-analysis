@@ -3,6 +3,7 @@
 
 #include "BinnedHistogram.h"
 #include "SystematicStrategy.h"
+#include "Logger.h"
 #include <TMatrixDSym.h>
 #include <map>
 #include <string>
@@ -22,6 +23,12 @@ class WeightSystematicStrategy : public SystematicStrategy {
     void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode, const BinningDefinition &binning,
                         const ROOT::RDF::TH1DModel &model, SystematicFutures &futures) override {
         log::debug("WeightSystematicStrategy::bookVariations", identifier_, "sample", sample_key.str());
+        if (!rnode.HasColumn(up_column_) || !rnode.HasColumn(dn_column_)) {
+            log::warn("WeightSystematicStrategy::bookVariations", "Missing weight columns",
+                      up_column_, "or", dn_column_, "for", identifier_, "in sample",
+                      sample_key.str(), ". Skipping systematic.");
+            return;
+        }
         const SystematicKey up_key{identifier_ + "_up"};
         const SystematicKey dn_key{identifier_ + "_dn"};
         futures.variations[up_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), up_column_);

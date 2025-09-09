@@ -35,6 +35,15 @@ public:
                       SystematicFutures &futures) override {
     log::debug("UniverseSystematicStrategy::bookVariations", identifier_,
                "sample", sample_key.str(), "universes", n_universes_);
+
+    if (!rnode.HasColumn(vector_name_)) {
+      log::warn("UniverseSystematicStrategy::bookVariations",
+                "Missing weight vector column", vector_name_, "for",
+                identifier_, "in sample", sample_key.str(),
+                ". Skipping systematic.");
+      return;
+    }
+
     auto col_type = rnode.GetColumnType(vector_name_);
     for (unsigned u = 0; u < n_universes_; ++u) {
       const SystematicKey uni_key(identifier_ + "_u" + std::to_string(u));

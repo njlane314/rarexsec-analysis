@@ -37,6 +37,11 @@ class DetectorSystematicStrategy : public SystematicStrategy {
         }
 
         auto total_detvar_hists = aggregateVariations(result);
+        if (total_detvar_hists.size() <= 1) {
+            log::warn("DetectorSystematicStrategy::computeCovariance",
+                      "No detector variations beyond CV found. Skipping detector systematics.");
+            return total_detvar_cov;
+        }
         auto h_det_cv_opt = sanitiseCvHistogram(total_detvar_hists);
         if (!h_det_cv_opt) return total_detvar_cov;
 
