@@ -36,26 +36,30 @@ class PerformancePlotPlugin : public IPlotPlugin {
 
     PerformancePlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
         const auto &cfg = args.plot_configs;
-        if (!cfg.contains("performance_plots") || !cfg.at("performance_plots").is_array()) {
-            throw std::runtime_error("PerformancePlotPlugin missing performance_plots");
-        }
-        for (auto const &p : cfg.at("performance_plots")) {
-            PlotConfig pc;
-            pc.region = p.at("region").get<std::string>();
-            pc.selection_rule = p.value("selection_rule", std::string());
-            pc.channel_column = p.at("channel_column").get<std::string>();
-            pc.signal_group = p.at("signal_group").get<std::string>();
-            pc.variable = p.at("variable").get<std::string>();
-            pc.output_directory = p.value("output_directory", std::string{"plots"});
-            pc.plot_name = p.value("plot_name", std::string{"performance_plot"});
-            pc.n_bins = p.value("n_bins", 100);
-            pc.min = p.value("min", 0.0);
-            pc.max = p.value("max", 1.0);
-            if (p.contains("cut_direction")) {
-                auto dir = p.at("cut_direction").get<std::string>();
-                pc.cut_direction = (dir == "LessThan") ? CutDirection::LessThan : CutDirection::GreaterThan;
+        if (cfg.contains("performance_plots") && cfg.at("performance_plots").is_array() &&
+            !cfg.at("performance_plots").empty()) {
+            for (auto const &p : cfg.at("performance_plots")) {
+                PlotConfig pc;
+                pc.region = p.at("region").get<std::string>();
+                pc.selection_rule = p.value("selection_rule", std::string());
+                pc.channel_column = p.at("channel_column").get<std::string>();
+                pc.signal_group = p.at("signal_group").get<std::string>();
+                pc.variable = p.at("variable").get<std::string>();
+                pc.output_directory = p.value("output_directory", std::string{"plots"});
+                pc.plot_name = p.value("plot_name", std::string{"performance_plot"});
+                pc.n_bins = p.value("n_bins", 100);
+                pc.min = p.value("min", 0.0);
+                pc.max = p.value("max", 1.0);
+                if (p.contains("cut_direction")) {
+                    auto dir = p.at("cut_direction").get<std::string>();
+                    pc.cut_direction =
+                        (dir == "LessThan") ? CutDirection::LessThan : CutDirection::GreaterThan;
+                }
+                plots_.push_back(std::move(pc));
             }
-            plots_.push_back(std::move(pc));
+        } else {
+            log::warn("PerformancePlotPlugin::PerformancePlotPlugin",
+                      "No performance_plots configuration provided. Plugin will be disabled.");
         }
     }
 
