@@ -80,6 +80,62 @@ public:
     return nodes;
   }
 
+  static void
+  printSummary(const RegionHandle &region_handle,
+               const std::vector<std::string> &clauses,
+               const std::vector<RegionAnalysis::StageCount> &stage_counts) {
+    size_t width = 70;
+    std::string line(width, '=');
+    std::string sub(width, '-');
+
+    std::cout << '\n' << line << '\n';
+    std::cout << std::left << std::setw(width)
+              << ("CutFlow Summary: " + region_handle.key_.str()) << '\n';
+    std::cout << line << '\n';
+
+    std::cout << std::fixed << std::setprecision(2);
+    size_t stage_w = 30;
+    size_t total_w = 20;
+    size_t eff_w = 10;
+    std::cout << std::left << std::setw(stage_w) << "Stage" << std::right
+              << std::setw(total_w) << "Total MC"
+              << std::setw(eff_w) << "Cum Eff"
+              << std::setw(eff_w) << "Inc Eff" << '\n';
+
+    double initial_total = stage_counts.empty() ? 0.0 : stage_counts[0].total;
+    for (size_t i = 0; i < stage_counts.size(); ++i) {
+      std::string label = i == 0 ? "initial" : clauses[i - 1];
+      double cum_eff =
+          initial_total != 0.0 ? stage_counts[i].total / initial_total : 0.0;
+      double prev_total =
+          i == 0 ? stage_counts[0].total : stage_counts[i - 1].total;
+      double inc_eff =
+          prev_total != 0.0 ? stage_counts[i].total / prev_total : 0.0;
+
+      std::cout << std::left << std::setw(stage_w) << label << std::right
+                << std::setw(total_w) << stage_counts[i].total
+                << std::setw(eff_w) << cum_eff
+                << std::setw(eff_w) << inc_eff << '\n';
+    }
+
+    std::cout << sub << '\n';
+    std::cout << std::left << std::setw(width)
+              << "Stratum MC Sums (final stage)" << '\n';
+
+    if (!stage_counts.empty()) {
+      const auto &final_stage = stage_counts.back();
+      for (const auto &[scheme, m] : final_stage.schemes) {
+        std::cout << std::left << std::setw(width) << scheme << '\n';
+        for (const auto &[key, pr] : m) {
+          std::cout << std::left << std::setw(stage_w) << key << std::right
+                    << std::setw(width - stage_w) << pr.first << '\n';
+        }
+      }
+    }
+
+    std::cout << line << "\n";
+  }
+
 private:
   void updateSchemeTallies(
       ROOT::RDF::RNode df, const std::vector<std::string> &schemes,
@@ -152,62 +208,6 @@ private:
     for (auto &setter : value_setters) {
       setter();
     }
-  }
-
-  static void
-  printSummary(const RegionHandle &region_handle,
-               const std::vector<std::string> &clauses,
-               const std::vector<RegionAnalysis::StageCount> &stage_counts) {
-    size_t width = 70;
-    std::string line(width, '=');
-    std::string sub(width, '-');
-
-    std::cout << '\n' << line << '\n';
-    std::cout << std::left << std::setw(width)
-              << ("CutFlow Summary: " + region_handle.key_.str()) << '\n';
-    std::cout << line << '\n';
-
-    std::cout << std::fixed << std::setprecision(2);
-    size_t stage_w = 30;
-    size_t total_w = 20;
-    size_t eff_w = 10;
-    std::cout << std::left << std::setw(stage_w) << "Stage" << std::right
-              << std::setw(total_w) << "Total MC"
-              << std::setw(eff_w) << "Cum Eff"
-              << std::setw(eff_w) << "Inc Eff" << '\n';
-
-    double initial_total = stage_counts.empty() ? 0.0 : stage_counts[0].total;
-    for (size_t i = 0; i < stage_counts.size(); ++i) {
-      std::string label = i == 0 ? "initial" : clauses[i - 1];
-      double cum_eff =
-          initial_total != 0.0 ? stage_counts[i].total / initial_total : 0.0;
-      double prev_total =
-          i == 0 ? stage_counts[0].total : stage_counts[i - 1].total;
-      double inc_eff =
-          prev_total != 0.0 ? stage_counts[i].total / prev_total : 0.0;
-
-      std::cout << std::left << std::setw(stage_w) << label << std::right
-                << std::setw(total_w) << stage_counts[i].total
-                << std::setw(eff_w) << cum_eff
-                << std::setw(eff_w) << inc_eff << '\n';
-    }
-
-    std::cout << sub << '\n';
-    std::cout << std::left << std::setw(width)
-              << "Stratum MC Sums (final stage)" << '\n';
-
-    if (!stage_counts.empty()) {
-      const auto &final_stage = stage_counts.back();
-      for (const auto &[scheme, m] : final_stage.schemes) {
-        std::cout << std::left << std::setw(width) << scheme << '\n';
-        for (const auto &[key, pr] : m) {
-          std::cout << std::left << std::setw(stage_w) << key << std::right
-                    << std::setw(width - stage_w) << pr.first << '\n';
-        }
-      }
-    }
-
-    std::cout << line << "\n";
   }
 
   Loader &data_loader_;

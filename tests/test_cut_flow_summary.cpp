@@ -1,11 +1,11 @@
-#define private public
 #include "CutFlowCalculator.h"
-#undef private
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <sstream>
 
 using namespace analysis;
+using Catch::Approx;
 
 TEST_CASE("cut flow summary prints efficiencies") {
     RegionKey rkey{"R"};
