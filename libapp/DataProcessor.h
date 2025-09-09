@@ -13,6 +13,8 @@ class DataProcessor : public ISampleProcessor {
         data_future_ = factory.bookNominalHist(binning, dataset_, model);
     }
 
+    std::size_t expectedHandleCount() const override { return 1; }
+
     void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) override {
         handles.emplace_back(data_future_);
     }

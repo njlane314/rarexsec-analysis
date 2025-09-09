@@ -30,8 +30,11 @@ class MonteCarloProcessor : public ISampleProcessor {
         }
     }
 
+    std::size_t expectedHandleCount() const override {
+        return nominal_futures_.size() + variation_futures_.size();
+    }
+
     void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) override {
-        handles.reserve(handles.size() + nominal_futures_.size() + variation_futures_.size());
         for (auto &pair : nominal_futures_) {
             handles.emplace_back(pair.second);
         }
