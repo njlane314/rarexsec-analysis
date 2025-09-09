@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cstdlib>
 #include "Logger.h"
 #include "PluginRegistry.h"
 
@@ -13,7 +14,12 @@ namespace analysis {
 template <class Interface, class Ctx>
 class PluginHost {
 public:
-  explicit PluginHost(Ctx* ctx = nullptr) : ctx_(ctx) {}
+  explicit PluginHost(Ctx* ctx = nullptr) : ctx_(ctx) {
+    if (const char* dir = std::getenv("ANALYSIS_PLUGIN_DIR")) {
+      log::info("PluginHost", "preloading", dir);
+      loadDirectory(dir, /*recurse=*/false);
+    }
+  }
 
   void loadDirectory(const std::string& dir, bool recurse = false) {
     namespace fs = std::filesystem;
@@ -56,6 +62,7 @@ public:
       }
     }
     if (!plugin) throw std::runtime_error("No registered plugin: " + name);
+    log::info("PluginHost", "registered", name);
     plugins_.push_back(std::move(plugin));
   }
 
