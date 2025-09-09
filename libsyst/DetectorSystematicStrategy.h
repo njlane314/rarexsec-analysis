@@ -6,6 +6,8 @@
 #include "SystematicStrategy.h"
 #include <cmath>
 #include <optional>
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 
 namespace analysis {
 
@@ -128,11 +130,14 @@ class DetectorSystematicStrategy : public SystematicStrategy {
 
         for (const auto &[var_key, delta] : result.delta_hists_) {
             TMatrixDSym cov_k(n_bins);
-            for (int i = 0; i < n_bins; ++i) {
-                for (int j = 0; j < n_bins; ++j) {
-                    cov_k(i, j) = delta.getBinContent(i) * delta.getBinContent(j);
+            tbb::parallel_for(tbb::blocked_range<int>(0, n_bins),
+                              [&](const tbb::blocked_range<int> &r) {
+                for (int i = r.begin(); i != r.end(); ++i) {
+                    for (int j = 0; j < n_bins; ++j) {
+                        cov_k(i, j) = delta.getBinContent(i) * delta.getBinContent(j);
+                    }
                 }
-            }
+            });
             total_detvar_cov += cov_k;
         }
         return total_detvar_cov;

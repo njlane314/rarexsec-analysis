@@ -3,6 +3,8 @@
 
 #include "VariableResult.h"
 #include "HistogramFactory.h"
+#include <ROOT/RDataFrame.hxx>
+#include <vector>
 
 namespace analysis {
 
@@ -12,6 +14,8 @@ class ISampleProcessor {
 
     virtual void book(HistogramFactory &factory, const BinningDefinition &binning,
                       const ROOT::RDF::TH1DModel &model) = 0;
+
+    virtual void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) = 0;
 
     virtual void contributeTo(VariableResult &result) = 0;
 };
