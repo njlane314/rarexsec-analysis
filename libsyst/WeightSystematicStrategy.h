@@ -5,6 +5,7 @@
 #include "SystematicStrategy.h"
 #include "Logger.h"
 #include <TMatrixDSym.h>
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
@@ -12,95 +13,118 @@
 namespace analysis {
 
 class WeightSystematicStrategy : public SystematicStrategy {
-  public:
-    WeightSystematicStrategy(KnobDef knob_def)
-        : identifier_(std::move(knob_def.name_)),
-          up_column_(std::move(knob_def.up_column_)),
-          dn_column_(std::move(knob_def.dn_column_)) {}
+public:
+  WeightSystematicStrategy(KnobDef knob_def)
+      : identifier_(std::move(knob_def.name_)),
+        up_column_(std::move(knob_def.up_column_)),
+        dn_column_(std::move(knob_def.dn_column_)) {}
 
-    const std::string &getName() const override { return identifier_; }
+  const std::string &getName() const override { return identifier_; }
 
-    void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode, const BinningDefinition &binning,
-                        const ROOT::RDF::TH1DModel &model, SystematicFutures &futures) override {
-        log::debug("WeightSystematicStrategy::bookVariations", identifier_, "sample", sample_key.str());
-        if (!rnode.HasColumn(up_column_) || !rnode.HasColumn(dn_column_)) {
-            log::warn("WeightSystematicStrategy::bookVariations", "Missing weight columns",
-                      up_column_, "or", dn_column_, "for", identifier_, "in sample",
-                      sample_key.str(), ". Skipping systematic.");
-            return;
-        }
-        const SystematicKey up_key{identifier_ + "_up"};
-        const SystematicKey dn_key{identifier_ + "_dn"};
-        futures.variations[up_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), up_column_);
-        futures.variations[dn_key][sample_key] = rnode.Histo1D(model, binning.getVariable(), dn_column_);
+  void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode,
+                      const BinningDefinition &binning,
+                      const ROOT::RDF::TH1DModel &model,
+                      SystematicFutures &futures) override {
+    log::debug("WeightSystematicStrategy::bookVariations", identifier_,
+               "sample", sample_key.str());
+    if (!rnode.HasColumn(up_column_) || !rnode.HasColumn(dn_column_)) {
+        log::warn("WeightSystematicStrategy::bookVariations", "Missing weight columns",
+                  up_column_, "or", dn_column_, "for", identifier_, "in sample",
+                  sample_key.str(), ". Skipping systematic.");
+        return;
+    }
+    const SystematicKey up_key{identifier_ + "_up"};
+    const SystematicKey dn_key{identifier_ + "_dn"};
+    futures.variations[up_key][sample_key] =
+        rnode.Histo1D(model, binning.getVariable(), up_column_);
+    futures.variations[dn_key][sample_key] =
+        rnode.Histo1D(model, binning.getVariable(), dn_column_);
+  }
+
+  TMatrixDSym computeCovariance(VariableResult &result,
+                                SystematicFutures &futures) override {
+    const auto &nominal_hist = result.total_mc_hist_;
+    const auto &binning = result.binning_;
+    const int n = nominal_hist.getNumberOfBins();
+    TMatrixDSym cov(n);
+    cov.Zero();
+
+    const SystematicKey up_key{identifier_ + "_up"};
+    const SystematicKey dn_key{identifier_ + "_dn"};
+
+    const auto hu = accumulateVariation(binning, n, up_key, futures, "up");
+    const auto hd = accumulateVariation(binning, n, dn_key, futures, "down");
+
+    result.variation_hists_[up_key] = hu;
+    result.variation_hists_[dn_key] = hd;
+
+    std::vector<double> diff_up(n), diff_dn(n);
+    for (int i = 0; i < n; ++i) {
+      const double nominal = nominal_hist.getBinContent(i);
+      const double up = hu.getBinContent(i);
+      const double dn = hd.getBinContent(i);
+      diff_up[i] = up - nominal;
+      diff_dn[i] = dn - nominal;
+
+      if (std::abs(up - dn) < 1e-6) {
+        log::warn("WeightSystematicStrategy::computeCovariance", identifier_,
+                  "identical up and down variations in bin", i);
+      }
+      if (nominal == 0.0 && (std::abs(up) > 1e-6 || std::abs(dn) > 1e-6)) {
+        log::warn("WeightSystematicStrategy::computeCovariance", identifier_,
+                  "non-zero variation in bin", i, "with zero nominal content");
+      }
+
+      log::debug("WeightSystematicStrategy::computeCovariance", identifier_,
+                 "bin", i, "diff_up", diff_up[i], "diff_down", diff_dn[i]);
+      for (int j = 0; j <= i; ++j) {
+        const double val =
+            0.5 * (diff_up[i] * diff_up[j] + diff_dn[i] * diff_dn[j]);
+        cov(i, j) = val;
+        cov(j, i) = val;
+      }
+    }
+    log::debug("WeightSystematicStrategy::computeCovariance", identifier_,
+               "covariance calculated");
+    return cov;
+  }
+
+  std::map<SystematicKey, BinnedHistogram>
+  getVariedHistograms(const BinningDefinition &, SystematicFutures &) override {
+    std::map<SystematicKey, BinnedHistogram> out;
+    return out;
+  }
+
+private:
+  BinnedHistogram accumulateVariation(const BinningDefinition &binning, int n,
+                                      const SystematicKey &key,
+                                      SystematicFutures &futures,
+                                      const std::string &direction) const {
+    Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
+    Eigen::MatrixXd shifts_mat = shifts;
+    BinnedHistogram hist(binning, std::vector<double>(n, 0.0), shifts_mat);
+    if (!futures.variations.count(key)) {
+      log::warn("WeightSystematicStrategy::computeCovariance", "Missing",
+                direction, "variation for", identifier_);
+      return hist;
     }
 
-    TMatrixDSym computeCovariance(VariableResult &result, SystematicFutures &futures) override {
-        const auto &nominal_hist = result.total_mc_hist_;
-        const auto &binning = result.binning_;
-        const int n = nominal_hist.getNumberOfBins();
-        TMatrixDSym cov(n);
-        cov.Zero();
-
-        const SystematicKey up_key{identifier_ + "_up"};
-        const SystematicKey dn_key{identifier_ + "_dn"};
-
-        const auto hu = accumulateVariation(binning, n, up_key, futures, "up");
-        const auto hd = accumulateVariation(binning, n, dn_key, futures, "down");
-
-        result.variation_hists_[up_key] = hu;
-        result.variation_hists_[dn_key] = hd;
-
-        std::vector<double> diff_up(n), diff_dn(n);
-        for (int i = 0; i < n; ++i) {
-            diff_up[i] = hu.getBinContent(i) - nominal_hist.getBinContent(i);
-            diff_dn[i] = hd.getBinContent(i) - nominal_hist.getBinContent(i);
-            log::debug("WeightSystematicStrategy::computeCovariance", identifier_,
-                       "bin", i, "diff_up", diff_up[i], "diff_down", diff_dn[i]);
-            for (int j = 0; j <= i; ++j) {
-                const double val = 0.5 *
-                                   (diff_up[i] * diff_up[j] + diff_dn[i] * diff_dn[j]);
-                cov(i, j) = val;
-                cov(j, i) = val;
-            }
-        }
-        log::debug("WeightSystematicStrategy::computeCovariance", identifier_, "covariance calculated");
-        return cov;
+    log::debug("WeightSystematicStrategy::computeCovariance", "Accumulating",
+               direction, "variations for", identifier_);
+    for (auto &[sample_key, future] : futures.variations.at(key)) {
+      if (future.GetPtr()) {
+        hist =
+            hist + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
+      }
     }
+    return hist;
+  }
 
-    std::map<SystematicKey, BinnedHistogram> getVariedHistograms(const BinningDefinition &,
-                                                                 SystematicFutures &) override {
-        std::map<SystematicKey, BinnedHistogram> out;
-        return out;
-    }
-
-  private:
-    BinnedHistogram accumulateVariation(const BinningDefinition &binning, int n, const SystematicKey &key,
-                                        SystematicFutures &futures, const std::string &direction) const {
-        Eigen::VectorXd shifts = Eigen::VectorXd::Zero(n);
-        Eigen::MatrixXd shifts_mat = shifts;
-        BinnedHistogram hist(binning, std::vector<double>(n, 0.0), shifts_mat);
-        if (!futures.variations.count(key)) {
-            log::warn("WeightSystematicStrategy::computeCovariance", "Missing", direction, "variation for",
-                      identifier_);
-            return hist;
-        }
-
-        log::debug("WeightSystematicStrategy::computeCovariance", "Accumulating", direction, "variations for",
-                   identifier_);
-        for (auto &[sample_key, future] : futures.variations.at(key)) {
-            if (future.GetPtr()) {
-                hist = hist + BinnedHistogram::createFromTH1D(binning, *future.GetPtr());
-            }
-        }
-        return hist;
-    }
-
-    std::string identifier_;
-    std::string up_column_;
-    std::string dn_column_;
+  std::string identifier_;
+  std::string up_column_;
+  std::string dn_column_;
 };
 
-}
+} // namespace analysis
 
 #endif
