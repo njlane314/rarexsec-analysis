@@ -10,7 +10,7 @@
 
 using namespace analysis;
 
-TEST_CASE("MonteCarloProcessor parallel contributeTo") {
+TEST_CASE("MonteCarloProcessor parallel contribute") {
     std::vector<double> edges{0.0, 1.0, 2.0};
     BinningDefinition binning(edges, "x", "x", {}, "inclusive_strange_channels");
     auto model = binning.toTH1DModel();
@@ -35,8 +35,6 @@ TEST_CASE("MonteCarloProcessor parallel contributeTo") {
     HistogramFactory factory;
     proc.book(factory, binning, model);
 
-    VariableResult result;
-    result.binning_ = binning;
     std::vector<ROOT::RDF::RResultHandle> handles;
     proc.collectHandles(handles);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 0)
@@ -46,7 +44,7 @@ TEST_CASE("MonteCarloProcessor parallel contributeTo") {
         h.GetResultPtr();
     }
 #endif
-    proc.contributeTo(result);
+    auto result = proc.contribute(binning);
 
     ChannelKey c10{StratumKey{"10"}.str()};
     ChannelKey c11{StratumKey{"11"}.str()};
