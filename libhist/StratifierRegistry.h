@@ -348,7 +348,7 @@ private:
     this->addScheme(
         "channel_definitions", StratifierType::kScalar,
         {{0, "data", "Data", kBlack, 1001},
-         {1, "external", "External", kTeal + 2, 3345},
+         {1, "external", "Cosmic", kTeal + 2, 3345},
          {2, "out_fv", "Out FV", kYellow - 7, 1001},
          {10, "numu_cc_np0pi", R"(#nu_{#mu}CC Np0#pi)", kRed, 1001},
          {11, "numu_cc_0pnpi", R"(#nu_{#mu}CC 0p1#pi)", kRed - 7, 1001},
