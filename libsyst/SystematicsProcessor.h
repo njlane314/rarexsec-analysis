@@ -59,6 +59,12 @@ class SystematicsProcessor {
     }
 
     void processSystematics(VariableResult &result) {
+        if (!hasSystematics() && result.raw_detvar_hists_.empty()) {
+            log::info("SystematicsProcessor::processSystematics",
+                      "No systematics found. Skipping covariance calculation.");
+            return;
+        }
+
         log::debug("SystematicsProcessor::processSystematics", "Commencing covariance calculations");
         for (const auto &strategy : systematic_strategies_) {
             VariableResult local_result = result;
@@ -75,6 +81,8 @@ class SystematicsProcessor {
     }
 
     void clearFutures() { systematic_futures_.variations.clear(); }
+
+    bool hasSystematics() const { return !systematic_futures_.variations.empty(); }
 
   private:
     static void sanitiseMatrix(TMatrixDSym &m) {

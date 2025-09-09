@@ -3,6 +3,7 @@
 
 #include "BinnedHistogram.h"
 #include "SystematicStrategy.h"
+#include "Logger.h"
 #include <TMatrixDSym.h>
 #include <cmath>
 #include <map>
@@ -26,6 +27,12 @@ public:
                       SystematicFutures &futures) override {
     log::debug("WeightSystematicStrategy::bookVariations", identifier_,
                "sample", sample_key.str());
+    if (!rnode.HasColumn(up_column_) || !rnode.HasColumn(dn_column_)) {
+        log::warn("WeightSystematicStrategy::bookVariations", "Missing weight columns",
+                  up_column_, "or", dn_column_, "for", identifier_, "in sample",
+                  sample_key.str(), ". Skipping systematic.");
+        return;
+    }
     const SystematicKey up_key{identifier_ + "_up"};
     const SystematicKey dn_key{identifier_ + "_dn"};
     futures.variations[up_key][sample_key] =
