@@ -31,6 +31,15 @@ int main() {
                                           {"signal_group",
                                            "inclusive_strange_channels"}}})}}}});
 
+  // Plot the ROC curve and significance improvement for the topological score
+  builder.add(Target::Plot, "PerformancePlotPlugin",
+              {{"performance_plots",
+                PluginArgs::array({{{"region", "PRE_TOPO"},
+                                     {"channel_column", "incl_channel"},
+                                     {"signal_group",
+                                      "inclusive_strange_channels"},
+                                     {"variable", "topological_score"}}})}});
+
   auto analysis_specs = builder.analysisSpecs();
   auto plot_specs = builder.plotSpecs();
 
