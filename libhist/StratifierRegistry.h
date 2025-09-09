@@ -348,10 +348,10 @@ private:
     this->addScheme(
         "channel_definitions", StratifierType::kScalar,
         {{0, "data", "Data", kBlack, 1001},
-         {1, "cosmic_dirt", "Cosmic or Dirt Background",
+        {1, "cosmic_dirt", "Cosmic or Dirt Background",
           static_cast<Color_t>(TColor::GetColor("#7f7f7f")), 3345},
-         {2, "out_fv", "Outside Fiducial Volume",
-          static_cast<Color_t>(TColor::GetColor("#bdbdbd")), 3354},
+        {2, "out_fv", "Outside Fiducial Volume",
+         static_cast<Color_t>(TColor::GetColor("#a65628")), 3354},
          {10, "cc0pi", R"(CC0#pi(#mu+Np))",
           static_cast<Color_t>(TColor::GetColor("#E69F00")), 1001},
          {11, "cc1pipm", R"(CC1#pi^{#pm})",
