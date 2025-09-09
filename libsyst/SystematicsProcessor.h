@@ -60,9 +60,7 @@ class SystematicsProcessor {
 
     void processSystematics(VariableResult &result) {
         log::debug("SystematicsProcessor::processSystematics", "Commencing covariance calculations");
-        std::mutex cov_mutex;
-        tbb::parallel_for(std::size_t{0}, systematic_strategies_.size(), [&](std::size_t i) {
-            auto &strategy = systematic_strategies_[i];
+        for (const auto &strategy : systematic_strategies_) {
             VariableResult local_result = result;
             SystematicKey key{strategy->getName()};
             log::debug("SystematicsProcessor::processSystematics", "Computing covariance for", key.str());
@@ -70,9 +68,8 @@ class SystematicsProcessor {
             sanitiseMatrix(cov);
             log::debug("SystematicsProcessor::processSystematics", key.str(), "matrix size", cov.GetNrows(), "x",
                        cov.GetNcols());
-            std::lock_guard<std::mutex> lock(cov_mutex);
             result.covariance_matrices_.insert_or_assign(key, cov);
-        });
+        }
         combineCovariances(result);
         log::debug("SystematicsProcessor::processSystematics", "Covariance calculation complete");
     }
