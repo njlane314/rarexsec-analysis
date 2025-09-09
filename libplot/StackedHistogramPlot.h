@@ -223,7 +223,7 @@ class StackedHistogramPlot : public IHistogramPlot {
             std::string sig_label = "Signal (overlay";
             if (signal_scale_ != 1.0) {
                 sig_label +=
-                    " (x" + this->formatWithCommas(signal_scale_, 0) + ")";
+                    " (x" + this->formatWithCommas(signal_scale_, 2) + ")";
             }
             sig_label += ")";
             legend_->AddEntry(h_sig, sig_label.c_str(), "l");
