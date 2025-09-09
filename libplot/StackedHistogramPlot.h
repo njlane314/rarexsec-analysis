@@ -2,6 +2,7 @@
 #define STACKEDHISTOGRAMPLOT_H
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <map>
 #include <numeric>
@@ -98,6 +99,7 @@ class StackedHistogramPlot : public IHistogramPlot {
         std::vector<std::pair<ChannelKey, BinnedHistogram>> &mc_hists,
         double &total_mc_events, double &left_edge, double &right_edge) {
         mc_stack_ = new THStack("mc_stack", "");
+        signal_scale_ = 1.0;
 
         std::vector<double> orig_edges;
         if (use_uniform_binning_ && uniform_max_ > uniform_min_) {
@@ -125,6 +127,22 @@ class StackedHistogramPlot : public IHistogramPlot {
         total_mc_events = 0.0;
         for (const auto &[key, hist] : mc_hists)
             total_mc_events += hist.getSum();
+
+        if (overlay_signal_) {
+            StratifierRegistry registry;
+            double sig_sum = 0.0;
+            try {
+                auto sig_keys = registry.getSignalKeys(signal_group_);
+                for (const auto &[key, hist] : mc_hists) {
+                    if (std::find(sig_keys.begin(), sig_keys.end(),
+                                  std::stoi(key.str())) != sig_keys.end()) {
+                        sig_sum += hist.getSum();
+                    }
+                }
+            } catch (...) {
+            }
+            signal_scale_ = (sig_sum > 0.0) ? total_mc_events / sig_sum : 1.0;
+        }
 
         return orig_edges;
     }
@@ -198,21 +216,17 @@ class StackedHistogramPlot : public IHistogramPlot {
 
         if (overlay_signal_) {
             TH1D *h_sig = new TH1D();
-            Color_t col = kRed;
-            try {
-                auto sig_keys = registry.getSignalKeys(signal_group_);
-                if (!sig_keys.empty()) {
-                    col =
-                        registry.getStratumProperties(category_column_,
-                                                     sig_keys.front())
-                            .fill_colour;
-                }
-            } catch (...) {
-            }
-            h_sig->SetLineColor(col);
+            h_sig->SetLineColor(kGreen + 2);
+            h_sig->SetLineStyle(kDashed);
             h_sig->SetLineWidth(2);
             h_sig->SetFillStyle(0);
-            legend_->AddEntry(h_sig, "Signal (overlay)", "l");
+            std::string sig_label = "Signal (overlay";
+            if (signal_scale_ != 1.0) {
+                sig_label +=
+                    " (x" + this->formatWithCommas(signal_scale_, 0) + ")";
+            }
+            sig_label += ")";
+            legend_->AddEntry(h_sig, sig_label.c_str(), "l");
             cut_visuals_.push_back(h_sig);
         }
 
@@ -228,16 +242,9 @@ class StackedHistogramPlot : public IHistogramPlot {
         p_main->cd();
 
         std::vector<int> sig_keys;
-        Color_t sig_color = kRed;
         if (overlay_signal_) {
             try {
                 sig_keys = registry.getSignalKeys(signal_group_);
-                if (!sig_keys.empty()) {
-                    sig_color =
-                        registry.getStratumProperties(category_column_,
-                                                      sig_keys.front())
-                            .fill_colour;
-                }
             } catch (...) {
             }
         }
@@ -312,7 +319,9 @@ class StackedHistogramPlot : public IHistogramPlot {
         }
 
         if (overlay_signal_ && signal_hist_) {
-            signal_hist_->SetLineColor(sig_color);
+            signal_hist_->Scale(signal_scale_);
+            signal_hist_->SetLineColor(kGreen + 2);
+            signal_hist_->SetLineStyle(kDashed);
             signal_hist_->SetLineWidth(2);
             signal_hist_->SetFillStyle(0);
             signal_hist_->Draw("HIST SAME");
@@ -479,6 +488,7 @@ class StackedHistogramPlot : public IHistogramPlot {
     double uniform_max_;
     TH1D *total_mc_hist_ = nullptr;
     TH1D *signal_hist_ = nullptr;
+    double signal_scale_ = 1.0;
     THStack *mc_stack_ = nullptr;
     TLegend *legend_ = nullptr;
     std::vector<TObject *> cut_visuals_;
