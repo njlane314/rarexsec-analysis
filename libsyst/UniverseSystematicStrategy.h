@@ -47,8 +47,6 @@ public:
       if (col_type == "ROOT::VecOps::RVec<float>") {
         auto weight = [u, this](const ROOT::RVec<float> &weights) {
           if (weights.empty()) {
-            log::warn("UniverseSystematicStrategy::bookVariations", identifier_,
-                      "empty weight vector");
             return 1.0;
           }
 
@@ -88,8 +86,6 @@ public:
       } else if (col_type == "ROOT::VecOps::RVec<double>") {
         auto weight = [u, this](const ROOT::RVec<double> &weights) {
           if (weights.empty()) {
-            log::warn("UniverseSystematicStrategy::bookVariations", identifier_,
-                      "empty weight vector");
             return 1.0;
           }
 
@@ -129,8 +125,6 @@ public:
       } else if (col_type == "ROOT::VecOps::RVec<unsigned short>") {
         auto weight = [u, this](const ROOT::RVec<unsigned short> &weights) {
           if (weights.empty()) {
-            log::warn("UniverseSystematicStrategy::bookVariations", identifier_,
-                      "empty weight vector");
             return 1.0;
           }
 
