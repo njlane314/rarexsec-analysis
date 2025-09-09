@@ -1,9 +1,6 @@
 #ifndef VARIABLE_PROCESSOR_H
 #define VARIABLE_PROCESSOR_H
 
-#include <algorithm>
-#include <tbb/task.h>
-#include <execution>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -75,20 +72,8 @@ template <typename SysProc> class VariableProcessor {
                 entry.second->collectHandles(handles);
             }
             ROOT::RDF::RunGraphs(handles);
-
-            std::vector<std::pair<ISampleProcessor *, std::size_t>> proc_refs;
-            proc_refs.reserve(sample_processors.size());
-            std::size_t pidx = 0;
             for (auto &entry : sample_processors) {
-                proc_refs.emplace_back(entry.second.get(), pidx++);
-            }
-            std::vector<VariableResult> local_results(proc_refs.size());
-            std::for_each(std::execution::par, proc_refs.begin(), proc_refs.end(),
-                          [&](auto &ref) {
-                              local_results[ref.second] = ref.first->contribute(result.binning_);
-                          });
-            for (const auto &local : local_results) {
-                mergeResult(result, local);
+                entry.second->contributeTo(result);
             }
 
             if (systematics_processor_.hasSystematics() || !result.raw_detvar_hists_.empty()) {
@@ -111,22 +96,6 @@ template <typename SysProc> class VariableProcessor {
     }
 
   private:
-    static void mergeResult(VariableResult &dest, const VariableResult &src) {
-        dest.data_hist_ = dest.data_hist_ + src.data_hist_;
-        dest.total_mc_hist_ = dest.total_mc_hist_ + src.total_mc_hist_;
-
-        for (const auto &[chan, hist] : src.strat_hists_) {
-            dest.strat_hists_[chan] = dest.strat_hists_[chan] + hist;
-        }
-
-        for (const auto &[sample, variations] : src.raw_detvar_hists_) {
-            auto &dest_map = dest.raw_detvar_hists_[sample];
-            for (const auto &[var_key, hist] : variations) {
-                dest_map[var_key] = dest_map[var_key] + hist;
-            }
-        }
-    }
-
     AnalysisDefinition& analysis_definition_;
     SysProc& systematics_processor_;
     HistogramFactory& histogram_factory_;

@@ -19,13 +19,11 @@ class DataProcessor : public ISampleProcessor {
         handles.emplace_back(data_future_);
     }
 
-    VariableResult contribute(const BinningDefinition &binning) override {
-        VariableResult local;
-        local.binning_ = binning;
+    void contributeTo(VariableResult &result) override {
         if (data_future_.GetPtr()) {
-            local.data_hist_ = BinnedHistogram::createFromTH1D(binning, *data_future_.GetPtr());
+            result.data_hist_ =
+                result.data_hist_ + BinnedHistogram::createFromTH1D(result.binning_, *data_future_.GetPtr());
         }
-        return local;
     }
 
   private:
