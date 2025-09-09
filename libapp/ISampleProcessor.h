@@ -5,6 +5,7 @@
 #include "HistogramFactory.h"
 #include <ROOT/RDataFrame.hxx>
 #include <vector>
+#include <cstddef>
 
 namespace analysis {
 
@@ -17,7 +18,9 @@ class ISampleProcessor {
 
     virtual void collectHandles(std::vector<ROOT::RDF::RResultHandle> &handles) = 0;
 
-    virtual VariableResult contribute(const BinningDefinition &binning) = 0;
+    virtual void contributeTo(VariableResult &result) = 0;
+
+    virtual std::size_t expectedHandleCount() const = 0;
 };
 
 }

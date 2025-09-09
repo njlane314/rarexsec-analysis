@@ -64,7 +64,12 @@ template <typename SysProc> class VariableProcessor {
             }
 
             log::info("VariableProcessor::process", "Persisting results...");
+            std::size_t total_handles = 0;
+            for (auto &entry : sample_processors) {
+                total_handles += entry.second->expectedHandleCount();
+            }
             std::vector<ROOT::RDF::RResultHandle> handles;
+            handles.reserve(total_handles);
             for (auto &entry : sample_processors) {
                 entry.second->collectHandles(handles);
             }
