@@ -350,7 +350,7 @@ private:
         {{0, "data", "Data", kBlack, 1001},
          {1, "external", "Cosmic", kTeal + 2, 3345},
          {2, "out_fv", "Out FV", kYellow - 7, 1001},
-         {10, "numu_cc_np0pi", R"(#nu_{#mu}CC Np0pi)", kRed, 1001},
+         {10, "numu_cc_np0pi", R"(#nu_{#mu}CC Np0#pi)", kRed, 1001},
          {11, "numu_cc_0pnpi", R"(#nu_{#mu}CC 0p1#pi^{#pm})", kRed - 7, 1001},
          {12, "numu_cc_pi0gg", R"(#nu_{#mu}CC #pi^{0}/#gamma#gamma)", kOrange, 1001},
          {13, "numu_cc_npnpi", R"(#nu_{#mu}CC multi-#pi^{#pm})", kViolet, 1001},

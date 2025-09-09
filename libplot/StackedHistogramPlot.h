@@ -220,12 +220,12 @@ class StackedHistogramPlot : public IHistogramPlot {
             h_sig->SetLineStyle(kDashed);
             h_sig->SetLineWidth(2);
             h_sig->SetFillStyle(0);
-            std::string sig_label = "Signal (overlay";
-            if (signal_scale_ != 1.0) {
+            std::string sig_label = "Signal ";
+            /*if (signal_scale_ != 1.0) {
                 sig_label +=
-                    " (x" + this->formatWithCommas(signal_scale_, 2) + ")";
+                    " (x" + this->formatWithCommas(signal_scale_, 2);
             }
-            sig_label += ")";
+            sig_label += ")";*/
             legend_->AddEntry(h_sig, sig_label.c_str(), "l");
             cut_visuals_.push_back(h_sig);
         }
@@ -420,8 +420,8 @@ class StackedHistogramPlot : public IHistogramPlot {
         }
 
         std::string line2 =
-            "Beam, Runs: " + beam_name + ", " + runs_str +
-            " (" + pot_str + " pot)";
+            "Beam(s), Run(s): " + beam_name + ", " + runs_str +
+            " (" + pot_str + " POT)";
         std::string line3 = "Analysis Region: " +
                              region_analysis_.regionLabel() +
                              " (" +
