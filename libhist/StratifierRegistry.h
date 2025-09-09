@@ -352,13 +352,14 @@ private:
          {2, "out_fv", "Out FV", kYellow - 7, 1001},
          {10, "numu_cc_np0pi", R"(#nu_{#mu}CC Np0#pi)", kRed, 1001},
          {11, "numu_cc_0pnpi", R"(#nu_{#mu}CC 0p1#pi)", kRed - 7, 1001},
-         {12, "numu_cc_pi0gg",
-          R"(#nu_{#mu}CC #pi^{0}/#gamma#gamma)", kOrange, 1001},
+         {12, "numu_cc_pi0gg", R"(#nu_{#mu}CC #pi^{0}/#gamma#gamma)", kOrange,
+          1001},
          {13, "numu_cc_npnpi", R"(#nu_{#mu}CC multi-#pi)", kViolet, 1001},
          {14, "nc", R"(#nu_{x}NC)", kBlue, 1001},
          {15, "numu_cc_1s", R"(#nu_{#mu}CC 1s)", kSpring + 5, 1001},
          {16, "numu_cc_ms", R"(#nu_{#mu}CC Ms)", kGreen + 2, 1001},
          {17, "nue_cc", R"(#nu_{e}CC)", kMagenta, 1001},
+         {18, "numu_cc_other", R"(#nu_{#mu}CC Other)", kCyan + 2, 1001},
          {99, "other", "Other", kCyan, 1001}});
   }
 
