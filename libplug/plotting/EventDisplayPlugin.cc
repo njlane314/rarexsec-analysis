@@ -1,10 +1,14 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
+#include <fstream>
+#include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+#include <nlohmann/json.hpp>
 
 #include "PluginRegistry.h"
 #include "AnalysisDataLoader.h"
@@ -23,9 +27,17 @@ class EventDisplayPlugin : public IPlotPlugin {
         std::string sample;
         std::string region;
         SelectionQuery selection;
+        std::optional<std::string> selection_expr;
         int n_events{1};
         int image_size{800};
         std::filesystem::path output_directory{"./plots/event_displays"};
+        std::vector<std::string> planes{"U","V","W"};
+        std::string mode{"detector"};
+        std::string file_pattern{"{plane}_{run}_{sub}_{evt}"};
+        std::optional<unsigned> seed;
+        std::optional<std::string> order_by;
+        bool order_desc{true};
+        std::string manifest_path;
     };
 
     EventDisplayPlugin(const PluginArgs &args, AnalysisDataLoader *loader) : loader_(loader) {
@@ -42,12 +54,25 @@ class EventDisplayPlugin : public IPlotPlugin {
             dc.image_size = ed.value("image_size", 800);
             dc.output_directory = ed.value("output_directory", std::string{"./plots/event_displays"});
             dc.output_directory = std::filesystem::absolute(dc.output_directory).lexically_normal();
+            dc.planes = ed.value("planes", std::vector<std::string>{"U","V","W"});
+            dc.mode = ed.value("mode", std::string{"detector"});
+            dc.file_pattern = ed.value("file_pattern", std::string{"{plane}_{run}_{sub}_{evt}"});
+            if (ed.contains("seed")) dc.seed = ed.at("seed").get<unsigned>();
+            if (ed.contains("order_by")) {
+                dc.order_by = ed.at("order_by").get<std::string>();
+                dc.order_desc = ed.value("order_desc", true);
+            }
+            dc.manifest_path = ed.value("manifest", std::string{});
+            if (ed.contains("selection_expr")) dc.selection_expr = ed.at("selection_expr").get<std::string>();
             if (!dc.region.empty()) {
                 try {
                     dc.selection = sel_reg.get(dc.region);
                 } catch (const std::exception &) {
                     log::error("EventDisplayPlugin", "Unknown region:", dc.region);
                 }
+            }
+            if (dc.selection_expr) {
+                dc.selection = SelectionQuery(*dc.selection_expr);
             }
             configs_.push_back(std::move(dc));
         }
@@ -67,49 +92,74 @@ class EventDisplayPlugin : public IPlotPlugin {
             if (has_filter)
                 df = df.Filter(filter);
 
-            auto runs = df.Take<int>("run").GetValue();
-            auto subs = df.Take<int>("sub").GetValue();
-            auto evts = df.Take<int>("evt").GetValue();
+            if (cfg.order_by) {
+                log::warn("EventDisplayPlugin", "order_by not implemented; proceeding without ordering");
+            }
 
-            size_t n = std::min<size_t>(cfg.n_events, runs.size());
+            auto limited = df.Range(static_cast<ULong64_t>(cfg.n_events));
             std::filesystem::path out_dir = cfg.output_directory / cfg.sample;
 
-            for (size_t i = 0; i < n; ++i) {
-                int run = runs[i];
-                int sub = subs[i];
-                int evt = evts[i];
-                std::string expr = "run == " + std::to_string(run) + "&& sub == " + std::to_string(sub) +
-                                   "&& evt == " + std::to_string(evt);
-                auto edf = df.Filter(expr);
+            nlohmann::json manifest = nlohmann::json::array();
+            std::mutex manifest_mutex;
 
-                auto det_u_vec = edf.Take<std::vector<float>>("event_detector_image_u").GetValue();
-                auto det_v_vec = edf.Take<std::vector<float>>("event_detector_image_v").GetValue();
-                auto det_w_vec = edf.Take<std::vector<float>>("event_detector_image_w").GetValue();
+            const std::vector<std::string> cols{
+                "run","sub","evt",
+                "event_detector_image_u","event_detector_image_v","event_detector_image_w",
+                "semantic_image_u","semantic_image_v","semantic_image_w"
+            };
 
-                auto sem_u_vec = edf.Take<std::vector<int>>("semantic_image_u").GetValue();
-                auto sem_v_vec = edf.Take<std::vector<int>>("semantic_image_v").GetValue();
-                auto sem_w_vec = edf.Take<std::vector<int>>("semantic_image_w").GetValue();
+            auto cfg_copy = cfg; // capture by value
 
-                if (det_u_vec.empty() || det_v_vec.empty() || det_w_vec.empty())
-                    continue;
-                if (sem_u_vec.empty() || sem_v_vec.empty() || sem_w_vec.empty())
-                    continue;
+            limited.ForeachSlot([&](unsigned /*slot*/, int run, int sub, int evt,
+                                     const std::vector<float>& det_u,
+                                     const std::vector<float>& det_v,
+                                     const std::vector<float>& det_w,
+                                     const std::vector<int>&   sem_u,
+                                     const std::vector<int>&   sem_v,
+                                     const std::vector<int>&   sem_w){
 
-                std::array<std::string, 3> planes = {"U", "V", "W"};
-                for (size_t p = 0; p < planes.size(); ++p) {
-                    std::string tag = planes[p] + std::string("_") + std::to_string(run) + "_" + std::to_string(sub) +
-                                      "_" + std::to_string(evt);
-                    std::vector<float> det_data = p == 0 ? det_u_vec[0] : (p == 1 ? det_v_vec[0] : det_w_vec[0]);
-                    std::vector<int> sem_data = p == 0 ? sem_u_vec[0] : (p == 1 ? sem_v_vec[0] : sem_w_vec[0]);
+                auto formatTag = [](std::string pattern, const std::string& plane, int r, int s, int e){
+                    auto replace_all = [](std::string &str, const std::string &from, const std::string &to){
+                        size_t pos = 0;
+                        while ((pos = str.find(from, pos)) != std::string::npos) {
+                            str.replace(pos, from.size(), to);
+                            pos += to.size();
+                        }
+                    };
+                    replace_all(pattern, "{plane}", plane);
+                    replace_all(pattern, "{run}", std::to_string(r));
+                    replace_all(pattern, "{sub}", std::to_string(s));
+                    replace_all(pattern, "{evt}", std::to_string(e));
+                    return pattern;
+                };
 
-                    log::info("EventDisplayPlugin", "Generating", tag, "display");
+                auto process = [&](const std::string& plane,
+                                   const std::vector<float>& det,
+                                   const std::vector<int>& sem){
+                    std::string tag = formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
+                    if (cfg_copy.mode == "semantic") {
+                        SemanticDisplay s(tag, sem, cfg_copy.image_size, out_dir.string());
+                        s.drawAndSave();
+                    } else {
+                        DetectorDisplay d(tag, det, cfg_copy.image_size, out_dir.string());
+                        d.drawAndSave();
+                    }
+                    if (!cfg_copy.manifest_path.empty()) {
+                        std::lock_guard<std::mutex> lock(manifest_mutex);
+                        manifest.push_back({{"run",run},{"sub",sub},{"evt",evt},{"plane",plane},{"file",(out_dir/(tag+".png")).string()}});
+                    }
+                };
 
-                    DetectorDisplay det_disp(tag, det_data, cfg.image_size, out_dir.string());
-                    det_disp.drawAndSave();
-
-                    SemanticDisplay sem_disp(tag, sem_data, cfg.image_size, out_dir.string());
-                    sem_disp.drawAndSave();
+                for (auto const& plane : cfg_copy.planes) {
+                    if (plane == "U") process("U", det_u, sem_u);
+                    else if (plane == "V") process("V", det_v, sem_v);
+                    else if (plane == "W") process("W", det_w, sem_w);
                 }
+            }, cols);
+
+            if (!cfg.manifest_path.empty()) {
+                std::ofstream ofs(cfg.manifest_path);
+                ofs << manifest.dump(2);
             }
         }
     }
