@@ -15,7 +15,9 @@ The selection is defined in terms of the following variables:
 - optical filter requirement for simulated events:
   `(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)`
   (bypassed when `bnbdata == 1` or `extdata == 1`)
-- run‑dependent software trigger for Monte Carlo:
+- run‑dependent software trigger for Monte Carlo (falls back to the standard
+  `software_trigger` for BNB samples when the run‑dependent columns are
+  unavailable):
   - before run 16880: `software_trigger_pre > 0` (or `software_trigger_pre_ext > 0` for NuMI)
   - after run 16880: `software_trigger_post > 0` (or `software_trigger_post_ext > 0` for NuMI)
 - neutrino vertex inside the fiducial volume:

@@ -34,13 +34,15 @@ class ReconstructionProcessor : public IEventProcessor {
                         return run < 16880 ? pre > 0 : post > 0;
                     },
                     {"run", "software_trigger_pre_ext", "software_trigger_post_ext"});
-            } else {
+            } else if (gen3_df.HasColumn("software_trigger_pre")) {
                 swtrig_df = gen3_df.Define(
                     "software_trigger",
                     [](unsigned run, int pre, int post) {
                         return run < 16880 ? pre > 0 : post > 0;
                     },
                     {"run", "software_trigger_pre", "software_trigger_post"});
+            } else if (!gen3_df.HasColumn("software_trigger")) {
+                swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
             }
         } else {
             swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
