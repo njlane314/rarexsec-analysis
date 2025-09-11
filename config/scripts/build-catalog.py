@@ -1,6 +1,4 @@
-# build_sample_catalog.py
 from __future__ import annotations
-
 import argparse
 import concurrent.futures
 import hashlib
@@ -8,22 +6,21 @@ import json
 import logging
 import os
 import sys
+import sqlite3
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
-
-# Inlined dependencies from former sample_processing module
 import re
 import subprocess
 import shutil
 import uproot
+from typing import Set, Tuple, List, Dict
 
 SCHEMA_VERSION = "1.0"
+DEFAULT_RUN_DB = "/exp/uboone/data/uboonebeam/beamdb/run.db"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
-
-# ---- small helpers -----------------------------------------------------------
 
 TOKEN_MAP_STAGE = {
     "selection_beam": "sel-beam",
@@ -37,7 +34,6 @@ def norm_run(run: str) -> str:
     return f"r{digits}" if digits else run
 
 def split_beam_key(beam_key: str) -> tuple[str, str]:
-    # 'bnb' -> ('bnb','data'); 'bnb_ext' -> ('bnb','ext'); 'numi_fhc' -> ('numi','fhc'), etc.
     if "_" in beam_key:
         b, m = beam_key.split("_", 1)
         return b, m
@@ -84,15 +80,15 @@ def summarize_beams_for_name(beam_keys: list[str]) -> str:
     beams = set(beam_keys)
     has_bnb = any(k.startswith("bnb") for k in beams)
     has_nu  = any(k.startswith("numi") for k in beams)
-    if has_bnb and has_nu: return "nu+bnb"
-    if has_bnb: return "bnb"
+    if has_bnb and has_nu:
+        return "nu+bnb"
+    if has_bnb:
+        return "bnb"
     if has_nu:
         pols = sorted({k.split("_", 1)[1] for k in beams if "_" in k and k != "numi_ext"})
         pol_str = f"[{','.join(pols)}]" if pols else ""
         return f"nu{pol_str}"
     return "multi"
-
-# ---- sample processing utilities ---------------------------------------------
 
 def get_xml_entities(xml_path: Path, content: str | None = None) -> dict[str, str]:
     if content is None:
@@ -105,7 +101,6 @@ def run_command(command: list[str], execute: bool) -> bool:
     if not execute:
         print("[INFO] Dry run mode. HADD command not executed.")
         return True
-
     if shutil.which(command[0]) is None:
         print(
             f"[ERROR] Command '{command[0]}' not found. Ensure ROOT is set up by running:\n"
@@ -114,7 +109,6 @@ def run_command(command: list[str], execute: bool) -> bool:
             file=sys.stderr,
         )
         return False
-
     try:
         subprocess.run(command, check=True)
         print("[STATUS] HADD Execution successful.")
@@ -158,14 +152,74 @@ def get_total_pot_from_files_parallel(file_paths: list[str], max_workers: int) -
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict) -> str | None:
     return stage_outdirs.get(stage_name) if stage_name else None
 
-
 def pot_sum_via_iterate(input_dir: str) -> float:
-    """Fast POT summation across a directory without explicit file listing."""
     pot_sum = 0.0
     expr = f"{input_dir}/**/*.root:nuselection/SubRun"
     for chunk in uproot.iterate(expr, filter_name=["pot"], library="np", step_size="50 MB"):
         pot_sum += float(chunk["pot"].sum())
     return pot_sum
+
+def _extract_pairs_from_file(f: Path) -> Set[Tuple[int, int]]:
+    pairs: Set[Tuple[int, int]] = set()
+    try:
+        with uproot.open(f) as rf:
+            for tree_name in ("SubRuns", "nuselection/SubRun", "subrun", "subruns"):
+                if tree_name in rf:
+                    t = rf[tree_name]
+                    if all(b in t.keys() for b in ("run", "subrun")):
+                        run = t["run"].array(library="np")
+                        sub = t["subrun"].array(library="np")
+                        pairs |= set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
+                        return pairs
+            for tree_name in ("Events", "nuselection/Events"):
+                if tree_name in rf:
+                    t = rf[tree_name]
+                    if all(b in t.keys() for b in ("run", "subrun")):
+                        run = t["run"].array(library="np")
+                        sub = t["subrun"].array(library="np")
+                        pairs |= set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
+                        return pairs
+    except Exception as e:
+        print(f"    Warning: {f}: failed extracting (run,subrun): {e}", file=sys.stderr)
+    return pairs
+
+def _collect_pairs_from_files(files: List[str]) -> Set[Tuple[int, int]]:
+    pairs: Set[Tuple[int, int]] = set()
+    for p in files:
+        pairs |= _extract_pairs_from_file(Path(p))
+    return pairs
+
+def _sum_ext_triggers_from_pairs(run_db: str, pairs: Set[Tuple[int, int]]) -> tuple[int, List[Tuple[int, int]], Dict[int, int]]:
+    if not pairs:
+        return 0, [], {}
+    conn = sqlite3.connect(run_db)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("PRAGMA temp_store=MEMORY;")
+    cur.execute("CREATE TEMP TABLE pairs(run INTEGER, subrun INTEGER);")
+    cur.executemany("INSERT INTO pairs(run, subrun) VALUES (?, ?);", list(pairs))
+    total = cur.execute("""
+        SELECT IFNULL(SUM(r.EXTTrig), 0)
+        FROM runinfo r
+        JOIN pairs p ON r.run = p.run AND r.subrun = p.subrun;
+    """).fetchone()[0]
+    missing_rows = cur.execute("""
+        SELECT p.run, p.subrun
+        FROM pairs p
+        LEFT JOIN runinfo r ON r.run = p.run AND r.subrun = p.subrun
+        WHERE r.run IS NULL;
+    """).fetchall()
+    missing_pairs = [(int(x["run"]), int(x["subrun"])) for x in missing_rows]
+    by_run_rows = cur.execute("""
+        SELECT r.run AS run, IFNULL(SUM(r.EXTTrig), 0) AS ext_sum
+        FROM runinfo r
+        JOIN pairs p ON r.run = p.run AND r.subrun = p.subrun
+        GROUP BY r.run
+        ORDER BY r.run;
+    """).fetchall()
+    by_run = {int(r["run"]): int(r["ext_sum"]) for r in by_run_rows}
+    conn.close()
+    return int(total), missing_pairs, by_run
 
 def process_sample_entry(
     entry: dict,
@@ -173,26 +227,19 @@ def process_sample_entry(
     stage_outdirs: dict,
     run_pot: float,
     ext_triggers: int,
+    run_db: str,
     jobs: int,
     is_detvar: bool = False,
 ) -> bool:
-    # HADD aggregation is always performed; the configuration no longer
-    # supports disabling it.
-
     if not entry.get("active", True):
         sample_key = entry.get("sample_key", "UNKNOWN")
         print(f"  Skipping {'detector variation' if is_detvar else 'sample'}: {sample_key} (marked as inactive)")
         return False
-
     stage_name = entry.get("stage_name")
     sample_key = entry.get("sample_key")
     sample_type = entry.get("sample_type", "mc")
-
     print(f"  Processing {'detector variation' if is_detvar else 'sample'}: {sample_key} (from stage: {stage_name})")
-    print(
-        f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: Enabled"
-    )
-
+    print(f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: Enabled")
     input_dir = resolve_input_dir(stage_name, stage_outdirs)
     if not input_dir:
         print(
@@ -200,10 +247,8 @@ def process_sample_entry(
             file=sys.stderr,
         )
         return False
-
     output_file = processed_analysis_path / f"{sample_key}.root"
     entry["relative_path"] = output_file.name
-
     root_files = list(list_root_files(input_dir))
     if not root_files:
         print(
@@ -222,17 +267,24 @@ def process_sample_entry(
             )
             return False
         source_files = [str(output_file)]
-
     if sample_type == "mc" or is_detvar:
         if source_files:
             pot = get_total_pot_from_files_parallel(source_files, jobs)
         else:
             pot = pot_sum_via_iterate(input_dir)
         entry["pot"] = pot if pot != 0.0 else run_pot
-    elif sample_type in {"data", "ext"}:
+    elif sample_type == "ext":
+        entry["pot"] = 0.0
+        files_for_pairs = source_files if source_files else list(list_root_files(input_dir))
+        pairs = _collect_pairs_from_files(list(files_for_pairs))
+        total_ext, missing_pairs, by_run = _sum_ext_triggers_from_pairs(run_db, pairs)
+        entry["triggers"] = int(total_ext)
+        print(f"    EXT triggers (from DB): {total_ext}")
+        if missing_pairs:
+            print(f"    Note: {len(missing_pairs)} (run,subrun) pairs seen in files not found in DB (showing up to 5): {missing_pairs[:5]}")
+    elif sample_type == "data":
         entry["pot"] = run_pot
         entry["triggers"] = ext_triggers
-
     entry.pop("stage_name", None)
     return True
 
@@ -260,92 +312,69 @@ def default_xmls() -> list[Path]:
         Path("/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_detvar.xml"),
     ]
 
-# ---- core --------------------------------------------------------------------
-
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-
     ap = argparse.ArgumentParser(description="Aggregate ROOT samples from a recipe into a catalog.")
     ap.add_argument("--recipe", type=Path, required=True, help="Path to recipe JSON (instance).")
     ap.add_argument("--runs", default="", help='Comma-separated runs to process (e.g. "run1,run2"). Empty = all.')
     ap.add_argument("--outdir", type=Path, default=repo_root / "catalogs", help="Directory to write the catalog.")
     ap.add_argument("--xml", type=Path, nargs="*", default=None, help="Workflow XML files to parse (entities/outdirs).")
     ap.add_argument("--project", default=None, help="Project slug for filename; defaults to recipe['project'].")
-    ap.add_argument(
-        "--jobs",
-        type=int,
-        default=min(8, os.cpu_count() or 1),
-        help="Max threads for HADD and POT aggregation",
-    )
+    ap.add_argument("--run-db", default=DEFAULT_RUN_DB, help=f"Path to run.db for EXTTrig lookup (default: {DEFAULT_RUN_DB})")
+    ap.add_argument("--jobs", type=int, default=min(8, os.cpu_count() or 1), help="Max threads for HADD and POT aggregation")
     args = ap.parse_args()
-
     recipe_path = args.recipe
     with open(recipe_path) as f:
         cfg = json.load(f)
-
-    # Hard guards
     if cfg.get("role") != "recipe":
         sys.exit(f"Expected role='recipe', found '{cfg.get('role')}'.")
     if cfg.get("recipe_kind", "instance") == "template":
         sys.exit("Refusing to run on a template. Copy it and set recipe_kind='instance'.")
-
     project = args.project or cfg.get("project", "proj")
     runs_to_process = [r.strip() for r in args.runs.split(",") if r.strip()]
     produced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     tag = version_tag()
     sha = sha7(recipe_path)
-
     xml_paths = args.xml if args.xml else default_xmls()
     _entities, stage_outdirs = load_xml_context(xml_paths)
-
     ntuple_dir = Path(cfg["ntuple_base_directory"])
     ntuple_dir.mkdir(parents=True, exist_ok=True)
-
     beams_in: dict = cfg.get("run_configurations", {})
     runs_out: dict = {}
-
     for beam_key, run_block in beams_in.items():
-        beam_active = bool(run_block.get("active", True))  # <-- beam-level switch (default: True)
+        beam_active = bool(run_block.get("active", True))
         if not beam_active:
             logging.info("Skipping beam '%s' (active=false).", beam_key)
             continue
-
         beamline, mode = split_beam_key(beam_key)
         for run, run_details in run_block.items():
             if run == "active":
-                continue  # not a run
+                continue
             if runs_to_process and run not in runs_to_process:
                 continue
-
             logging.info("Processing %s:%s", beam_key, run)
-
             is_ext = (mode == "ext") or beam_key.endswith("_ext")
             pot = float(run_details.get("pot", 0.0)) if not is_ext else 0.0
             ext_trig = int(run_details.get("ext_triggers", 0)) if is_ext else 0
-
             if not is_ext and pot == 0.0:
                 logging.warning("No POT provided for %s:%s (on-beam).", beam_key, run)
-
             samples_in = run_details.get("samples", []) or []
             samples_out = []
             for sample in samples_in:
                 s = dict(sample)
-
                 origin = s.get("sample_type", "unknown")
                 subset = infer_subset(s.get("sample_key", ""), origin)
                 stage_name = s.get("stage_name", "selection_beam")
                 s["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, None)
-
                 ok = process_sample_entry(
                     s,
                     ntuple_dir,
                     stage_outdirs,
                     pot,
                     ext_trig,
+                    args.run_db,
                     args.jobs,
                 )
-
-                # detector variations (inherit processing)
                 if ok and "detector_variations" in s:
                     new_vars = []
                     for dv in s["detector_variations"]:
@@ -358,29 +387,20 @@ def main() -> None:
                             stage_outdirs,
                             pot,
                             ext_trig,
+                            args.run_db,
                             args.jobs,
                             is_detvar=True,
                         )
                         new_vars.append(dv2)
                     s["detector_variations"] = new_vars
-
                 samples_out.append(s)
-
-            # write back run block
             run_copy = dict(run_details)
             run_copy["samples"] = samples_out
             runs_out.setdefault(beam_key, {})[run] = run_copy
-
-    # emit catalog
     outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
-
-    # Use a stable name for the catalog output so that downstream study
-    # programs can reference it without needing to know run- or
-    # beam-specific tokens.
     out_name = "samples.json"
     out_path = outdir / out_name
-
     catalog = {
         "role": "catalog",
         "schema_version": SCHEMA_VERSION,
@@ -392,10 +412,8 @@ def main() -> None:
             "run_configurations": runs_out,
         },
     }
-
     with open(out_path, "w") as f:
         json.dump(catalog, f, indent=4)
-
     logging.info("Wrote catalog: %s", out_path)
 
 if __name__ == "__main__":
