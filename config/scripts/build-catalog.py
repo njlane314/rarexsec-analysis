@@ -427,8 +427,8 @@ def main() -> None:
     ntuple_dir = Path(cfg["ntuple_base_directory"])
     ntuple_dir.mkdir(parents=True, exist_ok=True)
 
-    beams_in: dict = cfg.get("run_configurations", {})
-    runs_out: dict = {}
+    beams_in: dict = cfg.get("beamlines", cfg.get("run_configurations", {}))
+    beamlines_out: dict = {}
 
     for beam_key, run_block in beams_in.items():
         beam_active = bool(run_block.get("active", True))
@@ -493,7 +493,7 @@ def main() -> None:
 
             run_copy = dict(run_details)
             run_copy["samples"] = samples_out
-            runs_out.setdefault(beam_key, {})[run] = run_copy
+            beamlines_out.setdefault(beam_key, {})[run] = run_copy
 
     outdir.mkdir(parents=True, exist_ok=True)
     out_path = outdir / "samples.json"
@@ -506,7 +506,7 @@ def main() -> None:
         "source_recipe_hash": sha,
         "samples": {
             "ntupledir": cfg["ntuple_base_directory"],
-            "run_configurations": runs_out,
+            "beamlines": beamlines_out,
         },
     }
 

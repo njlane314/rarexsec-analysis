@@ -6,7 +6,7 @@
     "source_recipe_hash": "8b0e9b0",
     "samples": {
         "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
-        "run_configurations": {
+        "beamlines": {
             "bnb": {
                 "run1": {
                     "pot": 3.332e+20,
