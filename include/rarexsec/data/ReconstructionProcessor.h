@@ -27,12 +27,21 @@ class ReconstructionProcessor : public IEventProcessor {
 
         ROOT::RDF::RNode swtrig_df(gen3_df);
         if (st == SampleOrigin::kMonteCarlo) {
-            swtrig_df = gen3_df.Define(
-                "software_trigger",
-                [](unsigned run, int pre, int post) {
-                    return run < 16880 ? pre > 0 : post > 0;
-                },
-                {"run", "software_trigger_pre", "software_trigger_post"});
+            if (gen3_df.HasColumn("software_trigger_pre_ext")) {
+                swtrig_df = gen3_df.Define(
+                    "software_trigger",
+                    [](unsigned run, int pre, int post) {
+                        return run < 16880 ? pre > 0 : post > 0;
+                    },
+                    {"run", "software_trigger_pre_ext", "software_trigger_post_ext"});
+            } else {
+                swtrig_df = gen3_df.Define(
+                    "software_trigger",
+                    [](unsigned run, int pre, int post) {
+                        return run < 16880 ? pre > 0 : post > 0;
+                    },
+                    {"run", "software_trigger_pre", "software_trigger_post"});
+            }
         } else {
             swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
         }
