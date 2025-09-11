@@ -126,8 +126,9 @@ number of built‑in options:
 
 - `EMPTY` – no event selection (`NONE` rule)
 - `QUALITY` – requires the `quality_event` preselection. For Monte Carlo
-  samples this includes a run‑dependent software trigger: runs before 16880 use
-  `software_trigger_pre` while later runs use `software_trigger_post`.
+  samples this includes a run‑dependent software trigger via the
+  `software_trigger` branch, which uses `software_trigger_pre` before run 16880
+  and `software_trigger_post` afterward.
 - `MUON` – selects events containing a reconstructed muon
 - `NUMU_CC` – selects charged-current νµ events
 - `QUALITY_NUMU_CC` – combines the quality preselection with the νµ CC rule
