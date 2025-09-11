@@ -1,102 +1,242 @@
+# aggregate_samples.py
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
+import logging
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 
 from .sample_processing import get_xml_entities, process_sample_entry
 
-def main() -> None:
-    config_dir = Path(__file__).resolve().parents[1]
-    DEFINITIONS_PATH = config_dir / "data" / "data.json"
-    XML_PATHS = [
-        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_core.xml",
-        "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_detvar.xml",
-    ]
-    CONFIG_PATH = config_dir / "data" / "samples.json"
-    RUNS_PROCESS = ["run1"]
+SCHEMA_VERSION = "1.0"
 
-    input_definitions_path = DEFINITIONS_PATH
+logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 
-    with open(input_definitions_path) as f:
-        config = json.load(f)
+# ---- small helpers -----------------------------------------------------------
 
+TOKEN_MAP_STAGE = {
+    "selection_beam": "sel-beam",
+    "selection_ext": "sel-ext",
+    "selection_strangeness": "sel-strange",
+    "selection_dirt": "sel-dirt",
+}
+
+def norm_run(run: str) -> str:
+    digits = "".join(ch for ch in run if ch.isdigit())
+    return f"r{digits}" if digits else run
+
+def split_beam_key(beam_key: str) -> tuple[str, str]:
+    # 'bnb' -> ('bnb','data'); 'bnb_ext' -> ('bnb','ext'); 'numi_fhc' -> ('numi','fhc'), etc.
+    if "_" in beam_key:
+        b, m = beam_key.split("_", 1)
+        return b, m
+    return beam_key, "data"
+
+def infer_subset(sample_key: str, sample_type: str) -> str:
+    key = (sample_key or "").lower()
+    if "strange" in key:
+        return "strange"
+    if "dirt" in key or sample_type == "dirt":
+        return "dirt"
+    return "inc"
+
+def dataset_id(beamline: str, mode: str, run: str, origin: str, subset: str, stage_name: str, detvar: str | None = None) -> str:
+    parts = [beamline, mode, norm_run(run), origin, subset, TOKEN_MAP_STAGE.get(stage_name, stage_name)]
+    if detvar:
+        parts.append(detvar)
+    return ".".join(parts)
+
+def sha7(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()[:7]
+
+def version_tag() -> str:
+    return datetime.now(timezone.utc).strftime("v%Y%m%d")
+
+def runset_token(runs: list[str]) -> str:
+    if not runs:
+        return "all"
+    if len(runs) == 1:
+        return norm_run(runs[0])
+    try:
+        nums = sorted(int("".join(ch for ch in r if ch.isdigit())) for r in runs)
+        if nums == list(range(nums[0], nums[-1] + 1)):
+            return f"r{nums[0]}-r{nums[-1]}"
+    except Exception:
+        pass
+    return ",".join(norm_run(r) for r in runs)
+
+def summarize_beams_for_name(beam_keys: list[str]) -> str:
+    beams = set(beam_keys)
+    has_bnb = any(k.startswith("bnb") for k in beams)
+    has_nu  = any(k.startswith("numi") for k in beams)
+    if has_bnb and has_nu: return "nu+bnb"
+    if has_bnb: return "bnb"
+    if has_nu:
+        pols = sorted({k.split("_", 1)[1] for k in beams if "_" in k and k != "numi_ext"})
+        pol_str = f"[{','.join(pols)}]" if pols else ""
+        return f"nu{pol_str}"
+    return "multi"
+
+def load_xml_context(xml_paths: list[Path]) -> tuple[dict[str, str], dict[str, str]]:
     entities: dict[str, str] = {}
     stage_outdirs: dict[str, str] = {}
-    for xml in XML_PATHS:
-        xml_path = Path(xml)
-        entities.update(get_xml_entities(xml_path))
-        tree = ET.parse(xml_path)
-        project_node = tree.find("project")
-        if project_node is None:
-            print(f"Error: Could not find <project> tag in XML file '{xml}'.", file=sys.stderr)
+    for xml in xml_paths:
+        entities.update(get_xml_entities(xml))
+        tree = ET.parse(xml)
+        proj = tree.find("project")
+        if proj is None:
+            logging.error("Could not find <project> in XML '%s'", xml)
             continue
-        stage_outdirs.update(
-            {
-                s.get("name"): s.find("outdir").text
-                for s in project_node.findall("stage")
-                if s.find("outdir") is not None
-            }
-        )
+        for s in proj.findall("stage"):
+            outdir = s.find("outdir")
+            if outdir is not None and outdir.text:
+                stage_outdirs[s.get("name")] = outdir.text
+    return entities, stage_outdirs
 
-    processed_analysis_path = Path(config["ntuple_base_directory"])
-    processed_analysis_path.mkdir(parents=True, exist_ok=True)
+def default_xmls() -> list[Path]:
+    return [
+        Path("/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_core.xml"),
+        Path("/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_detvar.xml"),
+    ]
 
-    for beam, run_configs in config.get("run_configurations", {}).items():
-        for run, run_details in run_configs.items():
-            if RUNS_PROCESS and run not in RUNS_PROCESS:
-                print(f"\nSkipping run: {run} (not in specified RUNS_PROCESS list)")
+# ---- core --------------------------------------------------------------------
+
+def main() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+
+    ap = argparse.ArgumentParser(description="Aggregate ROOT samples from a recipe into a catalog.")
+    ap.add_argument("--recipe", required=True, help="Path to recipe JSON (instance).")
+    ap.add_argument("--runs", default="", help='Comma-separated runs to process (e.g. "run1,run2"). Empty = all.')
+    ap.add_argument("--outdir", default=str(repo_root / "catalogs"), help="Directory to write the catalog.")
+    ap.add_argument("--xml", nargs="*", default=None, help="Workflow XML files to parse (entities/outdirs).")
+    ap.add_argument("--project", default=None, help="Project slug for filename; defaults to recipe['project'].")
+    args = ap.parse_args()
+
+    recipe_path = Path(args.recipe)
+    with open(recipe_path) as f:
+        cfg = json.load(f)
+
+    # Hard guards
+    if cfg.get("role") != "recipe":
+        sys.exit(f"Expected role='recipe', found '{cfg.get('role')}'.")
+    if cfg.get("recipe_kind", "instance") == "template":
+        sys.exit("Refusing to run on a template. Copy it and set recipe_kind='instance'.")
+
+    project = args.project or cfg.get("project", "proj")
+    runs_to_process = [r.strip() for r in args.runs.split(",") if r.strip()]
+    produced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    tag = version_tag()
+    sha = sha7(recipe_path)
+
+    xml_paths = [Path(x) for x in args.xml] if args.xml else default_xmls()
+    entities, stage_outdirs = load_xml_context(xml_paths)
+
+    ntuple_dir = Path(cfg["ntuple_base_directory"])
+    ntuple_dir.mkdir(parents=True, exist_ok=True)
+
+    beams_in: dict = cfg.get("run_configurations", {})
+    beamlines_out: dict = {}
+    run_cfgs_out: dict = {}
+
+    for beam_key, run_block in beams_in.items():
+        beam_active = bool(run_block.get("active", True))  # <-- beam-level switch (default: True)
+        if not beam_active:
+            logging.info("Skipping beam '%s' (active=false).", beam_key)
+            continue
+
+        beamline, mode = split_beam_key(beam_key)
+        for run, run_details in run_block.items():
+            if run == "active":
+                continue  # not a run
+            if runs_to_process and run not in runs_to_process:
                 continue
 
-            print(f"\nProcessing run: {run}")
+            logging.info("Processing %s:%s", beam_key, run)
 
-            run_pot = run_details.get("torb_target_pot_wcut", 0.0)
-            ext_triggers = int(run_details.get("ext_triggers", 0))
+            is_ext = (mode == "ext") or beam_key.endswith("_ext")
+            pot = float(run_details.get("pot", 0.0)) if not is_ext else 0.0
+            ext_trig = int(run_details.get("ext_triggers", 0)) if is_ext else 0
 
-            if run_pot == 0.0:
-                print(
-                    f"  Warning: No torb_target_pot_wcut specified for run '{run}'. MC scaling might be incorrect.",
-                    file=sys.stderr,
-                )
-            else:
-                print(f"  Using run POT: {run_pot:.4e}")
+            if not is_ext and pot == 0.0:
+                logging.warning("No POT provided for %s:%s (on-beam).", beam_key, run)
 
-            for sample in run_details.get("samples", []):
-                if process_sample_entry(
-                    sample,
-                    processed_analysis_path,
+            samples_in = run_details.get("samples", []) or []
+            samples_out = []
+            for sample in samples_in:
+                s = dict(sample)
+                # ignore legacy do_hadd/active if present
+                s.pop("do_hadd", None)
+
+                origin = s.get("sample_type", "unknown")
+                subset = infer_subset(s.get("sample_key", ""), origin)
+                stage_name = s.get("stage_name", "selection_beam")
+                s["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, None)
+
+                ok = process_sample_entry(
+                    s,
+                    ntuple_dir,
                     stage_outdirs,
                     entities,
-                    run_pot,
-                    ext_triggers,
-                ):
-                    if "detector_variations" in sample:
-                        for detvar_sample in sample["detector_variations"]:
-                            process_sample_entry(
-                                detvar_sample,
-                                processed_analysis_path,
-                                stage_outdirs,
-                                entities,
-                                run_pot,
-                                ext_triggers,
-                                is_detvar=True,
-                            )
+                    pot,
+                    ext_trig,
+                )
 
-    output_path = CONFIG_PATH
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    samples_cfg = {
+                # detector variations (inherit processing)
+                if ok and "detector_variations" in s:
+                    new_vars = []
+                    for dv in s["detector_variations"]:
+                        dv2 = dict(dv)
+                        dv2.pop("do_hadd", None)
+                        detvar = dv2.get("variation_type")
+                        dv2["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, detvar)
+                        process_sample_entry(
+                            dv2, ntuple_dir, stage_outdirs, entities, pot, ext_trig, is_detvar=True
+                        )
+                        new_vars.append(dv2)
+                    s["detector_variations"] = new_vars
+
+                samples_out.append(s)
+
+            # write back run block
+            run_copy = dict(run_details)
+            run_copy["samples"] = samples_out
+            beamlines_out.setdefault(beam_key, {})[run] = run_copy
+            run_cfgs_out.setdefault(beam_key, {})[run] = run_copy
+
+    # emit catalog
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    beam_scope = summarize_beams_for_name(list(beamlines_out.keys()))
+    runs_token = runset_token(runs_to_process)
+    out_name = f"{project}.{beam_scope}.{runs_token}.catalog.{tag}-g{sha}.json"
+    out_path = outdir / out_name
+
+    catalog = {
+        "role": "catalog",
+        "schema_version": SCHEMA_VERSION,
+        "produced_at": produced_at,
+        "source_recipe_path": str(recipe_path),
+        "source_recipe_hash": sha,
         "samples": {
-            "ntupledir": config["ntuple_base_directory"],
-            "beamlines": config["run_configurations"],
-            "run_configurations": config["run_configurations"],
-        }
+            "ntupledir": cfg["ntuple_base_directory"],
+            "beamlines": beamlines_out,
+            "run_configurations": run_cfgs_out,
+        },
     }
-    with open(output_path, "w") as f:
-        json.dump(samples_cfg, f, indent=4)
 
-    print(f"\n--- Workflow Complete ---")
-    print(f"Successfully generated configuration at '{output_path}'")
+    with open(out_path, "w") as f:
+        json.dump(catalog, f, indent=4)
+
+    logging.info("Wrote catalog: %s", out_path)
 
 if __name__ == "__main__":
     main()
