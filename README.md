@@ -6,8 +6,6 @@ source .container.sh
 source .setup.sh
 source .build.sh
 ```
-If [ccache](https://ccache.dev/) is available on your system it will be used
-automatically to cache compilation results, speeding up subsequent builds.
 
 ## Configuration
 ```bash
