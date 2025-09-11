@@ -165,30 +165,51 @@ def pot_sum_via_iterate(input_dir: str) -> float:
     return pot_sum
 
 def _extract_pairs_from_file(f: Path) -> Set[Tuple[int, int]]:
-    """Return unique (run, subrun) pairs found in ``f``.
-
-    Older ntuples exposed the relevant information in predictable trees
-    (``SubRuns`` or ``Events``).  Newer productions may nest the trees
-    within additional directories (e.g. ``nuselection/BlipRecoAlg``).
-    Instead of checking a short list of hard-coded paths, walk the file
-    and inspect every ``TTree`` for ``run`` and ``subrun`` branches.
-    """
-
     pairs: Set[Tuple[int, int]] = set()
     try:
         with uproot.open(f) as rf:
-            # ``walk`` recursively yields (path, object) pairs for all
-            # objects in the file.  Filter for TTrees and collect any that
-            # provide ``run`` and ``subrun`` branches.
-            for _path, obj in rf.walk(filter_classname="TTree"):
+            candidates = [
+                "nuselection/SubRun", "nuselection/SubRuns",
+                "SubRun", "SubRuns",
+                "subrun", "subruns",
+                "nuselection/Events", "Events",
+            ]
+
+            def read_pairs(t) -> Set[Tuple[int, int]]:
                 try:
-                    if all(b in obj.keys() for b in ("run", "subrun")):
-                        run = obj["run"].array(library="np")
-                        sub = obj["subrun"].array(library="np")
-                        pairs |= set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
+                    # case-insensitive branch lookup
+                    bmap = {k.lower(): k for k in t.keys()}
+                    if "run" in bmap and "subrun" in bmap:
+                        run = t[bmap["run"]].array(library="np")
+                        sub = t[bmap["subrun"]].array(library="np")
+                        return set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
                 except Exception:
-                    # Skip unreadable trees and continue searching.
+                    pass
+                return set()
+
+            # Try explicit common paths first
+            for name in candidates:
+                try:
+                    t = rf[name]  # works for nested paths like "nuselection/SubRun"
+                except Exception:
                     continue
+                got = read_pairs(t)
+                if got:
+                    return got
+
+            # Fallback: scan every TTree recursively
+            try:
+                for path, cls in (rf.classnames(recursive=True) or {}).items():
+                    if cls == "TTree":
+                        try:
+                            got = read_pairs(rf[path])
+                        except Exception:
+                            continue
+                        if got:
+                            pairs |= got
+                return pairs
+            except Exception:
+                return pairs
     except Exception as e:
         print(f"    Warning: {f}: failed extracting (run,subrun): {e}", file=sys.stderr)
     return pairs
@@ -335,11 +356,17 @@ def process_sample_entry(
         entry["pot"] = pot if pot != 0.0 else run_pot
     elif sample_type == "ext":
         entry["pot"] = 0.0
-        files_for_pairs = source_files if source_files else list(list_root_files(input_dir))
+        # Prefer original inputs; hadded outputs may not expose SubRun as expected.
+        files_for_pairs = list(list_root_files(input_dir)) or source_files
         pairs = _collect_pairs_from_files(list(files_for_pairs))
         total_ext, missing_pairs, by_run = _sum_ext_triggers_from_pairs(run_db, pairs)
         entry["triggers"] = int(total_ext)
         print(f"    EXT triggers (from DB): {total_ext}")
+        if not pairs:
+            print(
+                "    Note: No (run, subrun) pairs found in EXT files; check tree names/paths.",
+                file=sys.stderr,
+            )
         if missing_pairs:
             print(f"    Note: {len(missing_pairs)} (run,subrun) pairs seen in files not found in DB (showing up to 5): {missing_pairs[:5]}")
     elif sample_type == "data":
