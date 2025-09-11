@@ -1,7 +1,7 @@
 #include <rarexsec/flow/Study.h>
-#include <rarexsec/flow/Display.h>
-#include <rarexsec/flow/Helpers.h>
-#include <rarexsec/flow/Plots.h>
+#include <rarexsec/flow/EventDisplayBuilder.h>
+#include <rarexsec/flow/Where.h>
+#include <rarexsec/flow/PlotBuilders.h>
 using namespace analysis::dsl;
 
 int main() {
