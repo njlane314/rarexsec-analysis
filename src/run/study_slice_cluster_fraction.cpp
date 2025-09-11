@@ -5,7 +5,7 @@ using namespace analysis::dsl;
 
 int main() {
   auto study = Study("Slice Cluster Fraction")
-    .data("config/data/samples.json")
+    .data("config/catalogs/samples.json")
     .region("SINGLE_SLICE", where("in_reco_fiducial && (num_slices == 1)"))
     .var("slice_cluster_fraction")
     .plot(stack("slice_cluster_fraction").in("SINGLE_SLICE").signal("inclusive_strange_channels").logY())

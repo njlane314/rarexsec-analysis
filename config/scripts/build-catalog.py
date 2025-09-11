@@ -375,9 +375,10 @@ def main() -> None:
     outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
 
-    beam_scope = summarize_beams_for_name(list(runs_out.keys()))
-    runs_token = runset_token(runs_to_process)
-    out_name = f"{project}.{beam_scope}.{runs_token}.catalog.{tag}-g{sha}.json"
+    # Use a stable name for the catalog output so that downstream study
+    # programs can reference it without needing to know run- or
+    # beam-specific tokens.
+    out_name = "samples.json"
     out_path = outdir / out_name
 
     catalog = {

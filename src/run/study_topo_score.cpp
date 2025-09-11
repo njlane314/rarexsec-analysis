@@ -6,7 +6,7 @@ using namespace analysis::dsl;
 
 int main() {
   auto study = Study("Topo score")
-    .data("config/data/samples.json")
+    .data("config/catalogs/samples.json")
     .region("PRE_TOPO", where("in_reco_fiducial && (num_slices == 1) && (optical_filter_pe_beam > 20)"))
     .var("topological_score")
     .plot(stack("topological_score").in("PRE_TOPO").signal("inclusive_strange_channels").logY())
