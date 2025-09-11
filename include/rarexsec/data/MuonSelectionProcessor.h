@@ -64,7 +64,9 @@ private:
            const ROOT::RVec<float> &start_z, const ROOT::RVec<float> &end_x,
            const ROOT::RVec<float> &end_y, const ROOT::RVec<float> &end_z,
            const ROOT::RVec<int> &gens, const ROOT::RVec<float> &mcs,
-           const ROOT::RVec<float> &range, const ROOT::RVec<float> &avg) {
+           const ROOT::RVec<float> &range, const ROOT::RVec<float> &avg,
+           const ROOT::RVec<int> &hits_u, const ROOT::RVec<int> &hits_v,
+           const ROOT::RVec<int> &hits_y) {
           ROOT::RVec<bool> mask(scores.size());
           const float min_x = 10.f, max_x = 246.f;
           const float min_y = -105.f, max_y = 105.f;
@@ -79,7 +81,8 @@ private:
             mask[i] =
                 (scores[i] > 0.8f && llr[i] > 0.0f && lengths[i] > 5.0f &&
                  dists[i] < 4.0f && gens[i] == 2 && mcs[i] > 0.0f &&
-                 range[i] > 0.0f && avg[i] < 3.0f && fid_start && fid_end);
+                 range[i] > 0.0f && avg[i] < 3.0f && fid_start && fid_end &&
+                 hits_u[i] > 0 && hits_v[i] > 0 && hits_y[i] > 0);
           }
           return mask;
         },
@@ -87,7 +90,8 @@ private:
          "track_distance_to_vertex", "track_start_x", "track_start_y",
          "track_start_z", "track_end_x", "track_end_y", "track_end_z",
          "pfp_generations", "trk_mcs_muon_mom_v", "trk_range_muon_mom_v",
-         "trk_rr_dedx_avg"});
+         "trk_rr_dedx_avg", "pfp_num_plane_hits_U", "pfp_num_plane_hits_V",
+         "pfp_num_plane_hits_Y"});
   }
 
   ROOT::RDF::RNode extractMuonFeatures(ROOT::RDF::RNode df) const {
