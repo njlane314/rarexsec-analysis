@@ -3,7 +3,7 @@ import pytest
 np = pytest.importorskip("numpy")
 uproot = pytest.importorskip("uproot")
 
-import config.sample_processing as sp
+import config.scripts.sample_processing as sp
 
 
 def test_collect_run_subrun_pairs_from_subrun_tree(tmp_path):

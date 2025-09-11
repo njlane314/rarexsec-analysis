@@ -149,7 +149,7 @@ def main():
         "total_ext_triggers": total_ext,
         "by_run_ext_triggers": by_run,
         "missing_pairs": missing_pairs[:50],  # cap preview
-        "notes": "Copy 'total_ext_triggers' into config/data.json as 'ext_triggers' for the EXT sample."
+        "notes": "Copy 'total_ext_triggers' into config/data/data.json as 'ext_triggers' for the EXT sample."
     }
 
     outp = Path(args.out)

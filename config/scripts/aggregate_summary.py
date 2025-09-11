@@ -5,18 +5,19 @@ import sys
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from sample_processing import get_xml_entities, process_sample_entry
+from .sample_processing import get_xml_entities, process_sample_entry
 
 def main() -> None:
-    DEFINITIONS_PATH = "config/data.json"
+    config_dir = Path(__file__).resolve().parents[1]
+    DEFINITIONS_PATH = config_dir / "data" / "data.json"
     XML_PATHS = [
         "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_core.xml",
         "/exp/uboone/app/users/nlane/production/strangeness_mcc9/srcs/ubana/ubana/searchingforstrangeness/xml/numi_fhc_workflow_detvar.xml",
     ]
-    CONFIG_PATH = "config/samples.json"
+    CONFIG_PATH = config_dir / "data" / "samples.json"
     RUNS_PROCESS = ["run1"]
 
-    input_definitions_path = Path(DEFINITIONS_PATH)
+    input_definitions_path = DEFINITIONS_PATH
 
     with open(input_definitions_path) as f:
         config = json.load(f)
@@ -82,7 +83,7 @@ def main() -> None:
                                 is_detvar=True,
                             )
 
-    output_path = Path(CONFIG_PATH)
+    output_path = CONFIG_PATH
     output_path.parent.mkdir(parents=True, exist_ok=True)
     samples_cfg = {
         "samples": {

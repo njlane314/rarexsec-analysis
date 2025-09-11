@@ -7,7 +7,7 @@ using namespace analysis::dsl;
 
 int main() {
   auto s = Study("NUMU CC end-to-end")
-    .data("config/samples.json")
+    .data("config/data/samples.json")
     .region("NUMU_CC", where("QUALITY && NUMU_CC"))
     .var("topological_score")
     .plot(
