@@ -4,6 +4,9 @@ add_executable(study_topo_score
 add_executable(study_all
   study_all.cpp)
 
+add_executable(study_slice_cluster_fraction
+  study_slice_cluster_fraction.cpp)
+
 target_link_libraries(study_topo_score PRIVATE
   libcore
   libplug
@@ -34,5 +37,20 @@ target_link_libraries(study_all PRIVATE
   TMVA
   dl)
 
-set_target_properties(study_topo_score study_all PROPERTIES
+target_link_libraries(study_slice_cluster_fraction PRIVATE
+  libcore
+  libplug
+  libdata
+  libhist
+  libplot
+  libsyst
+  libutils
+  Eigen3::Eigen
+  nlohmann_json::nlohmann_json
+  ${ROOT_LIBRARIES}
+  TBB::tbb
+  TMVA
+  dl)
+
+set_target_properties(study_topo_score study_all study_slice_cluster_fraction PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
