@@ -50,8 +50,7 @@ private:
                            end_z[i] > min_z && end_z[i] < max_z;
             mask[i] =
                 (scores[i] > 0.8f && llr[i] > 0.2f && lengths[i] > 10.0f &&
-                 dists[i] < 4.0f && gens[i] == 2 && mcs[i] > 0.0f &&
-                 range[i] > 0.0f && fid_start && fid_end &&
+                 dists[i] < 4.0f && gens[i] == 2 && fid_start && fid_end &&
                  hits_u[i] > 0 && hits_v[i] > 0 && hits_y[i] > 0);
           }
           return mask;
