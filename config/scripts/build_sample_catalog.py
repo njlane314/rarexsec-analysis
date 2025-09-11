@@ -330,8 +330,6 @@ def main() -> None:
             samples_out = []
             for sample in samples_in:
                 s = dict(sample)
-                # ignore legacy do_hadd/active if present
-                s.pop("do_hadd", None)
 
                 origin = s.get("sample_type", "unknown")
                 subset = infer_subset(s.get("sample_key", ""), origin)
@@ -352,7 +350,6 @@ def main() -> None:
                     new_vars = []
                     for dv in s["detector_variations"]:
                         dv2 = dict(dv)
-                        dv2.pop("do_hadd", None)
                         detvar = dv2.get("variation_type")
                         dv2["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, detvar)
                         process_sample_entry(
