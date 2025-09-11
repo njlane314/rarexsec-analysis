@@ -19,12 +19,21 @@ public:
             .Define("reco_nu_vtx_sce_z", "reco_neutrino_vertex_sce_z");
 
     if (st == SampleOrigin::kMonteCarlo) {
-        proc_df = proc_df.Define(
-            "software_trigger",
-            [](unsigned run, int pre, int post) {
-                return run < 16880 ? pre > 0 : post > 0;
-            },
-            {"run", "software_trigger_pre", "software_trigger_post"});
+        if (proc_df.HasColumn("software_trigger_pre_ext")) {
+            proc_df = proc_df.Define(
+                "software_trigger",
+                [](unsigned run, int pre, int post) {
+                    return run < 16880 ? pre > 0 : post > 0;
+                },
+                {"run", "software_trigger_pre_ext", "software_trigger_post_ext"});
+        } else {
+            proc_df = proc_df.Define(
+                "software_trigger",
+                [](unsigned run, int pre, int post) {
+                    return run < 16880 ? pre > 0 : post > 0;
+                },
+                {"run", "software_trigger_pre", "software_trigger_post"});
+        }
     } else {
         proc_df = proc_df.Define("software_trigger", []() { return true; });
     }

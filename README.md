@@ -1,94 +1,10 @@
-# rarexsec_analysis
+# rarexsec-analysis
 
 ## Building
 ```bash
 source .container.sh
 source .setup.sh
 source .build.sh
-```
-
-## Configuration
-```bash
-python scripts/generate_analysis_config.py
-```
-`config/config.json` is assembled from the sample definitions in `config/sample_definitions.json`.
-
-## Running
-```bash
-./build/analyse config/config.json config/plugins/selection_efficiency.json
-# The ROOT file is written to /pnfs/uboone/scratch/users/$USER/analysis_config_<YYYYMMDD>.root
-./build/plot /pnfs/uboone/scratch/users/$USER/analysis_config_<YYYYMMDD>.root config/config.json
-```
-`analyse` executes the analysis and optional plug-ins. By default the output file is named `analysis_<dataset>_<YYYYMMDD>.root`, where `<dataset>` is derived from the samples configuration filename. `plot` renders figures using the produced ROOT file.
-
-## Example plug-ins
-The configuration files contain analysis and plotting directives.
-
-```json
-{
-  "bins": {
-    "mode": "dynamic",
-    "min": 0.0,
-    "max": 3000.0,
-    "include_oob_bins": true,
-    "strategy": "bayesian_blocks"
-  }
-}
-```
-
-The `strategy` field accepts `equal_weight`, `uniform_width`, or `bayesian_blocks`.
-
-```json
-{
-  "path": "build/EventDisplayPlugin.so",
-  "event_displays": [
-    {
-      "sample": "sample",
-      "region": "REGION_KEY",
-      "n_events": 5,
-      "image_size": 800,
-      "output_directory": "./plots"
-    }
-  ]
-}
-```
-
-The same configuration can be enabled via the `EVENT_DISPLAY` preset:
-
-```json
-{
-  "presets": [
-    {
-      "name": "EVENT_DISPLAY",
-      "vars": {
-        "plot_configs": {
-          "sample": "sample",
-          "region": "REGION_KEY",
-          "n_events": 5,
-          "image_size": 800,
-          "output_directory": "./plots"
-        }
-      }
-    }
-  ]
-}
-```
-
-```json
-{
-  "path": "build/PerformancePlotPlugin.so",
-  "performance_plots": [
-    {
-      "region": "REGION_KEY",
-      "selection_rule": "NUMU_CC",
-      "channel_column": "incl_channel",
-      "signal_group": "inclusive_strange_channels",
-      "variable": "some_discriminant",
-      "output_directory": "./plots",
-      "plot_name": "performance_plot"
-    }
-  ]
-}
 ```
 
 ## Muon neutrino selection
@@ -99,6 +15,9 @@ The selection is defined in terms of the following variables:
 - optical filter requirement for simulated events:
   `(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)`
   (bypassed when `bnbdata == 1` or `extdata == 1`)
+- run‑dependent software trigger for Monte Carlo:
+  - before run 16880: `software_trigger_pre > 0` (or `software_trigger_pre_ext > 0` for NuMI)
+  - after run 16880: `software_trigger_post > 0` (or `software_trigger_post_ext > 0` for NuMI)
 - neutrino vertex inside the fiducial volume:
   - `reco_nu_vtx_sce_x` in `[5, 251]` cm
   - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
@@ -117,50 +36,6 @@ The selection is defined in terms of the following variables:
   - `pfp_num_plane_hits_U[i] > 0 && pfp_num_plane_hits_V[i] > 0 &&
     pfp_num_plane_hits_Y[i] > 0`
 - event-level: `has_muon` and `n_pfps_gen2 > 1`
-
-## Region presets
-
-Common selection regions can be added via presets. The framework provides a
-number of built‑in options:
-
-- `EMPTY` – no event selection (`NONE` rule)
-- `QUALITY` – requires the `quality_event` preselection. For Monte Carlo
-  samples this includes a run‑dependent software trigger via the
-  `software_trigger` branch, which uses `software_trigger_pre` before run 16880
-  and `software_trigger_post` afterward.
-- `MUON` – selects events containing a reconstructed muon
-- `NUMU_CC` – selects charged-current νµ events
-- `QUALITY_NUMU_CC` – combines the quality preselection with the νµ CC rule
-
-They are enabled in the `presets` block of the configuration:
-
-```json
-{
-  "presets": [
-    { "name": "QUALITY" },
-    { "name": "NUMU_CC" }
-  ]
-}
-```
-
-Each preset configures the `RegionsPlugin` with an analysis region matching the
-given selection rule.
-
-## Snapshot preset
-
-To write out events that satisfy the νµ charged‑current selection, enable the
-`NUMU_CC_SNAPSHOT` preset. It wires the `SnapshotPlugin` to dump the selected
-events to a ROOT file in the `snapshots` directory:
-
-```json
-{
-  "presets": [
-    { "name": "NUMU_CC_SNAPSHOT" }
-  ]
-}
-```
-
-The output file is named `<beam>_<periods>_NUMU_CC_snapshot.root`.
 
 ## Run Periods
 
@@ -231,30 +106,4 @@ Run     | NuMI   |            EXT           Gate            Cnt           TorA  
 5       | RHC    |        30926.0         1803.0         1804.0       9.04e+16      8.938e+16           94.0      4.698e+15      4.645e+15
 
 ====================================================================================================
-Legend / definitions
-- Row labels:
-  - BNB rows show TOTAL only (no horn split available in official BNB DBs).
-  - NuMI rows show TOTAL plus FHC and RHC when numi_v4.db is available.
-- Time window: rows integrate runs where r.begin_time >= START and r.end_time <= END for each run period.
-- Columns (BNB uses Gate2; NuMI uses Gate1):
-  - EXT         : SUM(r.EXTTrig)              — number of EXT triggers (from runinfo).
-  - Gate        : SUM(r.Gate2Trig or Gate1Trig) — beam gate triggers (runinfo).
-  - Cnt         : SUM(r.E1DCNT) for BNB, SUM(r.EA9CNT) for NuMI (raw counter, runinfo).
-  - TorA        : SUM(r.tor860)*1e12 (BNB) or SUM(r.tor101)*1e12 (NuMI) — toroid integral from runinfo.
-  - TorB/Target : SUM(r.tor875)*1e12 (BNB) or SUM(r.tortgt)*1e12 (NuMI) — second toroid / target toroid from runinfo.
-  - Cnt_wcut    : SUM(b.E1DCNT) (BNB) or SUM(n.EA9CNT) (NuMI) — after beam-quality cuts (from bnb_v{1,2}.db or numi_v{1,2}.db).
-  - TorA_wcut   : SUM(b.tor860)*1e12 (BNB) or SUM(n.tor101)*1e12 (NuMI) — after beam-quality cuts.
-  - TorB/Target_wcut : SUM(b.tor875)*1e12 (BNB) or SUM(n.tortgt)*1e12 (NuMI) — after beam-quality cuts.
-- Units: toroid sums are multiplied by 1e12 in SQL; values are printed as scientific/float (POT-scale).
-- NuMI FHC/RHC rows: only the *_wcut columns are populated; other columns are printed as 0 by design.
-  Those come from numi_v4.db split fields (EA9CNT_fhc/rhc, tor101_fhc/rhc, tortgt_fhc/rhc) joined on (run,subrun).
-- DB sources:
-  - runinfo table: timing, triggers, and uncuts toroids/counters.
-  - bnb_v{1,2}.db / numi_v{1,2}.db: “_wcut” (beam-quality–cut) totals.
-  - numi_v4.db: NuMI horn-polarity–split “_wcut” totals (FHC/RHC).
-```
-
-## Testing
-```bash
-ctest --output-on-failure
 ```

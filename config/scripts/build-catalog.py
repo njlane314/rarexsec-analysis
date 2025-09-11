@@ -356,7 +356,6 @@ def process_sample_entry(
         entry["pot"] = pot if pot != 0.0 else run_pot
     elif sample_type == "ext":
         entry["pot"] = 0.0
-        # Use generated output ROOT file if available; otherwise fall back to original inputs.
         files_for_pairs = source_files if source_files else list(list_root_files(input_dir))
         pairs = _collect_pairs_from_files(list(files_for_pairs))
         total_ext, missing_pairs, by_run = _sum_ext_triggers_from_pairs(run_db, pairs)

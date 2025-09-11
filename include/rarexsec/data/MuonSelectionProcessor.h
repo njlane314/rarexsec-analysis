@@ -45,9 +45,9 @@ private:
             bool fid_start = start_x[i] > min_x && start_x[i] < max_x &&
                              start_y[i] > min_y && start_y[i] < max_y &&
                              start_z[i] > min_z && start_z[i] < max_z;
-            bool fid_end = end_x[i] > min_x && end_x[i] < max_x &&
-                           end_y[i] > min_y && end_y[i] < max_y &&
-                           end_z[i] > min_z && end_z[i] < max_z;
+           bool fid_end = end_x[i] > min_x && end_x[i] < max_x &&
+                          end_y[i] > min_y && end_y[i] < max_y &&
+                          end_z[i] > min_z && end_z[i] < max_z;
             mask[i] =
                 (scores[i] > 0.8f && llr[i] > 0.2f && lengths[i] > 10.0f &&
                  dists[i] < 4.0f && gens[i] == 2 && fid_start && fid_end &&
