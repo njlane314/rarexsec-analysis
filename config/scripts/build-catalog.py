@@ -20,11 +20,10 @@ from typing import Set, Tuple, List, Dict
 SCHEMA_VERSION = "1.0"
 DEFAULT_RUN_DB = "/exp/uboone/data/uboonebeam/beamdb/run.db"
 
-# --- Fixed configuration (no CLI flags) ---
-HADD_TMPDIR = Path("/pnfs/uboone/scratch/users/nlane/")  # where hadd writes partial files (-d)
-MIN_FREE_GB = 5.0                                        # if less is free here, run single-process hadd
-DEFAULT_JOBS = min(8, os.cpu_count() or 1)               # parallelism for hadd/POT aggregation
-CATALOG_SUBDIR = "catalogs"                              # output folder (relative to repo root)
+HADD_TMPDIR = Path("/pnfs/uboone/scratch/users/nlane/tmp/") 
+MIN_FREE_GB = 5.0                                        
+DEFAULT_JOBS = min(8, os.cpu_count() or 1)               
+CATALOG_SUBDIR = "catalogs"                              
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 
