@@ -25,6 +25,8 @@
 *.app
 
 build/*
+bin/*
+!bin/.gitkeep
 .vscode/*
 venv/*
 plots/*
