@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import json
 import logging
+import os
 import sys
+from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
@@ -14,7 +17,6 @@ import xml.etree.ElementTree as ET
 import re
 import subprocess
 import shutil
-import numpy as np
 import uproot
 
 SCHEMA_VERSION = "1.0"
@@ -56,7 +58,7 @@ def dataset_id(beamline: str, mode: str, run: str, origin: str, subset: str, sta
     return ".".join(parts)
 
 def sha7(path: Path) -> str:
-    h = hashlib.sha256()
+    h = hashlib.blake2s(digest_size=8)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
@@ -92,8 +94,9 @@ def summarize_beams_for_name(beam_keys: list[str]) -> str:
 
 # ---- sample processing utilities ---------------------------------------------
 
-def get_xml_entities(xml_path: Path) -> dict[str, str]:
-    content = xml_path.read_text()
+def get_xml_entities(xml_path: Path, content: str | None = None) -> dict[str, str]:
+    if content is None:
+        content = xml_path.read_text()
     entity_regex = re.compile(r"<!ENTITY\s+([^\s]+)\s+\"([^\"]+)\">")
     return {match.group(1): match.group(2) for match in entity_regex.finditer(content)}
 
@@ -120,48 +123,42 @@ def run_command(command: list[str], execute: bool) -> bool:
         print(f"[ERROR] HADD Execution failed: {exc}", file=sys.stderr)
         return False
 
-def _pot_from_file(path: Path) -> float:
-    """Read POT from a single ROOT file."""
+@lru_cache(maxsize=256)
+def list_root_files(input_dir: str) -> tuple[str, ...]:
+    return tuple(str(p) for p in Path(input_dir).rglob("*.root"))
+
+_POT_CACHE: dict[tuple[str, float], float] = {}
+
+def get_total_pot_from_single_file(file_path: Path) -> float:
+    if not file_path or not file_path.is_file():
+        return 0.0
     try:
-        with uproot.open(path) as root_file:
-            if "nuselection/SubRun" not in root_file:
-                return 0.0
-            subrun_tree = root_file["nuselection/SubRun"]
-            if "pot" in subrun_tree:
-                return float(subrun_tree["pot"].array(library="np").sum())
+        st = file_path.stat()
+        key = (str(file_path), st.st_mtime)
+        if key in _POT_CACHE:
+            return _POT_CACHE[key]
+        with uproot.open(file_path) as f:
+            if "nuselection/SubRun" not in f:
+                pot = 0.0
+            else:
+                arr = f["nuselection/SubRun"]["pot"].array(library="np")
+                pot = float(arr.sum())
+        _POT_CACHE[key] = pot
+        return pot
     except Exception as exc:
-        print(f"    Warning: Could not read POT from {path}: {exc}", file=sys.stderr)
-    return 0.0
-
-
-def get_total_pot_from_files(file_paths: list[str]) -> float:
-    """Return the summed POT from ``file_paths`` using a vectorised ``uproot`` read.
-
-    ``uproot.iterate`` streams only the required ``pot`` branch across all files
-    and avoids repeatedly opening and closing individual files in Python.  This
-    significantly reduces overhead compared to processing each file
-    sequentially or within a thread pool.
-    """
-
-    if not file_paths:
+        print(f"    Warning: Could not read POT from {file_path}: {exc}", file=sys.stderr)
         return 0.0
 
-    try:
-        total = 0.0
-        for arrays in uproot.iterate(file_paths, "nuselection/SubRun", ["pot"], library="np"):
-            total += arrays["pot"].sum()
-        return float(total)
-    except Exception as exc:
-        print(f"    Warning: Bulk POT read failed ({exc}); falling back to per-file method.", file=sys.stderr)
-        return float(sum(_pot_from_file(Path(p)) for p in file_paths))
+def get_total_pot_from_files_parallel(file_paths: list[str], max_workers: int) -> float:
+    if not file_paths:
+        return 0.0
+    paths = [Path(p) for p in file_paths]
+    mw = min(len(paths), max_workers)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=mw) as ex:
+        return sum(ex.map(get_total_pot_from_single_file, paths))
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
-    if not stage_name or stage_name not in stage_outdirs:
-        return None
-    input_dir = stage_outdirs[stage_name]
-    for name, value in entities.items():
-        input_dir = input_dir.replace(f"&{name};", value)
-    return input_dir
+    return stage_outdirs.get(stage_name) if stage_name else None
 
 def process_sample_entry(
     entry: dict,
@@ -170,6 +167,7 @@ def process_sample_entry(
     entities: dict,
     run_pot: float,
     ext_triggers: int,
+    jobs: int,
     is_detvar: bool = False,
 ) -> bool:
     execute_hadd = entry.pop("do_hadd", False)
@@ -199,12 +197,12 @@ def process_sample_entry(
     output_file = processed_analysis_path / f"{sample_key}.root"
     entry["relative_path"] = output_file.name
 
-    root_files = sorted(str(f) for f in Path(input_dir).rglob("*.root"))
+    root_files = list(list_root_files(input_dir))
     if not root_files:
         print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
 
     if root_files and execute_hadd:
-        if not run_command(["hadd", "-f", str(output_file), *root_files], True):
+        if not run_command(["hadd", "-f", str(output_file), *root_files], execute_hadd):
             print(
                 f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
                 file=sys.stderr,
@@ -220,7 +218,7 @@ def process_sample_entry(
     source_files = [str(output_file)] if execute_hadd else root_files
 
     if sample_type == "mc" or is_detvar:
-        entry["pot"] = get_total_pot_from_files(source_files)
+        entry["pot"] = get_total_pot_from_files_parallel(source_files, jobs)
         if entry["pot"] == 0.0:
             entry["pot"] = run_pot
     elif sample_type in {"data", "ext"}:
@@ -234,16 +232,18 @@ def load_xml_context(xml_paths: list[Path]) -> tuple[dict[str, str], dict[str, s
     entities: dict[str, str] = {}
     stage_outdirs: dict[str, str] = {}
     for xml in xml_paths:
-        entities.update(get_xml_entities(xml))
-        tree = ET.parse(xml)
-        proj = tree.find("project")
+        text = xml.read_text()
+        entities.update(get_xml_entities(xml, text))
+        root = ET.fromstring(text)
+        proj = root.find("project")
         if proj is None:
             logging.error("Could not find <project> in XML '%s'", xml)
             continue
         for s in proj.findall("stage"):
-            outdir = s.find("outdir")
-            if outdir is not None and outdir.text:
-                stage_outdirs[s.get("name")] = outdir.text
+            outdir_text = s.findtext("outdir") or ""
+            for name, val in entities.items():
+                outdir_text = outdir_text.replace(f"&{name};", val)
+            stage_outdirs[s.get("name")] = outdir_text
     return entities, stage_outdirs
 
 def default_xmls() -> list[Path]:
@@ -258,14 +258,20 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
 
     ap = argparse.ArgumentParser(description="Aggregate ROOT samples from a recipe into a catalog.")
-    ap.add_argument("--recipe", required=True, help="Path to recipe JSON (instance).")
+    ap.add_argument("--recipe", type=Path, required=True, help="Path to recipe JSON (instance).")
     ap.add_argument("--runs", default="", help='Comma-separated runs to process (e.g. "run1,run2"). Empty = all.')
-    ap.add_argument("--outdir", default=str(repo_root / "catalogs"), help="Directory to write the catalog.")
-    ap.add_argument("--xml", nargs="*", default=None, help="Workflow XML files to parse (entities/outdirs).")
+    ap.add_argument("--outdir", type=Path, default=repo_root / "catalogs", help="Directory to write the catalog.")
+    ap.add_argument("--xml", type=Path, nargs="*", default=None, help="Workflow XML files to parse (entities/outdirs).")
     ap.add_argument("--project", default=None, help="Project slug for filename; defaults to recipe['project'].")
+    ap.add_argument(
+        "--jobs",
+        type=int,
+        default=min(8, os.cpu_count() or 1),
+        help="Max threads for POT aggregation",
+    )
     args = ap.parse_args()
 
-    recipe_path = Path(args.recipe)
+    recipe_path = args.recipe
     with open(recipe_path) as f:
         cfg = json.load(f)
 
@@ -281,15 +287,14 @@ def main() -> None:
     tag = version_tag()
     sha = sha7(recipe_path)
 
-    xml_paths = [Path(x) for x in args.xml] if args.xml else default_xmls()
+    xml_paths = args.xml if args.xml else default_xmls()
     entities, stage_outdirs = load_xml_context(xml_paths)
 
     ntuple_dir = Path(cfg["ntuple_base_directory"])
     ntuple_dir.mkdir(parents=True, exist_ok=True)
 
     beams_in: dict = cfg.get("run_configurations", {})
-    beamlines_out: dict = {}
-    run_cfgs_out: dict = {}
+    runs_out: dict = {}
 
     for beam_key, run_block in beams_in.items():
         beam_active = bool(run_block.get("active", True))  # <-- beam-level switch (default: True)
@@ -332,6 +337,7 @@ def main() -> None:
                     entities,
                     pot,
                     ext_trig,
+                    args.jobs,
                 )
 
                 # detector variations (inherit processing)
@@ -343,7 +349,14 @@ def main() -> None:
                         detvar = dv2.get("variation_type")
                         dv2["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, detvar)
                         process_sample_entry(
-                            dv2, ntuple_dir, stage_outdirs, entities, pot, ext_trig, is_detvar=True
+                            dv2,
+                            ntuple_dir,
+                            stage_outdirs,
+                            entities,
+                            pot,
+                            ext_trig,
+                            args.jobs,
+                            is_detvar=True,
                         )
                         new_vars.append(dv2)
                     s["detector_variations"] = new_vars
@@ -353,14 +366,13 @@ def main() -> None:
             # write back run block
             run_copy = dict(run_details)
             run_copy["samples"] = samples_out
-            beamlines_out.setdefault(beam_key, {})[run] = run_copy
-            run_cfgs_out.setdefault(beam_key, {})[run] = run_copy
+            runs_out.setdefault(beam_key, {})[run] = run_copy
 
     # emit catalog
-    outdir = Path(args.outdir)
+    outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
 
-    beam_scope = summarize_beams_for_name(list(beamlines_out.keys()))
+    beam_scope = summarize_beams_for_name(list(runs_out.keys()))
     runs_token = runset_token(runs_to_process)
     out_name = f"{project}.{beam_scope}.{runs_token}.catalog.{tag}-g{sha}.json"
     out_path = outdir / out_name
@@ -373,8 +385,7 @@ def main() -> None:
         "source_recipe_hash": sha,
         "samples": {
             "ntupledir": cfg["ntuple_base_directory"],
-            "beamlines": beamlines_out,
-            "run_configurations": run_cfgs_out,
+            "run_configurations": runs_out,
         },
     }
 
