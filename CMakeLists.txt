@@ -25,6 +25,7 @@ find_package(nlohmann_json REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 include_directories(
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/libapp"
     "${CMAKE_CURRENT_SOURCE_DIR}/libdata"
     "${CMAKE_CURRENT_SOURCE_DIR}/libhist"
@@ -42,101 +43,4 @@ add_subdirectory(libsyst)
 add_subdirectory(libapp)
 add_subdirectory(libplug)
 add_subdirectory(tests)
-
-add_library(analyse STATIC
-    ana/presets/Presets_Standard.cpp
-    ana/presets/Presets_Vertices.cpp
-    ana/presets/Presets_Plots.cpp
-    ana/presets/Presets_Preselections.cpp
-    ana/presets/Presets_TopologicalScore.cpp
-)
-target_link_libraries(analyse
-    PUBLIC
-        libapp
-        libplug
-        libdata
-        libhist
-        libplot
-        libsyst
-        libutils
-        Eigen3::Eigen
-        nlohmann_json::nlohmann_json
-        ${ROOT_LIBRARIES}
-        TBB::tbb
-        TMVA
-        dl
-)
-
-add_executable(pipeline_runner_example
-    ana/pipeline_runner_example.cpp
-    ana/presets/Presets_Standard.cpp
-    ana/presets/Presets_Vertices.cpp
-    ana/presets/Presets_Plots.cpp
-    ana/presets/Presets_Preselections.cpp
-    ana/presets/Presets_TopologicalScore.cpp
-)
-target_link_libraries(pipeline_runner_example
-    PRIVATE
-        libapp
-        libplug
-        libdata
-        libhist
-        libplot
-        libsyst
-        libutils
-        Eigen3::Eigen
-        nlohmann_json::nlohmann_json
-        ${ROOT_LIBRARIES}
-        TBB::tbb
-        TMVA
-        dl
-)
-
-add_executable(event_display_runner
-    ana/event_display_runner.cpp
-    ana/presets/Presets_Standard.cpp
-    ana/presets/Presets_Vertices.cpp
-    ana/presets/Presets_Plots.cpp
-    ana/presets/Presets_Preselections.cpp
-)
-target_link_libraries(event_display_runner
-    PRIVATE
-        libapp
-        libplug
-        libdata
-        libhist
-        libplot
-        libsyst
-        libutils
-        Eigen3::Eigen
-        nlohmann_json::nlohmann_json
-        ${ROOT_LIBRARIES}
-        TBB::tbb
-        TMVA
-        dl
-)
-
-add_executable(cut_flow_plot_runner
-    ana/cut_flow_plot_runner.cpp
-    ana/presets/Presets_Standard.cpp
-    ana/presets/Presets_Vertices.cpp
-    ana/presets/Presets_Plots.cpp
-    ana/presets/Presets_Preselections.cpp
-)
-target_link_libraries(cut_flow_plot_runner
-    PRIVATE
-        libapp
-        libplug
-        libdata
-        libhist
-        libplot
-        libsyst
-        libutils
-        Eigen3::Eigen
-        nlohmann_json::nlohmann_json
-        ${ROOT_LIBRARIES}
-        TBB::tbb
-        TMVA
-        dl
-)
-
+add_subdirectory(examples)
