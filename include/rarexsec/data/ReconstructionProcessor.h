@@ -39,11 +39,14 @@ class ReconstructionProcessor : public IEventProcessor {
 
         auto quality_df = swtrig_df.Define(
             "quality_event",
-            [st](bool in_fid, int nslices, bool sel_pass, float pe_beam, bool swtrig) {
+            [st](bool in_fid, int nslices, bool sel_pass, float pe_beam, bool swtrig,
+                 float contained_frac, float associated_frac) {
                 return in_fid && nslices == 1 && sel_pass && pe_beam > 20 &&
+                       contained_frac >= 0.7 && associated_frac >= 0.5 &&
                        (st == SampleOrigin::kMonteCarlo ? swtrig : true);
             },
-            {"in_reco_fiducial", "num_slices", "selection_pass", "optical_filter_pe_beam", "software_trigger"});
+            {"in_reco_fiducial", "num_slices", "selection_pass", "optical_filter_pe_beam",
+             "software_trigger", "slice_contained_fraction", "slice_cluster_fraction"});
 
         return next_ ? next_->process(quality_df, st) : quality_df;
     }

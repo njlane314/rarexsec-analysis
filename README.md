@@ -103,6 +103,8 @@ The selection is defined in terms of the following variables:
   - `reco_nu_vtx_sce_x` in `[5, 251]` cm
   - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
   - `reco_nu_vtx_sce_z < 675` cm or `reco_nu_vtx_sce_z > 775` cm
+- at least 70% of reconstructed hits in the neutrino slice are within the fiducial volume (contained fraction ≥ 0.7)
+- at least 50% of reconstructed hits in the neutrino slice are associated with a Pandora PFParticle (associated hits fraction ≥ 0.5)
 - `topological_score > 0.06`
 - muon candidate requirements (index `i` over `muon_*` vectors):
   - `muon_trk_score_v[i] > 0.8` and `muon_trk_llr_pid_v[i] > 0.2`
