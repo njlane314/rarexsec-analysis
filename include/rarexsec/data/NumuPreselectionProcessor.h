@@ -3,6 +3,7 @@
 
 #include <rarexsec/data/IEventProcessor.h>
 #include <rarexsec/data/SampleTypes.h>
+#include "ROOT/RVec.hxx"
 
 namespace analysis {
 
@@ -16,7 +17,12 @@ public:
             .Define("_opfilter_pe_veto", "optical_filter_pe_veto")
             .Define("reco_nu_vtx_sce_x", "reco_neutrino_vertex_sce_x")
             .Define("reco_nu_vtx_sce_y", "reco_neutrino_vertex_sce_y")
-            .Define("reco_nu_vtx_sce_z", "reco_neutrino_vertex_sce_z");
+            .Define("reco_nu_vtx_sce_z", "reco_neutrino_vertex_sce_z")
+            .Define("n_pfps_gen2",
+                    [](const ROOT::RVec<unsigned> &gens) {
+                        return ROOT::VecOps::Sum(gens == 2u);
+                    },
+                    {"pfp_generations"});
 
     if (st == SampleOrigin::kMonteCarlo) {
         if (proc_df.HasColumn("software_trigger_pre_ext")) {
@@ -46,17 +52,22 @@ public:
 
     auto presel_df = proc_df.Define(
         "numu_presel",
-        [st](int nslice, float pe_beam, float pe_veto, float x, float y, float z,
-             float topo, int bnb, int ext, bool swtrig) {
-            return nslice == 1 && ((pe_beam > 0 && pe_veto < 20) || bnb == 1 ||
-                                   ext == 1) &&
-                   x > 5 && x < 251 && y > -110 && y < 110 &&
-                   (z < 675 || z > 775) && topo > 0.06 &&
-                   (st == SampleOrigin::kMonteCarlo ? swtrig : true);
+        [st](int bnb, int ext, float pe_beam, float pe_veto, bool swtrig,
+             int nslice, float topo, int n_gen2, float x, float y, float z) {
+            bool dataset_gate = (bnb == 0 && ext == 0) ?
+                                    (pe_beam > 0.f && pe_veto < 20.f) :
+                                    true;
+            bool basic_reco = nslice == 1 && topo > 0.06f && n_gen2 > 1;
+            bool fv = x > 5.f && x < 251.f && y > -110.f && y < 110.f &&
+                      z > 20.f && z < 986.f && (z < 675.f || z > 775.f);
+            return dataset_gate &&
+                   (st == SampleOrigin::kMonteCarlo ? swtrig : true) &&
+                   basic_reco && fv;
         },
-        {"nslice", "_opfilter_pe_beam", "_opfilter_pe_veto",
-         "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z",
-         "topological_score", "bnbdata", "extdata", "software_trigger"});
+        {"bnbdata", "extdata", "_opfilter_pe_beam", "_opfilter_pe_veto",
+         "software_trigger", "nslice", "topological_score", "n_pfps_gen2",
+         "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y",
+         "reco_nu_vtx_sce_z"});
 
     return next_ ? next_->process(presel_df, st) : presel_df;
   }
