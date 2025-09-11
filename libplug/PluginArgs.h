@@ -12,11 +12,12 @@ namespace analysis {
 struct PluginArgs {
     nlohmann::json plot_configs = nlohmann::json::object();     // configuration for plotting plugins
     nlohmann::json analysis_configs = nlohmann::json::object(); // configuration for analysis plugins
+    nlohmann::json systematics_configs = nlohmann::json::object(); // configuration for systematics plugins
 
     PluginArgs() = default;
 
-    // Allow initialisation from an initializer list using keys "plot_configs"
-    // and/or "analysis_configs".  This preserves the terse construction style
+    // Allow initialisation from an initializer list using keys "plot_configs",
+    // "analysis_configs" and/or "systematics_configs".  This preserves the terse construction style
     // that existed when PluginArgs was an alias for nlohmann::json.
     PluginArgs(std::initializer_list<std::pair<const std::string, nlohmann::json>> init) {
         for (const auto &kv : init) {
@@ -24,6 +25,8 @@ struct PluginArgs {
                 plot_configs = kv.second;
             } else if (kv.first == "analysis_configs") {
                 analysis_configs = kv.second;
+            } else if (kv.first == "systematics_configs") {
+                systematics_configs = kv.second;
             }
         }
     }

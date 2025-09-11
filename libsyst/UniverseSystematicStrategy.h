@@ -29,6 +29,9 @@ public:
 
   const std::string &getName() const override { return identifier_; }
 
+  void setUniverseCount(unsigned n) { n_universes_ = n; }
+  unsigned getUniverseCount() const { return n_universes_; }
+
   void bookVariations(const SampleKey &sample_key, ROOT::RDF::RNode &rnode,
                       const BinningDefinition &binning,
                       const ROOT::RDF::TH1DModel &model,

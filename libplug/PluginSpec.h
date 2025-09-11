@@ -34,6 +34,7 @@ inline PluginArgs deepMerge(PluginArgs lhs, const PluginArgs& rhs) {
 
   lhs.analysis_configs = merge(lhs.analysis_configs, rhs.analysis_configs);
   lhs.plot_configs     = merge(lhs.plot_configs, rhs.plot_configs);
+  lhs.systematics_configs = merge(lhs.systematics_configs, rhs.systematics_configs);
   return lhs;
 }
 

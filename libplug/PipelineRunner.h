@@ -30,7 +30,8 @@ namespace detail {
 inline AnalysisResult processBeamline(
     RunConfigRegistry &run_config_registry, const std::string &ntuple_dir,
     const std::string &beam, const nlohmann::json &runs,
-    const PluginSpecList &analysis_specs) {
+    const PluginSpecList &analysis_specs,
+    const PluginSpecList &syst_specs) {
   std::vector<std::string> periods;
   periods.reserve(runs.size());
   for (auto const &[period, _] : runs.items())
@@ -43,7 +44,7 @@ inline AnalysisResult processBeamline(
   auto histogram_factory = std::make_unique<HistogramFactory>();
 
   AnalysisRunner runner(data_loader, std::move(histogram_factory),
-                        systematics_processor, analysis_specs);
+                        systematics_processor, analysis_specs, syst_specs);
   auto result = runner.run();
 
   for (auto &kv : result.regions()) {
@@ -63,7 +64,8 @@ inline void aggregateResults(AnalysisResult &result,
 }
 
 inline AnalysisResult runAnalysis(const nlohmann::json &samples,
-                                  const PluginSpecList &analysis_specs) {
+                                  const PluginSpecList &analysis_specs,
+                                  const PluginSpecList &syst_specs) {
   ROOT::EnableImplicitMT();
   log::info("analysis::runAnalysis", "Implicit multithreading engaged across",
             ROOT::GetThreadPoolSize(), "threads.");
@@ -81,7 +83,7 @@ inline AnalysisResult runAnalysis(const nlohmann::json &samples,
       continue;
     auto beamline_result =
         processBeamline(run_config_registry, ntuple_dir, beam, runs,
-                        analysis_specs);
+                        analysis_specs, syst_specs);
     aggregateResults(result, beamline_result);
   }
 
@@ -152,16 +154,18 @@ inline void runPlotting(const nlohmann::json &samples,
 class PipelineRunner {
 public:
   PipelineRunner(PluginSpecList analysis_specs,
-                 PluginSpecList plot_specs)
+                 PluginSpecList plot_specs,
+                 PluginSpecList systematics_specs = {})
       : analysis_specs_(std::move(analysis_specs)),
-        plot_specs_(std::move(plot_specs)) {}
+        plot_specs_(std::move(plot_specs)),
+        systematics_specs_(std::move(systematics_specs)) {}
 
   // Execute the analysis and plotting for the provided samples
   // configuration. The analysis result is written to \p output_path and
   // returned to the caller.
   inline AnalysisResult run(const nlohmann::json &samples,
                             const std::string /*&output_path*/) const {
-    auto result = detail::runAnalysis(samples, analysis_specs_);
+    auto result = detail::runAnalysis(samples, analysis_specs_, systematics_specs_);
     //result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
     return result;
@@ -182,6 +186,7 @@ public:
 private:
   PluginSpecList analysis_specs_;
   PluginSpecList plot_specs_;
+  PluginSpecList systematics_specs_;
 };
 
 } // namespace analysis
