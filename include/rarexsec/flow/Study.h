@@ -116,27 +116,34 @@ public:
     }
 
     // --- Simple plots ------------------------------------------------------
+    nlohmann::json stack_plots = nlohmann::json::array();
+    nlohmann::json perf_plots = nlohmann::json::array();
     for (auto const& p : plots_) {
       if (p.kind == "stack") {
-        PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({{
-                                          {"variable", p.variable},
-                                          {"region", p.region.empty() ? defaultRegionKey() : p.region},
-                                          {"signal_group", p.signal_group},
-                                          {"logy", p.logy}}})}}}};
-        plot_specs.push_back({"StackedPlotPlugin", std::move(args)});
+        stack_plots.push_back({
+            {"variable", p.variable},
+            {"region", p.region.empty() ? defaultRegionKey() : p.region},
+            {"signal_group", p.signal_group},
+            {"logy", p.logy}
+        });
       } else if (p.kind == "roc") {
-        PluginArgs args{{"performance_plots", nlohmann::json::array({{
-                                          {"region", p.region.empty() ? defaultRegionKey() : p.region},
-                                          {"channel_column", p.channel_column},
-                                          {"signal_group", p.signal_group},
-                                          {"variable", p.variable}}})}};
-        plot_specs.push_back({"PerformancePlotPlugin", std::move(args)});
+        perf_plots.push_back({
+            {"region", p.region.empty() ? defaultRegionKey() : p.region},
+            {"channel_column", p.channel_column},
+            {"signal_group", p.signal_group},
+            {"variable", p.variable}
+        });
       }
     }
 
-    if (!perf_.empty())
+    for (auto const& j : perf_) perf_plots.push_back(j);
+
+    if (!stack_plots.empty())
+      plot_specs.push_back({"StackedPlotPlugin",
+                            {{"plot_configs", {{"plots", stack_plots}}}}});
+    if (!perf_plots.empty())
       plot_specs.push_back({"PerformancePlotPlugin",
-                            {{"plot_configs", {{"performance_plots", perf_}}}}});
+                            {{"plot_configs", {{"performance_plots", perf_plots}}}}});
     if (!cutflow_.empty())
       plot_specs.push_back({"CutFlowPlotPlugin",
                             {{"plot_configs", {{"plots", cutflow_}}}}});
