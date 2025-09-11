@@ -10,18 +10,16 @@
                         "stage_name": "selection_beam",
                         "sample_type": "mc",
                         "active": true,
-                        "do_hadd": true,
                         "exclusion_truth_filters": [
                             "mc_strangeness_run1_fhc"
                         ],
                         "detector_variations": [
                             {
-                                "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
-                                "variation_type": "cv",
-                                "stage_name": "selection_detvar_cv",
-                                "active": true,
-                                "do_hadd": true
-                            }
+                                  "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
+                                  "variation_type": "cv",
+                                  "stage_name": "selection_detvar_cv",
+                                  "active": true
+                              }
                         ]
                     },
                     {
@@ -29,25 +27,22 @@
                         "stage_name": "selection_strangeness",
                         "sample_type": "mc",
                         "active": true,
-                        "do_hadd": true,
                         "truth_filter": "(mc_n_strange > 0)",
                         "detector_variations": [
                             {
-                                "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
-                                "variation_type": "cv",
-                                "stage_name": "selection_detvar_cv",
-                                "active": true,
-                                "do_hadd": true
-                            }
+                                  "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
+                                  "variation_type": "cv",
+                                  "stage_name": "selection_detvar_cv",
+                                  "active": true
+                              }
                         ]
                     },
                     {
-                        "sample_key": "mc_dirt_run1_fhc",
-                        "stage_name": "selection_dirt",
-                        "sample_type": "dirt",
-                        "active": true,
-                        "do_hadd": true
-                    }
+                          "sample_key": "mc_dirt_run1_fhc",
+                          "stage_name": "selection_dirt",
+                          "sample_type": "dirt",
+                          "active": true
+                      }
                 ]
             }
         },
@@ -57,12 +52,11 @@
                 "pot_target_wcut_total": 4.565e+20,
                 "samples": [
                     {
-                        "sample_key": "numi_ext_run1",
-                        "stage_name": "selection_ext",
-                        "sample_type": "ext",
-                        "active": true,
-                        "do_hadd": true
-                    }
+                          "sample_key": "numi_ext_run1",
+                          "stage_name": "selection_ext",
+                          "sample_type": "ext",
+                          "active": true
+                      }
                 ]
             },
             "run2": {
@@ -70,12 +64,11 @@
                 "pot_target_wcut_total": 4.827e+20,
                 "samples": [
                     {
-                        "sample_key": "numi_ext_run2",
-                        "stage_name": "selection_ext",
-                        "sample_type": "ext",
-                        "active": false,
-                        "do_hadd": false
-                    }
+                          "sample_key": "numi_ext_run2",
+                          "stage_name": "selection_ext",
+                          "sample_type": "ext",
+                          "active": false
+                      }
                 ]
             },
             "run3": {
@@ -83,12 +76,11 @@
                 "pot_target_wcut_total": 5.392e+20,
                 "samples": [
                     {
-                        "sample_key": "numi_ext_run3",
-                        "stage_name": "selection_ext",
-                        "sample_type": "ext",
-                        "active": false,
-                        "do_hadd": false
-                    }
+                          "sample_key": "numi_ext_run3",
+                          "stage_name": "selection_ext",
+                          "sample_type": "ext",
+                          "active": false
+                      }
                 ]
             },
             "run4": {
@@ -96,12 +88,11 @@
                 "pot_target_wcut_total": 5.232e+20,
                 "samples": [
                     {
-                        "sample_key": "numi_ext_run4",
-                        "stage_name": "selection_ext",
-                        "sample_type": "ext",
-                        "active": false,
-                        "do_hadd": false
-                    }
+                          "sample_key": "numi_ext_run4",
+                          "stage_name": "selection_ext",
+                          "sample_type": "ext",
+                          "active": false
+                      }
                 ]
             },
             "run5": {
@@ -109,12 +100,11 @@
                 "pot_target_wcut_total": 2.493e+20,
                 "samples": [
                     {
-                        "sample_key": "numi_ext_run5",
-                        "stage_name": "selection_ext",
-                        "sample_type": "ext",
-                        "active": false,
-                        "do_hadd": false
-                    }
+                          "sample_key": "numi_ext_run5",
+                          "stage_name": "selection_ext",
+                          "sample_type": "ext",
+                          "active": false
+                      }
                 ]
             }
         }

@@ -176,7 +176,8 @@ def process_sample_entry(
     jobs: int,
     is_detvar: bool = False,
 ) -> bool:
-    execute_hadd = entry.pop("do_hadd", False)
+    # HADD aggregation is always performed; the configuration no longer
+    # supports disabling it.
 
     if not entry.get("active", True):
         sample_key = entry.get("sample_key", "UNKNOWN")
@@ -189,7 +190,7 @@ def process_sample_entry(
 
     print(f"  Processing {'detector variation' if is_detvar else 'sample'}: {sample_key} (from stage: {stage_name})")
     print(
-        f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: {'Enabled' if execute_hadd else 'Disabled'}"
+        f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: Enabled"
     )
 
     input_dir = resolve_input_dir(stage_name, stage_outdirs)
@@ -203,28 +204,27 @@ def process_sample_entry(
     output_file = processed_analysis_path / f"{sample_key}.root"
     entry["relative_path"] = output_file.name
 
-    if execute_hadd:
-        root_files = list(list_root_files(input_dir))
-        if not root_files:
-            print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
-        if root_files:
-            if not run_command(["hadd", "-f", str(output_file), *root_files], execute_hadd):
-                print(
-                    f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
-                    file=sys.stderr,
-                )
-                return False
-        else:
-            print(
-                f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable)."
-            )
-        source_files = [str(output_file)]
-    else:
-        print(f"    Note: HADD not requested for '{sample_key}'. Skipping HADD command.")
+    root_files = list(list_root_files(input_dir))
+    if not root_files:
+        print(
+            f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.",
+            file=sys.stderr,
+        )
+        print(
+            f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable)."
+        )
         source_files = []
+    else:
+        if not run_command(["hadd", "-f", str(output_file), *root_files], True):
+            print(
+                f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
+                file=sys.stderr,
+            )
+            return False
+        source_files = [str(output_file)]
 
     if sample_type == "mc" or is_detvar:
-        if execute_hadd:
+        if source_files:
             pot = get_total_pot_from_files_parallel(source_files, jobs)
         else:
             pot = pot_sum_via_iterate(input_dir)
