@@ -1,11 +1,13 @@
 {
   "role": "recipe",
   "schema_version": "1.0",
+  "recipe_kind": "template",
   "project": "sfs",
   "ntuple_base_directory": "/exp/uboone/data/users/nlane/ntuples",
 
   "run_configurations": {
     "bnb": {
+      "active": true,
       "run1": { "pot": 3.332e+20, "samples": [] },
       "run2": { "pot": 3.057e+20, "samples": [] },
       "run3": { "pot": 2.671e+20, "samples": [] },
@@ -14,6 +16,7 @@
     },
 
     "bnb_ext": {
+      "active": true,
       "run1": { "ext_triggers": 40062895, "samples": [] },
       "run2": { "ext_triggers": 165820967, "samples": [] },
       "run3": { "ext_triggers": 194770254, "samples": [] },
@@ -22,6 +25,7 @@
     },
 
     "numi_fhc": {
+      "active": true,
       "run1": { "pot": 3.922e+20, "samples": [] },
       "run2": { "pot": 1.766e+20, "samples": [] },
       "run3": { "pot": 4.466e+14, "samples": [] },
@@ -30,6 +34,7 @@
     },
 
     "numi_rhc": {
+      "active": true,
       "run1": { "pot": 6.268e+19, "samples": [] },
       "run2": { "pot": 2.971e+20, "samples": [] },
       "run3": { "pot": 5.387e+20, "samples": [] },
@@ -38,6 +43,7 @@
     },
 
     "numi_ext": {
+      "active": true,
       "run1": { "ext_triggers": 40062895, "samples": [] },
       "run2": { "ext_triggers": 165820967, "samples": [] },
       "run3": { "ext_triggers": 194770254, "samples": [] },
