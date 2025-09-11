@@ -457,6 +457,7 @@ private:
     static const std::vector<std::string> v = {
         "trk_score_v",         "trk_llr_pid_v",
         "track_length",        "trk_distance_v",
+        "trk_pfpgeneration_v",
         "track_start_x",       "track_start_y",
         "track_start_z",       "track_end_x",
         "track_end_y",         "track_end_z",
@@ -470,6 +471,9 @@ private:
 
   static const std::vector<std::string> &processedEventVariables() {
     static const std::vector<std::string> v = {"in_reco_fiducial",
+                                               "reco_nu_vtx_sce_x",
+                                               "reco_nu_vtx_sce_y",
+                                               "reco_nu_vtx_sce_z",
                                                "n_pfps_gen2",
                                                "n_pfps_gen3",
                                                "quality_event",
