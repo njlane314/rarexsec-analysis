@@ -2,7 +2,7 @@
 #include <rarexsec/syst/DetectorSystematicStrategy.h>
 #include <rarexsec/syst/SystematicsProcessor.h>
 #include <rarexsec/syst/UniverseSystematicStrategy.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 #include <rarexsec/syst/WeightSystematicStrategy.h>
 #include <Eigen/Eigenvalues>
 #include <ROOT/RDataFrame.hxx>

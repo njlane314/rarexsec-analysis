@@ -1,7 +1,7 @@
-#include <workflow/Study.h>
-#include <workflow/Display.h>
-#include <workflow/Helpers.h>
-#include <workflow/Plots.h>
+#include <rarexsec/study/Study.h>
+#include <rarexsec/study/Display.h>
+#include <rarexsec/study/Helpers.h>
+#include <rarexsec/study/Plots.h>
 using namespace analysis::dsl;
 
 int main() {

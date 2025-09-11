@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 
 namespace analysis {
 

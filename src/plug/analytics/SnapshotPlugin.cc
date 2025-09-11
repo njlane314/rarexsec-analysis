@@ -7,7 +7,7 @@
 #include <rarexsec/data/AnalysisDataLoader.h>
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/plug/IAnalysisPlugin.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 
 namespace analysis {
 

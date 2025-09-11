@@ -22,9 +22,9 @@
 
 #include <rarexsec/plot/HistogramCut.h>
 #include <rarexsec/plot/IHistogramPlot.h>
-#include <rarexsec/app/RegionAnalysis.h>
+#include <rarexsec/core/RegionAnalysis.h>
 #include <rarexsec/hist/StratifierRegistry.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 
 namespace analysis {
 

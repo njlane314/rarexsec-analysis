@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-#include <rarexsec/app/AnalysisKey.h>
-#include <rarexsec/app/RegionAnalysis.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/AnalysisKey.h>
+#include <rarexsec/core/RegionAnalysis.h>
+#include <rarexsec/core/SelectionQuery.h>
 
 namespace analysis {
 

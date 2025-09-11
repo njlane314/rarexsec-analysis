@@ -5,7 +5,7 @@ add_executable(study_all
   study_all.cpp)
 
 target_link_libraries(study_topo_score PRIVATE
-  libapp
+  libcore
   libplug
   libdata
   libhist
@@ -20,7 +20,7 @@ target_link_libraries(study_topo_score PRIVATE
   dl)
 
 target_link_libraries(study_all PRIVATE
-  libapp
+  libcore
   libplug
   libdata
   libhist

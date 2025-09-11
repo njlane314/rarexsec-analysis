@@ -5,14 +5,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include <rarexsec/app/AnalysisDefinition.h>
-#include <rarexsec/app/AnalysisResult.h>
+#include <rarexsec/core/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisResult.h>
 #include <rarexsec/hist/HistogramFactory.h>
-#include <rarexsec/app/ISampleProcessor.h>
+#include <rarexsec/core/ISampleProcessor.h>
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/RegionAnalysis.h>
-#include <rarexsec/app/RegionHandle.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/RegionAnalysis.h>
+#include <rarexsec/core/RegionHandle.h>
+#include <rarexsec/core/VariableResult.h>
 
 #include <ROOT/RDataFrame.hxx>
 

@@ -12,10 +12,10 @@
 #include "TH1D.h"
 #include <TMatrixDSym.h>
 
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 #include <rarexsec/hist/BinnedHistogram.h>
 #include <rarexsec/hist/BinningDefinition.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/data/SampleTypes.h>
 
 namespace analysis {

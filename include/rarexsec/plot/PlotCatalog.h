@@ -8,11 +8,11 @@
 #include <vector>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisResult.h>
+#include <rarexsec/core/AnalysisResult.h>
 #include <rarexsec/plot/HistogramCut.h>
 #include <rarexsec/plot/IHistogramPlot.h>
 #include <rarexsec/plot/MatrixPlot.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 #include <rarexsec/plot/StackedHistogramPlot.h>
 #include <rarexsec/plot/UnstackedHistogramPlot.h>
 

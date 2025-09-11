@@ -16,8 +16,8 @@
 #include <rarexsec/plug/IPlotPlugin.h>
 #include <rarexsec/plot/DetectorDisplay.h>
 #include <rarexsec/plot/SemanticDisplay.h>
-#include <rarexsec/app/SelectionQuery.h>
-#include <rarexsec/app/SelectionRegistry.h>
+#include <rarexsec/core/SelectionQuery.h>
+#include <rarexsec/core/SelectionRegistry.h>
 
 namespace analysis {
 

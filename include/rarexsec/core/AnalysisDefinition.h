@@ -8,15 +8,15 @@
 #include <vector>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/hist/BinningDefinition.h>
 #include <rarexsec/hist/DynamicBinning.h>
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/RegionAnalysis.h>
-#include <rarexsec/app/RegionHandle.h>
-#include <rarexsec/app/SelectionQuery.h>
-#include <rarexsec/app/SelectionRegistry.h>
-#include <rarexsec/app/VariableHandle.h>
+#include <rarexsec/core/RegionAnalysis.h>
+#include <rarexsec/core/RegionHandle.h>
+#include <rarexsec/core/SelectionQuery.h>
+#include <rarexsec/core/SelectionRegistry.h>
+#include <rarexsec/core/VariableHandle.h>
 #include <rarexsec/data/VariableRegistry.h>
 
 namespace analysis {

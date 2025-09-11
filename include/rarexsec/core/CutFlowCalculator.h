@@ -9,10 +9,10 @@
 #include <vector>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisDefinition.h>
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/RegionAnalysis.h>
-#include <rarexsec/app/RegionHandle.h>
+#include <rarexsec/core/RegionAnalysis.h>
+#include <rarexsec/core/RegionHandle.h>
 #include <rarexsec/hist/StratifierRegistry.h>
 
 namespace analysis {

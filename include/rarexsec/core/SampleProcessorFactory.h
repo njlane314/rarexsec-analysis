@@ -9,12 +9,12 @@
 #include <utility>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisKey.h>
-#include <rarexsec/app/DataProcessor.h>
+#include <rarexsec/core/AnalysisKey.h>
+#include <rarexsec/core/DataProcessor.h>
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/MonteCarloProcessor.h>
-#include <rarexsec/app/RegionAnalysis.h>
-#include <rarexsec/app/RegionHandle.h>
+#include <rarexsec/core/MonteCarloProcessor.h>
+#include <rarexsec/core/RegionAnalysis.h>
+#include <rarexsec/core/RegionHandle.h>
 #include <rarexsec/data/SampleDataset.h>
 
 namespace analysis {

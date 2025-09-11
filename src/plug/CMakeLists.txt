@@ -8,7 +8,7 @@ target_include_directories(libplug
 
 target_link_libraries(libplug
   INTERFACE
-    libapp
+    libcore
     libplot
     libhist
     libdata

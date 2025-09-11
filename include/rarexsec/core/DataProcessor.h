@@ -1,7 +1,7 @@
 #ifndef DATA_PROCESSOR_H
 #define DATA_PROCESSOR_H
 
-#include <rarexsec/app/ISampleProcessor.h>
+#include <rarexsec/core/ISampleProcessor.h>
 
 namespace analysis {
 

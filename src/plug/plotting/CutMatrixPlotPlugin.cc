@@ -7,7 +7,7 @@
 #include <rarexsec/plot/HistogramCut.h>
 #include <rarexsec/plug/IPlotPlugin.h>
 #include <rarexsec/plot/PlotCatalog.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 
 namespace analysis {
 

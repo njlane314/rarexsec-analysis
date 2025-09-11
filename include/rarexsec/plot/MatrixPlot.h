@@ -11,11 +11,11 @@
 #include "TStyle.h"
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisResult.h>
+#include <rarexsec/core/AnalysisResult.h>
 #include <rarexsec/plot/HistogramCut.h>
 #include <rarexsec/plot/IHistogramPlot.h>
 #include <rarexsec/hist/QuadTreeBinning.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 
 namespace analysis {
 

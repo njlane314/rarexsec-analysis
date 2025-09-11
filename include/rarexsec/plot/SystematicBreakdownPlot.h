@@ -13,7 +13,7 @@
 #include "TLegend.h"
 
 #include <rarexsec/plot/IHistogramPlot.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 
 namespace analysis {
 

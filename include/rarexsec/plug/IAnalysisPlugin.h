@@ -3,11 +3,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include <rarexsec/app/AnalysisDefinition.h>
-#include <rarexsec/app/AnalysisResult.h>
-#include <rarexsec/app/RegionAnalysis.h>
+#include <rarexsec/core/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisResult.h>
+#include <rarexsec/core/RegionAnalysis.h>
 #include <rarexsec/data/RunConfig.h>
-#include <rarexsec/app/SelectionRegistry.h>
+#include <rarexsec/core/SelectionRegistry.h>
 
 namespace analysis {
 

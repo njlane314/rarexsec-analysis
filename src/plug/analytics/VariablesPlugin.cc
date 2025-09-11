@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <rarexsec/app/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisDefinition.h>
 #include <rarexsec/hist/BinningDefinition.h>
 #include <rarexsec/hist/DynamicBinning.h>
 #include <rarexsec/plug/IAnalysisPlugin.h>
