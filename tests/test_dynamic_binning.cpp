@@ -1,5 +1,5 @@
-#include "BinningDefinition.h"
-#include "DynamicBinning.h"
+#include <rarexsec/hist/BinningDefinition.h>
+#include <rarexsec/hist/DynamicBinning.h>
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"

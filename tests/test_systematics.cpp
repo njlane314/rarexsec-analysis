@@ -1,9 +1,9 @@
-#include "BinningDefinition.h"
-#include "DetectorSystematicStrategy.h"
-#include "SystematicsProcessor.h"
-#include "UniverseSystematicStrategy.h"
-#include "VariableResult.h"
-#include "WeightSystematicStrategy.h"
+#include <rarexsec/hist/BinningDefinition.h>
+#include <rarexsec/syst/DetectorSystematicStrategy.h>
+#include <rarexsec/syst/SystematicsProcessor.h>
+#include <rarexsec/syst/UniverseSystematicStrategy.h>
+#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/syst/WeightSystematicStrategy.h>
 #include <Eigen/Eigenvalues>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>

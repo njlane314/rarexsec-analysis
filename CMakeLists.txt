@@ -26,21 +26,14 @@ include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libapp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libdata"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libhist"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libplot"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libsyst"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libutils"
-    "${CMAKE_CURRENT_SOURCE_DIR}/libplug"
 )
 
-add_subdirectory(libdata)
-add_subdirectory(libutils)
-add_subdirectory(libhist)
-add_subdirectory(libplot)
-add_subdirectory(libsyst)
-add_subdirectory(libapp)
-add_subdirectory(libplug)
+add_subdirectory(src/data)
+add_subdirectory(src/utils)
+add_subdirectory(src/hist)
+add_subdirectory(src/plot)
+add_subdirectory(src/syst)
+add_subdirectory(src/app)
+add_subdirectory(src/plug)
 add_subdirectory(tests)
 add_subdirectory(studies)
