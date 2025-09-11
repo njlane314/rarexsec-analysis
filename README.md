@@ -14,20 +14,20 @@ The selection is applied in the following order:
 
 1. **Dataset and trigger gates**
    - For simulated events (`bnbdata == 0 && extdata == 0`): `_opfilter_pe_beam > 0` and `_opfilter_pe_veto < 20`.
+   - `software_trigger > 0` for BNB.
    - Run-dependent software trigger for Monte Carlo (falls back to the standard `software_trigger` when the run-dependent columns are unavailable):
      - before run 16880: `software_trigger_pre > 0` (or `software_trigger_pre_ext > 0` for NuMI)
      - after run 16880: `software_trigger_post > 0` (or `software_trigger_post_ext > 0` for NuMI)
 2. **Basic reconstruction checks**
    - `nslice == 1`
    - `topological_score > 0.06`
-   - optionally prune early: `n_pfps_gen2 > 1`
 3. **Neutrino-vertex fiducial volume**
    - `reco_nu_vtx_sce_x` in `[5, 251]` cm
    - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
-   - `reco_nu_vtx_sce_z` in `[20, 986]` cm, excluding the central region `675 < z < 775` cm for blinding
+   - `reco_nu_vtx_sce_z` in `[20, 986]` cm, excluding the central region `675 < z < 775` cm due to a dead region
 4. **Slice-level quality**
-   - at least 70% of reconstructed hits in the neutrino slice are within the fiducial volume (contained fraction ≥ 0.7)
-   - at least 50% of reconstructed hits in the neutrino slice are associated with a Pandora PFParticle (associated hits fraction ≥ 0.5)
+   - `slice_contained_fraction ≥ 0.7`
+   - `slice_cluster_fraction ≥ 0.5`
 5. **Muon candidate requirements** (index `i` over `muon_*` vectors)
    - `muon_trk_score_v[i] > 0.8` and `muon_trk_llr_pid_v[i] > 0.2`
    - `muon_trk_length_v[i] > 10` cm and `muon_trk_distance_v[i] < 4` cm
@@ -39,7 +39,6 @@ The selection is applied in the following order:
    - `pfp_num_plane_hits_U[i] > 0 && pfp_num_plane_hits_V[i] > 0 && pfp_num_plane_hits_Y[i] > 0`
 6. **Event pass**
    - `has_muon` := any `i` satisfying step 5
-   - ensure `n_pfps_gen2 > 1` if not already applied in step 2
 
 ## Run Periods
 
