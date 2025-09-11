@@ -450,6 +450,10 @@ def main() -> None:
                 logging.warning("No POT provided for %s:%s (on-beam).", beam_key, run)
 
             samples_in = run_details.get("samples", []) or []
+            if not samples_in:
+                logging.info("Skipping %s:%s (no samples).", beam_key, run)
+                continue
+
             samples_out = []
 
             for sample in samples_in:
