@@ -33,8 +33,7 @@ private:
            const ROOT::RVec<float> &start_x, const ROOT::RVec<float> &start_y,
            const ROOT::RVec<float> &start_z, const ROOT::RVec<float> &end_x,
            const ROOT::RVec<float> &end_y, const ROOT::RVec<float> &end_z,
-           const ROOT::RVec<int> &gens, const ROOT::RVec<float> &mcs,
-           const ROOT::RVec<float> &range, const ROOT::RVec<float> &avg,
+           const ROOT::RVec<int> &gens,
            const ROOT::RVec<int> &hits_u, const ROOT::RVec<int> &hits_v,
            const ROOT::RVec<int> &hits_y) {
           ROOT::RVec<bool> mask(scores.size());
@@ -58,9 +57,8 @@ private:
         {"trk_score_v", "trk_llr_pid_v", "track_length",
          "track_distance_to_vertex", "track_start_x", "track_start_y",
          "track_start_z", "track_end_x", "track_end_y", "track_end_z",
-         "trk_pfpgeneration_v", "trk_mcs_muon_mom_v", "trk_range_muon_mom_v",
-         "trk_rr_dedx_avg", "pfp_num_plane_hits_U", "pfp_num_plane_hits_V",
-         "pfp_num_plane_hits_Y"});
+         "trk_pfpgeneration_v", "pfp_num_plane_hits_U",
+         "pfp_num_plane_hits_V", "pfp_num_plane_hits_Y"});
   }
 
   ROOT::RDF::RNode extractMuonFeatures(ROOT::RDF::RNode df) const {
