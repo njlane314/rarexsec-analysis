@@ -1,18 +1,8 @@
 add_executable(study_topo_score
-  study_topo_score.cpp
-  presets/Presets_Standard.cpp
-  presets/Presets_Vertices.cpp
-  presets/Presets_Plots.cpp
-  presets/Presets_Preselections.cpp
-  presets/Presets_TopologicalScore.cpp)
+  study_topo_score.cpp)
 
 add_executable(study_all
-  study_all.cpp
-  presets/Presets_Standard.cpp
-  presets/Presets_Vertices.cpp
-  presets/Presets_Plots.cpp
-  presets/Presets_Preselections.cpp
-  presets/Presets_TopologicalScore.cpp)
+  study_all.cpp)
 
 target_link_libraries(study_topo_score PRIVATE
   libapp
