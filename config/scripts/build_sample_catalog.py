@@ -148,11 +148,18 @@ def get_total_pot_from_files(file_paths: list[str]) -> float:
 
     try:
         total = 0.0
-        for arrays in uproot.iterate(file_paths, "nuselection/SubRun", ["pot"], library="np"):
+        # Specify the TTree path for each file to avoid ambiguity when a file
+        # contains multiple TTrees (e.g. 'nuselection/EventSelectionFilter' and
+        # 'nuselection/SubRun').
+        file_map = {path: "nuselection/SubRun" for path in file_paths}
+        for arrays in uproot.iterate(file_map, ["pot"], library="np"):
             total += arrays["pot"].sum()
         return float(total)
     except Exception as exc:
-        print(f"    Warning: Bulk POT read failed ({exc}); falling back to per-file method.", file=sys.stderr)
+        print(
+            f"    Warning: Bulk POT read failed ({exc}); falling back to per-file method.",
+            file=sys.stderr,
+        )
         return float(sum(_pot_from_file(Path(p)) for p in file_paths))
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
