@@ -12,9 +12,12 @@ add_executable(study_neutrino_vertex
 
 add_executable(study_numucc_snapshot
   study_numucc_snapshot.cpp)
-  
+
 add_executable(study_region_event_display
   study_region_event_display.cpp)
+
+add_executable(study_numucc_selection
+  study_numucc_selection.cpp)
 
 target_link_libraries(study_topo_score PRIVATE
   core
@@ -107,6 +110,22 @@ target_link_libraries(study_region_event_display PRIVATE
   TMVA
   dl)
 
+target_link_libraries(study_numucc_selection PRIVATE
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
+  Eigen3::Eigen
+  nlohmann_json::nlohmann_json
+  ${ROOT_LIBRARIES}
+  TBB::tbb
+  TMVA
+  dl)
+
 
 
 set_target_properties(study_topo_score study_all study_slice_cluster_fraction study_neutrino_vertex study_region_event_display study_numucc_snapshot PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set_target_properties(study_numucc_selection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
