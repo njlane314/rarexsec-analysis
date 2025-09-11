@@ -93,6 +93,18 @@ class SelectionRegistry {
                "has_muon",
                "n_pfps_gen2 > 1"}}},
 
+            {"NUMUSEL",
+             {"NuMu Selection",
+              {"NUMUPRESEL",
+               "n_muons_tot > 0"}}},
+
+            {"NUMUSEL_CRT",
+             {"NuMu Selection with CRT cuts",
+              {"NUMUPRESEL",
+               "n_muons_tot > 0",
+               "(crtveto != 1 || crthitpe < 100)",
+               "_closestNuCosmicDist > 5"}}},
+
             {"ALL_EVENTS", {"All Events", {}}},
             {"NONE", {"No Preselection", {}}}};
 

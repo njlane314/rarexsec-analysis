@@ -96,8 +96,9 @@ class MuonSelectionProcessor : public IEventProcessor {
                                           {"track_theta", "muon_mask"});
 
         auto count_df = mu_cos_df.Define("n_muons", "ROOT::VecOps::Sum(muon_mask)");
+        auto tot_df = count_df.Define("n_muons_tot", "n_muons");
 
-        return count_df.Define("has_muon", "n_muons > 0");
+        return tot_df.Define("has_muon", "n_muons > 0");
     }
 };
 

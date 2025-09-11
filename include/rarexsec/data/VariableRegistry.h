@@ -250,6 +250,8 @@ private:
                                                "event_total_hits",
                                                "crt_veto",
                                                "crt_hit_pe",
+                                               "crtveto",
+                                               "crthitpe",
                                                "pfp_slice_indices",
                                                "backtracked_pdg_codes",
                                                "backtracked_energies",
@@ -304,7 +306,8 @@ private:
                                                "slice_topological_scores",
                                                "topological_score",
                                                "slice_cluster_fraction",
-                                               "slice_contained_fraction"};
+                                               "slice_contained_fraction",
+                                               "_closestNuCosmicDist"};
 
     return v;
   }
@@ -470,7 +473,8 @@ private:
     static const std::vector<std::string> v = {
         "in_reco_fiducial",  "n_pfps_gen2",
         "n_pfps_gen3",       "quality_event",
-        "n_muons",           "has_muon",
+        "n_muons",           "n_muons_tot",
+        "has_muon",
         "muon_track_length", "muon_track_costheta",
         "base_event_weight", "nominal_event_weight",
         "in_fiducial",       "mc_n_strange",
