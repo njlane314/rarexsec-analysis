@@ -25,6 +25,27 @@ struct RegionDef {
   std::string expr;
 };
 
+struct VarDef {
+  std::string name;
+  std::string branch;
+  std::string label;
+  std::string stratum{"channel_definitions"};
+  std::vector<std::string> regions;
+  nlohmann::json bins{{"n", 100}, {"min", 0.0}, {"max", 1.0}};
+
+  explicit VarDef(std::string n) : name(std::move(n)), branch(name), label(name) {}
+
+  VarDef& as(std::string b) { branch = std::move(b); return *this; }
+  VarDef& titled(std::string l) { label = std::move(l); return *this; }
+  VarDef& stratify(std::string s) { stratum = std::move(s); return *this; }
+  VarDef& in(std::string r) { regions.push_back(std::move(r)); return *this; }
+  VarDef& bins_config(nlohmann::json b) { bins = std::move(b); return *this; }
+  VarDef& bins(int n, double mn, double mx) {
+    bins = {{"n", n}, {"min", mn}, {"max", mx}};
+    return *this;
+  }
+};
+
 class Study {
 public:
   explicit Study(std::string name) : name_(std::move(name)) {}
@@ -41,7 +62,12 @@ public:
   }
 
   Study& var(std::string variable_name) {
-    variables_.push_back(std::move(variable_name));
+    variables_.emplace_back(std::move(variable_name));
+    return *this;
+  }
+
+  Study& var(VarDef v) {
+    variables_.push_back(std::move(v));
     return *this;
   }
 
@@ -70,13 +96,19 @@ public:
     if (!variables_.empty()) {
       nlohmann::json vars_cfg = nlohmann::json::array();
       for (auto const& v : variables_) {
+        nlohmann::json r = PluginArgs::array();
+        if (!v.regions.empty()) {
+          for (auto const& reg : v.regions) r.push_back(reg);
+        } else {
+          r.push_back(defaultRegionKey());
+        }
         vars_cfg.push_back({
-            {"name", v},
-            {"branch", v},
-            {"label", v},
-            {"stratum", "channel_definitions"},
-            {"regions", PluginArgs::array({defaultRegionKey()})},
-            {"bins", {{"n", 100}, {"min", 0.0}, {"max", 1.0}}}});
+            {"name", v.name},
+            {"branch", v.branch},
+            {"label", v.label},
+            {"stratum", v.stratum},
+            {"regions", r},
+            {"bins", v.bins}});
       }
       analysis_specs.push_back({
           "VariablesPlugin",
@@ -138,7 +170,7 @@ private:
   std::string name_;
   std::string samples_path_;
   std::vector<RegionDef> regions_;
-  std::vector<std::string> variables_;
+  std::vector<VarDef> variables_;
   std::vector<PlotDef> plots_;
   std::vector<nlohmann::json> perf_;
   std::vector<nlohmann::json> cutflow_;
