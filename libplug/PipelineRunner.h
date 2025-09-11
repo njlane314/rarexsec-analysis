@@ -16,7 +16,6 @@
 #include "AnalysisRunner.h"
 #include "HistogramFactory.h"
 #include "Logger.h"
-#include "PipelineBuilder.h"
 #include "PluginAliases.h"
 #include "PluginSpec.h"
 #include "RunConfigLoader.h"
@@ -148,72 +147,6 @@ inline void runPlotting(const nlohmann::json &samples,
 // Helper function to build analysis and plot pipelines from a JSON
 // description. The returned pair contains analysis plugin specs and
 // plot plugin specs respectively.
-inline std::pair<PluginSpecList, PluginSpecList>
-buildPipeline(const nlohmann::json &cfg) {
-  AnalysisPluginHost a_host; // dummy hosts
-  PlotPluginHost p_host;
-  PipelineBuilder builder(a_host, p_host);
-
-  if (cfg.contains("presets")) {
-    for (auto const &p : cfg.at("presets")) {
-      std::string name = p.at("name").get<std::string>();
-      PluginArgs vars;
-      if (p.contains("vars")) {
-        const auto &vj = p.at("vars");
-        vars = PluginArgs{{"analysis_configs",
-                            vj.value("analysis_configs", nlohmann::json::object())},
-                           {"plot_configs",
-                            vj.value("plot_configs", nlohmann::json::object())}};
-      }
-      std::unordered_map<std::string, PluginArgs> overrides;
-      if (p.contains("overrides")) {
-        for (auto const &[k, v] : p.at("overrides").items()) {
-          overrides.emplace(k, PluginArgs{{"analysis_configs",
-                                           v.value("analysis_configs",
-                                                   nlohmann::json::object())},
-                                          {"plot_configs",
-                                           v.value("plot_configs",
-                                                   nlohmann::json::object())}});
-        }
-      }
-      std::string kind = p.value("kind", std::string("region"));
-      if (kind == "variable")
-        builder.variable(name, vars, overrides);
-      else if (kind == "preset")
-        builder.preset(name, vars, overrides);
-      else
-        builder.region(name, vars, overrides);
-    }
-  }
-
-  if (cfg.contains("plugins")) {
-    for (auto const &p : cfg.at("plugins")) {
-      std::string tgt = p.value("target", std::string("analysis"));
-      Target target = Target::Analysis;
-      if (tgt == "plot")
-        target = Target::Plot;
-      else if (tgt == "both")
-        target = Target::Both;
-
-      std::string id = p.at("id").get<std::string>();
-      PluginArgs args;
-      if (p.contains("args")) {
-        const auto &a = p.at("args");
-        if (a.contains("analysis_configs"))
-          args.analysis_configs = a.at("analysis_configs");
-        if (a.contains("plot_configs"))
-          args.plot_configs = a.at("plot_configs");
-      }
-      builder.add(target, id, args);
-    }
-  }
-
-  builder.uniqueById();
-  PluginSpecList a_specs = builder.analysisSpecs();
-  PluginSpecList p_specs = builder.plotSpecs();
-  return {a_specs, p_specs};
-}
-
 // PipelineRunner orchestrates the execution of the analysis and optional
 // plotting stages once a pipeline has been constructed.
 class PipelineRunner {
