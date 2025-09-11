@@ -5,7 +5,7 @@
 #include <string>
 
 #include <rarexsec/hist/BinningDefinition.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 
 namespace analysis {
 

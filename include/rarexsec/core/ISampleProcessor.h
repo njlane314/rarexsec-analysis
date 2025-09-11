@@ -1,7 +1,7 @@
 #ifndef ISAMPLE_PROCESSOR_H
 #define ISAMPLE_PROCESSOR_H
 
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 #include <rarexsec/hist/HistogramFactory.h>
 #include <ROOT/RDataFrame.hxx>
 #include <vector>

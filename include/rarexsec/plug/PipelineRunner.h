@@ -12,8 +12,8 @@
 #include <nlohmann/json.hpp>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisResult.h>
-#include <rarexsec/app/AnalysisRunner.h>
+#include <rarexsec/core/AnalysisResult.h>
+#include <rarexsec/core/AnalysisRunner.h>
 #include <rarexsec/hist/HistogramFactory.h>
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/plug/PluginAliases.h>

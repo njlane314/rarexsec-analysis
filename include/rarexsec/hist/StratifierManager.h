@@ -8,7 +8,7 @@
 
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/hist/IHistogramStratifier.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/hist/StratifierRegistry.h>
 #include <rarexsec/hist/ScalarStratifier.h>
 #include <rarexsec/hist/VectorStratifier.h>

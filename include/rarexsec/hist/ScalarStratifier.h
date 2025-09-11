@@ -2,7 +2,7 @@
 #define SCALAR_STRATIFIER_H
 
 #include <rarexsec/hist/IHistogramStratifier.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/hist/StratifierRegistry.h>
 
 #include <memory>

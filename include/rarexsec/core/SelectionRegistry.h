@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 
 namespace analysis {
 

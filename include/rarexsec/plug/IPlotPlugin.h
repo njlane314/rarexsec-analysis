@@ -1,7 +1,7 @@
 #ifndef IPLOT_PLUGIN_H
 #define IPLOT_PLUGIN_H
 
-#include <rarexsec/app/AnalysisResult.h>
+#include <rarexsec/core/AnalysisResult.h>
 
 namespace analysis {
 

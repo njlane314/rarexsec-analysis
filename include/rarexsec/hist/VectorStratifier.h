@@ -2,7 +2,7 @@
 #define VECTOR_STRATIFIER_H
 
 #include <rarexsec/hist/IHistogramStratifier.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include "ROOT/RVec.hxx"
 #include <rarexsec/hist/StratifierRegistry.h>
 

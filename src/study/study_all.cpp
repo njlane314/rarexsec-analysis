@@ -1,8 +1,8 @@
-#include <workflow/Study.h>
-#include <workflow/Helpers.h>
-#include <workflow/Display.h>
-#include <workflow/Plots.h>
-#include <workflow/Snapshot.h>
+#include <rarexsec/study/Study.h>
+#include <rarexsec/study/Helpers.h>
+#include <rarexsec/study/Display.h>
+#include <rarexsec/study/Plots.h>
+#include <rarexsec/study/Snapshot.h>
 using namespace analysis::dsl;
 
 int main() {

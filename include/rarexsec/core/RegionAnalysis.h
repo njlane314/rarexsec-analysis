@@ -1,7 +1,7 @@
 #pragma once
 
-#include <rarexsec/app/VariableResult.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/VariableResult.h>
+#include <rarexsec/core/AnalysisKey.h>
 
 #include <map>
 #include <stdexcept>

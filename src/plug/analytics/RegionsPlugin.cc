@@ -1,5 +1,5 @@
 #include <rarexsec/plug/PluginRegistry.h>
-#include <rarexsec/app/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisDefinition.h>
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/plug/IAnalysisPlugin.h>
 #include <algorithm>

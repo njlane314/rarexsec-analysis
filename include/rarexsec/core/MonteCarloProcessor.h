@@ -3,7 +3,7 @@
 
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/hist/BinnedHistogram.h>
-#include <rarexsec/app/ISampleProcessor.h>
+#include <rarexsec/core/ISampleProcessor.h>
 #include <unordered_map>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDFHelpers.hxx>

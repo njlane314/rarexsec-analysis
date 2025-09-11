@@ -1,6 +1,6 @@
-#include <rarexsec/app/MonteCarloProcessor.h>
+#include <rarexsec/core/MonteCarloProcessor.h>
 #include <rarexsec/hist/HistogramFactory.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 #include <rarexsec/hist/BinningDefinition.h>
 #include <rarexsec/data/SampleDataset.h>
 #include <catch2/catch_test_macros.hpp>

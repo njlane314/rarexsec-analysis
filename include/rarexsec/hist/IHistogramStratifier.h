@@ -14,7 +14,7 @@
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/hist/BinnedHistogram.h>
 #include <rarexsec/hist/BinningDefinition.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/hist/StratifierRegistry.h>
 
 namespace analysis {

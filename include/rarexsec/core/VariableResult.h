@@ -9,7 +9,7 @@
 #include "TMatrixDSym.h"
 
 #include <rarexsec/hist/BinnedHistogram.h>
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/data/SampleTypes.h>
 
 namespace analysis {

@@ -4,8 +4,8 @@
 #include "TFile.h"
 #include "TObject.h"
 
-#include <rarexsec/app/VariableResult.h>
-#include <rarexsec/app/RegionAnalysis.h>
+#include <rarexsec/core/VariableResult.h>
+#include <rarexsec/core/RegionAnalysis.h>
 
 #include <iomanip>
 #include <iostream>

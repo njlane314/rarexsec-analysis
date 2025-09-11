@@ -9,20 +9,20 @@
 #include <vector>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
-#include <rarexsec/app/AnalysisDefinition.h>
-#include <rarexsec/app/AnalysisKey.h>
-#include <rarexsec/app/AnalysisResult.h>
+#include <rarexsec/core/AnalysisDefinition.h>
+#include <rarexsec/core/AnalysisKey.h>
+#include <rarexsec/core/AnalysisResult.h>
 #include <rarexsec/hist/HistogramFactory.h>
 #include <rarexsec/utils/Logger.h>
-#include <rarexsec/app/RegionAnalysis.h>
+#include <rarexsec/core/RegionAnalysis.h>
 #include <rarexsec/data/SampleDataset.h>
-#include <rarexsec/app/SelectionRegistry.h>
+#include <rarexsec/core/SelectionRegistry.h>
 #include <rarexsec/syst/SystematicsProcessor.h>
-#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/core/VariableResult.h>
 
-#include <rarexsec/app/SampleProcessorFactory.h>
-#include <rarexsec/app/CutFlowCalculator.h>
-#include <rarexsec/app/VariableProcessor.h>
+#include <rarexsec/core/SampleProcessorFactory.h>
+#include <rarexsec/core/CutFlowCalculator.h>
+#include <rarexsec/core/VariableProcessor.h>
 
 #include <rarexsec/plug/PluginAliases.h>
 #include <rarexsec/plug/PluginSpec.h>

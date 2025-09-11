@@ -16,7 +16,7 @@
 #include "RtypesCore.h"
 #include "TColor.h"
 
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/utils/Logger.h>
 
 namespace analysis {

@@ -9,7 +9,7 @@
 
 #include "ROOT/RDataFrame.hxx"
 
-#include <rarexsec/app/AnalysisKey.h>
+#include <rarexsec/core/AnalysisKey.h>
 #include <rarexsec/data/BlipProcessor.h>
 #include <rarexsec/data/IEventProcessor.h>
 #include <rarexsec/utils/Logger.h>
@@ -17,7 +17,7 @@
 #include <rarexsec/data/ReconstructionProcessor.h>
 #include <rarexsec/data/RunConfigRegistry.h>
 #include <rarexsec/data/SampleDefinition.h>
-#include <rarexsec/app/SelectionQuery.h>
+#include <rarexsec/core/SelectionQuery.h>
 #include <rarexsec/data/TruthChannelProcessor.h>
 #include <rarexsec/data/VariableRegistry.h>
 #include <rarexsec/data/WeightProcessor.h>
