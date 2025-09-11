@@ -248,6 +248,24 @@ def process_sample_entry(
         )
         return False
     output_file = processed_analysis_path / f"{sample_key}.root"
+    output_dir = output_file.parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if not os.access(output_dir, os.W_OK):
+        print(
+            f"    Error: Output directory '{output_dir}' is not writable. "
+            "Ensure it exists and you have write permission.",
+            file=sys.stderr,
+        )
+        return False
+    if output_file.exists():
+        try:
+            output_file.unlink()
+        except OSError as exc:
+            print(
+                f"    Error: Cannot remove existing file '{output_file}': {exc}",
+                file=sys.stderr,
+            )
+            return False
     entry["relative_path"] = output_file.name
     root_files = list(list_root_files(input_dir))
     if not root_files:
