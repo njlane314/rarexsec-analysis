@@ -14,6 +14,8 @@ public:
         df.Define("nslice", "num_slices")
             .Define("_opfilter_pe_beam", "optical_filter_pe_beam")
             .Define("_opfilter_pe_veto", "optical_filter_pe_veto")
+            .Define("reco_nu_vtx_sce_x", "reco_neutrino_vertex_sce_x")
+            .Define("reco_nu_vtx_sce_y", "reco_neutrino_vertex_sce_y")
             .Define("reco_nu_vtx_sce_z", "reco_neutrino_vertex_sce_z")
             .Define("bnbdata",
                     [st]() { return st == SampleOrigin::kData ? 1 : 0; })
@@ -24,6 +26,8 @@ public:
         "numu_presel",
         "nslice == 1 && ((_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20) || "
         "bnbdata == 1 || extdata == 1) && "
+        "reco_nu_vtx_sce_x > 5 && reco_nu_vtx_sce_x < 251 && "
+        "reco_nu_vtx_sce_y > -110 && reco_nu_vtx_sce_y < 110 && "
         "(reco_nu_vtx_sce_z < 675 || reco_nu_vtx_sce_z > 775) && "
         "topological_score > 0.06");
 
