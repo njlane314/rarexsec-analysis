@@ -19,8 +19,12 @@ struct PlotDef {
   PlotDef& logY(){ logy = true; return *this; }
 };
 
-inline PlotDef stack(std::string v){ return PlotDef{"stack", std::move(v)}; }
-inline PlotDef roc(std::string v){ return PlotDef{"roc", std::move(v)}; }
+inline PlotDef stack(std::string v){
+  return PlotDef{"stack", std::move(v), "", "", ""};
+}
+inline PlotDef roc(std::string v){
+  return PlotDef{"roc", std::move(v), "", "", ""};
+}
 
 // Cut direction helpers for Performance plots
 namespace dir {

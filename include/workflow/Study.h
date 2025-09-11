@@ -31,7 +31,7 @@ struct VarDef {
   std::string label;
   std::string stratum{"channel_definitions"};
   std::vector<std::string> regions;
-  nlohmann::json bins{{"n", 100}, {"min", 0.0}, {"max", 1.0}};
+  nlohmann::json binning{{"n", 100}, {"min", 0.0}, {"max", 1.0}};
 
   explicit VarDef(std::string n) : name(std::move(n)), branch(name), label(name) {}
 
@@ -39,9 +39,9 @@ struct VarDef {
   VarDef& titled(std::string l) { label = std::move(l); return *this; }
   VarDef& stratify(std::string s) { stratum = std::move(s); return *this; }
   VarDef& in(std::string r) { regions.push_back(std::move(r)); return *this; }
-  VarDef& bins_config(nlohmann::json b) { bins = std::move(b); return *this; }
+  VarDef& bins_config(nlohmann::json b) { binning = std::move(b); return *this; }
   VarDef& bins(int n, double mn, double mx) {
-    bins = {{"n", n}, {"min", mn}, {"max", mx}};
+    binning = {{"n", n}, {"min", mn}, {"max", mx}};
     return *this;
   }
 };
@@ -108,7 +108,7 @@ public:
             {"label", v.label},
             {"stratum", v.stratum},
             {"regions", r},
-            {"bins", v.bins}});
+            {"bins", v.binning}});
       }
       analysis_specs.push_back({
           "VariablesPlugin",
