@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 #include "PluginSpec.h"
 
-namespace analysis::dsl {
+namespace analysis::workflow {
 
 struct DisplayMode {
   std::string kind;
@@ -73,5 +73,5 @@ private:
 
 inline EventDisplayBuilder events(){ return {}; }
 
-} // namespace analysis::dsl
+} // namespace analysis::workflow
 

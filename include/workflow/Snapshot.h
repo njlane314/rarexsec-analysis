@@ -3,7 +3,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
-namespace analysis::dsl {
+namespace analysis::workflow {
 
 class SnapshotBuilder {
 public:
@@ -24,4 +24,4 @@ private:
 };
 inline SnapshotBuilder snapshot(){ return {}; }
 
-} // namespace analysis::dsl
+} // namespace analysis::workflow

@@ -162,7 +162,7 @@ AnalysisRunner runner(data_loader, std::move(histogram_factory),
 auto result = runner.run();
 ```
 
-See [`examples/analysis_runner_example.cpp`](examples/analysis_runner_example.cpp)
+See [`studies/analysis_runner_example.cpp`](studies/analysis_runner_example.cpp)
 for a more complete demonstration.
 
 ## Run Periods

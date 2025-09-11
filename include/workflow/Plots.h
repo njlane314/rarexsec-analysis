@@ -3,7 +3,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
-namespace analysis::dsl {
+namespace analysis::workflow {
 
 struct PlotDef {
   std::string kind;             // "stack" | "roc" | ...
@@ -101,4 +101,4 @@ private:
 };
 inline CutFlowBuilder cutflow(){ return {}; }
 
-} // namespace analysis::dsl
+} // namespace analysis::workflow

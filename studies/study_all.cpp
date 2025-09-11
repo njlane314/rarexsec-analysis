@@ -1,9 +1,9 @@
-#include <analysis/dsl/Study.h>
-#include <analysis/dsl/Helpers.h>
-#include <analysis/dsl/Display.h>
-#include <analysis/dsl/Plots.h>
-#include <analysis/dsl/Snapshot.h>
-using namespace analysis::dsl;
+#include <workflow/Study.h>
+#include <workflow/Helpers.h>
+#include <workflow/Display.h>
+#include <workflow/Plots.h>
+#include <workflow/Snapshot.h>
+using namespace analysis::workflow;
 
 int main() {
   auto s = Study("NUMU CC end-to-end")

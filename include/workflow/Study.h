@@ -17,7 +17,7 @@
 #include "Plots.h"
 #include "Snapshot.h"
 
-namespace analysis::dsl {
+namespace analysis::workflow {
 
 struct RegionDef {
   std::string key;
@@ -146,5 +146,5 @@ private:
   std::vector<nlohmann::json> displays_;
 };
 
-} // namespace analysis::dsl
+} // namespace analysis::workflow
 
