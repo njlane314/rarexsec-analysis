@@ -91,6 +91,19 @@ The same configuration can be enabled via the `EVENT_DISPLAY` preset:
 }
 ```
 
+## Muon neutrino selection
+
+- exactly one reconstructed slice
+- simulated events must pass the optical filter
+- neutrino vertex inside the fiducial volume (x 5–251 cm, y −110–110 cm, z < 675 cm or z > 775 cm)
+- topological score > 0.06
+- muon track score > 0.8 and log-likelihood PID > 0.2
+- muon length > 10 cm and within 4 cm of the vertex
+- muon start and end inside fiducial volume (x 5–251 cm, y −110–110 cm, z 20–986 cm)
+- muon is PFParticle generation 2 with positive MCS and range estimates
+- muon has hits on all three planes
+- event contains at least one muon and n_pfps_gen2 > 1
+
 ## Region presets
 
 Common selection regions can be added via presets. The framework provides a
