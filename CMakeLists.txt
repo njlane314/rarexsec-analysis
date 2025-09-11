@@ -28,12 +28,4 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-add_subdirectory(src/data)
-add_subdirectory(src/utils)
-add_subdirectory(src/hist)
-add_subdirectory(src/plot)
-add_subdirectory(src/syst)
-add_subdirectory(src/core)
-add_subdirectory(src/plug)
-add_subdirectory(src/tests)
-add_subdirectory(src/run)
+add_subdirectory(src)

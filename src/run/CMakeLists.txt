@@ -11,13 +11,13 @@ add_executable(study_neutrino_vertex
   study_neutrino_vertex.cpp)
 
 target_link_libraries(study_topo_score PRIVATE
-  libcore
-  libplug
-  libdata
-  libhist
-  libplot
-  libsyst
-  libutils
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
   Eigen3::Eigen
   nlohmann_json::nlohmann_json
   ${ROOT_LIBRARIES}
@@ -26,13 +26,13 @@ target_link_libraries(study_topo_score PRIVATE
   dl)
 
 target_link_libraries(study_all PRIVATE
-  libcore
-  libplug
-  libdata
-  libhist
-  libplot
-  libsyst
-  libutils
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
   Eigen3::Eigen
   nlohmann_json::nlohmann_json
   ${ROOT_LIBRARIES}
@@ -41,13 +41,13 @@ target_link_libraries(study_all PRIVATE
   dl)
 
 target_link_libraries(study_slice_cluster_fraction PRIVATE
-  libcore
-  libplug
-  libdata
-  libhist
-  libplot
-  libsyst
-  libutils
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
   Eigen3::Eigen
   nlohmann_json::nlohmann_json
   ${ROOT_LIBRARIES}
@@ -56,13 +56,13 @@ target_link_libraries(study_slice_cluster_fraction PRIVATE
   dl)
 
 target_link_libraries(study_neutrino_vertex PRIVATE
-  libcore
-  libplug
-  libdata
-  libhist
-  libplot
-  libsyst
-  libutils
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
   Eigen3::Eigen
   nlohmann_json::nlohmann_json
   ${ROOT_LIBRARIES}
