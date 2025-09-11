@@ -7,50 +7,6 @@
     "samples": {
         "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
         "beamlines": {
-            "bnb": {
-                "run1": {
-                    "pot": 3.332e+20,
-                    "samples": []
-                },
-                "run2": {
-                    "pot": 3.057e+20,
-                    "samples": []
-                },
-                "run3": {
-                    "pot": 2.671e+20,
-                    "samples": []
-                },
-                "run4": {
-                    "pot": 3.273e+20,
-                    "samples": []
-                },
-                "run5": {
-                    "pot": 1.366e+20,
-                    "samples": []
-                }
-            },
-            "bnb_ext": {
-                "run1": {
-                    "ext_triggers": 40062895,
-                    "samples": []
-                },
-                "run2": {
-                    "ext_triggers": 165820967,
-                    "samples": []
-                },
-                "run3": {
-                    "ext_triggers": 194770254,
-                    "samples": []
-                },
-                "run4": {
-                    "ext_triggers": 288582511,
-                    "samples": []
-                },
-                "run5": {
-                    "ext_triggers": 138338167,
-                    "samples": []
-                }
-            },
             "numi_fhc": {
                 "run1": {
                     "pot": 3.922e+20,
@@ -98,44 +54,6 @@
                             "relative_path": "mc_dirt_run1_fhc.root"
                         }
                     ]
-                },
-                "run2": {
-                    "pot": 1.766e+20,
-                    "samples": []
-                },
-                "run3": {
-                    "pot": 446600000000000.0,
-                    "samples": []
-                },
-                "run4": {
-                    "pot": 2.126e+20,
-                    "samples": []
-                },
-                "run5": {
-                    "pot": 2.461e+20,
-                    "samples": []
-                }
-            },
-            "numi_rhc": {
-                "run1": {
-                    "pot": 6.268e+19,
-                    "samples": []
-                },
-                "run2": {
-                    "pot": 2.971e+20,
-                    "samples": []
-                },
-                "run3": {
-                    "pot": 5.387e+20,
-                    "samples": []
-                },
-                "run4": {
-                    "pot": 3.111e+20,
-                    "samples": []
-                },
-                "run5": {
-                    "pot": 4645000000000000.0,
-                    "samples": []
                 }
             },
             "numi_ext": {
@@ -151,22 +69,6 @@
                             "triggers": 19565379
                         }
                     ]
-                },
-                "run2": {
-                    "ext_triggers": 165820967,
-                    "samples": []
-                },
-                "run3": {
-                    "ext_triggers": 194770254,
-                    "samples": []
-                },
-                "run4": {
-                    "ext_triggers": 288582511,
-                    "samples": []
-                },
-                "run5": {
-                    "ext_triggers": 138338167,
-                    "samples": []
                 }
             }
         }
