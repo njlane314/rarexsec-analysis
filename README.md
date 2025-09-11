@@ -110,9 +110,8 @@ The selection is defined in terms of the following variables:
   - start/end inside fiducial volume:
     - `muon_trk_start_x_v[i]`, `muon_trk_end_x_v[i]` in `[5, 251]` cm
     - `muon_trk_start_y_v[i]`, `muon_trk_end_y_v[i]` in `[-110, 110]` cm
-    - `muon_trk_start_z_v[i]`, `muon_trk_end_z_v[i]` in `[20, 986]` cm
+  - `muon_trk_start_z_v[i]`, `muon_trk_end_z_v[i]` in `[20, 986]` cm
   - `muon_pfp_generation_v[i] == 2`
-  - `muon_trk_mcs_muon_mom_v[i] > 0` and `muon_trk_range_muon_mom_v[i] > 0`
   - `pfp_num_plane_hits_U[i] > 0 && pfp_num_plane_hits_V[i] > 0 &&
     pfp_num_plane_hits_Y[i] > 0`
 - event-level: `has_muon` and `n_pfps_gen2 > 1`
