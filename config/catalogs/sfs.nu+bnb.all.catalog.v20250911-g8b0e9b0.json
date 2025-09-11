@@ -1,7 +1,7 @@
 {
     "role": "catalog",
     "schema_version": "1.0",
-    "produced_at": "2025-09-11T19:18:45+00:00",
+    "produced_at": "2025-09-11T19:42:58+00:00",
     "source_recipe_path": "config/analysis_recipe.json",
     "source_recipe_hash": "8b0e9b0",
     "samples": {
@@ -67,12 +67,12 @@
                                     "variation_type": "cv",
                                     "dataset_id": "numi.fhc.r1.mc.inc.sel-beam.cv",
                                     "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
-                                    "pot": 3.0470410537403417e+20
+                                    "pot": 3.0470412137616795e+20
                                 }
                             ],
                             "dataset_id": "numi.fhc.r1.mc.inc.sel-beam",
                             "relative_path": "mc_inclusive_run1_fhc.root",
-                            "pot": 1.3308774445500942e+21
+                            "pot": 1.3308774439702065e+21
                         },
                         {
                             "sample_key": "mc_strangeness_run1_fhc",
@@ -84,12 +84,12 @@
                                     "variation_type": "cv",
                                     "dataset_id": "numi.fhc.r1.mc.strange.sel-strange.cv",
                                     "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
-                                    "pot": 3.0470410537403417e+20
+                                    "pot": 3.0470412137616795e+20
                                 }
                             ],
                             "dataset_id": "numi.fhc.r1.mc.strange.sel-strange",
                             "relative_path": "mc_strangeness_run1_fhc.root",
-                            "pot": 1.4322893600129322e+23
+                            "pot": 1.4322894271958414e+23
                         },
                         {
                             "sample_key": "mc_dirt_run1_fhc",
