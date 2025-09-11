@@ -1,5 +1,5 @@
-#include "BinningDefinition.h"
-#include "QuadTreeBinning.h"
+#include <rarexsec/hist/BinningDefinition.h>
+#include <rarexsec/hist/QuadTreeBinning.h>
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"

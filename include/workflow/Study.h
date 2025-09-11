@@ -10,9 +10,9 @@
 // PluginSpec/Args types and directly build the specification lists used by the
 // PipelineRunner.  This keeps the user facing DSL intact while avoiding the
 // indirection of PipelineBuilder and PresetRegistry.
-#include "PluginSpec.h"
-#include "PluginArgs.h"
-#include "PipelineRunner.h"
+#include <rarexsec/plug/PluginSpec.h>
+#include <rarexsec/plug/PluginArgs.h>
+#include <rarexsec/plug/PipelineRunner.h>
 #include "Display.h"
 #include "Plots.h"
 #include "Snapshot.h"

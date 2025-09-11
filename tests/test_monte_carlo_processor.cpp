@@ -1,8 +1,8 @@
-#include "MonteCarloProcessor.h"
-#include "HistogramFactory.h"
-#include "VariableResult.h"
-#include "BinningDefinition.h"
-#include "SampleDataset.h"
+#include <rarexsec/app/MonteCarloProcessor.h>
+#include <rarexsec/hist/HistogramFactory.h>
+#include <rarexsec/app/VariableResult.h>
+#include <rarexsec/hist/BinningDefinition.h>
+#include <rarexsec/data/SampleDataset.h>
 #include <catch2/catch_test_macros.hpp>
 #include <ROOT/RDataFrame.hxx>
 #include <unordered_map>

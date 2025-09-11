@@ -3,7 +3,7 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "PluginSpec.h"
+#include <rarexsec/plug/PluginSpec.h>
 
 namespace analysis::dsl {
 
