@@ -26,13 +26,15 @@ public:
                     return run < 16880 ? pre > 0 : post > 0;
                 },
                 {"run", "software_trigger_pre_ext", "software_trigger_post_ext"});
-        } else {
+        } else if (proc_df.HasColumn("software_trigger_pre")) {
             proc_df = proc_df.Define(
                 "software_trigger",
                 [](unsigned run, int pre, int post) {
                     return run < 16880 ? pre > 0 : post > 0;
                 },
                 {"run", "software_trigger_pre", "software_trigger_post"});
+        } else if (!proc_df.HasColumn("software_trigger")) {
+            proc_df = proc_df.Define("software_trigger", []() { return true; });
         }
     } else {
         proc_df = proc_df.Define("software_trigger", []() { return true; });
