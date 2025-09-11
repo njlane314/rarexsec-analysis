@@ -17,6 +17,7 @@ import subprocess
 import shutil
 import numpy as np
 import uproot
+import os
 
 SCHEMA_VERSION = "1.0"
 
@@ -136,8 +137,21 @@ def get_total_pot_from_single_file(file_path: Path) -> float:
     return 0.0
 
 def get_total_pot_from_files_parallel(file_paths: list[str]) -> float:
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        return sum(executor.map(get_total_pot_from_single_file, map(Path, file_paths)))
+    """Return the summed POT from ``file_paths`` using a thread pool.
+
+    Each input file is processed concurrently via
+    :func:`get_total_pot_from_single_file`.  Using a small pool speeds up
+    aggregation when a sample consists of many ROOT files while keeping
+    resource usage modest.
+    """
+
+    if not file_paths:
+        return 0.0
+
+    paths = [Path(p) for p in file_paths]
+    max_workers = min(len(paths), os.cpu_count() or 1)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        return sum(executor.map(get_total_pot_from_single_file, paths))
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
     if not stage_name or stage_name not in stage_outdirs:
