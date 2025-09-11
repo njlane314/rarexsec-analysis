@@ -13,9 +13,9 @@
 #include <rarexsec/plug/PluginSpec.h>
 #include <rarexsec/plug/PluginArgs.h>
 #include <rarexsec/plug/PipelineRunner.h>
-#include "Display.h"
-#include "Plots.h"
-#include "Snapshot.h"
+#include "EventDisplayBuilder.h"
+#include "PlotBuilders.h"
+#include "SnapshotBuilder.h"
 
 namespace analysis::dsl {
 
