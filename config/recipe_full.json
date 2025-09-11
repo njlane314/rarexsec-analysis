@@ -7,6 +7,7 @@
 
   "run_configurations": {
     "bnb": {
+      "active": true,
       "run1": { "pot": 3.332e+20, "samples": [] },
       "run2": { "pot": 3.057e+20, "samples": [] },
       "run3": { "pot": 2.671e+20, "samples": [] },
@@ -15,6 +16,7 @@
     },
 
     "bnb_ext": {
+      "active": true,
       "run1": { "ext_triggers": 40062895, "samples": [] },
       "run2": { "ext_triggers": 165820967, "samples": [] },
       "run3": { "ext_triggers": 194770254, "samples": [] },
@@ -23,6 +25,7 @@
     },
 
     "numi_fhc": {
+      "active": true,
       "run1": {
         "pot": 3.922e+20,
         "samples": [
@@ -30,16 +33,12 @@
             "sample_key": "mc_inclusive_run1_fhc",
             "stage_name": "selection_beam",
             "sample_type": "mc",
-            "active": true,
-            "do_hadd": true,
             "exclusion_truth_filters": ["mc_strangeness_run1_fhc"],
             "detector_variations": [
               {
                 "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
                 "variation_type": "cv",
-                "stage_name": "selection_detvar_cv",
-                "active": true,
-                "do_hadd": true
+                "stage_name": "selection_detvar_cv"
               }
             ]
           },
@@ -47,25 +46,19 @@
             "sample_key": "mc_strangeness_run1_fhc",
             "stage_name": "selection_strangeness",
             "sample_type": "mc",
-            "active": true,
-            "do_hadd": true,
             "truth_filter": "(mc_n_strange > 0)",
             "detector_variations": [
               {
                 "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
                 "variation_type": "cv",
-                "stage_name": "selection_detvar_cv",
-                "active": true,
-                "do_hadd": true
+                "stage_name": "selection_detvar_cv"
               }
             ]
           },
           {
             "sample_key": "mc_dirt_run1_fhc",
             "stage_name": "selection_dirt",
-            "sample_type": "dirt",
-            "active": true,
-            "do_hadd": true
+            "sample_type": "dirt"
           }
         ]
       },
@@ -76,6 +69,7 @@
     },
 
     "numi_rhc": {
+      "active": true,
       "run1": { "pot": 6.268e+19, "samples": [] },
       "run2": { "pot": 2.971e+20, "samples": [] },
       "run3": { "pot": 5.387e+20, "samples": [] },
@@ -84,15 +78,14 @@
     },
 
     "numi_ext": {
+      "active": true,
       "run1": {
         "ext_triggers": 40062895,
         "samples": [
           {
             "sample_key": "numi_ext_run1",
             "stage_name": "selection_ext",
-            "sample_type": "ext",
-            "active": true,
-            "do_hadd": true
+            "sample_type": "ext"
           }
         ]
       },
