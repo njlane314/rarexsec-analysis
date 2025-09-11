@@ -1,0 +1,174 @@
+{
+    "role": "catalog",
+    "schema_version": "1.0",
+    "produced_at": "2025-09-11T19:18:45+00:00",
+    "source_recipe_path": "config/recipe_full.json",
+    "source_recipe_hash": "8b0e9b0",
+    "samples": {
+        "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
+        "run_configurations": {
+            "bnb": {
+                "run1": {
+                    "pot": 3.332e+20,
+                    "samples": []
+                },
+                "run2": {
+                    "pot": 3.057e+20,
+                    "samples": []
+                },
+                "run3": {
+                    "pot": 2.671e+20,
+                    "samples": []
+                },
+                "run4": {
+                    "pot": 3.273e+20,
+                    "samples": []
+                },
+                "run5": {
+                    "pot": 1.366e+20,
+                    "samples": []
+                }
+            },
+            "bnb_ext": {
+                "run1": {
+                    "ext_triggers": 40062895,
+                    "samples": []
+                },
+                "run2": {
+                    "ext_triggers": 165820967,
+                    "samples": []
+                },
+                "run3": {
+                    "ext_triggers": 194770254,
+                    "samples": []
+                },
+                "run4": {
+                    "ext_triggers": 288582511,
+                    "samples": []
+                },
+                "run5": {
+                    "ext_triggers": 138338167,
+                    "samples": []
+                }
+            },
+            "numi_fhc": {
+                "run1": {
+                    "pot": 3.922e+20,
+                    "samples": [
+                        {
+                            "sample_key": "mc_inclusive_run1_fhc",
+                            "sample_type": "mc",
+                            "exclusion_truth_filters": [
+                                "mc_strangeness_run1_fhc"
+                            ],
+                            "detector_variations": [
+                                {
+                                    "sample_key": "mc_inclusive_run1_fhc_detvar_cv",
+                                    "variation_type": "cv",
+                                    "dataset_id": "numi.fhc.r1.mc.inc.sel-beam.cv",
+                                    "relative_path": "mc_inclusive_run1_fhc_detvar_cv.root",
+                                    "pot": 3.0470410537403417e+20
+                                }
+                            ],
+                            "dataset_id": "numi.fhc.r1.mc.inc.sel-beam",
+                            "relative_path": "mc_inclusive_run1_fhc.root",
+                            "pot": 1.3308774445500942e+21
+                        },
+                        {
+                            "sample_key": "mc_strangeness_run1_fhc",
+                            "sample_type": "mc",
+                            "truth_filter": "(mc_n_strange > 0)",
+                            "detector_variations": [
+                                {
+                                    "sample_key": "mc_strangeness_run1_fhc_detvar_cv",
+                                    "variation_type": "cv",
+                                    "dataset_id": "numi.fhc.r1.mc.strange.sel-strange.cv",
+                                    "relative_path": "mc_strangeness_run1_fhc_detvar_cv.root",
+                                    "pot": 3.0470410537403417e+20
+                                }
+                            ],
+                            "dataset_id": "numi.fhc.r1.mc.strange.sel-strange",
+                            "relative_path": "mc_strangeness_run1_fhc.root",
+                            "pot": 1.4322893600129322e+23
+                        },
+                        {
+                            "sample_key": "mc_dirt_run1_fhc",
+                            "sample_type": "dirt",
+                            "dataset_id": "numi.fhc.r1.dirt.dirt.sel-dirt",
+                            "relative_path": "mc_dirt_run1_fhc.root"
+                        }
+                    ]
+                },
+                "run2": {
+                    "pot": 1.766e+20,
+                    "samples": []
+                },
+                "run3": {
+                    "pot": 446600000000000.0,
+                    "samples": []
+                },
+                "run4": {
+                    "pot": 2.126e+20,
+                    "samples": []
+                },
+                "run5": {
+                    "pot": 2.461e+20,
+                    "samples": []
+                }
+            },
+            "numi_rhc": {
+                "run1": {
+                    "pot": 6.268e+19,
+                    "samples": []
+                },
+                "run2": {
+                    "pot": 2.971e+20,
+                    "samples": []
+                },
+                "run3": {
+                    "pot": 5.387e+20,
+                    "samples": []
+                },
+                "run4": {
+                    "pot": 3.111e+20,
+                    "samples": []
+                },
+                "run5": {
+                    "pot": 4645000000000000.0,
+                    "samples": []
+                }
+            },
+            "numi_ext": {
+                "run1": {
+                    "ext_triggers": 40062895,
+                    "samples": [
+                        {
+                            "sample_key": "numi_ext_run1",
+                            "sample_type": "ext",
+                            "dataset_id": "numi.ext.r1.ext.inc.sel-ext",
+                            "relative_path": "numi_ext_run1.root",
+                            "pot": 0.0,
+                            "triggers": 40062895
+                        }
+                    ]
+                },
+                "run2": {
+                    "ext_triggers": 165820967,
+                    "samples": []
+                },
+                "run3": {
+                    "ext_triggers": 194770254,
+                    "samples": []
+                },
+                "run4": {
+                    "ext_triggers": 288582511,
+                    "samples": []
+                },
+                "run5": {
+                    "ext_triggers": 138338167,
+                    "samples": []
+                }
+            }
+        }
+    }
+}
