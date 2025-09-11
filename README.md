@@ -42,11 +42,13 @@ The selection is applied in the following order:
 
 ## Run Periods
 
-1. Run 1 → October 2015 to July 2016
-2. Run 2 → October 2016 to July 2017
-3. Run 3 → October 2017 to July 2018
-4. Run 4 → October 2018 to July 2019
-5. Run 5 → October 2019 to March 2020
+| Run | Start Date    | End Date    |
+| --- | ------------- | ----------- |
+| 1   | October 2015  | July 2016   |
+| 2   | October 2016  | July 2017   |
+| 3   | October 2017  | July 2018   |
+| 4   | October 2018  | July 2019   |
+| 5   | October 2019  | March 2020  |
 
 ```bash
 ====================================================================================================
