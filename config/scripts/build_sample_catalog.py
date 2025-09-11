@@ -155,14 +155,22 @@ def get_total_pot_from_files_parallel(file_paths: list[str], max_workers: int) -
     with concurrent.futures.ThreadPoolExecutor(max_workers=mw) as ex:
         return sum(ex.map(get_total_pot_from_single_file, paths))
 
-def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
+def resolve_input_dir(stage_name: str | None, stage_outdirs: dict) -> str | None:
     return stage_outdirs.get(stage_name) if stage_name else None
+
+
+def pot_sum_via_iterate(input_dir: str) -> float:
+    """Fast POT summation across a directory without explicit file listing."""
+    pot_sum = 0.0
+    expr = f"{input_dir}/**/*.root:nuselection/SubRun"
+    for chunk in uproot.iterate(expr, filter_name=["pot"], library="np", step_size="50 MB"):
+        pot_sum += float(chunk["pot"].sum())
+    return pot_sum
 
 def process_sample_entry(
     entry: dict,
     processed_analysis_path: Path,
     stage_outdirs: dict,
-    entities: dict,
     run_pot: float,
     ext_triggers: int,
     jobs: int,
@@ -184,7 +192,7 @@ def process_sample_entry(
         f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: {'Enabled' if execute_hadd else 'Disabled'}"
     )
 
-    input_dir = resolve_input_dir(stage_name, stage_outdirs, entities)
+    input_dir = resolve_input_dir(stage_name, stage_outdirs)
     if not input_dir:
         print(
             f"    Warning: Stage '{stage_name}' not found in XML outdirs. Skipping {'detector variation' if is_detvar else 'sample'} '{sample_key}'.",
@@ -195,30 +203,32 @@ def process_sample_entry(
     output_file = processed_analysis_path / f"{sample_key}.root"
     entry["relative_path"] = output_file.name
 
-    root_files = list(list_root_files(input_dir))
-    if not root_files:
-        print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
-
-    if root_files and execute_hadd:
-        if not run_command(["hadd", "-f", str(output_file), *root_files], execute_hadd):
+    if execute_hadd:
+        root_files = list(list_root_files(input_dir))
+        if not root_files:
+            print(f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.", file=sys.stderr)
+        if root_files:
+            if not run_command(["hadd", "-f", str(output_file), *root_files], execute_hadd):
+                print(
+                    f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
+                    file=sys.stderr,
+                )
+                return False
+        else:
             print(
-                f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
-                file=sys.stderr,
+                f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable)."
             )
-            return False
-    elif not root_files and execute_hadd:
-        print(
-            f"    Note: No ROOT files found for '{sample_key}'. Skipping HADD but proceeding to record metadata (if applicable)."
-        )
-    elif root_files and not execute_hadd:
+        source_files = [str(output_file)]
+    else:
         print(f"    Note: HADD not requested for '{sample_key}'. Skipping HADD command.")
-
-    source_files = [str(output_file)] if execute_hadd else root_files
+        source_files = []
 
     if sample_type == "mc" or is_detvar:
-        entry["pot"] = get_total_pot_from_files_parallel(source_files, jobs)
-        if entry["pot"] == 0.0:
-            entry["pot"] = run_pot
+        if execute_hadd:
+            pot = get_total_pot_from_files_parallel(source_files, jobs)
+        else:
+            pot = pot_sum_via_iterate(input_dir)
+        entry["pot"] = pot if pot != 0.0 else run_pot
     elif sample_type in {"data", "ext"}:
         entry["pot"] = run_pot
         entry["triggers"] = ext_triggers
@@ -286,7 +296,7 @@ def main() -> None:
     sha = sha7(recipe_path)
 
     xml_paths = args.xml if args.xml else default_xmls()
-    entities, stage_outdirs = load_xml_context(xml_paths)
+    _entities, stage_outdirs = load_xml_context(xml_paths)
 
     ntuple_dir = Path(cfg["ntuple_base_directory"])
     ntuple_dir.mkdir(parents=True, exist_ok=True)
@@ -332,7 +342,6 @@ def main() -> None:
                     s,
                     ntuple_dir,
                     stage_outdirs,
-                    entities,
                     pot,
                     ext_trig,
                     args.jobs,
@@ -350,7 +359,6 @@ def main() -> None:
                             dv2,
                             ntuple_dir,
                             stage_outdirs,
-                            entities,
                             pot,
                             ext_trig,
                             args.jobs,
