@@ -35,4 +35,4 @@ target_link_libraries(study_all PRIVATE
   dl)
 
 set_target_properties(study_topo_score study_all PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/app")

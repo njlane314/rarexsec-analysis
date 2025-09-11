@@ -11,7 +11,7 @@ automatically to cache compilation results, speeding up subsequent builds.
 
 ## Configuration
 ```bash
-python scripts/generate_analysis_config.py
+python app/generate_analysis_config.py
 ```
 `config/config.json` is assembled from the sample definitions in `config/sample_definitions.json`.
 
