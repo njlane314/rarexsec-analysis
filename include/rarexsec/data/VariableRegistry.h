@@ -456,7 +456,7 @@ private:
   static const std::vector<std::string> &recoTrackVariables() {
     static const std::vector<std::string> v = {
         "trk_score_v",         "trk_llr_pid_v",
-        "track_length",        "track_distance_to_vertex",
+        "track_length",        "trk_distance_v",
         "track_start_x",       "track_start_y",
         "track_start_z",       "track_end_x",
         "track_end_y",         "track_end_z",
@@ -484,7 +484,7 @@ private:
                                                "muon_trk_end_y_v",
                                                "muon_trk_end_z_v",
                                                "muon_trk_length_v",
-                                               "muon_trk_distance_to_vertex_v",
+                                               "muon_trk_distance_v",
                                                "muon_pfp_generation_v",
                                                "muon_trk_mcs_muon_mom_v",
                                                "muon_trk_range_muon_mom_v",
