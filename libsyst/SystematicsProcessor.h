@@ -16,11 +16,8 @@
 
 #include "Logger.h"
 #include "BinnedHistogram.h"
-#include "DetectorSystematicStrategy.h"
 #include "SystematicStrategy.h"
-#include "UniverseSystematicStrategy.h"
 #include "VariableRegistry.h"
-#include "WeightSystematicStrategy.h"
 
 namespace analysis {
 
@@ -35,16 +32,7 @@ class SystematicsProcessor {
                          bool store_universe_hists = false)
         : knob_definitions_(std::move(knob_definitions)), universe_definitions_(std::move(universe_definitions)),
           store_universe_hists_(store_universe_hists) {
-        systematic_strategies_.emplace_back(std::make_unique<DetectorSystematicStrategy>());
-        for (const auto &knob : knob_definitions_) {
-            systematic_strategies_.emplace_back(std::make_unique<WeightSystematicStrategy>(knob));
-        }
-        for (const auto &universe : universe_definitions_) {
-            systematic_strategies_.emplace_back(
-                std::make_unique<UniverseSystematicStrategy>(universe, store_universe_hists_));
-        }
-
-          log::debug("SystematicsProcessor", "Initialised with", knob_definitions_.size(), "weight knobs and",
+        log::debug("SystematicsProcessor", "Initialised with", knob_definitions_.size(), "weight knobs and",
                    universe_definitions_.size(), "universe variations");
     }
 
@@ -55,6 +43,12 @@ class SystematicsProcessor {
     std::vector<std::unique_ptr<SystematicStrategy>>& strategies() {
         return systematic_strategies_;
     }
+
+    const std::vector<KnobDef>& knobDefinitions() const { return knob_definitions_; }
+
+    const std::vector<UniverseDef>& universeDefinitions() const { return universe_definitions_; }
+
+    bool storeUniverseHists() const { return store_universe_hists_; }
 
     void bookSystematics(const SampleKey &sample_key, ROOT::RDF::RNode &rnode, const BinningDefinition &binning,
                          const ROOT::RDF::TH1DModel &model) {
@@ -69,7 +63,8 @@ class SystematicsProcessor {
     void processSystematics(VariableResult &result) {
         if (!hasSystematics() && result.raw_detvar_hists_.empty()) {
             log::info("SystematicsProcessor::processSystematics",
-                      "No systematics found. Skipping covariance calculation.");
+                      "No systematics found. Using statistical uncertainties only.");
+            combineCovariances(result);
             return;
         }
 

@@ -9,6 +9,7 @@
 #include <ROOT/RVec.hxx>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -69,6 +70,9 @@ TEST_CASE("systematics processor covariance") {
   KnobDef k{"knob", "knob_up", "knob_dn"};
   UniverseDef un{"uni", "uni_weights", 2};
   SystematicsProcessor p({k}, {un});
+  p.addStrategy(std::make_unique<DetectorSystematicStrategy>());
+  p.addStrategy(std::make_unique<WeightSystematicStrategy>(k));
+  p.addStrategy(std::make_unique<UniverseSystematicStrategy>(un));
   SampleKey sk(std::string{"sample"});
   p.bookSystematics(sk, rnode, b, b.toTH1DModel());
   auto r = makeResult(b);

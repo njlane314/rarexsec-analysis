@@ -1,16 +1,17 @@
 #include "ISystematicsPlugin.h"
 #include "PluginRegistry.h"
+#include "DetectorSystematicStrategy.h"
 #include "UniverseSystematicStrategy.h"
-#include <algorithm>
+#include "WeightSystematicStrategy.h"
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace analysis {
 
-// Plugin that filters the set of existing SystematicStrategy instances.
-// A list of strategy names can be provided via the "enabled" array in the
-// systematics plugin configuration. Any strategies whose names are not in
-// this list are removed from the processor before booking.
+// Plugin that constructs a selectable set of SystematicStrategy instances.
+// Strategies listed in the optional "enabled" array are added to the
+// processor. If no list is provided all available strategies are added.
 class StrategySelectionPlugin : public ISystematicsPlugin {
 public:
   StrategySelectionPlugin(const PluginArgs &args, SystematicsProcessor *) {
@@ -30,23 +31,28 @@ public:
 
   void configure(SystematicsProcessor &proc) override {
     auto &vec = proc.strategies();
+    const auto &knobs = proc.knobDefinitions();
+    const auto &universes = proc.universeDefinitions();
+    const bool filter = !enabled_.empty();
 
-    if (!enabled_.empty()) {
-      vec.erase(std::remove_if(vec.begin(), vec.end(), [&](const auto &ptr) {
-                  return enabled_.count(ptr->getName()) == 0;
-                }),
-                vec.end());
+    const std::string det_name = DetectorSystematicStrategy().getName();
+    if (!filter || enabled_.count(det_name)) {
+      vec.emplace_back(std::make_unique<DetectorSystematicStrategy>());
     }
 
-    if (!universe_counts_.empty()) {
-      for (auto &ptr : vec) {
-        if (auto *u = dynamic_cast<UniverseSystematicStrategy *>(ptr.get())) {
-          auto it = universe_counts_.find(u->getName());
-          if (it != universe_counts_.end()) {
-            u->setUniverseCount(it->second);
-          }
-        }
-      }
+    for (const auto &k : knobs) {
+      if (filter && enabled_.count(k.name_) == 0)
+        continue;
+      vec.emplace_back(std::make_unique<WeightSystematicStrategy>(k));
+    }
+
+    for (auto u : universes) {
+      if (filter && enabled_.count(u.name_) == 0)
+        continue;
+      auto it = universe_counts_.find(u.name_);
+      if (it != universe_counts_.end())
+        u.n_universes_ = it->second;
+      vec.emplace_back(std::make_unique<UniverseSystematicStrategy>(u, proc.storeUniverseHists()));
     }
   }
 
