@@ -97,7 +97,10 @@ Common selection regions can be added via presets. The framework provides a
 number of built‑in options:
 
 - `EMPTY` – no event selection (`NONE` rule)
-- `QUALITY` – requires the `quality_event` preselection
+- `QUALITY` – requires the `quality_event` preselection. For Monte Carlo
+  samples this includes a run‑dependent software trigger via the
+  `software_trigger` branch, which uses `software_trigger_pre` before run 16880
+  and `software_trigger_post` afterward.
 - `MUON` – selects events containing a reconstructed muon
 - `NUMU_CC` – selects charged-current νµ events
 - `QUALITY_NUMU_CC` – combines the quality preselection with the νµ CC rule

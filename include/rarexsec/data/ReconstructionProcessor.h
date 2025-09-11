@@ -27,11 +27,11 @@ class ReconstructionProcessor : public IEventProcessor {
 
         auto quality_df = gen3_df.Define(
             "quality_event",
-            "in_reco_fiducial && "
-            "num_slices == 1 && "
-            "selection_pass && "
-            "optical_filter_pe_beam > 20"
-        );
+            [st](bool in_fid, int nslices, bool sel_pass, float pe_beam, int swtrig) {
+                return in_fid && nslices == 1 && sel_pass && pe_beam > 20 &&
+                       (st == SampleOrigin::kMonteCarlo ? swtrig > 0 : true);
+            },
+            {"in_reco_fiducial", "num_slices", "selection_pass", "optical_filter_pe_beam", "software_trigger"});
 
         return next_ ? next_->process(quality_df, st) : quality_df;
     }
