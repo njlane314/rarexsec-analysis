@@ -8,6 +8,10 @@ This directory contains configuration assets and helper scripts.
   example, `build_sample_catalog.py` reads definitions from
   `data/data.json` and writes out `data/samples.json` using utilities from
   `sample_processing.py`.
+- `recipe_template.json` – skeleton recipe to seed a new analysis
+  configuration.
+- `analysis_recipe.json` – fully populated example recipe generated
+  from the template.
 
 Scripts reference files via paths relative to this directory, so moving a
 configuration file into `data/` automatically makes it available to the

@@ -2,7 +2,7 @@
     "role": "catalog",
     "schema_version": "1.0",
     "produced_at": "2025-09-11T19:18:45+00:00",
-    "source_recipe_path": "config/recipe_full.json",
+    "source_recipe_path": "config/analysis_recipe.json",
     "source_recipe_hash": "8b0e9b0",
     "samples": {
         "ntupledir": "/exp/uboone/data/users/nlane/ntuples",
