@@ -44,8 +44,16 @@ class SystematicsProcessor {
                 std::make_unique<UniverseSystematicStrategy>(universe, store_universe_hists_));
         }
 
-        log::debug("SystematicsProcessor", "Initialised with", knob_definitions_.size(), "weight knobs and",
+          log::debug("SystematicsProcessor", "Initialised with", knob_definitions_.size(), "weight knobs and",
                    universe_definitions_.size(), "universe variations");
+    }
+
+    void addStrategy(std::unique_ptr<SystematicStrategy> strat) {
+        systematic_strategies_.emplace_back(std::move(strat));
+    }
+
+    std::vector<std::unique_ptr<SystematicStrategy>>& strategies() {
+        return systematic_strategies_;
     }
 
     void bookSystematics(const SampleKey &sample_key, ROOT::RDF::RNode &rnode, const BinningDefinition &binning,

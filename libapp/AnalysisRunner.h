@@ -34,8 +34,10 @@ public:
   AnalysisRunner(AnalysisDataLoader &ldr,
                  std::unique_ptr<HistogramFactory> factory,
                  SystematicsProcessor &sys_proc,
-                 const PluginSpecList &specs)
-    : a_host_(&ldr),
+                 const PluginSpecList &analysis_specs,
+                 const PluginSpecList &syst_specs)
+    : s_host_(&sys_proc),
+      a_host_(&ldr),
       p_host_(&ldr),
       data_loader_(ldr),
       analysis_definition_(selection_registry_),
@@ -45,11 +47,11 @@ public:
       histogram_factory_(std::move(factory)),
       variable_processor_(analysis_definition_, systematics_processor_, *histogram_factory_) {
 
-    // Optional: preload .so directory
-    // const char* dir = std::getenv("ANALYSIS_PLUGIN_DIR");
-    // if (dir) a_host_.loadDirectory(dir, /*recurse=*/false);
+    for (const auto &s : syst_specs) {
+      s_host_.add(s.id, s.args);
+    }
 
-    for (const auto &s : specs) {
+    for (const auto &s : analysis_specs) {
       a_host_.add(s.id, s.args);
     }
   }
@@ -61,6 +63,9 @@ public:
     a_host_.forEach([&](IAnalysisPlugin& pl){
       pl.onInitialisation(analysis_definition_, selection_registry_);
     });
+
+    // Configure systematics plugins
+    s_host_.forEach([&](ISystematicsPlugin& sp){ sp.configure(systematics_processor_); });
 
     analysis_definition_.resolveDynamicBinning(data_loader_);
     RegionAnalysisMap analysis_regions;
@@ -102,6 +107,7 @@ public:
   }
 
 private:
+  SystematicsPluginHost s_host_;
   AnalysisPluginHost a_host_;
   PlotPluginHost     p_host_; // present for future use
 

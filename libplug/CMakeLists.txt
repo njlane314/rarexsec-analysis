@@ -38,6 +38,7 @@ endfunction()
 add_plugin(RegionsPlugin analytics/RegionsPlugin.cc "")
 add_plugin(SnapshotPlugin analytics/SnapshotPlugin.cc "")
 add_plugin(VariablesPlugin analytics/VariablesPlugin.cc "")
+add_plugin(StrategySelectionPlugin systematics/StrategySelectionPlugin.cc "")
 
 add_plugin(EventDisplayPlugin plotting/EventDisplayPlugin.cc "")
 add_plugin(CutFlowPlotPlugin plotting/CutFlowPlotPlugin.cc "")
