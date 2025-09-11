@@ -1,14 +1,5 @@
 # rarexsec-analysis
 
-Tools for muon-neutrino interaction studies in MicroBooNE using C++ modules and Python helpers.
-
-## Layout
-
-- `config/` – configs and helper scripts (see [config/README.md](config/README.md))
-- `src/` – C++ sources and tests
-- `docs/` – supplementary docs
-- `bin/` – compiled executables
-
 ## Build
 ```bash
 source .container.sh
