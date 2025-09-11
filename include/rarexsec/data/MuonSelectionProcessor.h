@@ -89,7 +89,7 @@ private:
         {"trk_score_v", "trk_llr_pid_v", "track_length",
          "track_distance_to_vertex", "track_start_x", "track_start_y",
          "track_start_z", "track_end_x", "track_end_y", "track_end_z",
-         "pfp_generations", "trk_mcs_muon_mom_v", "trk_range_muon_mom_v",
+         "trk_pfpgeneration_v", "trk_mcs_muon_mom_v", "trk_range_muon_mom_v",
          "trk_rr_dedx_avg", "pfp_num_plane_hits_U", "pfp_num_plane_hits_V",
          "pfp_num_plane_hits_Y"});
   }
@@ -148,8 +148,8 @@ private:
                              {"track_length", "muon_mask"})
                      .Define("muon_trk_distance_to_vertex_v", filter_float,
                              {"track_distance_to_vertex", "muon_mask"})
-                     .Define("muon_pfp_generation_v", filter_int,
-                             {"pfp_generations", "muon_mask"})
+                    .Define("muon_pfp_generation_v", filter_int,
+                            {"trk_pfpgeneration_v", "muon_mask"})
                      .Define("muon_trk_mcs_muon_mom_v", filter_float,
                              {"trk_mcs_muon_mom_v", "muon_mask"})
                      .Define("muon_trk_range_muon_mom_v", filter_float,
