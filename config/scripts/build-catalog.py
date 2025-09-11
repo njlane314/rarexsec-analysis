@@ -215,7 +215,7 @@ def process_sample_entry(
         )
         source_files = []
     else:
-        if not run_command(["hadd", "-f", str(output_file), *root_files], True):
+        if not run_command(["hadd", "-f", "-j", str(jobs), str(output_file), *root_files], True):
             print(
                 f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
                 file=sys.stderr,
@@ -275,7 +275,7 @@ def main() -> None:
         "--jobs",
         type=int,
         default=min(8, os.cpu_count() or 1),
-        help="Max threads for POT aggregation",
+        help="Max threads for HADD and POT aggregation",
     )
     args = ap.parse_args()
 
