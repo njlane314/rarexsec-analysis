@@ -455,28 +455,49 @@ private:
 
   static const std::vector<std::string> &recoTrackVariables() {
     static const std::vector<std::string> v = {
+        "trk_score_v",         "trk_llr_pid_v",
         "track_length",        "track_distance_to_vertex",
         "track_start_x",       "track_start_y",
         "track_start_z",       "track_end_x",
         "track_end_y",         "track_end_z",
         "track_theta",         "track_phi",
         "track_calo_energy_u", "track_calo_energy_v",
-        "track_calo_energy_y"};
+        "track_calo_energy_y", "trk_mcs_muon_mom_v",
+        "trk_range_muon_mom_v"};
 
     return v;
   }
 
   static const std::vector<std::string> &processedEventVariables() {
-    static const std::vector<std::string> v = {
-        "in_reco_fiducial",  "n_pfps_gen2",
-        "n_pfps_gen3",       "quality_event",
-        "n_muons",           "has_muon",
-        "muon_track_length", "muon_track_costheta",
-        "base_event_weight", "nominal_event_weight",
-        "in_fiducial",       "mc_n_strange",
-        "mc_n_pion",         "mc_n_proton",
-        "genie_int_mode",    "incl_channel",
-        "excl_channel"};
+    static const std::vector<std::string> v = {"in_reco_fiducial",
+                                               "n_pfps_gen2",
+                                               "n_pfps_gen3",
+                                               "quality_event",
+                                               "n_muons_tot",
+                                               "has_muon",
+                                               "muon_trk_score_v",
+                                               "muon_trk_llr_pid_v",
+                                               "muon_trk_start_x_v",
+                                               "muon_trk_start_y_v",
+                                               "muon_trk_start_z_v",
+                                               "muon_trk_end_x_v",
+                                               "muon_trk_end_y_v",
+                                               "muon_trk_end_z_v",
+                                               "muon_trk_length_v",
+                                               "muon_trk_distance_to_vertex_v",
+                                               "muon_pfp_generation_v",
+                                               "muon_trk_mcs_muon_mom_v",
+                                               "muon_trk_range_muon_mom_v",
+                                               "muon_track_costheta",
+                                               "base_event_weight",
+                                               "nominal_event_weight",
+                                               "in_fiducial",
+                                               "mc_n_strange",
+                                               "mc_n_pion",
+                                               "mc_n_proton",
+                                               "genie_int_mode",
+                                               "incl_channel",
+                                               "excl_channel"};
 
     return v;
   }
