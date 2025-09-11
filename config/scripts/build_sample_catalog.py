@@ -11,13 +11,11 @@ from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 
 # Inlined dependencies from former sample_processing module
-import concurrent.futures
 import re
 import subprocess
 import shutil
 import numpy as np
 import uproot
-import os
 
 SCHEMA_VERSION = "1.0"
 
@@ -122,36 +120,40 @@ def run_command(command: list[str], execute: bool) -> bool:
         print(f"[ERROR] HADD Execution failed: {exc}", file=sys.stderr)
         return False
 
-def get_total_pot_from_single_file(file_path: Path) -> float:
-    if not file_path or not file_path.is_file():
-        return 0.0
+def _pot_from_file(path: Path) -> float:
+    """Read POT from a single ROOT file."""
     try:
-        with uproot.open(file_path) as root_file:
+        with uproot.open(path) as root_file:
             if "nuselection/SubRun" not in root_file:
                 return 0.0
             subrun_tree = root_file["nuselection/SubRun"]
             if "pot" in subrun_tree:
                 return float(subrun_tree["pot"].array(library="np").sum())
     except Exception as exc:
-        print(f"    Warning: Could not read POT from {file_path}: {exc}", file=sys.stderr)
+        print(f"    Warning: Could not read POT from {path}: {exc}", file=sys.stderr)
     return 0.0
 
-def get_total_pot_from_files_parallel(file_paths: list[str]) -> float:
-    """Return the summed POT from ``file_paths`` using a thread pool.
 
-    Each input file is processed concurrently via
-    :func:`get_total_pot_from_single_file`.  Using a small pool speeds up
-    aggregation when a sample consists of many ROOT files while keeping
-    resource usage modest.
+def get_total_pot_from_files(file_paths: list[str]) -> float:
+    """Return the summed POT from ``file_paths`` using a vectorised ``uproot`` read.
+
+    ``uproot.iterate`` streams only the required ``pot`` branch across all files
+    and avoids repeatedly opening and closing individual files in Python.  This
+    significantly reduces overhead compared to processing each file
+    sequentially or within a thread pool.
     """
 
     if not file_paths:
         return 0.0
 
-    paths = [Path(p) for p in file_paths]
-    max_workers = min(len(paths), os.cpu_count() or 1)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        return sum(executor.map(get_total_pot_from_single_file, paths))
+    try:
+        total = 0.0
+        for arrays in uproot.iterate(file_paths, "nuselection/SubRun", ["pot"], library="np"):
+            total += arrays["pot"].sum()
+        return float(total)
+    except Exception as exc:
+        print(f"    Warning: Bulk POT read failed ({exc}); falling back to per-file method.", file=sys.stderr)
+        return float(sum(_pot_from_file(Path(p)) for p in file_paths))
 
 def resolve_input_dir(stage_name: str | None, stage_outdirs: dict, entities: dict) -> str | None:
     if not stage_name or stage_name not in stage_outdirs:
@@ -218,7 +220,7 @@ def process_sample_entry(
     source_files = [str(output_file)] if execute_hadd else root_files
 
     if sample_type == "mc" or is_detvar:
-        entry["pot"] = get_total_pot_from_files_parallel(source_files)
+        entry["pot"] = get_total_pot_from_files(source_files)
         if entry["pot"] == 0.0:
             entry["pot"] = run_pot
     elif sample_type in {"data", "ext"}:
