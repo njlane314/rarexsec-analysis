@@ -67,6 +67,8 @@ class SelectionRegistry {
 
             {"MUON", {"Muon Selection", {"has_muon"}}},
 
+            {"NUMUPRESEL", {"NuMu Preselection", {"numu_presel"}}},
+
             {"NUMU_CC", {"NuMu CC Selection", {"has_muon", "n_pfps_gen2 > 1"}}},
 
             {"NUMU_CC_BREAKDOWN",
