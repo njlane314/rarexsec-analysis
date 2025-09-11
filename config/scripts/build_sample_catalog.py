@@ -1,4 +1,4 @@
-# aggregate_samples.py
+# build_sample_catalog.py
 from __future__ import annotations
 
 import argparse
