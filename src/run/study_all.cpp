@@ -1,8 +1,8 @@
-#include <rarexsec/study/Study.h>
-#include <rarexsec/study/Helpers.h>
-#include <rarexsec/study/Display.h>
-#include <rarexsec/study/Plots.h>
-#include <rarexsec/study/Snapshot.h>
+#include <rarexsec/flow/Study.h>
+#include <rarexsec/flow/Helpers.h>
+#include <rarexsec/flow/Display.h>
+#include <rarexsec/flow/Plots.h>
+#include <rarexsec/flow/Snapshot.h>
 using namespace analysis::dsl;
 
 int main() {
