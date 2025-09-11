@@ -2,11 +2,17 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <unordered_set>
 #include <nlohmann/json.hpp>
 
-#include "PipelineBuilder.h"
+// The original implementation relied on the full plugin and preset
+// infrastructure.  To make the backend lighter we only depend on the basic
+// PluginSpec/Args types and directly build the specification lists used by the
+// PipelineRunner.  This keeps the user facing DSL intact while avoiding the
+// indirection of PipelineBuilder and PresetRegistry.
+#include "PluginSpec.h"
+#include "PluginArgs.h"
 #include "PipelineRunner.h"
-#include "PresetRegistry.h"
 #include "Display.h"
 #include "Plots.h"
 #include "Snapshot.h"
@@ -46,67 +52,81 @@ public:
   Study& snapshot(const SnapshotBuilder& s){ snaps_.push_back(s.to_json()); return *this; }
 
   void run(const std::string& out_root_path) const {
-    AnalysisPluginHost a_host;
-    PlotPluginHost p_host;
-    PipelineBuilder b(a_host, p_host);
+    PluginSpecList analysis_specs;
+    PluginSpecList plot_specs;
 
+    // --- Regions -----------------------------------------------------------
     nlohmann::json regions = nlohmann::json::array();
     for (auto const& r : regions_) {
       regions.push_back({
-        {"region_key", r.key},
-        {"label", r.label},
-        {"expression", r.expr}
-      });
+          {"region_key", r.key},
+          {"label", r.label},
+          {"expression", r.expr}});
     }
-    PluginArgs region_args{{"analysis_configs", {{"regions", regions}}}};
-    b.add(Target::Analysis, "RegionsPlugin", region_args);
+    analysis_specs.push_back({"RegionsPlugin",
+                              {{"analysis_configs", {{"regions", regions}}}}});
 
-    for (auto const& v : variables_) {
-      b.variable("VARIABLE:" + v,
-                 {{"analysis_configs", {{"region", defaultRegionKey()}}}});
+    // --- Variables ---------------------------------------------------------
+    if (!variables_.empty()) {
+      nlohmann::json vars_cfg = nlohmann::json::array();
+      for (auto const& v : variables_) {
+        vars_cfg.push_back({
+            {"name", v},
+            {"branch", v},
+            {"label", v},
+            {"stratum", "channel_definitions"},
+            {"regions", PluginArgs::array({defaultRegionKey()})},
+            {"bins", {{"n", 100}, {"min", 0.0}, {"max", 1.0}}}});
+      }
+      analysis_specs.push_back({
+          "VariablesPlugin",
+          {{"analysis_configs", {{"variables", vars_cfg}}}}});
     }
 
+    // --- Simple plots ------------------------------------------------------
     for (auto const& p : plots_) {
       if (p.kind == "stack") {
         PluginArgs args{{"plot_configs", {{"plots", nlohmann::json::array({{
-            {"variable", p.variable},
-            {"region",   p.region.empty() ? defaultRegionKey() : p.region},
-            {"signal_group", p.signal_group},
-            {"logy", p.logy}
-        }})}}}};
-        b.add(Target::Plot, "StackedPlotPlugin", std::move(args));
+                                          {"variable", p.variable},
+                                          {"region", p.region.empty() ? defaultRegionKey() : p.region},
+                                          {"signal_group", p.signal_group},
+                                          {"logy", p.logy}}})}}}};
+        plot_specs.push_back({"StackedPlotPlugin", std::move(args)});
       } else if (p.kind == "roc") {
         PluginArgs args{{"performance_plots", nlohmann::json::array({{
-            {"region",         p.region.empty() ? defaultRegionKey() : p.region},
-            {"channel_column", p.channel_column},
-            {"signal_group",   p.signal_group},
-            {"variable",       p.variable}
-        }})}};
-        b.add(Target::Plot, "PerformancePlotPlugin", std::move(args));
+                                          {"region", p.region.empty() ? defaultRegionKey() : p.region},
+                                          {"channel_column", p.channel_column},
+                                          {"signal_group", p.signal_group},
+                                          {"variable", p.variable}}})}};
+        plot_specs.push_back({"PerformancePlotPlugin", std::move(args)});
       }
     }
 
-    if (!perf_.empty()) {
-      PluginArgs args{{"plot_configs", {{"performance_plots", perf_}}}};
-      b.add(Target::Plot, "PerformancePlotPlugin", args);
-    }
-    if (!cutflow_.empty()) {
-      PluginArgs args{{"plot_configs", {{"plots", cutflow_}}}};
-      b.add(Target::Plot, "CutFlowPlotPlugin", args);
-    }
-    if (!snaps_.empty()) {
-      PluginArgs args{{"analysis_configs", {{"snapshots", snaps_}}}};
-      b.add(Target::Analysis, "SnapshotPlugin", args);
-    }
+    if (!perf_.empty())
+      plot_specs.push_back({"PerformancePlotPlugin",
+                            {{"plot_configs", {{"performance_plots", perf_}}}}});
+    if (!cutflow_.empty())
+      plot_specs.push_back({"CutFlowPlotPlugin",
+                            {{"plot_configs", {{"plots", cutflow_}}}}});
+    if (!snaps_.empty())
+      analysis_specs.push_back({"SnapshotPlugin",
+                                {{"analysis_configs", {{"snapshots", snaps_}}}}});
+    if (!displays_.empty())
+      plot_specs.push_back({"EventDisplayPlugin",
+                            {{"plot_configs", {{"event_displays", displays_}}}}});
 
-    if (!displays_.empty()) {
-      PluginArgs args{{"plot_configs", {{"event_displays", displays_}}}};
-      b.add(Target::Plot, "EventDisplayPlugin", args);
-    }
+    // De-duplicate specs by plugin id.
+    auto unique = [](PluginSpecList& v) {
+      std::unordered_set<std::string> seen;
+      PluginSpecList out;
+      out.reserve(v.size());
+      for (auto& s : v) if (seen.insert(s.id).second) out.push_back(std::move(s));
+      v.swap(out);
+    };
+    unique(analysis_specs);
+    unique(plot_specs);
 
-    b.uniqueById();
-
-    PipelineRunner runner(b.analysisSpecs(), b.plotSpecs());
+    PipelineRunner runner(std::move(analysis_specs), std::move(plot_specs));
     runner.run(samples_path_, out_root_path);
   }
 
