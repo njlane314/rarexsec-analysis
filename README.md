@@ -93,16 +93,29 @@ The same configuration can be enabled via the `EVENT_DISPLAY` preset:
 
 ## Muon neutrino selection
 
-- exactly one reconstructed slice
-- simulated events must pass the optical filter
-- neutrino vertex inside the fiducial volume (x 5–251 cm, y −110–110 cm, z < 675 cm or z > 775 cm)
-- topological score > 0.06
-- muon track score > 0.8 and log-likelihood PID > 0.2
-- muon length > 10 cm and within 4 cm of the vertex
-- muon start and end inside fiducial volume (x 5–251 cm, y −110–110 cm, z 20–986 cm)
-- muon is PFParticle generation 2 with positive MCS and range estimates
-- muon has hits on all three planes
-- event contains at least one muon and n_pfps_gen2 > 1
+The selection is defined in terms of the following variables:
+
+- `nslice == 1`
+- optical filter requirement for simulated events:
+  `(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)`
+  (bypassed when `bnbdata == 1` or `extdata == 1`)
+- neutrino vertex inside the fiducial volume:
+  - `reco_nu_vtx_sce_x` in `[5, 251]` cm
+  - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
+  - `reco_nu_vtx_sce_z < 675` cm or `reco_nu_vtx_sce_z > 775` cm
+- `topological_score > 0.06`
+- muon candidate requirements (index `i` over `muon_*` vectors):
+  - `muon_trk_score_v[i] > 0.8` and `muon_trk_llr_pid_v[i] > 0.2`
+  - `muon_trk_length_v[i] > 10` cm and `muon_trk_distance_v[i] < 4` cm
+  - start/end inside fiducial volume:
+    - `muon_trk_start_x_v[i]`, `muon_trk_end_x_v[i]` in `[5, 251]` cm
+    - `muon_trk_start_y_v[i]`, `muon_trk_end_y_v[i]` in `[-110, 110]` cm
+    - `muon_trk_start_z_v[i]`, `muon_trk_end_z_v[i]` in `[20, 986]` cm
+  - `muon_pfp_generation_v[i] == 2`
+  - `muon_trk_mcs_muon_mom_v[i] > 0` and `muon_trk_range_muon_mom_v[i] > 0`
+  - `pfp_num_plane_hits_U[i] > 0 && pfp_num_plane_hits_V[i] > 0 &&
+    pfp_num_plane_hits_Y[i] > 0`
+- event-level: `has_muon` and `n_pfps_gen2 > 1`
 
 ## Region presets
 
