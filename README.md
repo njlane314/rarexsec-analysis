@@ -96,6 +96,8 @@ The same configuration can be enabled via the `EVENT_DISPLAY` preset:
 - exactly one reconstructed slice
 - simulated events must pass the optical filter
 - neutrino vertex inside the fiducial volume (x 5–251 cm, y −110–110 cm, z < 675 cm or z > 775 cm)
+- at least 70% of reconstructed hits in the neutrino slice are within the fiducial volume (contained fraction ≥ 0.7)
+- at least 50% of reconstructed hits in the neutrino slice are associated with a Pandora PFParticle (associated hits fraction ≥ 0.5)
 - topological score > 0.06
 - muon track score > 0.8 and log-likelihood PID > 0.2
 - muon length > 10 cm and within 4 cm of the vertex
