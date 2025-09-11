@@ -165,25 +165,30 @@ def pot_sum_via_iterate(input_dir: str) -> float:
     return pot_sum
 
 def _extract_pairs_from_file(f: Path) -> Set[Tuple[int, int]]:
+    """Return unique (run, subrun) pairs found in ``f``.
+
+    Older ntuples exposed the relevant information in predictable trees
+    (``SubRuns`` or ``Events``).  Newer productions may nest the trees
+    within additional directories (e.g. ``nuselection/BlipRecoAlg``).
+    Instead of checking a short list of hard-coded paths, walk the file
+    and inspect every ``TTree`` for ``run`` and ``subrun`` branches.
+    """
+
     pairs: Set[Tuple[int, int]] = set()
     try:
         with uproot.open(f) as rf:
-            for tree_name in ("SubRuns", "nuselection/SubRun", "subrun", "subruns"):
-                if tree_name in rf:
-                    t = rf[tree_name]
-                    if all(b in t.keys() for b in ("run", "subrun")):
-                        run = t["run"].array(library="np")
-                        sub = t["subrun"].array(library="np")
+            # ``walk`` recursively yields (path, object) pairs for all
+            # objects in the file.  Filter for TTrees and collect any that
+            # provide ``run`` and ``subrun`` branches.
+            for _path, obj in rf.walk(filter_classname="TTree"):
+                try:
+                    if all(b in obj.keys() for b in ("run", "subrun")):
+                        run = obj["run"].array(library="np")
+                        sub = obj["subrun"].array(library="np")
                         pairs |= set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
-                        return pairs
-            for tree_name in ("Events", "nuselection/Events"):
-                if tree_name in rf:
-                    t = rf[tree_name]
-                    if all(b in t.keys() for b in ("run", "subrun")):
-                        run = t["run"].array(library="np")
-                        sub = t["subrun"].array(library="np")
-                        pairs |= set(zip(run.astype(int).tolist(), sub.astype(int).tolist()))
-                        return pairs
+                except Exception:
+                    # Skip unreadable trees and continue searching.
+                    continue
     except Exception as e:
         print(f"    Warning: {f}: failed extracting (run,subrun): {e}", file=sys.stderr)
     return pairs
