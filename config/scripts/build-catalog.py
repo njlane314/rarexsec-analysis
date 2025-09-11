@@ -20,6 +20,12 @@ from typing import Set, Tuple, List, Dict
 SCHEMA_VERSION = "1.0"
 DEFAULT_RUN_DB = "/exp/uboone/data/uboonebeam/beamdb/run.db"
 
+# --- Fixed configuration (no CLI flags) ---
+HADD_TMPDIR = Path("/pnfs/uboone/scratch/users/nlane/")  # where hadd writes partial files (-d)
+MIN_FREE_GB = 5.0                                        # if less is free here, run single-process hadd
+DEFAULT_JOBS = min(8, os.cpu_count() or 1)               # parallelism for hadd/POT aggregation
+CATALOG_SUBDIR = "catalogs"                              # output folder (relative to repo root)
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 
 TOKEN_MAP_STAGE = {
@@ -235,11 +241,14 @@ def process_sample_entry(
         sample_key = entry.get("sample_key", "UNKNOWN")
         print(f"  Skipping {'detector variation' if is_detvar else 'sample'}: {sample_key} (marked as inactive)")
         return False
+
     stage_name = entry.get("stage_name")
     sample_key = entry.get("sample_key")
     sample_type = entry.get("sample_type", "mc")
+
     print(f"  Processing {'detector variation' if is_detvar else 'sample'}: {sample_key} (from stage: {stage_name})")
     print(f"    HADD execution for this {'sample' if not is_detvar else 'detector variation'}: Enabled")
+
     input_dir = resolve_input_dir(stage_name, stage_outdirs)
     if not input_dir:
         print(
@@ -247,9 +256,11 @@ def process_sample_entry(
             file=sys.stderr,
         )
         return False
+
     output_file = processed_analysis_path / f"{sample_key}.root"
     output_dir = output_file.parent
     output_dir.mkdir(parents=True, exist_ok=True)
+
     if not os.access(output_dir, os.W_OK):
         print(
             f"    Error: Output directory '{output_dir}' is not writable. "
@@ -257,6 +268,7 @@ def process_sample_entry(
             file=sys.stderr,
         )
         return False
+
     if output_file.exists():
         try:
             output_file.unlink()
@@ -266,8 +278,10 @@ def process_sample_entry(
                 file=sys.stderr,
             )
             return False
+
     entry["relative_path"] = output_file.name
     root_files = list(list_root_files(input_dir))
+
     if not root_files:
         print(
             f"    Warning: No ROOT files found in {input_dir}. HADD will be skipped.",
@@ -278,13 +292,37 @@ def process_sample_entry(
         )
         source_files = []
     else:
-        if not run_command(["hadd", "-f", "-j", str(jobs), str(output_file), *root_files], True):
+        # Decide parallel vs single-process based on available space in fixed temp dir
+        use_parallel = jobs > 1
+        chosen_tmp = HADD_TMPDIR
+
+        if use_parallel:
+            try:
+                chosen_tmp.mkdir(parents=True, exist_ok=True)
+                free_gb = shutil.disk_usage(chosen_tmp).free / (1024 ** 3)
+            except Exception as e:
+                print(f"    Warning: Could not evaluate free space in '{chosen_tmp}': {e}. Falling back to single-process hadd.")
+                free_gb = 0.0
+
+            if free_gb < MIN_FREE_GB:
+                print(f"    Note: Only {free_gb:.1f} GB free in '{chosen_tmp}'. Falling back to single-process hadd to avoid temp fills.")
+                use_parallel = False
+
+        cmd = ["hadd", "-f"]
+        if use_parallel:
+            cmd += ["-j", str(jobs), "-d", str(chosen_tmp)]
+        cmd += [str(output_file), *root_files]
+
+        if not run_command(cmd, True):
             print(
                 f"    Error: HADD failed for {sample_key}. Skipping further processing for this entry.",
                 file=sys.stderr,
             )
             return False
+
         source_files = [str(output_file)]
+
+    # Book-keeping for POT/EXT triggers
     if sample_type == "mc" or is_detvar:
         if source_files:
             pot = get_total_pot_from_files_parallel(source_files, jobs)
@@ -303,6 +341,7 @@ def process_sample_entry(
     elif sample_type == "data":
         entry["pot"] = run_pot
         entry["triggers"] = ext_triggers
+
     entry.pop("stage_name", None)
     return True
 
@@ -334,13 +373,13 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     ap = argparse.ArgumentParser(description="Aggregate ROOT samples from a recipe into a catalog.")
     ap.add_argument("--recipe", type=Path, required=True, help="Path to recipe JSON (instance).")
-    ap.add_argument("--runs", default="", help='Comma-separated runs to process (e.g. "run1,run2"). Empty = all.')
-    ap.add_argument("--outdir", type=Path, default=repo_root / "catalogs", help="Directory to write the catalog.")
-    ap.add_argument("--xml", type=Path, nargs="*", default=None, help="Workflow XML files to parse (entities/outdirs).")
-    ap.add_argument("--project", default=None, help="Project slug for filename; defaults to recipe['project'].")
-    ap.add_argument("--run-db", default=DEFAULT_RUN_DB, help=f"Path to run.db for EXTTrig lookup (default: {DEFAULT_RUN_DB})")
-    ap.add_argument("--jobs", type=int, default=min(8, os.cpu_count() or 1), help="Max threads for HADD and POT aggregation")
     args = ap.parse_args()
+
+    # Fixed defaults (no CLI flags)
+    jobs = DEFAULT_JOBS
+    run_db = DEFAULT_RUN_DB
+    outdir = repo_root / CATALOG_SUBDIR
+
     recipe_path = args.recipe
     with open(recipe_path) as f:
         cfg = json.load(f)
@@ -348,51 +387,59 @@ def main() -> None:
         sys.exit(f"Expected role='recipe', found '{cfg.get('role')}'.")
     if cfg.get("recipe_kind", "instance") == "template":
         sys.exit("Refusing to run on a template. Copy it and set recipe_kind='instance'.")
-    project = args.project or cfg.get("project", "proj")
-    runs_to_process = [r.strip() for r in args.runs.split(",") if r.strip()]
+
     produced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    tag = version_tag()
     sha = sha7(recipe_path)
-    xml_paths = args.xml if args.xml else default_xmls()
+
+    xml_paths = default_xmls()
     _entities, stage_outdirs = load_xml_context(xml_paths)
+
     ntuple_dir = Path(cfg["ntuple_base_directory"])
     ntuple_dir.mkdir(parents=True, exist_ok=True)
+
     beams_in: dict = cfg.get("run_configurations", {})
     runs_out: dict = {}
+
     for beam_key, run_block in beams_in.items():
         beam_active = bool(run_block.get("active", True))
         if not beam_active:
             logging.info("Skipping beam '%s' (active=false).", beam_key)
             continue
+
         beamline, mode = split_beam_key(beam_key)
+
         for run, run_details in run_block.items():
             if run == "active":
                 continue
-            if runs_to_process and run not in runs_to_process:
-                continue
+
             logging.info("Processing %s:%s", beam_key, run)
             is_ext = (mode == "ext") or beam_key.endswith("_ext")
             pot = float(run_details.get("pot", 0.0)) if not is_ext else 0.0
             ext_trig = int(run_details.get("ext_triggers", 0)) if is_ext else 0
             if not is_ext and pot == 0.0:
                 logging.warning("No POT provided for %s:%s (on-beam).", beam_key, run)
+
             samples_in = run_details.get("samples", []) or []
             samples_out = []
+
             for sample in samples_in:
                 s = dict(sample)
                 origin = s.get("sample_type", "unknown")
                 subset = infer_subset(s.get("sample_key", ""), origin)
                 stage_name = s.get("stage_name", "selection_beam")
                 s["dataset_id"] = dataset_id(beamline, mode, run, origin, subset, stage_name, None)
+
                 ok = process_sample_entry(
                     s,
                     ntuple_dir,
                     stage_outdirs,
                     pot,
                     ext_trig,
-                    args.run_db,
-                    args.jobs,
+                    run_db,
+                    jobs,
+                    is_detvar=False,
                 )
+
                 if ok and "detector_variations" in s:
                     new_vars = []
                     for dv in s["detector_variations"]:
@@ -405,20 +452,22 @@ def main() -> None:
                             stage_outdirs,
                             pot,
                             ext_trig,
-                            args.run_db,
-                            args.jobs,
+                            run_db,
+                            jobs,
                             is_detvar=True,
                         )
                         new_vars.append(dv2)
                     s["detector_variations"] = new_vars
+
                 samples_out.append(s)
+
             run_copy = dict(run_details)
             run_copy["samples"] = samples_out
             runs_out.setdefault(beam_key, {})[run] = run_copy
-    outdir = args.outdir
+
     outdir.mkdir(parents=True, exist_ok=True)
-    out_name = "samples.json"
-    out_path = outdir / out_name
+    out_path = outdir / "samples.json"
+
     catalog = {
         "role": "catalog",
         "schema_version": SCHEMA_VERSION,
@@ -430,9 +479,12 @@ def main() -> None:
             "run_configurations": runs_out,
         },
     }
+
     with open(out_path, "w") as f:
         json.dump(catalog, f, indent=4)
+
     logging.info("Wrote catalog: %s", out_path)
 
 if __name__ == "__main__":
     main()
+
