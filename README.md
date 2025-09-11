@@ -99,6 +99,9 @@ The selection is defined in terms of the following variables:
 - optical filter requirement for simulated events:
   `(_opfilter_pe_beam > 0 && _opfilter_pe_veto < 20)`
   (bypassed when `bnbdata == 1` or `extdata == 1`)
+- run‑dependent software trigger for Monte Carlo:
+  - before run 16880: `software_trigger_pre > 0` (or `software_trigger_pre_ext > 0` for NuMI)
+  - after run 16880: `software_trigger_post > 0` (or `software_trigger_post_ext > 0` for NuMI)
 - neutrino vertex inside the fiducial volume:
   - `reco_nu_vtx_sce_x` in `[5, 251]` cm
   - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
@@ -125,9 +128,10 @@ number of built‑in options:
 
 - `EMPTY` – no event selection (`NONE` rule)
 - `QUALITY` – requires the `quality_event` preselection. For Monte Carlo
-  samples this includes a run‑dependent software trigger via the
-  `software_trigger` branch, which uses `software_trigger_pre` before run 16880
-  and `software_trigger_post` afterward.
+ samples this includes a run‑dependent software trigger via the
+  `software_trigger` branch, which uses `software_trigger_pre` (or
+  `software_trigger_pre_ext` for NuMI) before run 16880 and
+  `software_trigger_post` (or `software_trigger_post_ext`) afterward.
 - `MUON` – selects events containing a reconstructed muon
 - `NUMU_CC` – selects charged-current νµ events
 - `QUALITY_NUMU_CC` – combines the quality preselection with the νµ CC rule
