@@ -137,12 +137,10 @@ def get_total_pot_from_single_file(file_path: Path) -> float:
         key = (str(file_path), st.st_mtime)
         if key in _POT_CACHE:
             return _POT_CACHE[key]
-        with uproot.open(file_path) as f:
-            if "nuselection/SubRun" not in f:
-                pot = 0.0
-            else:
-                arr = f["nuselection/SubRun"]["pot"].array(library="np")
-                pot = float(arr.sum())
+        tree_path = f"{file_path}:nuselection/SubRun"
+        with uproot.open(tree_path) as tree:
+            arr = tree["pot"].array(library="np")
+            pot = float(arr.sum())
         _POT_CACHE[key] = pot
         return pot
     except Exception as exc:
