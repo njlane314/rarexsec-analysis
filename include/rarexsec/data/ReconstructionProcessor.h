@@ -25,13 +25,25 @@ class ReconstructionProcessor : public IEventProcessor {
                                       [](const ROOT::RVec<unsigned> &gens) { return ROOT::VecOps::Sum(gens == 3u); },
                                       {"pfp_generations"});
 
-        auto quality_df = gen3_df.Define(
+        ROOT::RDF::RNode swtrig_df(gen3_df);
+        if (st == SampleOrigin::kMonteCarlo) {
+            swtrig_df = gen3_df.Define(
+                "software_trigger",
+                [](unsigned run, int pre, int post) {
+                    return run < 16880 ? pre > 0 : post > 0;
+                },
+                {"run", "software_trigger_pre", "software_trigger_post"});
+        } else {
+            swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
+        }
+
+        auto quality_df = swtrig_df.Define(
             "quality_event",
-            "in_reco_fiducial && "
-            "num_slices == 1 && "
-            "selection_pass && "
-            "optical_filter_pe_beam > 20"
-        );
+            [st](bool in_fid, int nslices, bool sel_pass, float pe_beam, bool swtrig) {
+                return in_fid && nslices == 1 && sel_pass && pe_beam > 20 &&
+                       (st == SampleOrigin::kMonteCarlo ? swtrig : true);
+            },
+            {"in_reco_fiducial", "num_slices", "selection_pass", "optical_filter_pe_beam", "software_trigger"});
 
         return next_ ? next_->process(quality_df, st) : quality_df;
     }
