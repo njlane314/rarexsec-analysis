@@ -13,13 +13,11 @@ class MuonSelectionProcessor : public IEventProcessor {
 public:
   ROOT::RDF::RNode process(ROOT::RDF::RNode df,
                            SampleOrigin st) const override {
-    if (!df.HasColumn("track_trunk_rr_dedx_u")) {
+    if (!df.HasColumn("trk_score_v")) {
       return next_ ? next_->process(df, st) : df;
     }
 
-    auto dedx_df = this->computeAverageDedx(df);
-
-    auto muon_mask_df = this->buildMuonMask(dedx_df);
+    auto muon_mask_df = this->buildMuonMask(df);
 
     auto muon_features_df = this->extractMuonFeatures(muon_mask_df);
 
@@ -27,34 +25,6 @@ public:
   }
 
 private:
-  ROOT::RDF::RNode computeAverageDedx(ROOT::RDF::RNode df) const {
-    return df.Define("trk_rr_dedx_avg",
-                     [](const ROOT::RVec<float> &u, const ROOT::RVec<float> &v,
-                        const ROOT::RVec<float> &y) {
-                       ROOT::RVec<float> avg(u.size());
-                       for (size_t i = 0; i < u.size(); ++i) {
-                         int count = 0;
-                         float sum = 0;
-                         if (u[i] > 0) {
-                           sum += u[i];
-                           ++count;
-                         }
-                         if (v[i] > 0) {
-                           sum += v[i];
-                           ++count;
-                         }
-                         if (y[i] > 0) {
-                           sum += y[i];
-                           ++count;
-                         }
-                         avg[i] = count ? sum / count : -1;
-                       }
-                       return avg;
-                     },
-                     {"track_trunk_rr_dedx_u", "track_trunk_rr_dedx_v",
-                      "track_trunk_rr_dedx_y"});
-  }
-
   ROOT::RDF::RNode buildMuonMask(ROOT::RDF::RNode df) const {
     return df.Define(
         "muon_mask",
@@ -68,9 +38,9 @@ private:
            const ROOT::RVec<int> &hits_u, const ROOT::RVec<int> &hits_v,
            const ROOT::RVec<int> &hits_y) {
           ROOT::RVec<bool> mask(scores.size());
-          const float min_x = 10.f, max_x = 246.f;
-          const float min_y = -105.f, max_y = 105.f;
-          const float min_z = 10.f, max_z = 1026.f;
+          const float min_x = 5.f, max_x = 251.f;
+          const float min_y = -110.f, max_y = 110.f;
+          const float min_z = 20.f, max_z = 986.f;
           for (size_t i = 0; i < scores.size(); ++i) {
             bool fid_start = start_x[i] > min_x && start_x[i] < max_x &&
                              start_y[i] > min_y && start_y[i] < max_y &&
@@ -79,9 +49,9 @@ private:
                            end_y[i] > min_y && end_y[i] < max_y &&
                            end_z[i] > min_z && end_z[i] < max_z;
             mask[i] =
-                (scores[i] > 0.8f && llr[i] > 0.0f && lengths[i] > 5.0f &&
+                (scores[i] > 0.8f && llr[i] > 0.2f && lengths[i] > 10.0f &&
                  dists[i] < 4.0f && gens[i] == 2 && mcs[i] > 0.0f &&
-                 range[i] > 0.0f && avg[i] < 3.0f && fid_start && fid_end &&
+                 range[i] > 0.0f && fid_start && fid_end &&
                  hits_u[i] > 0 && hits_v[i] > 0 && hits_y[i] > 0);
           }
           return mask;
@@ -146,8 +116,8 @@ private:
                              {"track_end_z", "muon_mask"})
                      .Define("muon_trk_length_v", filter_float,
                              {"track_length", "muon_mask"})
-                     .Define("muon_trk_distance_to_vertex_v", filter_float,
-                             {"track_distance_to_vertex", "muon_mask"})
+                     .Define("muon_trk_distance_v", filter_float,
+                             {"trk_distance_v", "muon_mask"})
                     .Define("muon_pfp_generation_v", filter_int,
                             {"trk_pfpgeneration_v", "muon_mask"})
                      .Define("muon_trk_mcs_muon_mom_v", filter_float,
