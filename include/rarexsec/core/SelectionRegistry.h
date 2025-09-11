@@ -69,20 +69,18 @@ class SelectionRegistry {
 
             {"NUMUPRESEL", {"NuMu Preselection", {"numu_presel"}}},
 
-            {"NUMU_CC", {"NuMu CC Selection", {"has_muon", "n_pfps_gen2 > 1"}}},
+            {"NUMU_CC", {"NuMu CC Selection", {"has_muon"}}},
 
             {"NUMU_CC_BREAKDOWN",
              {"NuMu CC Selection Breakdown",
               {"muon_score",
                "muon_length",
-               "has_muon",
-               "n_pfps_gen2 > 1"}}},
+               "has_muon"}}},
 
             {"QUALITY_NUMU_CC",
              {"Quality + NuMu CC Selection",
               {"quality_event",
-               "has_muon",
-               "n_pfps_gen2 > 1"}}},
+               "has_muon"}}},
 
             {"QUALITY_NUMU_CC_BREAKDOWN",
              {"Quality + NuMu CC Selection Breakdown",
@@ -92,8 +90,7 @@ class SelectionRegistry {
                "optical_filter_pe_beam > 20",
                "muon_score",
                "muon_length",
-               "has_muon",
-               "n_pfps_gen2 > 1"}}},
+               "has_muon"}}},
 
             {"ALL_EVENTS", {"All Events", {}}},
             {"NONE", {"No Preselection", {}}}};
