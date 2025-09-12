@@ -61,7 +61,7 @@ public:
         {"inclusive_strange_channels", {10, 11}},
         {"exclusive_strange_channels",
          {50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61}},
-        {"analysis_channel", {15, 16}}};
+        {"channel_definitions", {15, 16}}};
     log::info("StratifierRegistry::StratifierRegistry",
               "Registry initialised successfully.");
   }
