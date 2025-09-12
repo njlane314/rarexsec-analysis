@@ -6,6 +6,7 @@ using namespace analysis::dsl;
 int main() {
   auto study = Study("MC Neutrino Energy")
     .data("config/catalogs/samples.json")
+    .mcOnly()
     .region("EMPTY", where(""))
     // The WeightProcessor automatically scales MC event weights to the
     // total protons-on-target, so the resulting histogram is POT-normalised.
