@@ -131,8 +131,8 @@ protected:
         "#Sigma^{#pm}", "#Sigma^{0}", "Other"};
 
     const std::array<Style_t, palette_size> styles = {
-        1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
-        1001, 3002, 1001, 1001, 3003, 1001, 1001};
+        1001, 1001, 1001, 1001, 1001, 1001, 1001, 1001,
+        1001, 1001, 1001, 1001, 1001, 1001, 1001};
     for (int idx : order) {
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(idx)).c_str(), "",
                                       1, 0, 1);
