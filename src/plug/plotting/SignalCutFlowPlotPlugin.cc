@@ -11,6 +11,8 @@
 #include <rarexsec/plug/IPlotPlugin.h>
 #include <rarexsec/plug/PluginRegistry.h>
 #include <rarexsec/utils/Logger.h>
+#include <rarexsec/data/VariableRegistry.h>
+#include <rarexsec/data/SampleTypes.h>
 
 namespace analysis {
 
@@ -26,6 +28,10 @@ public:
     std::string y_label{"Survival Probability (%)"};
     std::string output_directory{"plots"};
     std::string weight_column{"nominal_event_weight"};
+    std::vector<std::string> weight_systematics;
+    std::vector<std::string> detector_systematics;
+    int band_color{16};
+    double band_alpha{0.3};
   };
 
   SignalCutFlowPlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader)
@@ -47,6 +53,12 @@ public:
       pc.output_directory = p.value("output_directory", std::string{"plots"});
       pc.weight_column =
           p.value("weight_column", std::string{"nominal_event_weight"});
+      pc.weight_systematics =
+          p.value("weight_systematics", std::vector<std::string>{});
+      pc.detector_systematics =
+          p.value("detector_systematics", std::vector<std::string>{});
+      pc.band_color = p.value("band_color", 16);
+      pc.band_alpha = p.value("band_alpha", 0.3);
       if (pc.stages.size() != pc.pass_columns.size() ||
           pc.reason_columns.size() != pc.pass_columns.size())
         throw std::runtime_error(
@@ -78,6 +90,30 @@ private:
     return {std::max(0.0, center - half), std::min(1.0, center + half)};
   }
 
+  static SampleVariation parseDetVar(const std::string &name) {
+    std::string s = name;
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    if (s == "lyatt" || s == "lyattenuation")
+      return SampleVariation::kLYAttenuation;
+    if (s == "lydown")
+      return SampleVariation::kLYDown;
+    if (s == "lyray" || s == "lyrayleigh")
+      return SampleVariation::kLYRayleigh;
+    if (s == "recomb2")
+      return SampleVariation::kRecomb2;
+    if (s == "sce")
+      return SampleVariation::kSCE;
+    if (s == "wiremodx")
+      return SampleVariation::kWireModX;
+    if (s == "wiremodyz")
+      return SampleVariation::kWireModYZ;
+    if (s == "wiremodanglexz")
+      return SampleVariation::kWireModAngleXZ;
+    if (s == "wiremodangleyz")
+      return SampleVariation::kWireModAngleYZ;
+    return SampleVariation::kUnknown;
+  }
+
   void processPlot(const PlotConfig &pc) const {
     double N0 = 0.0;
     double N0_w2 = 0.0;
@@ -86,6 +122,22 @@ private:
     std::vector<std::map<std::string, double>> loss_reason(pc.stages.size());
     std::mutex m;
 
+    struct Accum {
+      double N0{0.0};
+      std::vector<double> counts;
+    };
+
+    std::map<std::string, Accum> w_up, w_dn, detvars;
+    std::map<std::string, SampleVariation> detvar_map;
+    for (const auto &ws : pc.weight_systematics) {
+      w_up[ws].counts.assign(pc.stages.size(), 0.0);
+      w_dn[ws].counts.assign(pc.stages.size(), 0.0);
+    }
+    for (const auto &dv : pc.detector_systematics) {
+      detvars[dv].counts.assign(pc.stages.size(), 0.0);
+      detvar_map[dv] = parseDetVar(dv);
+    }
+
     std::vector<std::string> cols;
     cols.push_back(pc.truth_column);
     for (auto const &c : pc.pass_columns)
@@ -93,6 +145,12 @@ private:
     for (size_t i = 1; i < pc.reason_columns.size(); ++i)
       cols.push_back(pc.reason_columns[i]);
     cols.push_back(pc.weight_column);
+
+    std::vector<std::string> base_cols;
+    base_cols.push_back(pc.truth_column);
+    for (auto const &c : pc.pass_columns)
+      base_cols.push_back(c);
+    base_cols.push_back(pc.weight_column);
 
     for (auto const &[skey, sample] : loader_->getSampleFrames()) {
       auto df = sample.nominal_node_;
@@ -134,6 +192,99 @@ private:
         }
       };
       df.Foreach(lam, cols);
+
+      for (const auto &ws : pc.weight_systematics) {
+        auto it = VariableRegistry::knobVariations().find(ws);
+        if (it == VariableRegistry::knobVariations().end()) {
+          log::warn("SignalCutFlowPlotPlugin::processPlot",
+                    "Unknown weight systematic", ws);
+          continue;
+        }
+        const auto &up_col = it->second.first;
+        const auto &dn_col = it->second.second;
+        if (df.HasColumn(up_col)) {
+          auto cols_up = base_cols;
+          cols_up.push_back(up_col);
+          auto &acc = w_up[ws];
+          auto lam_w = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3,
+                           bool p4, bool p5, double weight, double knob) {
+            if (!is_sig)
+              return;
+            std::lock_guard<std::mutex> lock(m);
+            double w = weight * knob;
+            acc.N0 += w;
+            bool pass[6] = {p0, p1, p2, p3, p4, p5};
+            bool cum = true;
+            for (int i = 0; i < 6; ++i) {
+              cum = cum && pass[i];
+              if (cum)
+                acc.counts[i] += w;
+              else
+                break;
+            }
+          };
+          df.Foreach(lam_w, cols_up);
+        } else {
+          log::warn("SignalCutFlowPlotPlugin::processPlot", "Sample ", skey,
+                    " missing column ", up_col, " for systematic ", ws);
+        }
+
+        if (df.HasColumn(dn_col)) {
+          auto cols_dn = base_cols;
+          cols_dn.push_back(dn_col);
+          auto &acc = w_dn[ws];
+          auto lam_w = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3,
+                           bool p4, bool p5, double weight, double knob) {
+            if (!is_sig)
+              return;
+            std::lock_guard<std::mutex> lock(m);
+            double w = weight * knob;
+            acc.N0 += w;
+            bool pass[6] = {p0, p1, p2, p3, p4, p5};
+            bool cum = true;
+            for (int i = 0; i < 6; ++i) {
+              cum = cum && pass[i];
+              if (cum)
+                acc.counts[i] += w;
+              else
+                break;
+            }
+          };
+          df.Foreach(lam_w, cols_dn);
+        } else {
+          log::warn("SignalCutFlowPlotPlugin::processPlot", "Sample ", skey,
+                    " missing column ", dn_col, " for systematic ", ws);
+        }
+      }
+
+      for (const auto &dv : pc.detector_systematics) {
+        auto var = detvar_map[dv];
+        auto itv = sample.variation_nodes_.find(var);
+        if (itv == sample.variation_nodes_.end())
+          continue;
+        auto dfv = itv->second;
+        if (!dfv.HasColumn(pc.truth_column)) {
+          dfv = dfv.Define(pc.truth_column.c_str(), "false");
+        }
+        auto &acc = detvars[dv];
+        auto lam_d = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3,
+                         bool p4, bool p5, double weight) {
+          if (!is_sig)
+            return;
+          std::lock_guard<std::mutex> lock(m);
+          acc.N0 += weight;
+          bool pass[6] = {p0, p1, p2, p3, p4, p5};
+          bool cum = true;
+          for (int i = 0; i < 6; ++i) {
+            cum = cum && pass[i];
+            if (cum)
+              acc.counts[i] += weight;
+            else
+              break;
+          }
+        };
+        dfv.Foreach(lam_d, base_cols);
+      }
     }
 
     std::vector<double> survival;
@@ -154,6 +305,41 @@ private:
       err_high.push_back(hi - s);
     }
 
+    std::vector<double> syst_low(pc.stages.size(), 0.0);
+    std::vector<double> syst_high(pc.stages.size(), 0.0);
+
+    for (const auto &ws : pc.weight_systematics) {
+      auto &up = w_up[ws];
+      auto &dn = w_dn[ws];
+      for (size_t i = 0; i < pc.stages.size(); ++i) {
+        double su = up.N0 > 0.0 ? up.counts[i] / up.N0 : 0.0;
+        double sd = dn.N0 > 0.0 ? dn.counts[i] / dn.N0 : 0.0;
+        double du = su - survival[i];
+        double dd = sd - survival[i];
+        double upc = std::max({du, dd, 0.0});
+        double dnc = std::min({du, dd, 0.0});
+        syst_high[i] += upc * upc;
+        syst_low[i] += dnc * dnc;
+      }
+    }
+
+    for (const auto &dv : pc.detector_systematics) {
+      auto &acc = detvars[dv];
+      for (size_t i = 0; i < pc.stages.size(); ++i) {
+        double sv = acc.N0 > 0.0 ? acc.counts[i] / acc.N0 : 0.0;
+        double diff = sv - survival[i];
+        if (diff >= 0)
+          syst_high[i] += diff * diff;
+        else
+          syst_low[i] += diff * diff;
+      }
+    }
+
+    for (size_t i = 0; i < pc.stages.size(); ++i) {
+      syst_low[i] = std::sqrt(syst_low[i]);
+      syst_high[i] = std::sqrt(syst_high[i]);
+    }
+
     std::vector<CutFlowLossInfo> losses(pc.stages.size());
     for (size_t i = 1; i < pc.stages.size(); ++i) {
       double total = 0.0;
@@ -170,8 +356,9 @@ private:
     }
 
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
-                           N0, cum_counts, losses, loader_->getTotalPot(),
-                           pc.output_directory, pc.x_label, pc.y_label);
+                           syst_low, syst_high, N0, cum_counts, losses,
+                           loader_->getTotalPot(), pc.output_directory, pc.x_label,
+                           pc.y_label, pc.band_color, pc.band_alpha);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");
