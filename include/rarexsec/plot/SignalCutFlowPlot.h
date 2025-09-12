@@ -47,6 +47,12 @@ protected:
     }
     h->SetMinimum(0.0);
     h->SetMaximum(100.0);
+    h->GetXaxis()->SetTitleFont(42);
+    h->GetYaxis()->SetTitleFont(42);
+    h->GetXaxis()->SetLabelFont(42);
+    h->GetYaxis()->SetLabelFont(42);
+    h->GetXaxis()->SetTitleOffset(1.0);
+    h->GetYaxis()->SetTitleOffset(1.0);
     h->Draw("hist");
 
     auto *g = new TGraphAsymmErrors(n);
@@ -58,6 +64,8 @@ protected:
 
     TLatex latex;
     latex.SetTextAlign(21);
+    latex.SetTextFont(h->GetXaxis()->GetTitleFont());
+    latex.SetTextSize(h->GetXaxis()->GetLabelSize());
     for (int i = 0; i < n; ++i) {
       auto txt = TString::Format("%0.1f/%0.1f", counts_[i], N0_);
       latex.DrawLatex(i + 1, survival_[i] * 100.0 + 3.0, txt.Data());
