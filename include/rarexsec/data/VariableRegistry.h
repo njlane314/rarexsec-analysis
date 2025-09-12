@@ -462,8 +462,7 @@ private:
         "track_end_y",         "track_end_z",
         "track_theta",         "track_phi",
         "track_calo_energy_u", "track_calo_energy_v",
-        "track_calo_energy_y", "trk_mcs_muon_mom_v",
-        "trk_range_muon_mom_v"};
+        "track_calo_energy_y", "trk_range_muon_mom_v"};
 
     return v;
   }
@@ -489,7 +488,6 @@ private:
                                                "muon_trk_length_v",
                                                "muon_trk_distance_v",
                                                "muon_pfp_generation_v",
-                                               "muon_trk_mcs_muon_mom_v",
                                                "muon_trk_range_muon_mom_v",
                                                "muon_track_costheta",
                                                "base_event_weight",
