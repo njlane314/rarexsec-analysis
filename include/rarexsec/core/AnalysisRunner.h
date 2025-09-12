@@ -21,7 +21,6 @@
 #include <rarexsec/core/VariableResult.h>
 
 #include <rarexsec/core/SampleProcessorFactory.h>
-#include <rarexsec/core/CutFlowCalculator.h>
 #include <rarexsec/core/VariableProcessor.h>
 
 #include <rarexsec/plug/PluginAliases.h>
@@ -43,7 +42,6 @@ public:
       analysis_definition_(selection_registry_),
       systematics_processor_(sys_proc),
       sample_processor_factory_(data_loader_),
-      cut_flow_calculator_(data_loader_, analysis_definition_),
       histogram_factory_(std::move(factory)),
       variable_processor_(analysis_definition_, systematics_processor_, *histogram_factory_) {
 
@@ -84,7 +82,6 @@ public:
       auto [sample_processors, monte_carlo_nodes] =
           sample_processor_factory_.create(region_handle, region_analysis);
 
-      cut_flow_calculator_.compute(region_handle, region_analysis);
       variable_processor_.process(region_handle, region_analysis,
                                   sample_processors, monte_carlo_nodes);
 
@@ -118,7 +115,6 @@ private:
   SystematicsProcessor &systematics_processor_;
 
   SampleProcessorFactory<AnalysisDataLoader> sample_processor_factory_;
-  CutFlowCalculator<AnalysisDataLoader> cut_flow_calculator_;
   std::unique_ptr<HistogramFactory> histogram_factory_;
   VariableProcessor<SystematicsProcessor> variable_processor_;
 };
