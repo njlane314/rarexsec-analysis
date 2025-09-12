@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -70,6 +71,7 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
         size_t N0 = 0;
         std::vector<size_t> cum_counts(pc.stages.size(), 0);
         std::vector<std::map<std::string, int>> loss_reason(pc.stages.size());
+        std::mutex m;
 
         std::vector<std::string> cols;
         cols.push_back(pc.truth_column);
@@ -86,12 +88,13 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
                           "; defaulting to false");
                 df = df.Define(pc.truth_column.c_str(), "false");
             }
-            auto lam = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3, bool p4,
-                            bool p5, const std::string &r1, const std::string &r2,
-                            const std::string &r3, const std::string &r4,
-                            const std::string &r5) {
+            auto lam = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3,
+                            bool p4, bool p5, const std::string &r1,
+                            const std::string &r2, const std::string &r3,
+                            const std::string &r4, const std::string &r5) {
                 if (!is_sig)
                     return;
+                std::lock_guard<std::mutex> lock(m);
                 ++N0;
                 bool pass[6] = {p0, p1, p2, p3, p4, p5};
                 bool cum = true;
