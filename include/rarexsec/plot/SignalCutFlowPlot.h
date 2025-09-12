@@ -47,12 +47,6 @@ protected:
     }
     h->SetMinimum(0.0);
     h->SetMaximum(100.0);
-    h->GetXaxis()->SetTitleFont(42);
-    h->GetYaxis()->SetTitleFont(42);
-    h->GetXaxis()->SetLabelFont(42);
-    h->GetYaxis()->SetLabelFont(42);
-    h->GetXaxis()->SetTitleOffset(1.0);
-    h->GetYaxis()->SetTitleOffset(1.0);
     h->Draw("hist");
 
     auto *g = new TGraphAsymmErrors(n);
