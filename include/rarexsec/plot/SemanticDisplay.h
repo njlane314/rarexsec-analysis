@@ -42,7 +42,8 @@ protected:
         kGreen + 2, kYellow, kCyan,    kOrange + 7, kSpring + 4,
         kTeal + 3,  kAzure + 5, kPink + 5, kViolet + 5, kGray + 1};
     gStyle->SetPalette(palette_size, palette.data());
-    canvas.SetFillColor(background);
+    canvas.SetFillColor(kWhite);
+    canvas.SetFrameFillColor(background);
 
     for (int r = 0; r < dim; ++r) {
       for (int c = 0; c < dim; ++c) {
