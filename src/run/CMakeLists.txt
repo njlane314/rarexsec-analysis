@@ -20,6 +20,8 @@ add_executable(study_neutrino_energy
   study_neutrino_energy.cpp)
 add_executable(study_numucc_selection
   study_numucc_selection.cpp)
+add_executable(study_numucc_signal_survival
+  study_numucc_signal_survival.cpp)
 
 target_link_libraries(study_topo_score PRIVATE
   core
@@ -142,6 +144,21 @@ target_link_libraries(study_numucc_selection PRIVATE
   TMVA
   dl)
 
+target_link_libraries(study_numucc_signal_survival PRIVATE
+  core
+  plug
+  data
+  hist
+  plot
+  syst
+  utils
+  Eigen3::Eigen
+  nlohmann_json::nlohmann_json
+  ${ROOT_LIBRARIES}
+  TBB::tbb
+  TMVA
+  dl)
+
 
 set_target_properties(
   study_topo_score
@@ -157,6 +174,7 @@ set_target_properties(
 
 set_target_properties(
   study_numucc_selection
+  study_numucc_signal_survival
   PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
 )

@@ -174,4 +174,50 @@ class CutFlowBuilder {
 };
 inline CutFlowBuilder cutflow() { return {}; }
 
+class SurvivalBuilder {
+  public:
+    SurvivalBuilder &truth(std::string t) {
+        truth_column_ = std::move(t);
+        return *this;
+    }
+    SurvivalBuilder &stages(std::vector<std::string> s) {
+        stages_ = std::move(s);
+        return *this;
+    }
+    SurvivalBuilder &passes(std::vector<std::string> p) {
+        pass_cols_ = std::move(p);
+        return *this;
+    }
+    SurvivalBuilder &reasons(std::vector<std::string> r) {
+        reason_cols_ = std::move(r);
+        return *this;
+    }
+    SurvivalBuilder &name(std::string n) {
+        plot_name_ = std::move(n);
+        return *this;
+    }
+    SurvivalBuilder &out(std::string d) {
+        out_dir_ = std::move(d);
+        return *this;
+    }
+
+    nlohmann::json to_json() const {
+        return {{"truth_column", truth_column_},
+                {"stages", stages_},
+                {"pass_columns", pass_cols_},
+                {"reason_columns", reason_cols_},
+                {"plot_name", plot_name_},
+                {"output_directory", out_dir_}};
+    }
+
+  private:
+    std::string truth_column_{"is_truth_signal"};
+    std::vector<std::string> stages_{"Pre", "Flash/CRT", "FV", "#mu-ID", "Topology/MVA", "Final"};
+    std::vector<std::string> pass_cols_{"pass_pre", "pass_flash", "pass_fv", "pass_mu", "pass_topo", "pass_final"};
+    std::vector<std::string> reason_cols_{"", "reason_flash", "reason_fv", "reason_mu", "reason_topo", "reason_final"};
+    std::string plot_name_{"signal_cutflow_survival"};
+    std::string out_dir_{"plots"};
+};
+inline SurvivalBuilder survival() { return {}; }
+
 }
