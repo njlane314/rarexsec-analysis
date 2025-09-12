@@ -67,8 +67,16 @@ inline AnalysisResult runAnalysis(const nlohmann::json &samples,
                                   const PluginSpecList &analysis_specs,
                                   const PluginSpecList &syst_specs) {
   ROOT::EnableImplicitMT();
-  log::info("analysis::runAnalysis", "Implicit multithreading engaged across",
-            ROOT::GetThreadPoolSize(), "threads.");
+  auto threads = ROOT::GetThreadPoolSize();
+  if (threads > 1) {
+    log::info("analysis::runAnalysis",
+              "Implicit multithreading engaged across", threads,
+              "threads.");
+  } else {
+    ROOT::DisableImplicitMT();
+    log::info("analysis::runAnalysis",
+              "Implicit multithreading not supported; running single-threaded.");
+  }
 
   std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
   log::info("analysis::runAnalysis", "Configuration loaded for",
