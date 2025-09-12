@@ -7,7 +7,8 @@ using namespace analysis::dsl;
 int main() {
   auto s = Study("NuMu CC selection and purity")
                .data("config/catalogs/samples.json")
-               .region("NUMU_CC", where("QUALITY && NUMU_CC"))
+               // Expand selection rule names to concrete expression
+               .region("NUMU_CC", where("quality_event && has_muon"))
                .plot(cutflow()
                          .rule("NUMU_CC")
                          .in("NUMU_CC")
