@@ -13,7 +13,7 @@ class MuonSelectionProcessor : public IEventProcessor {
 public:
   ROOT::RDF::RNode process(ROOT::RDF::RNode df,
                            SampleOrigin st) const override {
-    if (!df.HasColumn("trk_score_v")) {
+    if (!df.HasColumn("track_shower_scores")) {
       auto no_mu_df = df.Define("n_muons_tot", []() { return 0; })
                           .Define("has_muon", []() { return false; });
       return next_ ? next_->process(no_mu_df, st) : no_mu_df;
@@ -56,7 +56,7 @@ private:
           }
           return mask;
         },
-        {"trk_score_v", "trk_llr_pid_v", "track_length",
+        {"track_shower_scores", "trk_llr_pid_v", "track_length",
          "track_distance_to_vertex", "track_start_x", "track_start_y",
          "track_start_z", "track_end_x", "track_end_y", "track_end_z",
          "trk_pfpgeneration_v", "pfp_num_plane_hits_U",
@@ -98,7 +98,7 @@ private:
     };
 
     auto mu_df = df.Define("muon_trk_score_v", filter_float,
-                           {"trk_score_v", "muon_mask"})
+                           {"track_shower_scores", "muon_mask"})
                      .Define("muon_trk_llr_pid_v", filter_float,
                              {"trk_llr_pid_v", "muon_mask"})
                      .Define("muon_trk_start_x_v", filter_float,
