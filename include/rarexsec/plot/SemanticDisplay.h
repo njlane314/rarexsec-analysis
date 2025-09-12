@@ -47,7 +47,7 @@ protected:
     // High-contrast colour palette for particle classes
     std::array<int, palette_size> palette = {
         background,
-        TColor::GetColor("#000000"), // Cosmic
+        TColor::GetColor("#666666"), // Cosmic
         TColor::GetColor("#e41a1c"), // Muon
         TColor::GetColor("#377eb8"), // Electron
         TColor::GetColor("#4daf4a"), // Photon
