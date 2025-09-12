@@ -64,20 +64,18 @@ public:
 
     auto presel_df = proc_df.Define(
         "numu_presel",
-        [st](int bnb, int ext, float pe_beam, float pe_veto, bool swtrig,
-             int nslice, float topo, int n_gen2, float x, float y, float z) {
+        [st](int bnb, int ext, float pe_beam, float pe_veto, int nslice,
+             float topo, int n_gen2, float x, float y, float z) {
           bool dataset_gate =
               (bnb == 0 && ext == 0) ? (pe_beam > 0.f && pe_veto < 20.f) : true;
           bool basic_reco = nslice == 1 && topo > 0.06f && n_gen2 > 1;
           bool fv = x > 5.f && x < 251.f && y > -110.f && y < 110.f &&
                     z > 20.f && z < 986.f && (z < 675.f || z > 775.f);
-          return dataset_gate &&
-                 (st == SampleOrigin::kMonteCarlo ? swtrig : true) &&
-                 basic_reco && fv;
+          return dataset_gate && basic_reco && fv;
         },
         {"bnbdata", "extdata", "_opfilter_pe_beam", "_opfilter_pe_veto",
-         "software_trigger", "nslice", "topological_score", "n_pfps_gen2",
-         "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z"});
+         "nslice", "topological_score", "n_pfps_gen2", "reco_nu_vtx_sce_x",
+         "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z"});
 
     return next_ ? next_->process(presel_df, st) : presel_df;
   }
