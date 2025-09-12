@@ -81,8 +81,10 @@ private:
   void processPlot(const PlotConfig &pc) const {
     double N0 = 0.0;
     double N0_w2 = 0.0;
+    [[maybe_unused]] double Ntot = 0.0;
     std::vector<double> cum_counts(pc.stages.size(), 0.0);
     std::vector<double> cum_counts_w2(pc.stages.size(), 0.0);
+    std::vector<double> cum_counts_all(pc.stages.size(), 0.0);
     std::vector<std::map<std::string, double>> loss_reason(pc.stages.size());
     std::mutex m;
 
@@ -105,13 +107,22 @@ private:
                      bool p5, const std::string &r1, const std::string &r2,
                      const std::string &r3, const std::string &r4,
                      const std::string &r5, double weight) {
-        if (!is_sig)
-          return;
         std::lock_guard<std::mutex> lock(m);
-        N0 += weight;
-        N0_w2 += weight * weight;
+        Ntot += weight;
         bool pass[6] = {p0, p1, p2, p3, p4, p5};
         bool cum = true;
+        for (int i = 0; i < 6; ++i) {
+          cum = cum && pass[i];
+          if (cum)
+            cum_counts_all[i] += weight;
+          else
+            break;
+        }
+        if (!is_sig)
+          return;
+        N0 += weight;
+        N0_w2 += weight * weight;
+        cum = true;
         int first_fail = -1;
         for (int i = 0; i < 6; ++i) {
           cum = cum && pass[i];
@@ -169,9 +180,14 @@ private:
       losses[i] = {top_reason, top_count, total};
     }
 
+    std::vector<double> purity(pc.stages.size(), 0.0);
+    for (size_t i = 0; i < pc.stages.size(); ++i)
+      purity[i] =
+          cum_counts_all[i] > 0.0 ? cum_counts[i] / cum_counts_all[i] : 0.0;
+
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
                            N0, cum_counts, losses, loader_->getTotalPot(),
-                           pc.output_directory, pc.x_label, pc.y_label);
+                           pc.output_directory, pc.x_label, pc.y_label, purity);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");

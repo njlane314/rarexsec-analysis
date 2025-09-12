@@ -4,10 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "TGaxis.h"
+#include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1F.h"
 #include "TLatex.h"
 #include "TString.h"
+#include "TVirtualPad.h"
 
 #include <rarexsec/plot/IHistogramPlot.h>
 
@@ -28,13 +31,16 @@ public:
                     std::vector<CutFlowLossInfo> losses, double pot_scale = 1.0,
                     std::string output_directory = "plots",
                     std::string x_label = "Cut Stage",
-                    std::string y_label = "Survival Probability (%)")
+                    std::string y_label = "Survival Probability (%)",
+                    std::vector<double> purity = {},
+                    std::string y2_label = "Purity (%)")
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
         stages_(std::move(stages)), survival_(std::move(survival)),
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
-        y_label_(std::move(y_label)) {}
+        y_label_(std::move(y_label)), purity_(std::move(purity)),
+        y2_label_(std::move(y2_label)) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -56,6 +62,25 @@ protected:
       g->SetPointError(i, 0.0, 0.0, err_low_[i] * 100.0, err_high_[i] * 100.0);
     }
     g->Draw("P SAME");
+
+    if (purity_.size() == static_cast<size_t>(n)) {
+      gPad->SetRightMargin(0.15);
+      auto *gp = new TGraph(n);
+      gp->SetLineColor(kRed);
+      gp->SetMarkerColor(kRed);
+      gp->SetMarkerStyle(24);
+      for (int i = 0; i < n; ++i)
+        gp->SetPoint(i, i + 1, purity_[i] * 100.0);
+      gp->Draw("PL SAME");
+
+      auto *axis =
+          new TGaxis(n + 0.5, 0.0, n + 0.5, 100.0, 0.0, 100.0, 510, "+L");
+      axis->SetLineColor(kRed);
+      axis->SetLabelColor(kRed);
+      axis->SetTitleColor(kRed);
+      axis->SetTitle(y2_label_.c_str());
+      axis->Draw();
+    }
 
     TLatex latex;
     latex.SetTextAlign(21);
@@ -95,6 +120,8 @@ private:
   double pot_scale_;
   std::string x_label_;
   std::string y_label_;
+  std::vector<double> purity_;
+  std::string y2_label_;
 };
 
 } // namespace analysis
