@@ -134,6 +134,7 @@ endfunction()
 add_plugin(RegionsPlugin plug/analytics/RegionsPlugin.cc "")
 add_plugin(SnapshotPlugin plug/analytics/SnapshotPlugin.cc "")
 add_plugin(VariablesPlugin plug/analytics/VariablesPlugin.cc "")
+add_plugin(CutFlowPlugin plug/analytics/CutFlowPlugin.cc "")
 add_plugin(StrategySelectionPlugin plug/systematics/StrategySelectionPlugin.cc "")
 
 add_plugin(EventDisplayPlugin plug/plotting/EventDisplayPlugin.cc "")
