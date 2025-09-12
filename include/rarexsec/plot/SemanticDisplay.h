@@ -112,7 +112,7 @@ protected:
     const double x_max = hist_->GetXaxis()->GetXmax();
     const double y_min = hist_->GetYaxis()->GetXmin();
     const double y_max = hist_->GetYaxis()->GetXmax();
-    const double leg_x1 = x_min + 0.12 * (x_max - x_min);
+    const double leg_x1 = x_min + 0.02 * (x_max - x_min);
     const double leg_x2 = x_min + 0.98 * (x_max - x_min);
     const double leg_y2 = y_max - 0.02 * (y_max - y_min);
     const double leg_y1 = leg_y2 - 0.10 * (y_max - y_min);
@@ -133,10 +133,6 @@ protected:
     const std::array<Style_t, palette_size> styles = {
         1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
         1001, 3002, 1001, 1001, 3003, 1001, 1001};
-    // Add legend entries for all classes to keep the layout consistent across
-    // events. Classes with zero count get blank placeholders so they do not
-    // appear in the legend while still reserving space. Entries are ordered by
-    // descending count.
     for (int idx : order) {
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(idx)).c_str(), "",
                                       1, 0, 1);
