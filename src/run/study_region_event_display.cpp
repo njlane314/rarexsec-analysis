@@ -7,24 +7,22 @@ int main() {
   auto study = Study("Region detector and semantic displays")
                    .data("config/catalogs/samples.json")
                    .region("NUMU_CC", where("quality_event && has_muon"))
-                   .display(events()
-                                .from("mc_strangeness_run1_fhc")
-                                .in("NUMU_CC")
-                               .limit(5)
-                               .size(512)
-                               .format("pdf")
-                               .mode(detector())
-                                .out("plots/event_displays/detector")
-                                .combinedPdf("detector_events.pdf"))
-                   .display(events()
-                                .from("mc_strangeness_run1_fhc")
-                                .in("NUMU_CC")
-                                .limit(5)
-                                .size(512)
-                                .format("pdf")
-                                .mode(semantic())
-                                .out("plots/event_displays/semantic")
-                                .combinedPdf("semantic_events.pdf"));
+                   .display(
+                       events().from("mc_strangeness_run1_fhc")
+                           .in("NUMU_CC")
+                           .limit(5)
+                           .size(512)
+                           .format("pdf")
+                           .mode(detector())
+                           .out("plots/event_displays/detector"))
+                   .display(
+                       events().from("mc_strangeness_run1_fhc")
+                           .in("NUMU_CC")
+                           .limit(5)
+                           .size(512)
+                           .format("pdf")
+                           .mode(semantic())
+                           .out("plots/event_displays/semantic"));
 
   study.run("/tmp/event_displays.root");
   return 0;
