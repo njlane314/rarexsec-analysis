@@ -22,10 +22,18 @@ public:
 
   virtual ~IEventDisplay() = default;
 
-  void drawAndSave(const std::string &format = "png") {
+  void drawAndSave(const std::string &format = "png",
+                   const std::string &file_override = "") {
     gSystem->mkdir(output_directory_.c_str(), true);
 
-    log::info("EventDisplay", "Saving", tag_, "to", output_directory_);
+    std::string out_file;
+    if (file_override.empty()) {
+      out_file = output_directory_ + "/" + tag_ + "." + format;
+    } else {
+      out_file = file_override;
+    }
+
+    log::info("EventDisplay", "Saving", tag_, "to", out_file);
 
     TCanvas canvas(tag_.c_str(), title_.c_str(), canvas_size_, canvas_size_);
     canvas.SetCanvasSize(canvas_size_, canvas_size_);
@@ -43,7 +51,7 @@ public:
     gStyle->SetTitleX(0.5);
     this->draw(canvas);
     canvas.Update();
-    canvas.SaveAs((output_directory_ + "/" + tag_ + "." + format).c_str());
+    canvas.SaveAs(out_file.c_str());
   }
 
 protected:

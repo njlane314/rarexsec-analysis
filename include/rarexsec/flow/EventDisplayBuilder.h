@@ -52,6 +52,10 @@ public:
     file_pattern_ = std::move(pattern);
     return *this;
   }
+  EventDisplayBuilder &combinedPdf(std::string name) {
+    combined_pdf_ = std::move(name);
+    return *this;
+  }
 
   EventDisplayBuilder &limit(int n) {
     n_events_ = n;
@@ -98,6 +102,8 @@ public:
     }
     if (!manifest_path_.empty())
       j["manifest"] = manifest_path_;
+    if (!combined_pdf_.empty())
+      j["combined_pdf"] = combined_pdf_;
     return j;
   }
 
@@ -115,6 +121,7 @@ private:
   std::optional<std::string> order_by_;
   bool order_desc_ = true;
   std::string manifest_path_;
+  std::string combined_pdf_;
   DisplayMode mode_ = detector();
 };
 
