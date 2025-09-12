@@ -93,14 +93,14 @@ protected:
 
     // Legend describing semantic classes
     legend_entries_.clear();
-    // Compact legend with three columns in the upper right corner
-    legend_ = std::make_unique<TLegend>(0.55, 0.55, 0.95, 0.90);
+    // More compact legend matching the plot background
+    legend_ = std::make_unique<TLegend>(0.60, 0.65, 0.95, 0.90);
     legend_->SetNColumns(3);
-    legend_->SetFillColor(kWhite);
+    legend_->SetFillColor(background);
     legend_->SetFillStyle(1001);
     legend_->SetBorderSize(0);
     legend_->SetTextFont(42);
-    legend_->SetTextSize(0.025);
+    legend_->SetTextSize(0.02);
 
     const std::array<const char *, palette_size> labels = {
         "#emptyset",    "Cosmic",     "#mu",  "e^{-}",   "#gamma", "#pi^{#pm}",
