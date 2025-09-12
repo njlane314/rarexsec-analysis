@@ -104,7 +104,7 @@ protected:
     const double x_max = hist_->GetXaxis()->GetXmax();
     const double y_min = hist_->GetYaxis()->GetXmin();
     const double y_max = hist_->GetYaxis()->GetXmax();
-    const double leg_x1 = x_min + 0.12 * (x_max - x_min);
+    const double leg_x1 = x_min + 0.02 * (x_max - x_min);
     const double leg_x2 = x_min + 0.98 * (x_max - x_min);
     const double leg_y2 = y_max - 0.02 * (y_max - y_min);
     const double leg_y1 = leg_y2 - 0.10 * (y_max - y_min);
