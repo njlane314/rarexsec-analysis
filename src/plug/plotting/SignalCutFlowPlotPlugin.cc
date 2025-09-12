@@ -81,7 +81,8 @@ private:
   void processPlot(const PlotConfig &pc) const {
     double N0 = 0.0;
     double N0_w2 = 0.0;
-    std::vector<double> cum_counts(pc.stages.size(), 0.0);
+    std::vector<double> cum_sig(pc.stages.size(), 0.0);
+    std::vector<double> cum_total(pc.stages.size(), 0.0);
     std::vector<std::map<std::string, double>> loss_reason(pc.stages.size());
     std::mutex m;
 
@@ -104,18 +105,29 @@ private:
                      bool p5, const std::string &r1, const std::string &r2,
                      const std::string &r3, const std::string &r4,
                      const std::string &r5, double weight) {
+        bool pass[6] = {p0, p1, p2, p3, p4, p5};
+        std::lock_guard<std::mutex> lock(m);
+
+        bool cum = true;
+        for (int i = 0; i < 6; ++i) {
+          cum = cum && pass[i];
+          if (cum)
+            cum_total[i] += weight;
+          else
+            break;
+        }
+
         if (!is_sig)
           return;
-        std::lock_guard<std::mutex> lock(m);
+
         N0 += weight;
         N0_w2 += weight * weight;
-        bool pass[6] = {p0, p1, p2, p3, p4, p5};
-        bool cum = true;
+        cum = true;
         int first_fail = -1;
         for (int i = 0; i < 6; ++i) {
           cum = cum && pass[i];
           if (cum)
-            cum_counts[i] += weight;
+            cum_sig[i] += weight;
           else {
             first_fail = i;
             break;
@@ -138,12 +150,17 @@ private:
     std::vector<double> err_low, err_high;
     double n_eff = (N0 > 0.0 && N0_w2 > 0.0) ? (N0 * N0) / N0_w2 : 0.0;
     for (size_t i = 0; i < pc.stages.size(); ++i) {
-      double s = N0 > 0.0 ? cum_counts[i] / N0 : 0.0;
+      double s = N0 > 0.0 ? cum_sig[i] / N0 : 0.0;
       survival.push_back(s);
       double k_eff = s * n_eff;
       auto [lo, hi] = wilsonInterval(k_eff, n_eff);
       err_low.push_back(s - lo);
       err_high.push_back(hi - s);
+    }
+
+    std::vector<double> purity(pc.stages.size(), 0.0);
+    for (size_t i = 0; i < pc.stages.size(); ++i) {
+      purity[i] = cum_total[i] > 0.0 ? cum_sig[i] / cum_total[i] : 0.0;
     }
 
     std::vector<CutFlowLossInfo> losses(pc.stages.size());
@@ -162,7 +179,7 @@ private:
     }
 
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
-                           N0, cum_counts, losses, loader_->getTotalPot(),
+                           N0, cum_sig, purity, losses, loader_->getTotalPot(),
                            pc.output_directory, pc.x_label, pc.y_label);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",

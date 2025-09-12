@@ -5,9 +5,11 @@
 #include <vector>
 
 #include "TGraphAsymmErrors.h"
+#include "TGraph.h"
 #include "TH1F.h"
 #include "TLatex.h"
 #include "TString.h"
+#include "TGaxis.h"
 
 #include <rarexsec/plot/IHistogramPlot.h>
 
@@ -24,7 +26,7 @@ public:
   SignalCutFlowPlot(std::string plot_name, std::vector<std::string> stages,
                     std::vector<double> survival, std::vector<double> err_low,
                     std::vector<double> err_high, double N0,
-                    std::vector<double> counts,
+                    std::vector<double> counts, std::vector<double> purity,
                     std::vector<CutFlowLossInfo> losses, double pot_scale = 1.0,
                     std::string output_directory = "plots",
                     std::string x_label = "Cut Stage",
@@ -32,9 +34,9 @@ public:
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
         stages_(std::move(stages)), survival_(std::move(survival)),
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
-        counts_(std::move(counts)), losses_(std::move(losses)),
-        pot_scale_(pot_scale), x_label_(std::move(x_label)),
-        y_label_(std::move(y_label)) {}
+        counts_(std::move(counts)), purity_(std::move(purity)),
+        losses_(std::move(losses)), pot_scale_(pot_scale),
+        x_label_(std::move(x_label)), y_label_(std::move(y_label)) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -56,6 +58,22 @@ protected:
       g->SetPointError(i, 0.0, 0.0, err_low_[i] * 100.0, err_high_[i] * 100.0);
     }
     g->Draw("P SAME");
+
+    auto *g_purity = new TGraph(n);
+    for (int i = 0; i < n; ++i) {
+      g_purity->SetPoint(i, i + 1, purity_[i] * 100.0);
+    }
+    g_purity->SetLineColor(kRed);
+    g_purity->SetMarkerColor(kRed);
+    g_purity->SetMarkerStyle(24);
+    g_purity->Draw("LP SAME");
+
+    TGaxis axis(n + 0.5, 0.0, n + 0.5, 100.0, 0.0, 100.0, 510, "+L");
+    axis.SetLineColor(kRed);
+    axis.SetLabelColor(kRed);
+    axis.SetTitleColor(kRed);
+    axis.SetTitle("Signal Purity (%)");
+    axis.Draw();
 
     TLatex latex;
     latex.SetTextAlign(21);
@@ -90,6 +108,7 @@ private:
   std::vector<double> err_high_;
   double N0_;
   std::vector<double> counts_;
+  std::vector<double> purity_;
   std::vector<CutFlowLossInfo> losses_;
   double pot_scale_;
   std::string x_label_;
