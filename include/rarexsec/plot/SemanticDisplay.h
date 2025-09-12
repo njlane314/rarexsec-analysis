@@ -126,6 +126,8 @@ protected:
         1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
         1001, 3002, 1001, 1001, 3003, 1001, 1001};
     for (int i = 1; i < palette_size; ++i) {
+      if (counts[i] == 0)
+        continue;
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
                                       0, 1);
       h->SetFillColor(palette[i]);
