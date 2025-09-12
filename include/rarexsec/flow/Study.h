@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "EventDisplayBuilder.h"
 #include "PlotBuilders.h"
@@ -178,10 +179,21 @@ class Study {
             analysis_specs.push_back(
                 {"SnapshotPlugin",
                  {{"analysis_configs", {{"snapshots", snaps_}}}}});
-        if (!displays_.empty())
+        if (!displays_.empty()) {
+            auto displays = displays_;
+            for (auto &ed : displays) {
+                if (ed.contains("region")) {
+                    const auto &rk = ed.at("region").get_ref<const std::string&>();
+                    auto it = std::find_if(regions_.begin(), regions_.end(),
+                                           [&](const RegionDef &r) { return r.key == rk; });
+                    if (it != regions_.end())
+                        ed["selection_expr"] = it->expr;
+                }
+            }
             plot_specs.push_back(
                 {"EventDisplayPlugin",
-                 {{"plot_configs", {{"event_displays", displays_}}}}});
+                 {{"plot_configs", {{"event_displays", displays}}}}});
+        }
 
         auto unique = [](PluginSpecList &v) {
             std::unordered_set<std::string> seen;

@@ -160,6 +160,7 @@ class EventDisplayPlugin : public IPlotPlugin {
                                    const std::vector<float>& det,
                                    const std::vector<int>& sem){
                     std::string tag = formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
+                    auto out_file = out_dir / (tag + ".png");
                     if (cfg_copy.mode == "semantic") {
                         SemanticDisplay s(tag, sem, cfg_copy.image_size, out_dir.string());
                         s.drawAndSave();
@@ -167,9 +168,10 @@ class EventDisplayPlugin : public IPlotPlugin {
                         DetectorDisplay d(tag, det, cfg_copy.image_size, out_dir.string());
                         d.drawAndSave();
                     }
+                    log::info("EventDisplayPlugin", "Saved event display:", out_file.string());
                     if (!cfg_copy.manifest_path.empty()) {
                         std::lock_guard<std::mutex> lock(manifest_mutex);
-                        manifest.push_back({{"run",run},{"sub",sub},{"evt",evt},{"plane",plane},{"file",(out_dir/(tag+".png")).string()}});
+                        manifest.push_back({{"run",run},{"sub",sub},{"evt",evt},{"plane",plane},{"file",out_file.string()}});
                     }
                 };
 
@@ -183,6 +185,7 @@ class EventDisplayPlugin : public IPlotPlugin {
             if (!cfg.manifest_path.empty()) {
                 std::ofstream ofs(cfg.manifest_path);
                 ofs << manifest.dump(2);
+                log::info("EventDisplayPlugin", "Wrote event display manifest:", cfg.manifest_path);
             }
         }
     }
