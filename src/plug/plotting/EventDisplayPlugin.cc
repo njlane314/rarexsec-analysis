@@ -203,7 +203,7 @@ public:
                   formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
               std::string title = "Plane " + plane + " Detector (" +
                                   std::to_string(run) + " Run, " +
-                                  std::to_string(sub) + " SubRun, " +
+                                  std::to_string(sub) + " Subrun, " +
                                   std::to_string(evt) + " Event)";
 
               std::string out_file_record;
