@@ -35,7 +35,7 @@ private:
            const ROOT::RVec<float> &start_x, const ROOT::RVec<float> &start_y,
            const ROOT::RVec<float> &start_z, const ROOT::RVec<float> &end_x,
            const ROOT::RVec<float> &end_y, const ROOT::RVec<float> &end_z,
-           const ROOT::RVec<int> &gens,
+           const ROOT::RVec<unsigned> &gens,
            const ROOT::RVec<int> &hits_u, const ROOT::RVec<int> &hits_v,
            const ROOT::RVec<int> &hits_y) {
           ROOT::RVec<bool> mask(scores.size());
@@ -51,7 +51,7 @@ private:
                           end_z[i] > min_z && end_z[i] < max_z;
             mask[i] =
                 (scores[i] > 0.8f && llr[i] > 0.2f && lengths[i] > 10.0f &&
-                 dists[i] < 4.0f && gens[i] == 2 && fid_start && fid_end &&
+                 dists[i] < 4.0f && gens[i] == 2u && fid_start && fid_end &&
                  hits_u[i] > 0 && hits_v[i] > 0 && hits_y[i] > 0);
           }
           return mask;
@@ -59,7 +59,7 @@ private:
         {"track_shower_scores", "trk_llr_pid_v", "track_length",
          "track_distance_to_vertex", "track_start_x", "track_start_y",
          "track_start_z", "track_end_x", "track_end_y", "track_end_z",
-         "trk_pfpgeneration_v", "pfp_num_plane_hits_U",
+         "pfp_generations", "pfp_num_plane_hits_U",
          "pfp_num_plane_hits_V", "pfp_num_plane_hits_Y"});
   }
 
@@ -75,9 +75,9 @@ private:
       return out;
     };
 
-    auto filter_int = [](const ROOT::RVec<int> &vals,
-                         const ROOT::RVec<bool> &mask) {
-      ROOT::RVec<int> out;
+    auto filter_uint = [](const ROOT::RVec<unsigned> &vals,
+                          const ROOT::RVec<bool> &mask) {
+      ROOT::RVec<unsigned> out;
       out.reserve(vals.size());
       for (size_t i = 0; i < vals.size(); ++i) {
         if (mask[i])
@@ -117,8 +117,8 @@ private:
                              {"track_length", "muon_mask"})
                      .Define("muon_trk_distance_v", filter_float,
                              {"trk_distance_v", "muon_mask"})
-                    .Define("muon_pfp_generation_v", filter_int,
-                            {"trk_pfpgeneration_v", "muon_mask"})
+                    .Define("muon_pfp_generation_v", filter_uint,
+                            {"pfp_generations", "muon_mask"})
                      .Define("muon_trk_mcs_muon_mom_v", filter_float,
                              {"trk_mcs_muon_mom_v", "muon_mask"})
                      .Define("muon_trk_range_muon_mom_v", filter_float,

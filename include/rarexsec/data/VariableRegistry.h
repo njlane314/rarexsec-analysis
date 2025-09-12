@@ -457,7 +457,6 @@ private:
     static const std::vector<std::string> v = {
         "track_shower_scores", "trk_llr_pid_v",
         "track_length",        "trk_distance_v",
-        "trk_pfpgeneration_v",
         "track_start_x",       "track_start_y",
         "track_start_z",       "track_end_x",
         "track_end_y",         "track_end_z",
