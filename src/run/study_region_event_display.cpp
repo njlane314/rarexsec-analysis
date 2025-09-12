@@ -10,11 +10,12 @@ int main() {
                    .display(events()
                                 .from("mc_strangeness_run1_fhc")
                                 .in("NUMU_CC")
-                                .limit(5)
-                                .size(512)
-                                .format("pdf")
-                                .mode(detector())
-                                .out("plots/event_displays/detector"))
+                               .limit(5)
+                               .size(512)
+                               .format("pdf")
+                               .mode(detector())
+                                .out("plots/event_displays/detector")
+                                .combinedPdf("detector_events.pdf"))
                    .display(events()
                                 .from("mc_strangeness_run1_fhc")
                                 .in("NUMU_CC")
@@ -22,7 +23,8 @@ int main() {
                                 .size(512)
                                 .format("pdf")
                                 .mode(semantic())
-                                .out("plots/event_displays/semantic"));
+                                .out("plots/event_displays/semantic")
+                                .combinedPdf("semantic_events.pdf"));
 
   study.run("/tmp/event_displays.root");
   return 0;

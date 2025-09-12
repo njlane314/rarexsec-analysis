@@ -43,6 +43,7 @@ public:
     std::optional<std::string> order_by;
     bool order_desc{true};
     std::string manifest_path;
+    std::string combined_pdf;
   };
 
   EventDisplayPlugin(const PluginArgs &args, AnalysisDataLoader *loader)
@@ -75,6 +76,7 @@ public:
         dc.order_desc = ed.value("order_desc", true);
       }
       dc.manifest_path = ed.value("manifest", std::string{});
+      dc.combined_pdf = ed.value("combined_pdf", std::string{});
       if (ed.contains("selection_expr"))
         dc.selection_expr = ed.at("selection_expr").get<std::string>();
       if (!dc.region.empty()) {
@@ -150,6 +152,15 @@ public:
       nlohmann::json manifest = nlohmann::json::array();
       std::mutex manifest_mutex;
       std::atomic<size_t> saved{0};
+      std::mutex pdf_mutex;
+
+      bool use_combined_pdf = !cfg.combined_pdf.empty() &&
+                              cfg.image_format == "pdf";
+      std::filesystem::path combined_path;
+      size_t total_pages =
+          static_cast<size_t>(cfg.n_events) * cfg.planes.size();
+      if (use_combined_pdf)
+        combined_path = out_dir / cfg.combined_pdf;
 
       const std::vector<std::string> cols{"run",
                                           "sub",
@@ -194,27 +205,57 @@ public:
                                   std::to_string(run) + " Run, " +
                                   std::to_string(sub) + " SubRun, " +
                                   std::to_string(evt) + " Event)";
-              auto out_file = out_dir / (tag + "." + cfg_copy.image_format);
-              if (cfg_copy.mode == "semantic") {
-                SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
-                                  out_dir.string());
-                s.drawAndSave(cfg_copy.image_format);
+
+              std::string out_file_record;
+              std::string save_target;
+
+              if (use_combined_pdf) {
+                size_t idx = saved.fetch_add(1);
+                bool first = (idx == 0);
+                bool last = (idx == total_pages - 1);
+                save_target = combined_path.string();
+                if (first)
+                  save_target += "(";
+                else if (last)
+                  save_target += ")";
+                if (cfg_copy.mode == "semantic") {
+                  SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
+                                    out_dir.string());
+                  std::lock_guard<std::mutex> lock(pdf_mutex);
+                  s.drawAndSave("pdf", save_target);
+                } else {
+                  DetectorDisplay d(tag, title, det, cfg_copy.image_size,
+                                    out_dir.string());
+                  std::lock_guard<std::mutex> lock(pdf_mutex);
+                  d.drawAndSave("pdf", save_target);
+                }
+                out_file_record = combined_path.string();
               } else {
-                DetectorDisplay d(tag, title, det, cfg_copy.image_size,
-                                  out_dir.string());
-                d.drawAndSave(cfg_copy.image_format);
+                auto out_file = out_dir / (tag + "." + cfg_copy.image_format);
+                if (cfg_copy.mode == "semantic") {
+                  SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
+                                    out_dir.string());
+                  s.drawAndSave(cfg_copy.image_format, out_file.string());
+                } else {
+                  DetectorDisplay d(tag, title, det, cfg_copy.image_size,
+                                    out_dir.string());
+                  d.drawAndSave(cfg_copy.image_format, out_file.string());
+                }
+                save_target = out_file.string();
+                out_file_record = out_file.string();
+                saved.fetch_add(1);
               }
-              log::info("EventDisplayPlugin",
-                        "Saved event display:", out_file.string());
+
+              log::info("EventDisplayPlugin", "Saved event display:",
+                        save_target);
               if (!cfg_copy.manifest_path.empty()) {
                 std::lock_guard<std::mutex> lock(manifest_mutex);
                 manifest.push_back({{"run", run},
                                     {"sub", sub},
                                     {"evt", evt},
                                     {"plane", plane},
-                                    {"file", out_file.string()}});
+                                    {"file", out_file_record}});
               }
-              ++saved;
             };
 
             for (auto const &plane : cfg_copy.planes) {
