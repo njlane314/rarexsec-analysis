@@ -188,10 +188,9 @@ public:
                                const std::vector<int> &sem) {
               std::string tag =
                   formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
-              std::string title = "Plane " + plane + " Detector (" +
-                                  std::to_string(run) + " Run, " +
-                                  std::to_string(sub) + " SubRun, " +
-                                  std::to_string(evt) + " Event)";
+              std::string title =
+                  "Run " + std::to_string(run) + ", SubRun " +
+                  std::to_string(sub) + ", Event " + std::to_string(evt);
               auto out_file = out_dir / (tag + ".png");
               if (cfg_copy.mode == "semantic") {
                 SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
