@@ -35,7 +35,7 @@ class SignalCutFlowPlot : public IHistogramPlot {
           counts_(std::move(counts)), losses_(std::move(losses)) {}
 
   protected:
-    void draw(TCanvas &canvas) override {
+    void draw(TCanvas &) override {
         int n = static_cast<int>(stages_.size());
         TH1F h("h_surv", "Truth-signal cut-flow;Stage;Cumulative survival [%]",
                n, 0.5, n + 0.5);
