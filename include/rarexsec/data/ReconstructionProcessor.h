@@ -28,7 +28,7 @@ class ReconstructionProcessor : public IEventProcessor {
                                       [](const ROOT::RVec<unsigned> &gens) { return ROOT::VecOps::Sum(gens == 3u); },
                                       {"pfp_generations"});
 
-        ROOT::RDF::RNode swtrig_df;
+        ROOT::RDF::RNode swtrig_df = gen3_df;
         if (st == SampleOrigin::kMonteCarlo) {
             if (gen3_df.HasColumn("software_trigger_pre_ext")) {
                 swtrig_df = gen3_df.Define(
@@ -45,13 +45,13 @@ class ReconstructionProcessor : public IEventProcessor {
                     },
                     {"run", "software_trigger_pre", "software_trigger_post"});
             } else if (gen3_df.HasColumn("software_trigger")) {
-                swtrig_df = gen3_df.Define("software_trigger", "software_trigger != 0");
+                swtrig_df = gen3_df.Redefine("software_trigger", "software_trigger != 0");
             } else {
                 swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
             }
         } else {
             if (gen3_df.HasColumn("software_trigger")) {
-                swtrig_df = gen3_df.Define("software_trigger", "software_trigger != 0");
+                swtrig_df = gen3_df.Redefine("software_trigger", "software_trigger != 0");
             } else {
                 swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
             }
