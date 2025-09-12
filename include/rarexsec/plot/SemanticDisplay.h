@@ -1,15 +1,17 @@
 #ifndef SEMANTICDISPLAY_H
 #define SEMANTICDISPLAY_H
 
-#include <cmath>
 #include <array>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "TCanvas.h"
 #include "TColor.h"
+#include "TH1F.h"
 #include "TH2F.h"
+#include "TLegend.h"
 #include "TStyle.h"
 
 #include <rarexsec/plot/IEventDisplay.h>
@@ -38,8 +40,8 @@ protected:
 
     const int background = TColor::GetColor(200, 200, 200);
     std::array<int, palette_size> palette = {
-        background, kBlack,  kRed,     kBlue,     kMagenta,
-        kGreen + 2, kYellow, kCyan,    kOrange + 7, kSpring + 4,
+        background, kBlack,     kRed,      kBlue,       kMagenta,
+        kGreen + 2, kYellow,    kCyan,     kOrange + 7, kSpring + 4,
         kTeal + 3,  kAzure + 5, kPink + 5, kViolet + 5, kGray + 1};
     gStyle->SetPalette(palette_size, palette.data());
     canvas.SetFillColor(kWhite);
@@ -69,11 +71,36 @@ protected:
     hist_->GetXaxis()->SetAxisColor(0);
     hist_->GetYaxis()->SetAxisColor(0);
     hist_->Draw("COL");
+
+    // Legend describing semantic classes
+    legend_entries_.clear();
+    legend_ = std::make_unique<TLegend>(0.80, 0.10, 0.98, 0.90);
+    legend_->SetFillColor(kWhite);
+    legend_->SetBorderSize(0);
+    legend_->SetTextSize(0.03);
+
+    const std::array<const char *, palette_size> labels = {
+        "Empty",       "Cosmic",       "Muon",         "Electron",
+        "Photon",      "ChargedPion",  "NeutralPion",  "Neutron",
+        "Proton",      "ChargedKaon",  "NeutralKaon",  "Lambda",
+        "ChargedSigma", "NeutralSigma", "Other"};
+
+    for (int i = 0; i < palette_size; ++i) {
+      auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
+                                      0, 1);
+      h->SetFillColor(palette[i]);
+      h->SetLineColor(palette[i]);
+      legend_->AddEntry(h.get(), labels[i], "f");
+      legend_entries_.push_back(std::move(h));
+    }
+    legend_->Draw();
   }
 
 private:
   std::vector<int> data_;
   std::unique_ptr<TH2F> hist_;
+  std::unique_ptr<TLegend> legend_;
+  std::vector<std::unique_ptr<TH1F>> legend_entries_;
 };
 
 } // namespace analysis
