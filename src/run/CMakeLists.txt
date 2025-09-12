@@ -143,5 +143,20 @@ target_link_libraries(study_numucc_selection PRIVATE
   dl)
 
 
-set_target_properties(study_topo_score study_all study_slice_cluster_fraction study_neutrino_vertex study_region_event_display study_numucc_snapsho study_neutrino_energy PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set_target_properties(study_numucc_selection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set_target_properties(
+  study_topo_score
+  study_all
+  study_slice_cluster_fraction
+  study_neutrino_vertex
+  study_region_event_display
+  study_numucc_snapshot
+  study_neutrino_energy
+  PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+set_target_properties(
+  study_numucc_selection
+  PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
