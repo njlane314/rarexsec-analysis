@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <mutex>
+#include <atomic>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -122,8 +123,19 @@ class EventDisplayPlugin : public IPlotPlugin {
             auto limited = df.Range(static_cast<ULong64_t>(cfg.n_events));
             std::filesystem::path out_dir = cfg.output_directory / cfg.sample;
 
+            // Ensure the output directory exists before processing events.  Using
+            // std::filesystem avoids relying solely on ROOT's gSystem which may
+            // fail silently on some platforms.
+            std::error_code ec;
+            std::filesystem::create_directories(out_dir, ec);
+            if (ec) {
+                log::error("EventDisplayPlugin", "Failed to create output directory:",
+                          out_dir.string(), ec.message());
+            }
+
             nlohmann::json manifest = nlohmann::json::array();
             std::mutex manifest_mutex;
+            std::atomic<size_t> saved{0};
 
             const std::vector<std::string> cols{
                 "run","sub","evt",
@@ -173,6 +185,7 @@ class EventDisplayPlugin : public IPlotPlugin {
                         std::lock_guard<std::mutex> lock(manifest_mutex);
                         manifest.push_back({{"run",run},{"sub",sub},{"evt",evt},{"plane",plane},{"file",out_file.string()}});
                     }
+                    ++saved;
                 };
 
                 for (auto const& plane : cfg_copy.planes) {
@@ -186,6 +199,11 @@ class EventDisplayPlugin : public IPlotPlugin {
                 std::ofstream ofs(cfg.manifest_path);
                 ofs << manifest.dump(2);
                 log::info("EventDisplayPlugin", "Wrote event display manifest:", cfg.manifest_path);
+            }
+
+            if (saved == 0) {
+                log::warn("EventDisplayPlugin", "No events matched selection for sample:",
+                          cfg.sample);
             }
         }
     }
