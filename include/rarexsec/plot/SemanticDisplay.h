@@ -16,14 +16,14 @@ namespace analysis {
 
 class SemanticDisplay : public IEventDisplay {
   public:
-    SemanticDisplay(std::string tag, std::vector<int> data, int image_size,
-                    std::string output_directory)
-        : IEventDisplay(std::move(tag), image_size,
+    SemanticDisplay(std::string tag, std::string title, std::vector<int> data,
+                    int image_size, std::string output_directory)
+        : IEventDisplay(std::move(tag), std::move(title), image_size,
                         std::move(output_directory)),
           data_(std::move(data)) {}
 
   protected:
-    void draw(TCanvas &) override {
+    void draw(TCanvas &canvas) override {
         const int palette_size = 10;
         const int palette_step = 2;
         const int bin_offset = 1;
@@ -31,7 +31,7 @@ class SemanticDisplay : public IEventDisplay {
         const double z_min = -0.5;
         const double z_max = 9.5;
 
-        hist_ = std::make_unique<TH2F>(tag_.c_str(), tag_.c_str(), image_size_, 0,
+        hist_ = std::make_unique<TH2F>(tag_.c_str(), title_.c_str(), image_size_, 0,
                                        image_size_, image_size_, 0, image_size_);
 
         int palette[palette_size];
@@ -48,8 +48,15 @@ class SemanticDisplay : public IEventDisplay {
 
         hist_->SetStats(stats_off);
         hist_->GetZaxis()->SetRangeUser(z_min, z_max);
-        hist_->GetXaxis()->SetTitle("Time");
-        hist_->GetYaxis()->SetTitle("Wire");
+        canvas.SetTicks(0, 0);
+        hist_->GetXaxis()->SetTitle("Local Wire Coordinate");
+        hist_->GetYaxis()->SetTitle("Local Drift Coordinate");
+        hist_->GetXaxis()->CenterTitle(true);
+        hist_->GetYaxis()->CenterTitle(true);
+        hist_->GetXaxis()->SetTickLength(0);
+        hist_->GetYaxis()->SetTickLength(0);
+        hist_->GetXaxis()->SetLabelSize(0);
+        hist_->GetYaxis()->SetLabelSize(0);
         hist_->Draw("COL");
     }
 

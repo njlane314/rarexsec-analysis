@@ -172,12 +172,18 @@ class EventDisplayPlugin : public IPlotPlugin {
                                    const std::vector<float>& det,
                                    const std::vector<int>& sem){
                     std::string tag = formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
+                    std::string title = "Plane " + plane + " Detector (" +
+                                        std::to_string(run) + " Run, " +
+                                        std::to_string(sub) + " SubRun, " +
+                                        std::to_string(evt) + " Event)";
                     auto out_file = out_dir / (tag + ".png");
                     if (cfg_copy.mode == "semantic") {
-                        SemanticDisplay s(tag, sem, cfg_copy.image_size, out_dir.string());
+                        SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
+                                          out_dir.string());
                         s.drawAndSave();
                     } else {
-                        DetectorDisplay d(tag, det, cfg_copy.image_size, out_dir.string());
+                        DetectorDisplay d(tag, title, det, cfg_copy.image_size,
+                                          out_dir.string());
                         d.drawAndSave();
                     }
                     log::info("EventDisplayPlugin", "Saved event display:", out_file.string());
