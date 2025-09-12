@@ -37,9 +37,10 @@ class SignalCutFlowPlot : public IHistogramPlot {
   protected:
     void draw(TCanvas &) override {
         int n = static_cast<int>(stages_.size());
-        auto *h = new TH1F("h_surv",
-                           "Truth-signal cut-flow;Stage;Cumulative survival [%]",
-                           n, 0.5, n + 0.5);
+        auto *h =
+            new TH1F("h_surv",
+                     ";Cut Stage;Survival Probability (%)",
+                     n, 0.5, n + 0.5);
         h->SetDirectory(nullptr);
         for (int i = 0; i < n; ++i) {
             h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
@@ -62,8 +63,9 @@ class SignalCutFlowPlot : public IHistogramPlot {
         latex.SetTextFont(42);
         latex.SetTextSize(0.035);
         for (int i = 0; i < n; ++i) {
-            std::string txt = std::to_string(counts_[i]) + "/" + std::to_string(N0_);
-            latex.DrawLatex(i + 1, survival_[i] * 100.0 + 1.5, txt.c_str());
+            std::string txt = std::to_string(counts_[i]) + "/" +
+                              std::to_string(N0_);
+            latex.DrawLatex(i + 1, survival_[i] * 100.0 + 3.0, txt.c_str());
         }
 
         double prev_s = 1.0;
@@ -77,7 +79,7 @@ class SignalCutFlowPlot : public IHistogramPlot {
                                   : 0.0;
                 auto txt = TString::Format("-%0.1f%%: %s (%0.0f%%)", drop,
                                           info.reason.c_str(), frac * 100.0);
-                latex.DrawLatex(i + 1 - 0.05, survival_[i] * 100.0 + 4.0,
+                latex.DrawLatex(i + 1 - 0.05, survival_[i] * 100.0 + 5.0,
                                 txt.Data());
             }
         }
