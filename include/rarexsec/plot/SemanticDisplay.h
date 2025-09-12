@@ -1,9 +1,11 @@
 #ifndef SEMANTICDISPLAY_H
 #define SEMANTICDISPLAY_H
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -97,6 +99,12 @@ protected:
       if (v >= 0 && v < palette_size)
         counts[v]++;
     }
+    // Sort classes by descending count, keeping indices for placeholder slots
+    std::vector<int> order(palette_size - 1);
+    std::iota(order.begin(), order.end(), 1);
+    std::stable_sort(order.begin(), order.end(),
+                     [&](int a, int b) { return counts[a] > counts[b]; });
+
     // Legend describing semantic classes
     legend_entries_.clear();
     // Place legend using axis coordinates so it stays within histogram bounds
@@ -125,18 +133,29 @@ protected:
     const std::array<Style_t, palette_size> styles = {
         1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
         1001, 3002, 1001, 1001, 3003, 1001, 1001};
-    for (int i = 1; i < palette_size; ++i) {
-      if (counts[i] == 0)
-        continue;
-      auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
-                                      0, 1);
-      h->SetFillColor(palette[i]);
-      h->SetLineColor(palette[i]);
-      h->SetLineWidth(1);
-      h->SetFillStyle(styles[i]);
-      std::ostringstream lab;
-      lab << labels[i] << " (" << counts[i] << ")";
-      legend_->AddEntry(h.get(), lab.str().c_str(), "f");
+    // Add legend entries for all classes to keep the layout consistent across
+    // events. Classes with zero count get blank placeholders so they do not
+    // appear in the legend while still reserving space. Entries are ordered by
+    // descending count.
+    for (int idx : order) {
+      auto h = std::make_unique<TH1F>((tag_ + std::to_string(idx)).c_str(), "",
+                                      1, 0, 1);
+      if (counts[idx] > 0) {
+        h->SetFillColor(palette[idx]);
+        h->SetLineColor(palette[idx]);
+        h->SetLineWidth(1);
+        h->SetFillStyle(styles[idx]);
+        std::ostringstream lab;
+        lab << labels[idx] << " (" << counts[idx] << ")";
+        legend_->AddEntry(h.get(), lab.str().c_str(), "f");
+      } else {
+        // Use background colour so placeholder slots blend into the legend
+        h->SetFillColor(background);
+        h->SetLineColor(background);
+        h->SetLineWidth(0);
+        h->SetFillStyle(1001);
+        legend_->AddEntry(h.get(), "", "f");
+      }
       legend_entries_.push_back(std::move(h));
     }
     legend_->Draw();
