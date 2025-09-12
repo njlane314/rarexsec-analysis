@@ -130,9 +130,26 @@ inline void plotBeamline(RunConfigRegistry &run_config_registry,
 inline void runPlotting(const nlohmann::json &samples,
                         const PluginSpecList &plot_specs,
                         const AnalysisResult &result) {
-  ROOT::DisableImplicitMT();
-  log::info("analysis::runPlotting",
-            "Implicit multithreading disabled; running single-threaded.");
+  bool requires_single_thread = std::any_of(
+      plot_specs.begin(), plot_specs.end(),
+      [](const PluginSpec &spec) { return spec.id == "EventDisplayPlugin"; });
+
+  if (requires_single_thread) {
+    ROOT::DisableImplicitMT();
+    log::info("analysis::runPlotting",
+              "Implicit multithreading disabled; running single-threaded.");
+  } else {
+    ROOT::EnableImplicitMT();
+    auto threads = ROOT::GetThreadPoolSize();
+    if (threads > 1) {
+      log::info("analysis::runPlotting",
+                "Implicit multithreading engaged across", threads, "threads.");
+    } else {
+      ROOT::DisableImplicitMT();
+      log::info("analysis::runPlotting",
+                "Implicit multithreading not supported; running single-threaded.");
+    }
+  }
   std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
   log::info("analysis::runPlotting", "Configuration loaded for",
             samples.at("beamlines").size(), "beamlines.");
