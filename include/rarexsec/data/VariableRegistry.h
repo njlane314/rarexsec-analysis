@@ -455,7 +455,7 @@ private:
 
   static const std::vector<std::string> &recoTrackVariables() {
     static const std::vector<std::string> v = {
-        "trk_score_v",         "trk_llr_pid_v",
+        "track_shower_scores", "trk_llr_pid_v",
         "track_length",        "trk_distance_v",
         "trk_pfpgeneration_v",
         "track_start_x",       "track_start_y",
