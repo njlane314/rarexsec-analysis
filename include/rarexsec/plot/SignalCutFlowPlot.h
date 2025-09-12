@@ -28,13 +28,19 @@ public:
                     std::vector<CutFlowLossInfo> losses, double pot_scale = 1.0,
                     std::string output_directory = "plots",
                     std::string x_label = "Cut Stage",
-                    std::string y_label = "Survival Probability (%)")
+                    std::string y_label = "Survival Probability (%)",
+                    std::vector<double> syst_err_low = {},
+                    std::vector<double> syst_err_high = {},
+                    bool draw_systematics = false,
+                    int syst_color = 17)
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
         stages_(std::move(stages)), survival_(std::move(survival)),
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
-        y_label_(std::move(y_label)) {}
+        y_label_(std::move(y_label)), syst_err_low_(std::move(syst_err_low)),
+        syst_err_high_(std::move(syst_err_high)),
+        draw_systematics_(draw_systematics), syst_color_(syst_color) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -49,6 +55,18 @@ protected:
     h->SetMinimum(0.0);
     h->SetMaximum(100.0);
     h->Draw("hist");
+
+    if (draw_systematics_ && syst_err_low_.size() == survival_.size()) {
+      auto *g_syst = new TGraphAsymmErrors(n);
+      for (int i = 0; i < n; ++i) {
+        g_syst->SetPoint(i, i + 1, survival_[i] * 100.0);
+        g_syst->SetPointError(i, 0.0, 0.0, syst_err_low_[i] * 100.0,
+                              syst_err_high_[i] * 100.0);
+      }
+      g_syst->SetFillColorAlpha(syst_color_, 0.35);
+      g_syst->SetLineColor(0);
+      g_syst->Draw("2 SAME");
+    }
 
     auto *g = new TGraphAsymmErrors(n);
     for (int i = 0; i < n; ++i) {
@@ -94,6 +112,10 @@ private:
   double pot_scale_;
   std::string x_label_;
   std::string y_label_;
+  std::vector<double> syst_err_low_;
+  std::vector<double> syst_err_high_;
+  bool draw_systematics_;
+  int syst_color_;
 };
 
 } // namespace analysis
