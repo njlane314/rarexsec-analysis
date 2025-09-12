@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "TCanvas.h"
+#include "TImage.h"
 #include "TSystem.h"
 #include "TStyle.h"
 
@@ -57,7 +58,17 @@ public:
     gStyle->SetTitleY(1 - top_margin / 2.0);
     this->draw(canvas);
     canvas.Update();
-    canvas.SaveAs(out_file.c_str());
+    if (format == "pdf") {
+      auto image = TImage::Create();
+      image->FromPad(&canvas);
+      canvas.Clear();
+      image->Draw();
+      canvas.Update();
+      canvas.Print(out_file.c_str());
+      delete image;
+    } else {
+      canvas.SaveAs(out_file.c_str());
+    }
   }
 
 protected:

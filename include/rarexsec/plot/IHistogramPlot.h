@@ -6,6 +6,7 @@
 
 #include "TCanvas.h"
 #include "TColor.h"
+#include "TImage.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TSystem.h"
@@ -31,7 +32,15 @@ class IHistogramPlot {
         this->setGlobalStyle();
         TCanvas canvas(plot_name_.c_str(), plot_name_.c_str(), 800, 600);
         this->draw(canvas);
-        canvas.SaveAs((output_directory_ + "/" + plot_name_ + "." + format).c_str());
+        auto out_path = output_directory_ + "/" + plot_name_ + "." + format;
+        if (format == "pdf") {
+            auto image = TImage::Create();
+            image->FromPad(&canvas);
+            image->WriteImage(out_path.c_str());
+            delete image;
+        } else {
+            canvas.SaveAs(out_path.c_str());
+        }
     }
 
     static std::string sanitise(std::string s) {
