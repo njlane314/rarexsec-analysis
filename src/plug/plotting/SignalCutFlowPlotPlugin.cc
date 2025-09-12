@@ -162,8 +162,8 @@ private:
     }
 
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
-                           N0, cum_counts, losses, pc.output_directory,
-                           pc.x_label, pc.y_label);
+                           N0, cum_counts, losses, loader_->getTotalPot(),
+                           pc.output_directory, pc.x_label, pc.y_label);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");
