@@ -47,6 +47,7 @@ public:
     canvas.SetBottomMargin(margin);
     canvas.SetLeftMargin(margin);
     canvas.SetRightMargin(margin);
+    canvas.SetFixedAspectRatio();
     gStyle->SetTitleAlign(23);
     gStyle->SetTitleX(0.5);
     this->draw(canvas);
