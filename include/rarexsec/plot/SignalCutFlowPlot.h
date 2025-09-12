@@ -37,23 +37,25 @@ class SignalCutFlowPlot : public IHistogramPlot {
   protected:
     void draw(TCanvas &) override {
         int n = static_cast<int>(stages_.size());
-        TH1F h("h_surv", "Truth-signal cut-flow;Stage;Cumulative survival [%]",
-               n, 0.5, n + 0.5);
+        auto *h = new TH1F("h_surv",
+                           "Truth-signal cut-flow;Stage;Cumulative survival [%]",
+                           n, 0.5, n + 0.5);
+        h->SetDirectory(nullptr);
         for (int i = 0; i < n; ++i) {
-            h.GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
-            h.SetBinContent(i + 1, survival_[i] * 100.0);
+            h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
+            h->SetBinContent(i + 1, survival_[i] * 100.0);
         }
-        h.SetMinimum(0.0);
-        h.SetMaximum(100.0);
-        h.Draw("hist");
+        h->SetMinimum(0.0);
+        h->SetMaximum(100.0);
+        h->Draw("hist");
 
-        TGraphAsymmErrors g(n);
+        auto *g = new TGraphAsymmErrors(n);
         for (int i = 0; i < n; ++i) {
-            g.SetPoint(i, i + 1, survival_[i] * 100.0);
-            g.SetPointError(i, 0.0, 0.0, err_low_[i] * 100.0,
-                            err_high_[i] * 100.0);
+            g->SetPoint(i, i + 1, survival_[i] * 100.0);
+            g->SetPointError(i, 0.0, 0.0, err_low_[i] * 100.0,
+                             err_high_[i] * 100.0);
         }
-        g.Draw("P SAME");
+        g->Draw("P SAME");
 
         TLatex latex;
         latex.SetTextAlign(21);

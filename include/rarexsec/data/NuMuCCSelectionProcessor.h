@@ -18,8 +18,16 @@ public:
     auto pre_df = df.Define(
         "pass_pre",
         [st](int bnb, int ext, float pe_beam, float pe_veto, bool swtrig) {
-          bool dataset_gate = (bnb == 0 && ext == 0) ?
-                                 (pe_beam > 0.f && pe_veto < 20.f) : true;
+          // For non-beam data samples (e.g. Monte Carlo or external), the
+          // dataset gate and software trigger do not apply, so we accept all
+          // events. This prevents the preselection from trivially failing
+          // for those samples where the necessary trigger information is
+          // absent or not meaningful.
+          if (st != SampleOrigin::kData)
+            return true;
+
+          bool dataset_gate =
+              (bnb == 0 && ext == 0) ? (pe_beam > 0.f && pe_veto < 20.f) : true;
           return dataset_gate && swtrig;
         },
         {"bnbdata", "extdata", "_opfilter_pe_beam", "_opfilter_pe_veto",
