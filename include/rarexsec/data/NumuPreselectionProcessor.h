@@ -42,11 +42,17 @@ public:
               return run < 16880 ? pre > 0 : post > 0;
             },
             {"run", "software_trigger_pre", "software_trigger_post"});
-      } else if (!proc_df.HasColumn("software_trigger")) {
+      } else if (proc_df.HasColumn("software_trigger")) {
+        proc_df = proc_df.Define("software_trigger", "software_trigger != 0");
+      } else {
         proc_df = proc_df.Define("software_trigger", []() { return true; });
       }
-    } else if (!proc_df.HasColumn("software_trigger")) {
-      proc_df = proc_df.Define("software_trigger", []() { return true; });
+    } else {
+      if (proc_df.HasColumn("software_trigger")) {
+        proc_df = proc_df.Define("software_trigger", "software_trigger != 0");
+      } else {
+        proc_df = proc_df.Define("software_trigger", []() { return true; });
+      }
     }
 
     proc_df = proc_df
