@@ -28,19 +28,21 @@ class SignalCutFlowPlot : public IHistogramPlot {
                       size_t N0,
                       std::vector<size_t> counts,
                       std::vector<CutFlowLossInfo> losses,
-                      std::string output_directory = "plots")
+                      std::string output_directory = "plots",
+                      std::string x_label = "Cut Stage",
+                      std::string y_label = "Survival Probability (%)")
         : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
           stages_(std::move(stages)), survival_(std::move(survival)),
           err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
-          counts_(std::move(counts)), losses_(std::move(losses)) {}
+          counts_(std::move(counts)), losses_(std::move(losses)),
+          x_label_(std::move(x_label)), y_label_(std::move(y_label)) {}
 
   protected:
     void draw(TCanvas &) override {
         int n = static_cast<int>(stages_.size());
+        std::string title = ";" + x_label_ + ";" + y_label_;
         auto *h =
-            new TH1F("h_surv",
-                     ";Cut Stage;Survival Probability (%)",
-                     n, 0.5, n + 0.5);
+            new TH1F("h_surv", title.c_str(), n, 0.5, n + 0.5);
         h->SetDirectory(nullptr);
         for (int i = 0; i < n; ++i) {
             h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
@@ -91,6 +93,8 @@ class SignalCutFlowPlot : public IHistogramPlot {
     size_t N0_;
     std::vector<size_t> counts_;
     std::vector<CutFlowLossInfo> losses_;
+    std::string x_label_;
+    std::string y_label_;
 };
 
 } // namespace analysis

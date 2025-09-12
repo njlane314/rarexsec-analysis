@@ -22,6 +22,8 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
         std::vector<std::string> reason_columns;
         std::string truth_column;
         std::string plot_name;
+        std::string x_label{"Cut Stage"};
+        std::string y_label{"Survival Probability (%)"};
         std::string output_directory{"plots"};
     };
 
@@ -37,6 +39,8 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
             pc.reason_columns = p.at("reason_columns").get<std::vector<std::string>>();
             pc.truth_column = p.at("truth_column").get<std::string>();
             pc.plot_name = p.value("plot_name", std::string{"signal_cutflow_survival"});
+            pc.x_label = p.value("x_label", std::string{"Cut Stage"});
+            pc.y_label = p.value("y_label", std::string{"Survival Probability (%)"});
             pc.output_directory = p.value("output_directory", std::string{"plots"});
             if (pc.stages.size() != pc.pass_columns.size() ||
                 pc.reason_columns.size() != pc.pass_columns.size())
@@ -150,7 +154,8 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
         }
 
         SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
-                               N0, cum_counts, losses, pc.output_directory);
+                               N0, cum_counts, losses, pc.output_directory,
+                               pc.x_label, pc.y_label);
         plot.drawAndSave("pdf");
         log::info("SignalCutFlowPlotPlugin::onPlot",
                   pc.output_directory + "/" + pc.plot_name + ".pdf");
