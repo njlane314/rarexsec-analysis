@@ -8,7 +8,7 @@ int main() {
     .data("config/catalogs/samples.json")
     .region("MC_ONLY", where("bnbdata == 0 && extdata == 0"))
     .var("neutrino_energy")
-    .plot(stack("neutrino_energy").in("MC_ONLY").signal("inclusive_strange_channels"));
+    .plot(stack("neutrino_energy").in("MC_ONLY").signal("channel_definitions"));
 
   study.run("/tmp/neutrino_energy.root");
   return 0;
