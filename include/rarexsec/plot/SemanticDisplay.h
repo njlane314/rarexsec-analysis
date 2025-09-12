@@ -3,8 +3,10 @@
 
 #include <array>
 #include <cmath>
+#include <iomanip>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "TCanvas.h"
@@ -91,6 +93,13 @@ protected:
     hist_->GetYaxis()->SetAxisColor(0);
     hist_->Draw("COL");
 
+    std::array<int, palette_size> counts{};
+    for (int v : data_) {
+      if (v >= 0 && v < palette_size)
+        counts[v]++;
+    }
+    const double total = static_cast<double>(data_.size());
+
     // Legend describing semantic classes
     legend_entries_.clear();
     // Wide legend across the top of the canvas
@@ -117,7 +126,13 @@ protected:
       h->SetLineColor(palette[i]);
       h->SetLineWidth(1);
       h->SetFillStyle(styles[i]);
-      legend_->AddEntry(h.get(), labels[i], "f");
+      std::ostringstream lab;
+      double frac = 0.0;
+      if (total > 0.0)
+        frac = 100.0 * counts[i] / total;
+      lab << labels[i] << " (" << std::fixed << std::setprecision(1) << frac
+          << "%)";
+      legend_->AddEntry(h.get(), lab.str().c_str(), "f");
       legend_entries_.push_back(std::move(h));
     }
     legend_->Draw();
