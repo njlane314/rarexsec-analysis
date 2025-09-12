@@ -26,7 +26,7 @@ The selection is applied in the following order:
    - `reco_nu_vtx_sce_y` in `[-110, 110]` cm
    - `reco_nu_vtx_sce_z` in `[20, 986]` cm, excluding the central region `675 < z < 775` cm due to a dead region
 4. **Slice-level quality**
-   - `slice_contained_fraction ≥ 0.7`
+   - `contained_fraction ≥ 0.7`
    - `slice_cluster_fraction ≥ 0.5`
 5. **Muon candidate requirements** (index `i` over `muon_*` vectors)
    - `muon_trk_score_v[i] > 0.8` and `muon_trk_llr_pid_v[i] > 0.2`

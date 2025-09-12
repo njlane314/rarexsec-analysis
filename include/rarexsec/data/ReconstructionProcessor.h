@@ -70,7 +70,7 @@ class ReconstructionProcessor : public IEventProcessor {
             {"optical_filter_pe_beam", "optical_filter_pe_veto", "software_trigger",
              "num_slices", "topological_score", "n_pfps_gen2",
              "reco_neutrino_vertex_sce_x", "reco_neutrino_vertex_sce_y",
-             "reco_neutrino_vertex_sce_z", "slice_contained_fraction",
+             "reco_neutrino_vertex_sce_z", "contained_fraction",
              "slice_cluster_fraction"});
 
         return next_ ? next_->process(quality_df, st) : quality_df;
