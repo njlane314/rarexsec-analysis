@@ -7,10 +7,13 @@
 #include <vector>
 
 #include <rarexsec/data/AnalysisDataLoader.h>
+#include <rarexsec/data/VariableRegistry.h>
+#include <rarexsec/data/SampleTypes.h>
 #include <rarexsec/plot/SignalCutFlowPlot.h>
 #include <rarexsec/plug/IPlotPlugin.h>
 #include <rarexsec/plug/PluginRegistry.h>
 #include <rarexsec/utils/Logger.h>
+#include <TColor.h>
 
 namespace analysis {
 
@@ -26,6 +29,10 @@ public:
     std::string y_label{"Survival Probability (%)"};
     std::string output_directory{"plots"};
     std::string weight_column{"nominal_event_weight"};
+    std::vector<std::string> weight_systematics;
+    std::vector<std::string> detector_systematics;
+    int band_color{kGray};
+    double band_alpha{0.3};
   };
 
   SignalCutFlowPlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader)
@@ -47,6 +54,12 @@ public:
       pc.output_directory = p.value("output_directory", std::string{"plots"});
       pc.weight_column =
           p.value("weight_column", std::string{"nominal_event_weight"});
+      pc.weight_systematics =
+          p.value("weight_systematics", std::vector<std::string>{});
+      pc.detector_systematics =
+          p.value("detector_systematics", std::vector<std::string>{});
+      pc.band_color = p.value("band_color", kGray);
+      pc.band_alpha = p.value("band_alpha", 0.3);
       if (pc.stages.size() != pc.pass_columns.size() ||
           pc.reason_columns.size() != pc.pass_columns.size())
         throw std::runtime_error(
@@ -185,9 +198,113 @@ private:
       purity[i] =
           cum_counts_all[i] > 0.0 ? cum_counts[i] / cum_counts_all[i] : 0.0;
 
+    std::vector<std::vector<double>> syst_survivals;
+
+    auto accumulate = [&](ROOT::RDF::RNode df, const std::string &wcol,
+                          double &n0, std::vector<double> &counts) {
+      if (!df.HasColumn(pc.truth_column))
+        df = df.Define(pc.truth_column.c_str(), "false");
+      std::mutex m2;
+      auto lam = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3, bool p4,
+                     bool p5, double weight) {
+        if (!is_sig)
+          return;
+        std::lock_guard<std::mutex> lock(m2);
+        n0 += weight;
+        bool pass[6] = {p0, p1, p2, p3, p4, p5};
+        bool cum = true;
+        for (int i = 0; i < 6; ++i) {
+          cum = cum && pass[i];
+          if (cum)
+            counts[i] += weight;
+          else
+            break;
+        }
+      };
+      std::vector<std::string> c;
+      c.push_back(pc.truth_column);
+      for (auto const &cc : pc.pass_columns)
+        c.push_back(cc);
+      c.push_back(wcol);
+      df.Foreach(lam, c);
+    };
+
+    for (const auto &ws : pc.weight_systematics) {
+      auto it = VariableRegistry::knobVariations().find(ws);
+      if (it == VariableRegistry::knobVariations().end()) {
+        log::warn("SignalCutFlowPlotPlugin::processPlot",
+                  "Unknown weight systematic", ws);
+        continue;
+      }
+      for (const auto &wcol : {it->second.first, it->second.second}) {
+        double n0s = 0.0;
+        std::vector<double> counts(pc.stages.size(), 0.0);
+        for (auto const &[skey, sample] : loader_->getSampleFrames()) {
+          auto df = sample.nominal_node_;
+          accumulate(df, wcol, n0s, counts);
+        }
+        std::vector<double> sv(pc.stages.size(), 0.0);
+        for (size_t i = 0; i < pc.stages.size(); ++i)
+          sv[i] = n0s > 0.0 ? counts[i] / n0s : 0.0;
+        syst_survivals.push_back(std::move(sv));
+      }
+    }
+
+    auto strToVariation = [](const std::string &s) {
+      for (auto v : {SampleVariation::kCV, SampleVariation::kLYAttenuation,
+                     SampleVariation::kLYDown, SampleVariation::kLYRayleigh,
+                     SampleVariation::kRecomb2, SampleVariation::kSCE,
+                     SampleVariation::kWireModX, SampleVariation::kWireModYZ,
+                     SampleVariation::kWireModAngleXZ,
+                     SampleVariation::kWireModAngleYZ}) {
+        if (variationToKey(v) == s)
+          return v;
+      }
+      return SampleVariation::kUnknown;
+    };
+
+    for (const auto &ds : pc.detector_systematics) {
+      auto var = strToVariation(ds);
+      if (var == SampleVariation::kUnknown) {
+        log::warn("SignalCutFlowPlotPlugin::processPlot",
+                  "Unknown detector systematic", ds);
+        continue;
+      }
+      double n0s = 0.0;
+      std::vector<double> counts(pc.stages.size(), 0.0);
+      for (auto const &[skey, sample] : loader_->getSampleFrames()) {
+        auto it = sample.variation_nodes_.find(var);
+        if (it == sample.variation_nodes_.end())
+          continue;
+        auto df = it->second;
+        accumulate(df, pc.weight_column, n0s, counts);
+      }
+      std::vector<double> sv(pc.stages.size(), 0.0);
+      for (size_t i = 0; i < pc.stages.size(); ++i)
+        sv[i] = n0s > 0.0 ? counts[i] / n0s : 0.0;
+      syst_survivals.push_back(std::move(sv));
+    }
+
+    std::vector<double> syst_low(pc.stages.size(), 0.0);
+    std::vector<double> syst_high(pc.stages.size(), 0.0);
+    if (!syst_survivals.empty()) {
+      for (size_t i = 0; i < pc.stages.size(); ++i) {
+        double min_s = survival[i];
+        double max_s = survival[i];
+        for (const auto &sv : syst_survivals) {
+          min_s = std::min(min_s, sv[i]);
+          max_s = std::max(max_s, sv[i]);
+        }
+        syst_low[i] = survival[i] - min_s;
+        syst_high[i] = max_s - survival[i];
+      }
+    }
+
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
                            N0, cum_counts, losses, loader_->getTotalPot(),
-                           pc.output_directory, pc.x_label, pc.y_label, purity);
+                           pc.output_directory, pc.x_label, pc.y_label, purity,
+                           "Purity (%)", syst_low, syst_high, pc.band_color,
+                           pc.band_alpha);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");

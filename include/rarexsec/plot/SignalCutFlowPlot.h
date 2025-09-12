@@ -8,6 +8,7 @@
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1F.h"
+#include "TColor.h"
 #include "TLatex.h"
 #include "TString.h"
 #include "TVirtualPad.h"
@@ -33,14 +34,20 @@ public:
                     std::string x_label = "Cut Stage",
                     std::string y_label = "Survival Probability (%)",
                     std::vector<double> purity = {},
-                    std::string y2_label = "Purity (%)")
+                    std::string y2_label = "Purity (%)",
+                    std::vector<double> syst_low = {},
+                    std::vector<double> syst_high = {},
+                    int band_color = kGray,
+                    double band_alpha = 0.3)
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
         stages_(std::move(stages)), survival_(std::move(survival)),
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
         y_label_(std::move(y_label)), purity_(std::move(purity)),
-        y2_label_(std::move(y2_label)) {}
+        y2_label_(std::move(y2_label)), syst_low_(std::move(syst_low)),
+        syst_high_(std::move(syst_high)), band_color_(band_color),
+        band_alpha_(band_alpha) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -55,6 +62,19 @@ protected:
     h->SetMinimum(0.0);
     h->SetMaximum(100.0);
     h->Draw("hist");
+
+    if (syst_low_.size() == static_cast<size_t>(n) &&
+        syst_high_.size() == static_cast<size_t>(n)) {
+      auto *gb = new TGraphAsymmErrors(n);
+      for (int i = 0; i < n; ++i) {
+        gb->SetPoint(i, i + 1, survival_[i] * 100.0);
+        gb->SetPointError(i, 0.0, 0.0, syst_low_[i] * 100.0,
+                          syst_high_[i] * 100.0);
+      }
+      gb->SetFillColorAlpha(band_color_, band_alpha_);
+      gb->SetLineColorAlpha(band_color_, 0.0);
+      gb->Draw("2 SAME");
+    }
 
     auto *g = new TGraphAsymmErrors(n);
     for (int i = 0; i < n; ++i) {
@@ -122,6 +142,10 @@ private:
   std::string y_label_;
   std::vector<double> purity_;
   std::string y2_label_;
+  std::vector<double> syst_low_;
+  std::vector<double> syst_high_;
+  int band_color_;
+  double band_alpha_;
 };
 
 } // namespace analysis
