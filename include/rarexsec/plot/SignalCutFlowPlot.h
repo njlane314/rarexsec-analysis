@@ -60,8 +60,6 @@ class SignalCutFlowPlot : public IHistogramPlot {
 
         TLatex latex;
         latex.SetTextAlign(21);
-        latex.SetTextFont(42);
-        latex.SetTextSize(0.035);
         for (int i = 0; i < n; ++i) {
             std::string txt = std::to_string(counts_[i]) + "/" +
                               std::to_string(N0_);
