@@ -84,7 +84,14 @@ class EventDisplayPlugin : public IPlotPlugin {
             return;
         }
         for (auto const &cfg : configs_) {
-            auto &sample = loader_->getSampleFrames().at(SampleKey{cfg.sample});
+            auto &frames = loader_->getSampleFrames();
+            auto skey = SampleKey{cfg.sample};
+            auto it = frames.find(skey);
+            if (it == frames.end()) {
+                log::error("EventDisplayPlugin", "Unknown sample:", cfg.sample);
+                continue;
+            }
+            auto &sample = it->second;
             auto df = sample.nominal_node_;
 
             std::string filter = cfg.selection.str();
