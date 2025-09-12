@@ -184,10 +184,11 @@ class StackedHistogramPlot : public IHistogramPlot {
         int n_cols = (n_entries > 4) ? 3 : 2;
         legend_->SetNColumns(n_cols);
 
+        const auto scheme = resolveCategoryColumn();
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h_leg = new TH1D();
-            const auto &stratum = registry.getStratumProperties(
-                category_column_, std::stoi(key.str()));
+            const auto &stratum =
+                registry.getStratumProperties(scheme, std::stoi(key.str()));
             h_leg->SetFillColor(stratum.fill_colour);
             h_leg->SetFillStyle(stratum.fill_style);
             h_leg->SetLineColor(kBlack);
@@ -249,6 +250,7 @@ class StackedHistogramPlot : public IHistogramPlot {
             }
         }
 
+        const auto scheme = resolveCategoryColumn();
         for (const auto &[key, hist] : mc_hists) {
             TH1D *h = (TH1D *)hist.get()->Clone();
             if (use_uniform_binning_ && uniform_max_ > uniform_min_) {
@@ -259,8 +261,8 @@ class StackedHistogramPlot : public IHistogramPlot {
                 delete h;
                 h = h_tmp;
             }
-            const auto &stratum = registry.getStratumProperties(
-                category_column_, std::stoi(key.str()));
+            const auto &stratum =
+                registry.getStratumProperties(scheme, std::stoi(key.str()));
             h->SetFillColor(stratum.fill_colour);
             h->SetFillStyle(stratum.fill_style);
             h->SetLineColor(kBlack);
@@ -473,6 +475,12 @@ class StackedHistogramPlot : public IHistogramPlot {
     }
 
   private:
+    std::string resolveCategoryColumn() const {
+        if (!category_column_.empty())
+            return category_column_;
+        return variable_result_.binning_.getStratifierKey().str();
+    }
+
     const VariableResult &variable_result_;
     const RegionAnalysis &region_analysis_;
     std::string category_column_;

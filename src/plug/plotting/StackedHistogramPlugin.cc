@@ -17,7 +17,7 @@ class StackedHistogramPlugin : public IPlotPlugin {
     struct PlotConfig {
         std::string variable{};               // optional variable name
         std::string region{};                 // optional region key
-        std::string category_column{"inclusive"};
+        std::string category_column{};
         std::string output_directory = "plots";
         bool overlay_signal = true;
         std::string signal_group{"inclusive_strange_channels"};
@@ -38,7 +38,7 @@ class StackedHistogramPlugin : public IPlotPlugin {
                 PlotConfig pc;
                 pc.variable = p.value("variable", std::string());
                 pc.region = p.value("region", std::string());
-                pc.category_column = p.value("category_column", std::string("inclusive"));
+                pc.category_column = p.value("category_column", std::string());
                 pc.output_directory = p.value("output_directory", std::string("plots"));
                 pc.overlay_signal = p.value("overlay_signal", true);
                 pc.signal_group =
