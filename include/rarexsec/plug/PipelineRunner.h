@@ -11,40 +11,48 @@
 #include <ROOT/RDataFrame.hxx>
 #include <nlohmann/json.hpp>
 
-#include <rarexsec/data/AnalysisDataLoader.h>
 #include <rarexsec/core/AnalysisResult.h>
 #include <rarexsec/core/AnalysisRunner.h>
-#include <rarexsec/hist/HistogramFactory.h>
-#include <rarexsec/utils/Logger.h>
-#include <rarexsec/plug/PluginAliases.h>
-#include <rarexsec/plug/PluginSpec.h>
+#include <rarexsec/data/AnalysisDataLoader.h>
 #include <rarexsec/data/RunConfigLoader.h>
 #include <rarexsec/data/RunConfigRegistry.h>
-#include <rarexsec/syst/SystematicsProcessor.h>
 #include <rarexsec/data/VariableRegistry.h>
+#include <rarexsec/hist/HistogramFactory.h>
+#include <rarexsec/plug/PluginAliases.h>
+#include <rarexsec/plug/PluginSpec.h>
+#include <rarexsec/syst/SystematicsProcessor.h>
+#include <rarexsec/utils/Logger.h>
 
 namespace analysis {
 
 namespace detail {
 
-inline AnalysisResult processBeamline(
-    RunConfigRegistry &run_config_registry, const std::string &ntuple_dir,
-    const std::string &beam, const nlohmann::json &runs,
-    const PluginSpecList &analysis_specs,
-    const PluginSpecList &syst_specs) {
+inline AnalysisResult processBeamline(RunConfigRegistry &run_config_registry,
+                                      const std::string &ntuple_dir,
+                                      const std::string &beam,
+                                      const nlohmann::json &runs,
+                                      const PluginSpecList &analysis_specs,
+                                      const PluginSpecList &syst_specs) {
   std::vector<std::string> periods;
   periods.reserve(runs.size());
   for (auto const &[period, _] : runs.items())
     periods.emplace_back(period);
 
   VariableRegistry variable_registry;
-  SystematicsProcessor systematics_processor(variable_registry);
+  std::unique_ptr<SystematicsProcessor> systematics_processor;
+  if (syst_specs.empty()) {
+    systematics_processor = std::make_unique<SystematicsProcessor>(
+        std::vector<KnobDef>{}, std::vector<UniverseDef>{});
+  } else {
+    systematics_processor =
+        std::make_unique<SystematicsProcessor>(variable_registry);
+  }
   AnalysisDataLoader data_loader(run_config_registry, variable_registry, beam,
                                  periods, ntuple_dir, true);
   auto histogram_factory = std::make_unique<HistogramFactory>();
 
   AnalysisRunner runner(data_loader, std::move(histogram_factory),
-                        systematics_processor, analysis_specs, syst_specs);
+                        *systematics_processor, analysis_specs, syst_specs);
   auto result = runner.run();
 
   for (auto &kv : result.regions()) {
@@ -91,8 +99,8 @@ inline AnalysisResult runAnalysis(const nlohmann::json &samples,
 }
 
 inline void plotBeamline(RunConfigRegistry &run_config_registry,
-                         const std::string &ntuple_dir,
-                         const std::string &beam, const nlohmann::json &runs,
+                         const std::string &ntuple_dir, const std::string &beam,
+                         const nlohmann::json &runs,
                          const PluginSpecList &plot_specs,
                          const AnalysisResult &beam_result) {
   std::vector<std::string> periods;
@@ -153,8 +161,7 @@ inline void runPlotting(const nlohmann::json &samples,
 // plotting stages once a pipeline has been constructed.
 class PipelineRunner {
 public:
-  PipelineRunner(PluginSpecList analysis_specs,
-                 PluginSpecList plot_specs,
+  PipelineRunner(PluginSpecList analysis_specs, PluginSpecList plot_specs,
                  PluginSpecList systematics_specs = {})
       : analysis_specs_(std::move(analysis_specs)),
         plot_specs_(std::move(plot_specs)),
@@ -165,8 +172,9 @@ public:
   // returned to the caller.
   inline AnalysisResult run(const nlohmann::json &samples,
                             const std::string /*&output_path*/) const {
-    auto result = detail::runAnalysis(samples, analysis_specs_, systematics_specs_);
-    //result.saveToFile(output_path.c_str());
+    auto result =
+        detail::runAnalysis(samples, analysis_specs_, systematics_specs_);
+    // result.saveToFile(output_path.c_str());
     detail::runPlotting(samples, plot_specs_, result);
     return result;
   }
@@ -190,4 +198,3 @@ private:
 };
 
 } // namespace analysis
-
