@@ -111,7 +111,7 @@ class EventDisplayBuilder {
     std::string region_;
     std::optional<std::string> selection_expr_;
     std::vector<std::string> planes_;
-    int image_size_ = 800;
+    int image_size_ = 512;
     std::string out_dir_ = "./plots/event_displays";
     std::string file_pattern_ = "{plane}_{run}_{sub}_{evt}";
     int n_events_ = 1;

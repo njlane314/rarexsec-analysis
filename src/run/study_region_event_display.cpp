@@ -9,13 +9,13 @@ int main() {
     .region("NUMU_CC", where("quality_event && has_muon"))
     .display(
       events().from("mc_strangeness_run1_fhc").in("NUMU_CC")
-        .limit(5).size(800)
+        .limit(5).size(512)
         .mode(detector())
         .out("plots/event_displays/detector")
     )
     .display(
       events().from("mc_strangeness_run1_fhc").in("NUMU_CC")
-        .limit(5).size(800)
+        .limit(5).size(512)
         .mode(semantic())
         .out("plots/event_displays/semantic")
     );
