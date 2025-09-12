@@ -9,17 +9,9 @@ namespace analysis::dsl {
 
 struct DisplayMode {
   std::string kind;
-  double overlay_alpha = 1.0;
-
-  DisplayMode &alpha(double a) {
-    overlay_alpha = a;
-    return *this;
-  }
-  double alpha() const { return overlay_alpha; }
 };
 inline DisplayMode detector() { return {"detector"}; }
 inline DisplayMode semantic() { return {"semantic"}; }
-inline DisplayMode overlay() { return {"overlay"}; }
 
 enum class Direction { Asc, Desc };
 static constexpr Direction asc = Direction::Asc;
@@ -92,8 +84,6 @@ public:
                      {"image_format", image_format_},
                      {"output_directory", out_dir_},
                      {"mode", mode_.kind}};
-    if (mode_.kind == "overlay")
-      j["overlay_alpha"] = mode_.alpha();
     if (!planes_.empty())
       j["planes"] = planes_;
     if (selection_expr_)

@@ -2,6 +2,7 @@
 #define SEMANTICDISPLAY_H
 
 #include <cmath>
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,21 +26,23 @@ public:
 
 protected:
   void draw(TCanvas &canvas) override {
-    const int palette_size = 10;
-    const int palette_step = 2;
+    const int palette_size = 15;
     const int bin_offset = 1;
     const int stats_off = 0;
     const double z_min = -0.5;
-    const double z_max = 9.5;
+    const double z_max = palette_size - 0.5;
 
     int dim = static_cast<int>(std::sqrt(data_.size()));
     hist_ = std::make_unique<TH2F>(tag_.c_str(), title_.c_str(), dim, 0, dim,
                                    dim, 0, dim);
 
-    int palette[palette_size];
-    for (int i = 0; i < palette_size; ++i)
-      palette[i] = kWhite + (i > 0 ? i * palette_step : 0);
-    gStyle->SetPalette(palette_size, palette);
+    const int background = TColor::GetColor(200, 200, 200);
+    std::array<int, palette_size> palette = {
+        background, kBlack,  kRed,     kBlue,     kMagenta,
+        kGreen + 2, kYellow, kCyan,    kOrange + 7, kSpring + 4,
+        kTeal + 3,  kAzure + 5, kPink + 5, kViolet + 5, kGray + 1};
+    gStyle->SetPalette(palette_size, palette.data());
+    canvas.SetFillColor(background);
 
     for (int r = 0; r < dim; ++r) {
       for (int c = 0; c < dim; ++c) {
@@ -55,6 +58,9 @@ protected:
     hist_->GetYaxis()->SetTitle("Local Drift Coordinate");
     hist_->GetXaxis()->CenterTitle(true);
     hist_->GetYaxis()->CenterTitle(true);
+    constexpr double axis_offset = 1.2;
+    hist_->GetXaxis()->SetTitleOffset(axis_offset);
+    hist_->GetYaxis()->SetTitleOffset(axis_offset);
     hist_->GetXaxis()->SetTickLength(0);
     hist_->GetYaxis()->SetTickLength(0);
     hist_->GetXaxis()->SetLabelSize(0);
