@@ -42,8 +42,11 @@ public:
     canvas.SetFrameLineColor(0);
     canvas.SetFrameLineWidth(0);
 
-    constexpr double top_margin = 0.06;
     constexpr double side_margin = 0.10;
+    // Use the same margin on all sides so that the draw area has equal width
+    // and height, ensuring the x and y axes appear with the same absolute
+    // length.
+    constexpr double top_margin = side_margin;
     canvas.SetTopMargin(top_margin);
     canvas.SetBottomMargin(side_margin);
     canvas.SetLeftMargin(side_margin);
