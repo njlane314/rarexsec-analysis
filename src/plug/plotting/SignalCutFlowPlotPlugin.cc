@@ -25,7 +25,7 @@ public:
     std::string x_label{"Cut Stage"};
     std::string y_label{"Survival Probability (%)"};
     std::string output_directory{"plots"};
-    std::string weight_column{"base_event_weight"};
+    std::string weight_column{"nominal_event_weight"};
   };
 
   SignalCutFlowPlotPlugin(const PluginArgs &args, AnalysisDataLoader *loader)
@@ -46,7 +46,7 @@ public:
       pc.y_label = p.value("y_label", std::string{"Survival Probability (%)"});
       pc.output_directory = p.value("output_directory", std::string{"plots"});
       pc.weight_column =
-          p.value("weight_column", std::string{"base_event_weight"});
+          p.value("weight_column", std::string{"nominal_event_weight"});
       if (pc.stages.size() != pc.pass_columns.size() ||
           pc.reason_columns.size() != pc.pass_columns.size())
         throw std::runtime_error(
@@ -82,6 +82,7 @@ private:
     double N0 = 0.0;
     double N0_w2 = 0.0;
     std::vector<double> cum_counts(pc.stages.size(), 0.0);
+    std::vector<double> cum_counts_w2(pc.stages.size(), 0.0);
     std::vector<std::map<std::string, double>> loss_reason(pc.stages.size());
     std::mutex m;
 
@@ -114,9 +115,10 @@ private:
         int first_fail = -1;
         for (int i = 0; i < 6; ++i) {
           cum = cum && pass[i];
-          if (cum)
+          if (cum) {
             cum_counts[i] += weight;
-          else {
+            cum_counts_w2[i] += weight * weight;
+          } else {
             first_fail = i;
             break;
           }
@@ -136,11 +138,17 @@ private:
 
     std::vector<double> survival;
     std::vector<double> err_low, err_high;
-    double n_eff = (N0 > 0.0 && N0_w2 > 0.0) ? (N0 * N0) / N0_w2 : 0.0;
     for (size_t i = 0; i < pc.stages.size(); ++i) {
       double s = N0 > 0.0 ? cum_counts[i] / N0 : 0.0;
       survival.push_back(s);
-      double k_eff = s * n_eff;
+
+      double cw = cum_counts[i];
+      double cw2 = cum_counts_w2[i];
+      double fw = N0 - cw;
+      double fw2 = N0_w2 - cw2;
+      double k_eff = (cw2 > 0.0) ? (cw * cw) / cw2 : 0.0;
+      double f_eff = (fw2 > 0.0) ? (fw * fw) / fw2 : 0.0;
+      double n_eff = k_eff + f_eff;
       auto [lo, hi] = wilsonInterval(k_eff, n_eff);
       err_low.push_back(s - lo);
       err_high.push_back(hi - s);

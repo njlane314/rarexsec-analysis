@@ -76,8 +76,9 @@ protected:
         double frac = info.top_count > 0
                           ? static_cast<double>(info.top_count) / info.total
                           : 0.0;
-        auto txt = TString::Format("-%0.1f%%: %s (%0.0f%%)", drop,
-                                   info.reason.c_str(), frac * 100.0);
+        auto txt = TString::Format(
+            "-%0.1f%%: %s (%0.1f/%0.1f, %0.0f%%)", drop, info.reason.c_str(),
+            info.top_count * pot_scale_, info.total * pot_scale_, frac * 100.0);
         latex.DrawLatex(i + 1 - 0.1, survival_[i] * 100.0 + 7.0, txt.Data());
       }
     }
