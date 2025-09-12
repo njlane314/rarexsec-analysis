@@ -34,12 +34,12 @@ class IHistogramPlot {
         this->draw(canvas);
         auto out_path = output_directory_ + "/" + plot_name_ + "." + format;
         if (format == "pdf") {
+            canvas.SaveAs(out_path.c_str());
+        } else {
             auto image = TImage::Create();
             image->FromPad(&canvas);
             image->WriteImage(out_path.c_str());
             delete image;
-        } else {
-            canvas.SaveAs(out_path.c_str());
         }
     }
 
