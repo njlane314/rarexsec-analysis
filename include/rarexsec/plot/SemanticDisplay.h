@@ -125,18 +125,27 @@ protected:
     const std::array<Style_t, palette_size> styles = {
         1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
         1001, 3002, 1001, 1001, 3003, 1001, 1001};
+    // Add legend entries for all classes to keep the layout consistent across
+    // events. Classes with zero count get blank placeholders so they do not
+    // appear in the legend while still reserving space.
     for (int i = 1; i < palette_size; ++i) {
-      if (counts[i] == 0)
-        continue;
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
                                       0, 1);
-      h->SetFillColor(palette[i]);
-      h->SetLineColor(palette[i]);
-      h->SetLineWidth(1);
-      h->SetFillStyle(styles[i]);
-      std::ostringstream lab;
-      lab << labels[i] << " (" << counts[i] << ")";
-      legend_->AddEntry(h.get(), lab.str().c_str(), "f");
+      if (counts[i] > 0) {
+        h->SetFillColor(palette[i]);
+        h->SetLineColor(palette[i]);
+        h->SetLineWidth(1);
+        h->SetFillStyle(styles[i]);
+        std::ostringstream lab;
+        lab << labels[i] << " (" << counts[i] << ")";
+        legend_->AddEntry(h.get(), lab.str().c_str(), "f");
+      } else {
+        h->SetFillColor(0);
+        h->SetLineColor(0);
+        h->SetLineWidth(0);
+        h->SetFillStyle(0);
+        legend_->AddEntry(h.get(), "", "f");
+      }
       legend_entries_.push_back(std::move(h));
     }
     legend_->Draw();
