@@ -80,6 +80,12 @@ class SignalCutFlowPlotPlugin : public IPlotPlugin {
 
         for (auto const &[skey, sample] : loader_->getSampleFrames()) {
             auto df = sample.nominal_node_;
+            if (!df.HasColumn(pc.truth_column)) {
+                log::warn("SignalCutFlowPlotPlugin::processPlot",
+                          "Sample ", skey, " missing column ", pc.truth_column,
+                          "; defaulting to false");
+                df = df.Define(pc.truth_column.c_str(), "false");
+            }
             auto lam = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3, bool p4,
                             bool p5, const std::string &r1, const std::string &r2,
                             const std::string &r3, const std::string &r4,
