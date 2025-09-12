@@ -130,6 +130,9 @@ inline void plotBeamline(RunConfigRegistry &run_config_registry,
 inline void runPlotting(const nlohmann::json &samples,
                         const PluginSpecList &plot_specs,
                         const AnalysisResult &result) {
+  ROOT::DisableImplicitMT();
+  log::info("analysis::runPlotting",
+            "Implicit multithreading disabled; running single-threaded.");
   std::string ntuple_dir = samples.at("ntupledir").get<std::string>();
   log::info("analysis::runPlotting", "Configuration loaded for",
             samples.at("beamlines").size(), "beamlines.");
