@@ -442,13 +442,20 @@ private:
 
   static const std::vector<std::string> &recoTrackVariables() {
     static const std::vector<std::string> v = {
-        "track_shower_scores",     "trk_llr_pid_v",
-        "track_length",            "track_distance_to_vertex",
-        "track_start_x",       "track_start_y",
-        "track_start_z",       "track_end_x",
-        "track_end_y",         "track_end_z",
-        "track_theta",         "track_phi",
-        "track_calo_energy_u", "track_calo_energy_v",
+        "track_shower_scores",     
+        "trk_llr_pid_v",
+        "track_length",            
+        "track_distance_to_vertex",
+        "track_start_x",       
+        "track_start_y",
+        "track_start_z",       
+        "track_end_x",
+        "track_end_y",         
+        "track_end_z",
+        "track_theta",         
+        "track_phi",
+        "track_calo_energy_u", 
+        "track_calo_energy_v",
         "track_calo_energy_y"};
 
     return v;
