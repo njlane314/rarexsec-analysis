@@ -72,7 +72,7 @@ public:
     auto mu_df = fv_df
         .Define("pass_mu", "n_muons_tot > 0")
         .Define("reason_mu",
-                [](int nmu) {
+                [](unsigned long nmu) {
                   return nmu > 0 ? std::string{} : std::string{"no_muon"};
                 },
                 {"n_muons_tot"});

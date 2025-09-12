@@ -14,7 +14,7 @@ public:
   ROOT::RDF::RNode process(ROOT::RDF::RNode df,
                            SampleOrigin st) const override {
     if (!df.HasColumn("track_shower_scores")) {
-      auto no_mu_df = df.Define("n_muons_tot", []() { return 0; })
+      auto no_mu_df = df.Define("n_muons_tot", []() { return 0UL; })
                           .Define("has_muon", []() { return false; });
       return next_ ? next_->process(no_mu_df, st) : no_mu_df;
     }
