@@ -8,7 +8,8 @@ using namespace analysis::dsl;
 int main() {
   auto s = Study("NUMU CC end-to-end")
     .data("config/catalogs/samples.json")
-    .region("NUMU_CC", where("QUALITY && NUMU_CC"))
+    // Use explicit filter expression instead of registry keys
+    .region("NUMU_CC", where("quality_event && has_muon"))
     .var("topological_score")
     .plot(
       perf("topological_score")

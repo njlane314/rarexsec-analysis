@@ -8,7 +8,9 @@ int main() {
   auto study =
       Study("NuMu CC snapshot")
           .data("config/catalogs/samples.json")
-          .region("NUMU_CC", where("QUALITY && NUMU_CC"))
+          // Replace shorthand rule names with explicit selection expression
+          // so ROOT can compile the filter without undefined identifiers.
+          .region("NUMU_CC", where("quality_event && has_muon"))
           .var("run")
           .var("sub")
           .var("evt")
