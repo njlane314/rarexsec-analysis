@@ -48,6 +48,10 @@ public:
     image_size_ = px;
     return *this;
   }
+  EventDisplayBuilder &format(std::string fmt) {
+    image_format_ = std::move(fmt);
+    return *this;
+  }
   EventDisplayBuilder &out(std::string dir) {
     out_dir_ = std::move(dir);
     return *this;
@@ -85,6 +89,7 @@ public:
                      {"region", region_},
                      {"n_events", n_events_},
                      {"image_size", image_size_},
+                     {"image_format", image_format_},
                      {"output_directory", out_dir_},
                      {"mode", mode_.kind}};
     if (mode_.kind == "overlay")
@@ -111,7 +116,8 @@ private:
   std::string region_;
   std::optional<std::string> selection_expr_;
   std::vector<std::string> planes_;
-  int image_size_ = 1024;
+  int image_size_ = 512;
+  std::string image_format_ = "png";
   std::string out_dir_ = "./plots/event_displays";
   std::string file_pattern_ = "{plane}_{run}_{sub}_{evt}";
   int n_events_ = 1;
