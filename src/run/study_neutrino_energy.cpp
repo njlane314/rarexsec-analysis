@@ -6,12 +6,11 @@ using namespace analysis::dsl;
 int main() {
   auto study = Study("MC Neutrino Energy")
     .data("config/catalogs/samples.json")
-    .region("MC_ONLY", where("bnbdata == 0 && extdata == 0"))
+    .region("EMPTY", where(""))
     .var(VarDef("neutrino_energy").bins(100, 0.0, 10.0))
     .plot(stack("neutrino_energy")
-              .in("MC_ONLY")
-              .signal("channel_definitions")
-              .logY());
+              .in("EMPTY")
+              .signal("channel_definitions"));
 
   study.run("/tmp/neutrino_energy.root");
   return 0;
