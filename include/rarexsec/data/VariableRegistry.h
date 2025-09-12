@@ -462,7 +462,7 @@ private:
         "track_end_y",         "track_end_z",
         "track_theta",         "track_phi",
         "track_calo_energy_u", "track_calo_energy_v",
-        "track_calo_energy_y", "trk_range_muon_mom_v"};
+        "track_calo_energy_y"};
 
     return v;
   }
