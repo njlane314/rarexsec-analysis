@@ -51,9 +51,10 @@ protected:
     hist_->GetYaxis()->CenterTitle(true);
     // Increase the distance between the axis and its label to improve
     // readability of the event display.  The original value of 0.4 placed the
-    // labels very close to the axis; doubling the offset provides additional
-    // spacing without pushing the text too far away.
-    constexpr double axis_offset = 0.8;
+    // labels very close to the axis; tripling the offset aligns the title with
+    // the spacing used for the axis labels and provides additional clearance
+    // without pushing the text too far away.
+    constexpr double axis_offset = 1.2;
     hist_->GetXaxis()->SetTitleOffset(axis_offset);
     hist_->GetYaxis()->SetTitleOffset(axis_offset);
     hist_->GetXaxis()->SetTickLength(0);
