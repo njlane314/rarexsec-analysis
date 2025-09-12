@@ -46,12 +46,6 @@
                             "dataset_id": "numi.fhc.r1.mc.strange.sel-strange",
                             "relative_path": "mc_strangeness_run1_fhc.root",
                             "pot": 1.4322894271958414e+23
-                        },
-                        {
-                            "sample_key": "mc_dirt_run1_fhc",
-                            "sample_type": "dirt",
-                            "dataset_id": "numi.fhc.r1.dirt.dirt.sel-dirt",
-                            "relative_path": "mc_dirt_run1_fhc.root"
                         }
                     ]
                 }
