@@ -42,14 +42,19 @@ public:
     canvas.SetFrameLineColor(0);
     canvas.SetFrameLineWidth(0);
 
-    constexpr double margin = 0.10;
-    canvas.SetTopMargin(margin);
-    canvas.SetBottomMargin(margin);
-    canvas.SetLeftMargin(margin);
-    canvas.SetRightMargin(margin);
+    // Use a slightly smaller margin at the top of the canvas so that the plot
+    // title sits closer to the displayed image while keeping the other margins
+    // unchanged.
+    constexpr double top_margin = 0.06;
+    constexpr double side_margin = 0.10;
+    canvas.SetTopMargin(top_margin);
+    canvas.SetBottomMargin(side_margin);
+    canvas.SetLeftMargin(side_margin);
+    canvas.SetRightMargin(side_margin);
     canvas.SetFixedAspectRatio();
     gStyle->SetTitleAlign(23);
     gStyle->SetTitleX(0.5);
+    gStyle->SetTitleY(1 - top_margin / 2.0);
     this->draw(canvas);
     canvas.Update();
     canvas.SaveAs(out_file.c_str());
