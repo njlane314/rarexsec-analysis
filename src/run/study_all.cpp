@@ -38,7 +38,7 @@ int main() {
       events().from("numi_on").in("NUMU_CC")
         .limit(12).size(900)
         .planes({"U","V","W"})
-        .mode(overlay().alpha(0.35))
+        .mode(detector())
         .out("plots/event_displays")
     )
     .snapshot(
