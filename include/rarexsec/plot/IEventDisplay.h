@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "TCanvas.h"
-#include "TImage.h"
 #include "TSystem.h"
 #include "TStyle.h"
 
@@ -56,13 +55,7 @@ public:
     this->draw(canvas);
     canvas.Update();
     if (format == "pdf") {
-      auto image = TImage::Create();
-      image->FromPad(&canvas);
-      canvas.Clear();
-      image->Draw();
-      canvas.Update();
       canvas.Print(out_file.c_str());
-      delete image;
     } else {
       canvas.SaveAs(out_file.c_str());
     }
