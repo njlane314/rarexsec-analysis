@@ -14,7 +14,7 @@ int main() {
         .out("plots/event_displays/detector")
     )
     .display(
-      events().from("numi_on").in("NUMU_CC")
+      events().from("mc_strangeness_run1_fhc").in("NUMU_CC")
         .limit(5).size(800)
         .mode(semantic())
         .out("plots/event_displays/semantic")
