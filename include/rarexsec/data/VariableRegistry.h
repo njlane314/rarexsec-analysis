@@ -304,7 +304,7 @@ private:
                                                "slice_topological_scores",
                                                "topological_score",
                                                "slice_cluster_fraction",
-                                               "slice_contained_fraction"};
+                                               "contained_fraction"};
 
     return v;
   }
