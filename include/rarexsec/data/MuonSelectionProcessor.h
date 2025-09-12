@@ -14,7 +14,9 @@ public:
   ROOT::RDF::RNode process(ROOT::RDF::RNode df,
                            SampleOrigin st) const override {
     if (!df.HasColumn("trk_score_v")) {
-      return next_ ? next_->process(df, st) : df;
+      auto no_mu_df = df.Define("n_muons_tot", []() { return 0; })
+                          .Define("has_muon", []() { return false; });
+      return next_ ? next_->process(no_mu_df, st) : no_mu_df;
     }
 
     auto muon_mask_df = this->buildMuonMask(df);
