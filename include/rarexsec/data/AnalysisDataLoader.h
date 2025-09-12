@@ -14,7 +14,7 @@
 #include <rarexsec/data/IEventProcessor.h>
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/data/MuonSelectionProcessor.h>
-#include <rarexsec/data/NumuPreselectionProcessor.h>
+#include <rarexsec/data/PreselectionProcessor.h>
 #include <rarexsec/data/ReconstructionProcessor.h>
 #include <rarexsec/data/RunConfigRegistry.h>
 #include <rarexsec/data/SampleDefinition.h>
@@ -138,7 +138,7 @@ class AnalysisDataLoader {
                 std::make_unique<TruthChannelProcessor>(), std::make_unique<BlipProcessor>(),
                 std::make_unique<MuonSelectionProcessor>(),
                 std::make_unique<ReconstructionProcessor>(),
-                std::make_unique<NumuPreselectionProcessor>());
+                std::make_unique<PreselectionProcessor>());
             processors_.push_back(std::move(pipeline));
 
             auto &proc = *processors_.back();
