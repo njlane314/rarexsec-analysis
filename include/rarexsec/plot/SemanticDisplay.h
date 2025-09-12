@@ -38,11 +38,28 @@ protected:
     hist_ = std::make_unique<TH2F>(tag_.c_str(), title_.c_str(), dim, 0, dim,
                                    dim, 0, dim);
 
-    const int background = TColor::GetColor(200, 200, 200);
+    // Lighter grey background for the display
+    const int background = TColor::GetColor(230, 230, 230);
+
+    // More visually distinct and aesthetically pleasing colour palette
     std::array<int, palette_size> palette = {
-        background, kBlack,     kRed,      kBlue,       kMagenta,
-        kGreen + 2, kYellow,    kCyan,     kOrange + 7, kSpring + 4,
-        kTeal + 3,  kAzure + 5, kPink + 5, kViolet + 5, kGray + 1};
+        background,
+        kBlack,                      // Cosmic
+        TColor::GetColor("#fb8072"), // Muon
+        TColor::GetColor("#80b1d3"), // Electron
+        TColor::GetColor("#fdb462"), // Photon
+        TColor::GetColor("#b3de69"), // ChargedPion
+        TColor::GetColor("#fccde5"), // NeutralPion
+        TColor::GetColor("#8dd3c7"), // Neutron
+        TColor::GetColor("#d9d9d9"), // Proton
+        TColor::GetColor("#bc80bd"), // ChargedKaon
+        TColor::GetColor("#ccebc5"), // NeutralKaon
+        TColor::GetColor("#ffed6f"), // Lambda
+        TColor::GetColor("#bebada"), // ChargedSigma
+        TColor::GetColor("#1f78b4"), // NeutralSigma
+        TColor::GetColor("#b15928")  // Other
+    };
+
     gStyle->SetPalette(palette_size, palette.data());
     canvas.SetFillColor(kWhite);
     canvas.SetFrameFillColor(background);
@@ -76,15 +93,17 @@ protected:
 
     // Legend describing semantic classes
     legend_entries_.clear();
-    legend_ = std::make_unique<TLegend>(0.80, 0.10, 0.98, 0.90);
+    // Compact legend with three columns in the upper right corner
+    legend_ = std::make_unique<TLegend>(0.60, 0.60, 0.98, 0.90);
+    legend_->SetNColumns(3);
     legend_->SetFillColor(kWhite);
     legend_->SetBorderSize(0);
-    legend_->SetTextSize(0.03);
+    legend_->SetTextSize(0.025);
 
     const std::array<const char *, palette_size> labels = {
-        "Empty",       "Cosmic",       "Muon",         "Electron",
-        "Photon",      "ChargedPion",  "NeutralPion",  "Neutron",
-        "Proton",      "ChargedKaon",  "NeutralKaon",  "Lambda",
+        "Empty",        "Cosmic",       "Muon",        "Electron",
+        "Photon",       "ChargedPion",  "NeutralPion", "Neutron",
+        "Proton",       "ChargedKaon",  "NeutralKaon", "Lambda",
         "ChargedSigma", "NeutralSigma", "Other"};
 
     for (int i = 0; i < palette_size; ++i) {
