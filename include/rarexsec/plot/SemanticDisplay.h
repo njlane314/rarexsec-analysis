@@ -44,7 +44,7 @@ protected:
     // More visually distinct and aesthetically pleasing colour palette
     std::array<int, palette_size> palette = {
         background,
-        kBlack,                      // Cosmic
+        TColor::GetColor("#636363"), // Cosmic
         TColor::GetColor("#fb8072"), // Muon
         TColor::GetColor("#80b1d3"), // Electron
         TColor::GetColor("#fdb462"), // Photon
@@ -94,23 +94,25 @@ protected:
     // Legend describing semantic classes
     legend_entries_.clear();
     // Compact legend with three columns in the upper right corner
-    legend_ = std::make_unique<TLegend>(0.60, 0.60, 0.98, 0.90);
+    legend_ = std::make_unique<TLegend>(0.55, 0.55, 0.95, 0.90);
     legend_->SetNColumns(3);
     legend_->SetFillColor(kWhite);
+    legend_->SetFillStyle(1001);
     legend_->SetBorderSize(0);
+    legend_->SetTextFont(42);
     legend_->SetTextSize(0.025);
 
     const std::array<const char *, palette_size> labels = {
-        "Empty",        "Cosmic",       "Muon",        "Electron",
-        "Photon",       "ChargedPion",  "NeutralPion", "Neutron",
-        "Proton",       "ChargedKaon",  "NeutralKaon", "Lambda",
-        "ChargedSigma", "NeutralSigma", "Other"};
+        "#emptyset",    "Cosmic",     "#mu",  "e^{-}",   "#gamma", "#pi^{#pm}",
+        "#pi^{0}",      "n",          "p",    "K^{#pm}", "K^{0}",  "#Lambda",
+        "#Sigma^{#pm}", "#Sigma^{0}", "Other"};
 
     for (int i = 0; i < palette_size; ++i) {
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
                                       0, 1);
       h->SetFillColor(palette[i]);
       h->SetLineColor(palette[i]);
+      h->SetLineWidth(1);
       legend_->AddEntry(h.get(), labels[i], "f");
       legend_entries_.push_back(std::move(h));
     }
