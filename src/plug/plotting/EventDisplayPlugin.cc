@@ -201,10 +201,11 @@ public:
                                const std::vector<int> &sem) {
               std::string tag =
                   formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
-              std::string title = "Plane " + plane + " Detector (" +
-                                  std::to_string(run) + " Run, " +
-                                  std::to_string(sub) + " Subrun, " +
-                                  std::to_string(evt) + " Event)";
+              std::string title =
+                  "Detector Plane " + plane + " - Run " +
+                  std::to_string(run) + ", Subrun " +
+                  std::to_string(sub) + ", Event " +
+                  std::to_string(evt);
 
               std::string out_file_record;
               std::string save_target;
