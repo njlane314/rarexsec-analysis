@@ -54,7 +54,7 @@ public:
     canvas.SetFixedAspectRatio();
     gStyle->SetTitleAlign(23);
     gStyle->SetTitleX(0.5);
-    gStyle->SetTitleY(1 - top_margin / 2.0);
+    gStyle->SetTitleY(1 - top_margin / 3.0);
     this->draw(canvas);
     canvas.Update();
     if (format == "pdf") {
