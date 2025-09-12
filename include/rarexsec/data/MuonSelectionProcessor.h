@@ -119,8 +119,6 @@ private:
                              {"track_distance_to_vertex", "muon_mask"})
                     .Define("muon_pfp_generation_v", filter_uint,
                             {"pfp_generations", "muon_mask"})
-                     .Define("muon_trk_range_muon_mom_v", filter_float,
-                             {"trk_range_muon_mom_v", "muon_mask"})
                      .Define("muon_track_costheta", filter_costheta,
                              {"track_theta", "muon_mask"})
                      .Define("n_muons_tot", "ROOT::VecOps::Sum(muon_mask)")
