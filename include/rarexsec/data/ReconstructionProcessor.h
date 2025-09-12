@@ -47,7 +47,7 @@ class ReconstructionProcessor : public IEventProcessor {
             } else if (!gen3_df.HasColumn("software_trigger")) {
                 swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
             }
-        } else {
+        } else if (!gen3_df.HasColumn("software_trigger")) {
             swtrig_df = gen3_df.Define("software_trigger", []() { return true; });
         }
 

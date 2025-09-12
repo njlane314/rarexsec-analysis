@@ -45,7 +45,7 @@ public:
       } else if (!proc_df.HasColumn("software_trigger")) {
         proc_df = proc_df.Define("software_trigger", []() { return true; });
       }
-    } else {
+    } else if (!proc_df.HasColumn("software_trigger")) {
       proc_df = proc_df.Define("software_trigger", []() { return true; });
     }
 
