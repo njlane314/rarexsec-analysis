@@ -10,6 +10,9 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
+#include <ROOT/RConfig.h>
+#include <ROOT/RDataFrame.hxx>
+
 #include <rarexsec/plug/PluginRegistry.h>
 #include <rarexsec/data/AnalysisDataLoader.h>
 #include <rarexsec/utils/Logger.h>
@@ -79,6 +82,19 @@ class EventDisplayPlugin : public IPlotPlugin {
     }
 
     void onPlot(const AnalysisResult &) override {
+#if defined(R__HAS_IMPLICITMT)
+        if (ROOT::IsImplicitMTEnabled() && ROOT::GetThreadPoolSize() <= 1) {
+            ROOT::DisableImplicitMT();
+            log::info("EventDisplayPlugin",
+                      "Implicit multithreading not supported; running single-threaded.");
+        }
+#else
+        if (ROOT::IsImplicitMTEnabled()) {
+            ROOT::DisableImplicitMT();
+            log::info("EventDisplayPlugin",
+                      "ROOT built without multithreading; running single-threaded.");
+        }
+#endif
         if (!loader_) {
             log::error("EventDisplayPlugin::onPlot", "No AnalysisDataLoader context provided");
             return;
