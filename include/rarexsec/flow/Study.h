@@ -98,6 +98,10 @@ class Study {
         cutflow_.push_back(c.to_json());
         return *this;
     }
+    Study &plot(const SurvivalBuilder &s) {
+        survival_.push_back(s.to_json());
+        return *this;
+    }
     Study &display(const EventDisplayBuilder &ed) {
         displays_.push_back(ed.to_json());
         return *this;
@@ -175,6 +179,9 @@ class Study {
         if (!cutflow_.empty())
             plot_specs.push_back({"CutFlowPlotPlugin",
                                   {{"plot_configs", {{"plots", cutflow_}}}}});
+        if (!survival_.empty())
+            plot_specs.push_back({"SignalCutFlowPlotPlugin",
+                                  {{"plot_configs", {{"plots", survival_}}}}});
         if (!snaps_.empty())
             analysis_specs.push_back(
                 {"SnapshotPlugin",
@@ -223,6 +230,7 @@ class Study {
     std::vector<PlotDef> plots_;
     std::vector<nlohmann::json> perf_;
     std::vector<nlohmann::json> cutflow_;
+    std::vector<nlohmann::json> survival_;
     std::vector<nlohmann::json> snaps_;
     std::vector<nlohmann::json> displays_;
 };

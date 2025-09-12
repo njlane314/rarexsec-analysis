@@ -144,6 +144,7 @@ add_plugin(CutMatrixPlotPlugin plug/plotting/CutMatrixPlotPlugin.cc "")
 add_plugin(PerformancePlotPlugin plug/plotting/PerformancePlotPlugin.cc "")
 add_plugin(SystematicBreakdownPlugin plug/plotting/SystematicBreakdownPlugin.cc "")
 add_plugin(UnstackedHistogramPlugin plug/plotting/UnstackedHistogramPlugin.cc "")
+add_plugin(SignalCutFlowPlotPlugin plug/plotting/SignalCutFlowPlotPlugin.cc "")
 
 add_subdirectory(tests)
 add_subdirectory(run)
