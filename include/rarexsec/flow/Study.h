@@ -157,7 +157,7 @@ class Study {
                               p.region.empty() ? defaultRegionKey() : p.region},
                              {"signal_group", p.signal_group},
                              {"logy", p.logy}}})}}}};
-                plot_specs.push_back({"StackedPlotPlugin", std::move(args)});
+                plot_specs.push_back({"StackedHistogramPlugin", std::move(args)});
             } else if (p.kind == "roc") {
                 PluginArgs args{
                     {"performance_plots",
