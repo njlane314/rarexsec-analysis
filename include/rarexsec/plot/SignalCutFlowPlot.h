@@ -25,7 +25,7 @@ public:
                     std::vector<double> survival, std::vector<double> err_low,
                     std::vector<double> err_high, double N0,
                     std::vector<double> counts,
-                    std::vector<CutFlowLossInfo> losses,
+                    std::vector<CutFlowLossInfo> losses, double pot_scale = 1.0,
                     std::string output_directory = "plots",
                     std::string x_label = "Cut Stage",
                     std::string y_label = "Survival Probability (%)")
@@ -33,7 +33,8 @@ public:
         stages_(std::move(stages)), survival_(std::move(survival)),
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
-        x_label_(std::move(x_label)), y_label_(std::move(y_label)) {}
+        pot_scale_(pot_scale), x_label_(std::move(x_label)),
+        y_label_(std::move(y_label)) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -67,7 +68,8 @@ protected:
     latex.SetTextFont(h->GetXaxis()->GetTitleFont());
     latex.SetTextSize(h->GetXaxis()->GetLabelSize());
     for (int i = 0; i < n; ++i) {
-      auto txt = TString::Format("%0.1f/%0.1f", counts_[i], N0_);
+      auto txt = TString::Format("%0.1f/%0.1f", counts_[i] * pot_scale_,
+                                 N0_ * pot_scale_);
       latex.DrawLatex(i + 1, survival_[i] * 100.0 + 3.0, txt.Data());
     }
 
@@ -82,7 +84,7 @@ protected:
                           : 0.0;
         auto txt = TString::Format("-%0.1f%%: %s (%0.0f%%)", drop,
                                    info.reason.c_str(), frac * 100.0);
-        latex.DrawLatex(i + 1 - 0.05, survival_[i] * 100.0 + 5.0, txt.Data());
+        latex.DrawLatex(i + 1 - 0.1, survival_[i] * 100.0 + 7.0, txt.Data());
       }
     }
   }
@@ -95,6 +97,7 @@ private:
   double N0_;
   std::vector<double> counts_;
   std::vector<CutFlowLossInfo> losses_;
+  double pot_scale_;
   std::string x_label_;
   std::string y_label_;
 };
