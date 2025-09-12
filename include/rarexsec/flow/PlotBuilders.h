@@ -196,6 +196,14 @@ class SurvivalBuilder {
         plot_name_ = std::move(n);
         return *this;
     }
+    SurvivalBuilder &x_label(std::string l) {
+        x_label_ = std::move(l);
+        return *this;
+    }
+    SurvivalBuilder &y_label(std::string l) {
+        y_label_ = std::move(l);
+        return *this;
+    }
     SurvivalBuilder &out(std::string d) {
         out_dir_ = std::move(d);
         return *this;
@@ -207,6 +215,8 @@ class SurvivalBuilder {
                 {"pass_columns", pass_cols_},
                 {"reason_columns", reason_cols_},
                 {"plot_name", plot_name_},
+                {"x_label", x_label_},
+                {"y_label", y_label_},
                 {"output_directory", out_dir_}};
     }
 
@@ -216,6 +226,8 @@ class SurvivalBuilder {
     std::vector<std::string> pass_cols_{"pass_pre", "pass_flash", "pass_fv", "pass_mu", "pass_topo", "pass_final"};
     std::vector<std::string> reason_cols_{"", "reason_flash", "reason_fv", "reason_mu", "reason_topo", "reason_final"};
     std::string plot_name_{"signal_cutflow_survival"};
+    std::string x_label_{"Cut Stage"};
+    std::string y_label_{"Survival Probability (%)"};
     std::string out_dir_{"plots"};
 };
 inline SurvivalBuilder survival() { return {}; }
