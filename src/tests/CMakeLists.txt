@@ -23,6 +23,10 @@ add_executable(test_cut_flow_summary
 target_link_libraries(test_cut_flow_summary PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json ${ROOT_LIBRARIES} TBB::tbb)
 catch_discover_tests(test_cut_flow_summary)
 
+add_executable(test_cut_flow_gradient test_cut_flow_gradient.cpp)
+target_link_libraries(test_cut_flow_gradient PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json ${ROOT_LIBRARIES} TBB::tbb)
+catch_discover_tests(test_cut_flow_gradient)
+
 add_executable(test_monte_carlo_processor test_monte_carlo_processor.cpp)
 target_link_libraries(test_monte_carlo_processor PRIVATE core hist utils syst Eigen3::Eigen Catch2::Catch2WithMain ${ROOT_LIBRARIES} TBB::tbb)
 catch_discover_tests(test_monte_carlo_processor)
