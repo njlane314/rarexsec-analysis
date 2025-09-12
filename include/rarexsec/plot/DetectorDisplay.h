@@ -1,6 +1,7 @@
 #ifndef DETECTORDISPLAY_H
 #define DETECTORDISPLAY_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,27 +27,28 @@ class DetectorDisplay : public IEventDisplay {
         const float min_val = 1;
         const float max_val = 1000;
 
-        TH2F hist(tag_.c_str(), tag_.c_str(), image_size_, 0, image_size_,
-                  image_size_, 0, image_size_);
+        hist_ = std::make_unique<TH2F>(tag_.c_str(), tag_.c_str(), image_size_, 0,
+                                       image_size_, image_size_, 0, image_size_);
 
         for (int r = 0; r < image_size_; ++r) {
             for (int c = 0; c < image_size_; ++c) {
                 float v = data_[r * image_size_ + c];
-                hist.SetBinContent(c + bin_offset, r + bin_offset,
-                                   v > threshold ? v : min_val);
+                hist_->SetBinContent(c + bin_offset, r + bin_offset,
+                                     v > threshold ? v : min_val);
             }
         }
 
         canvas.SetLogz();
-        hist.SetMinimum(min_val);
-        hist.SetMaximum(max_val);
-        hist.GetXaxis()->SetTitle("Wire");
-        hist.GetYaxis()->SetTitle("Time");
-        hist.Draw("COL");
+        hist_->SetMinimum(min_val);
+        hist_->SetMaximum(max_val);
+        hist_->GetXaxis()->SetTitle("Wire");
+        hist_->GetYaxis()->SetTitle("Time");
+        hist_->Draw("COL");
     }
 
 private:
     std::vector<float> data_;
+    std::unique_ptr<TH2F> hist_;
 };
 
 } 

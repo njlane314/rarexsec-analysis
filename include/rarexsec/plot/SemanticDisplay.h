@@ -1,6 +1,7 @@
 #ifndef SEMANTICDISPLAY_H
 #define SEMANTICDISPLAY_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,8 +31,8 @@ class SemanticDisplay : public IEventDisplay {
         const double z_min = -0.5;
         const double z_max = 9.5;
 
-        TH2F hist(tag_.c_str(), tag_.c_str(), image_size_, 0, image_size_,
-                  image_size_, 0, image_size_);
+        hist_ = std::make_unique<TH2F>(tag_.c_str(), tag_.c_str(), image_size_, 0,
+                                       image_size_, image_size_, 0, image_size_);
 
         int palette[palette_size];
         for (int i = 0; i < palette_size; ++i)
@@ -40,22 +41,24 @@ class SemanticDisplay : public IEventDisplay {
 
         for (int r = 0; r < image_size_; ++r) {
             for (int c = 0; c < image_size_; ++c) {
-                hist.SetBinContent(c + bin_offset, r + bin_offset,
-                                   data_[r * image_size_ + c]);
+                hist_->SetBinContent(c + bin_offset, r + bin_offset,
+                                     data_[r * image_size_ + c]);
             }
         }
 
-        hist.SetStats(stats_off);
-        hist.GetZaxis()->SetRangeUser(z_min, z_max);
-        hist.GetXaxis()->SetTitle("Time");
-        hist.GetYaxis()->SetTitle("Wire");
-        hist.Draw("COL");
+        hist_->SetStats(stats_off);
+        hist_->GetZaxis()->SetRangeUser(z_min, z_max);
+        hist_->GetXaxis()->SetTitle("Time");
+        hist_->GetYaxis()->SetTitle("Wire");
+        hist_->Draw("COL");
     }
 
   private:
     std::vector<int> data_;
+    std::unique_ptr<TH2F> hist_;
 };
 
-}
+} // namespace analysis
 
 #endif
+
