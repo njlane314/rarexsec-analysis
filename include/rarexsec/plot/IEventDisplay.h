@@ -43,9 +43,6 @@ public:
     canvas.SetFrameLineColor(0);
     canvas.SetFrameLineWidth(0);
 
-    // Use a slightly smaller margin at the top of the canvas so that the plot
-    // title sits closer to the displayed image while keeping the other margins
-    // unchanged.
     constexpr double top_margin = 0.06;
     constexpr double side_margin = 0.10;
     canvas.SetTopMargin(top_margin);
@@ -61,7 +58,10 @@ public:
     if (format == "pdf") {
       auto image = TImage::Create();
       image->FromPad(&canvas);
-      image->WriteImage(out_file.c_str());
+      canvas.Clear();
+      image->Draw();
+      canvas.Update();
+      canvas.Print(out_file.c_str());
       delete image;
     } else {
       canvas.SaveAs(out_file.c_str());
