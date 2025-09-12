@@ -28,7 +28,7 @@ class ReconstructionProcessor : public IEventProcessor {
                                       [](const ROOT::RVec<unsigned> &gens) { return ROOT::VecOps::Sum(gens == 3u); },
                                       {"pfp_generations"});
 
-        ROOT::RDF::RNode swtrig_df;
+        ROOT::RDF::RNode swtrig_df = gen3_df;
         if (st == SampleOrigin::kMonteCarlo) {
             if (gen3_df.HasColumn("software_trigger_pre_ext")) {
                 swtrig_df = gen3_df.Define(
