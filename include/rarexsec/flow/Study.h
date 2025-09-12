@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 #include "EventDisplayBuilder.h"
 #include "PlotBuilders.h"
@@ -111,6 +112,11 @@ class Study {
         return *this;
     }
 
+    Study &mcOnly() {
+        mc_only_ = true;
+        return *this;
+    }
+
     void run(const std::string &out_root_path) const {
         PluginSpecList analysis_specs;
         PluginSpecList plot_specs;
@@ -214,8 +220,46 @@ class Study {
         unique(analysis_specs);
         unique(plot_specs);
 
+        std::ifstream in(samples_path_);
+        nlohmann::json samples;
+        in >> samples;
+        if (samples.contains("samples"))
+            samples = samples.at("samples");
+
+        if (mc_only_) {
+            auto &beamlines = samples["beamlines"];
+            for (auto beam_it = beamlines.begin(); beam_it != beamlines.end();) {
+                auto &runs = beam_it.value();
+                for (auto run_it = runs.begin(); run_it != runs.end();) {
+                    if (!run_it.value().is_object()) {
+                        ++run_it;
+                        continue;
+                    }
+                    if (run_it.value().contains("samples")) {
+                        auto &sarr = run_it.value()["samples"];
+                        sarr.erase(std::remove_if(sarr.begin(), sarr.end(),
+                                                  [](const nlohmann::json &s) {
+                                                      return s.value("sample_type", "") != "mc";
+                                                  }),
+                                   sarr.end());
+                    }
+                    if (!run_it.value().contains("samples") ||
+                        run_it.value()["samples"].empty()) {
+                        run_it = runs.erase(run_it);
+                    } else {
+                        ++run_it;
+                    }
+                }
+                if (runs.empty()) {
+                    beam_it = beamlines.erase(beam_it);
+                } else {
+                    ++beam_it;
+                }
+            }
+        }
+
         PipelineRunner runner(std::move(analysis_specs), std::move(plot_specs));
-        runner.run(samples_path_, out_root_path);
+        runner.run(samples, out_root_path);
     }
 
   private:
@@ -233,6 +277,7 @@ class Study {
     std::vector<nlohmann::json> survival_;
     std::vector<nlohmann::json> snaps_;
     std::vector<nlohmann::json> displays_;
+    bool mc_only_{false};
 };
 
 }
