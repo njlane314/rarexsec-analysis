@@ -13,7 +13,7 @@ int main() {
     .plot(roc("topological_score").in("PRE_TOPO").channel("incl_channel").signal("inclusive_strange_channels"))
     .display(
       events().from("numi_on").in("PRE_TOPO")
-        .limit(12).size(800).planes({"U","V","W"})
+        .limit(12).size(512).planes({"U","V","W"})
         .mode(detector())
         .out("plots/event_displays")
         .name("{plane}_{run}_{sub}_{evt}")

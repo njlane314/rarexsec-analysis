@@ -33,7 +33,7 @@ class EventDisplayPlugin : public IPlotPlugin {
         SelectionQuery selection;
         std::optional<std::string> selection_expr;
         int n_events{1};
-        int image_size{800};
+        int image_size{512};
         std::filesystem::path output_directory{"./plots/event_displays"};
         std::vector<std::string> planes{"U","V","W"};
         std::string mode{"detector"};
@@ -55,7 +55,7 @@ class EventDisplayPlugin : public IPlotPlugin {
             dc.sample = ed.at("sample").get<std::string>();
             dc.region = ed.value("region", std::string{});
             dc.n_events = ed.value("n_events", 1);
-            dc.image_size = ed.value("image_size", 800);
+            dc.image_size = ed.value("image_size", 512);
             dc.output_directory = ed.value("output_directory", std::string{"./plots/event_displays"});
             dc.output_directory = std::filesystem::absolute(dc.output_directory).lexically_normal();
             dc.planes = ed.value("planes", std::vector<std::string>{"U","V","W"});
