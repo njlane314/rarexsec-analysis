@@ -49,12 +49,12 @@ public:
   }
 
   static std::vector<std::string> eventVariables(SampleOrigin type) {
-    auto vars = this->collectBaseGroups();
-    
-    if (type == SampleOrigin::kMonteCarlo || type == SampleOrigin::kDirt)
-      this->appendMonteCarloGroups(vars);
+    auto vars = collectBaseGroups();
 
-    return {vars.begin(), vars.end()};
+    if (type == SampleOrigin::kMonteCarlo || type == SampleOrigin::kDirt)
+      appendMonteCarloGroups(vars);
+
+    return std::vector<std::string>(vars.begin(), vars.end());
   }
 
 private:
