@@ -10,7 +10,7 @@ int main() {
                    .display(
                        events().from("mc_strangeness_run1_fhc")
                            .in("NUMU_CC")
-                           .limit(5)
+                           .limit(20)
                            .size(512)
                            .format("pdf")
                            .mode(detector())
@@ -18,7 +18,7 @@ int main() {
                    .display(
                        events().from("mc_strangeness_run1_fhc")
                            .in("NUMU_CC")
-                           .limit(5)
+                           .limit(20)
                            .size(512)
                            .format("pdf")
                            .mode(semantic())
