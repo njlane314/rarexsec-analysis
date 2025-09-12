@@ -1,5 +1,5 @@
-#ifndef NUMU_PRESELECTION_PROCESSOR_H
-#define NUMU_PRESELECTION_PROCESSOR_H
+#ifndef PRESELECTION_PROCESSOR_H
+#define PRESELECTION_PROCESSOR_H
 
 #include "ROOT/RVec.hxx"
 #include <rarexsec/data/IEventProcessor.h>
@@ -7,7 +7,7 @@
 
 namespace analysis {
 
-class NumuPreselectionProcessor : public IEventProcessor {
+class PreselectionProcessor : public IEventProcessor {
 public:
   ROOT::RDF::RNode process(ROOT::RDF::RNode df,
                            SampleOrigin st) const override {
