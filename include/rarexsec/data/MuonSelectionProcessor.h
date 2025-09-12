@@ -116,7 +116,7 @@ private:
                      .Define("muon_trk_length_v", filter_float,
                              {"track_length", "muon_mask"})
                      .Define("muon_trk_distance_v", filter_float,
-                             {"trk_distance_v", "muon_mask"})
+                             {"track_distance_to_vertex", "muon_mask"})
                     .Define("muon_pfp_generation_v", filter_uint,
                             {"pfp_generations", "muon_mask"})
                      .Define("muon_trk_mcs_muon_mom_v", filter_float,
