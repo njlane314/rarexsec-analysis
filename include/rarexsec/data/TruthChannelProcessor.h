@@ -256,7 +256,12 @@ private:
 
     auto chan_alias_df = chan_df.Define("channel_definitions", "channel_def");
 
-    return chan_alias_df;
+    auto signal_df =
+        chan_alias_df.Define("is_truth_signal",
+                              [](int ch) { return ch == 15 || ch == 16; },
+                              {"channel_def"});
+
+    return signal_df;
   }
 };
 
