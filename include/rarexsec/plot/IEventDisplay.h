@@ -6,6 +6,7 @@
 
 #include "TCanvas.h"
 #include "TSystem.h"
+#include "TStyle.h"
 
 #include <rarexsec/utils/Logger.h>
 
@@ -32,6 +33,14 @@ public:
     canvas.SetFrameBorderMode(0);
     canvas.SetFrameLineColor(0);
     canvas.SetFrameLineWidth(0);
+
+    constexpr double margin = 0.10;
+    canvas.SetTopMargin(margin);
+    canvas.SetBottomMargin(margin);
+    canvas.SetLeftMargin(margin);
+    canvas.SetRightMargin(margin);
+    gStyle->SetTitleAlign(23);
+    gStyle->SetTitleX(0.5);
     this->draw(canvas);
     canvas.Update();
     canvas.SaveAs((output_directory_ + "/" + tag_ + "." + format).c_str());

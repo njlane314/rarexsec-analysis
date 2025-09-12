@@ -49,6 +49,9 @@ protected:
     hist_->GetYaxis()->SetTitle("Local Drift Coordinate");
     hist_->GetXaxis()->CenterTitle(true);
     hist_->GetYaxis()->CenterTitle(true);
+    constexpr double axis_offset = 1.2;
+    hist_->GetXaxis()->SetTitleOffset(axis_offset);
+    hist_->GetYaxis()->SetTitleOffset(axis_offset);
     hist_->GetXaxis()->SetTickLength(0);
     hist_->GetYaxis()->SetTickLength(0);
     hist_->GetXaxis()->SetLabelSize(0);
