@@ -106,8 +106,8 @@ protected:
     const double y_max = hist_->GetYaxis()->GetXmax();
     const double leg_x1 = x_min + 0.02 * (x_max - x_min);
     const double leg_x2 = x_min + 0.98 * (x_max - x_min);
-    const double leg_y2 = y_max - 0.05 * (y_max - y_min);
-    const double leg_y1 = leg_y2 - 0.13 * (y_max - y_min);
+    const double leg_y2 = y_max - 0.02 * (y_max - y_min);
+    const double leg_y1 = leg_y2 - 0.10 * (y_max - y_min);
     legend_ =
         std::make_unique<TLegend>(leg_x1, leg_y1, leg_x2, leg_y2, "", "br");
     legend_->SetNColumns(5);
