@@ -26,6 +26,7 @@ class IEventDisplay {
 
         TCanvas canvas(tag_.c_str(), tag_.c_str(), image_size_, image_size_);
         this->draw(canvas);
+        canvas.Update();
         canvas.SaveAs((output_directory_ + "/" + tag_ + "." + format).c_str());
     }
 
