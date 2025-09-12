@@ -33,7 +33,8 @@ public:
     SelectionQuery selection;
     std::optional<std::string> selection_expr;
     int n_events{1};
-    int image_size{1024};
+    int image_size{512};
+    std::string image_format{"png"};
     std::filesystem::path output_directory{"./plots/event_displays"};
     std::vector<std::string> planes{"U", "V", "W"};
     std::string mode{"detector"};
@@ -57,7 +58,8 @@ public:
       dc.sample = ed.at("sample").get<std::string>();
       dc.region = ed.value("region", std::string{});
       dc.n_events = ed.value("n_events", 1);
-      dc.image_size = ed.value("image_size", 1024);
+      dc.image_size = ed.value("image_size", 512);
+      dc.image_format = ed.value("image_format", std::string{"png"});
       dc.output_directory =
           ed.value("output_directory", std::string{"./plots/event_displays"});
       dc.output_directory =
@@ -188,18 +190,19 @@ public:
                                const std::vector<int> &sem) {
               std::string tag =
                   formatTag(cfg_copy.file_pattern, plane, run, sub, evt);
-              std::string title =
-                  "Run " + std::to_string(run) + ", SubRun " +
-                  std::to_string(sub) + ", Event " + std::to_string(evt);
-              auto out_file = out_dir / (tag + ".png");
+              std::string title = "Plane " + plane + " Detector (" +
+                                  std::to_string(run) + " Run, " +
+                                  std::to_string(sub) + " SubRun, " +
+                                  std::to_string(evt) + " Event)";
+              auto out_file = out_dir / (tag + "." + cfg_copy.image_format);
               if (cfg_copy.mode == "semantic") {
                 SemanticDisplay s(tag, title, sem, cfg_copy.image_size,
                                   out_dir.string());
-                s.drawAndSave();
+                s.drawAndSave(cfg_copy.image_format);
               } else {
                 DetectorDisplay d(tag, title, det, cfg_copy.image_size,
                                   out_dir.string());
-                d.drawAndSave();
+                d.drawAndSave(cfg_copy.image_format);
               }
               log::info("EventDisplayPlugin",
                         "Saved event display:", out_file.string());
