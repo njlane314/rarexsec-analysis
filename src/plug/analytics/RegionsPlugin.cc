@@ -2,7 +2,6 @@
 #include <rarexsec/core/AnalysisDefinition.h>
 #include <rarexsec/utils/Logger.h>
 #include <rarexsec/plug/IAnalysisPlugin.h>
-#include <algorithm>
 
 namespace analysis {
 
@@ -17,17 +16,6 @@ class RegionsPlugin : public IAnalysisPlugin {
             log::fatal("RegionsPlugin::onInitialisation", "no regions configured");
 
         auto &regions = config_.at("regions");
-
-        const auto has_pre_topo = std::any_of(regions.begin(), regions.end(), [](const auto &cfg) {
-            return cfg.value("region_key", "") == "PRE_TOPO";
-        });
-
-        if (!has_pre_topo) {
-            regions.push_back({{"region_key", "PRE_TOPO"},
-                              {"label", "Pre-topo quality"},
-                              {"expression",
-                               "in_reco_fiducial && num_slices == 1 && optical_filter_pe_beam > 20"}});
-        }
 
         for (auto const &region_cfg : regions) {
 
