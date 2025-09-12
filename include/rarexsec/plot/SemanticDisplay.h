@@ -41,22 +41,22 @@ protected:
     // Lighter grey background for the display
     const int background = TColor::GetColor(230, 230, 230);
 
-    // More visually distinct and aesthetically pleasing colour palette
+    // High-contrast colour palette for particle classes
     std::array<int, palette_size> palette = {
         background,
-        TColor::GetColor("#636363"), // Cosmic
-        TColor::GetColor("#fb8072"), // Muon
-        TColor::GetColor("#80b1d3"), // Electron
-        TColor::GetColor("#fdb462"), // Photon
-        TColor::GetColor("#b3de69"), // ChargedPion
-        TColor::GetColor("#fccde5"), // NeutralPion
-        TColor::GetColor("#8dd3c7"), // Neutron
-        TColor::GetColor("#d9d9d9"), // Proton
-        TColor::GetColor("#bc80bd"), // ChargedKaon
-        TColor::GetColor("#ccebc5"), // NeutralKaon
-        TColor::GetColor("#ffed6f"), // Lambda
-        TColor::GetColor("#bebada"), // ChargedSigma
-        TColor::GetColor("#1f78b4"), // NeutralSigma
+        TColor::GetColor("#000000"), // Cosmic
+        TColor::GetColor("#e41a1c"), // Muon
+        TColor::GetColor("#377eb8"), // Electron
+        TColor::GetColor("#4daf4a"), // Photon
+        TColor::GetColor("#ff7f00"), // ChargedPion
+        TColor::GetColor("#984ea3"), // NeutralPion
+        TColor::GetColor("#ffff33"), // Neutron
+        TColor::GetColor("#1b9e77"), // Proton
+        TColor::GetColor("#f781bf"), // ChargedKaon
+        TColor::GetColor("#a65628"), // NeutralKaon
+        TColor::GetColor("#66a61e"), // Lambda
+        TColor::GetColor("#e6ab02"), // ChargedSigma
+        TColor::GetColor("#a6cee3"), // NeutralSigma
         TColor::GetColor("#b15928")  // Other
     };
 
@@ -93,26 +93,30 @@ protected:
 
     // Legend describing semantic classes
     legend_entries_.clear();
-    // More compact legend matching the plot background
-    legend_ = std::make_unique<TLegend>(0.60, 0.65, 0.95, 0.90);
-    legend_->SetNColumns(3);
+    // Wide legend across the top of the canvas
+    legend_ = std::make_unique<TLegend>(0.02, 0.89, 0.98, 0.99);
+    legend_->SetNColumns(5);
     legend_->SetFillColor(background);
     legend_->SetFillStyle(1001);
     legend_->SetBorderSize(0);
     legend_->SetTextFont(42);
-    legend_->SetTextSize(0.02);
+    legend_->SetTextSize(0.025);
 
     const std::array<const char *, palette_size> labels = {
         "#emptyset",    "Cosmic",     "#mu",  "e^{-}",   "#gamma", "#pi^{#pm}",
         "#pi^{0}",      "n",          "p",    "K^{#pm}", "K^{0}",  "#Lambda",
         "#Sigma^{#pm}", "#Sigma^{0}", "Other"};
 
+    const std::array<Style_t, palette_size> styles = {
+        1001, 3004, 1001, 1001, 1001, 3005, 1001, 3354,
+        1001, 3002, 1001, 1001, 3003, 1001, 1001};
     for (int i = 0; i < palette_size; ++i) {
       auto h = std::make_unique<TH1F>((tag_ + std::to_string(i)).c_str(), "", 1,
                                       0, 1);
       h->SetFillColor(palette[i]);
       h->SetLineColor(palette[i]);
       h->SetLineWidth(1);
+      h->SetFillStyle(styles[i]);
       legend_->AddEntry(h.get(), labels[i], "f");
       legend_entries_.push_back(std::move(h));
     }
