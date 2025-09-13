@@ -97,7 +97,7 @@ private:
     double N0_w2 = 0.0;
     double N0_pure = 0.0;
     double N0_pure_w2 = 0.0;
-    [[maybe_unused]] double Ntot = 0.0;
+    double Ntot = 0.0;
     std::vector<double> cum_counts(pc.stages.size(), 0.0);
     std::vector<double> cum_counts_w2(pc.stages.size(), 0.0);
     std::vector<double> cum_counts_all(pc.stages.size(), 0.0);
@@ -233,10 +233,13 @@ private:
       losses[i] = {top_reason, top_count, total};
     }
 
-    std::vector<double> purity(pc.stages.size(), 0.0);
-    for (size_t i = 0; i < pc.stages.size(); ++i)
-      purity[i] =
-          cum_counts_all[i] > 0.0 ? cum_counts[i] / cum_counts_all[i] : 0.0;
+    std::vector<double> bkg_rejection(pc.stages.size(), 0.0);
+    double N0_bkg = Ntot - N0;
+    for (size_t i = 0; i < pc.stages.size(); ++i) {
+      double bkg_surv = cum_counts_all[i] - cum_counts[i];
+      bkg_rejection[i] =
+          N0_bkg > 0.0 ? 1.0 - bkg_surv / N0_bkg : 0.0;
+    }
 
     std::vector<std::vector<double>> syst_survivals;
 
@@ -348,7 +351,7 @@ private:
       err_high.pop_back();
       cum_counts.pop_back();
       losses.pop_back();
-      purity.pop_back();
+      bkg_rejection.pop_back();
       if (!syst_low.empty()) {
         syst_low.pop_back();
         syst_high.pop_back();
@@ -364,7 +367,7 @@ private:
     err_high.insert(err_high.begin(), 0.0);
     cum_counts.insert(cum_counts.begin(), N0);
     losses.insert(losses.begin(), {});
-    purity.insert(purity.begin(), N0 > 0.0 ? N0 / Ntot : 0.0);
+    bkg_rejection.insert(bkg_rejection.begin(), 0.0);
     if (!syst_low.empty()) {
       syst_low.insert(syst_low.begin(), 0.0);
       syst_high.insert(syst_high.begin(), 0.0);
@@ -377,8 +380,9 @@ private:
     SignalCutFlowPlot plot(pc.plot_name, stages, survival, err_low, err_high,
                            N0, cum_counts, losses, loader_->getTotalPot(),
                            pc.output_directory, pc.x_label, pc.y_label,
-                           "Nominal Selection Efficiency", purity, purity,
-                           "Purity (%)", syst_low, syst_high, pc.band_color,
+                           "Nominal Selection Efficiency", bkg_rejection,
+                           bkg_rejection, "Background rejection (%)",
+                           syst_low, syst_high, pc.band_color,
                            pc.band_alpha);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
@@ -392,7 +396,7 @@ private:
                                 loader_->getTotalPot(), pc.output_directory,
                                 pc.x_label, pc.y_label,
                                 "Well-Reconstructed Selection Efficiency", {}, {},
-                                "Purity (%)", {}, {}, pc.band_color,
+                                "Background rejection (%)", {}, {}, pc.band_color,
                                 pc.band_alpha);
     plot_pure.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
