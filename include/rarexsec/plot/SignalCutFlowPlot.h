@@ -10,6 +10,7 @@
 #include "TH1F.h"
 #include "TColor.h"
 #include "TLatex.h"
+#include "TLegend.h"
 #include "TString.h"
 #include "TVirtualPad.h"
 
@@ -33,7 +34,8 @@ public:
                     std::string output_directory = "plots",
                     std::string x_label = "Cut Stage",
                     std::string y_label = "Survival Probability (%)",
-                    std::vector<double> purity = {},
+                    std::vector<double> mc_purity = {},
+                    std::vector<double> total_purity = {},
                     std::string y2_label = "Purity (%)",
                     std::vector<double> syst_low = {},
                     std::vector<double> syst_high = {},
@@ -44,7 +46,8 @@ public:
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
-        y_label_(std::move(y_label)), purity_(std::move(purity)),
+        y_label_(std::move(y_label)), mc_purity_(std::move(mc_purity)),
+        total_purity_(std::move(total_purity)),
         y2_label_(std::move(y2_label)), syst_low_(std::move(syst_low)),
         syst_high_(std::move(syst_high)), band_color_(band_color),
         band_alpha_(band_alpha) {}
@@ -59,13 +62,19 @@ protected:
       h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
       h->SetBinContent(i + 1, survival_[i] * 100.0);
     }
-    h->SetMinimum(0.0);
+    h->GetXaxis()->SetLabelSize(0.045);
+    h->GetYaxis()->SetLabelSize(0.045);
+    h->GetXaxis()->SetTitleSize(0.05);
+    h->GetYaxis()->SetTitleSize(0.05);
+    h->SetMinimum(0.01);
     h->SetMaximum(100.0);
+    gPad->SetLogy();
     h->Draw("hist");
 
+    TGraphAsymmErrors *gb = nullptr;
     if (syst_low_.size() == static_cast<size_t>(n) &&
         syst_high_.size() == static_cast<size_t>(n)) {
-      auto *gb = new TGraphAsymmErrors(n);
+      gb = new TGraphAsymmErrors(n);
       for (int i = 0; i < n; ++i) {
         gb->SetPoint(i, i + 1, survival_[i] * 100.0);
         gb->SetPointError(i, 0.0, 0.0, syst_low_[i] * 100.0,
@@ -83,33 +92,64 @@ protected:
     }
     g->Draw("P SAME");
 
-    if (purity_.size() == static_cast<size_t>(n)) {
+    TGraph *gp_mc = nullptr;
+    TGraph *gp_tot = nullptr;
+    if (mc_purity_.size() == static_cast<size_t>(n) ||
+        total_purity_.size() == static_cast<size_t>(n)) {
       gPad->SetRightMargin(0.15);
-      auto *gp = new TGraph(n);
-      gp->SetLineColor(kRed);
-      gp->SetMarkerColor(kRed);
-      gp->SetMarkerStyle(24);
-      for (int i = 0; i < n; ++i)
-        gp->SetPoint(i, i + 1, purity_[i] * 100.0);
-      gp->Draw("PL SAME");
+      if (mc_purity_.size() == static_cast<size_t>(n)) {
+        gp_mc = new TGraph(n);
+        gp_mc->SetLineColor(kRed);
+        gp_mc->SetMarkerColor(kRed);
+        gp_mc->SetMarkerStyle(24);
+        for (int i = 0; i < n; ++i)
+          gp_mc->SetPoint(i, i + 1, mc_purity_[i] * 100.0);
+        gp_mc->Draw("PL SAME");
+      }
+      if (total_purity_.size() == static_cast<size_t>(n)) {
+        gp_tot = new TGraph(n);
+        gp_tot->SetLineColor(kBlue);
+        gp_tot->SetMarkerColor(kBlue);
+        gp_tot->SetMarkerStyle(25);
+        for (int i = 0; i < n; ++i)
+          gp_tot->SetPoint(i, i + 1, total_purity_[i] * 100.0);
+        gp_tot->Draw("PL SAME");
+      }
 
-      auto *axis =
-          new TGaxis(n + 0.5, 0.0, n + 0.5, 100.0, 0.0, 100.0, 510, "+L");
-      axis->SetLineColor(kRed);
-      axis->SetLabelColor(kRed);
-      axis->SetTitleColor(kRed);
+      auto *axis = new TGaxis(n + 0.5, h->GetMinimum(), n + 0.5,
+                               h->GetMaximum(), h->GetMinimum(),
+                               h->GetMaximum(), 510, "+LG");
+      axis->SetLineColor(kBlack);
+      axis->SetLabelColor(kBlack);
+      axis->SetTitleColor(kBlack);
+      axis->SetLabelSize(0.045);
+      axis->SetTitleSize(0.05);
       axis->SetTitle(y2_label_.c_str());
       axis->Draw();
     }
 
+    TLegend *legend = new TLegend(0.6, 0.7, 0.88, 0.9);
+    legend->SetBorderSize(0);
+    legend->SetFillStyle(0);
+    legend->SetTextFont(42);
+    legend->SetTextSize(0.045);
+    legend->AddEntry(g, "Survival", "p");
+    if (gb)
+      legend->AddEntry(gb, "Syst. Unc.", "f");
+    if (gp_mc)
+      legend->AddEntry(gp_mc, "MC Purity", "pl");
+    if (gp_tot)
+      legend->AddEntry(gp_tot, "Total Purity", "pl");
+    legend->Draw();
+
     TLatex latex;
     latex.SetTextAlign(21);
     latex.SetTextFont(h->GetXaxis()->GetTitleFont());
-    latex.SetTextSize(h->GetXaxis()->GetLabelSize());
+    latex.SetTextSize(h->GetXaxis()->GetLabelSize() * 0.5);
     for (int i = 0; i < n; ++i) {
       auto txt = TString::Format("%0.1f/%0.1f", counts_[i] * pot_scale_,
                                  N0_ * pot_scale_);
-      latex.DrawLatex(i + 1, survival_[i] * 100.0 + 3.0, txt.Data());
+      latex.DrawLatex(i + 1, survival_[i] * 100.0 * 1.05, txt.Data());
     }
 
     double prev_s = 1.0;
@@ -124,7 +164,7 @@ protected:
         auto txt = TString::Format(
             "-%0.1f%%: %s (%0.1f/%0.1f, %0.0f%%)", drop, info.reason.c_str(),
             info.top_count * pot_scale_, info.total * pot_scale_, frac * 100.0);
-        latex.DrawLatex(i + 1 - 0.1, survival_[i] * 100.0 + 7.0, txt.Data());
+        latex.DrawLatex(i + 1 - 0.1, survival_[i] * 100.0 * 1.1, txt.Data());
       }
     }
   }
@@ -140,7 +180,8 @@ private:
   double pot_scale_;
   std::string x_label_;
   std::string y_label_;
-  std::vector<double> purity_;
+  std::vector<double> mc_purity_;
+  std::vector<double> total_purity_;
   std::string y2_label_;
   std::vector<double> syst_low_;
   std::vector<double> syst_high_;
