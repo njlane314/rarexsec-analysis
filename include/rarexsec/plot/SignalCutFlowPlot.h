@@ -4,14 +4,15 @@
 #include <string>
 #include <vector>
 
+#include "TColor.h"
 #include "TGaxis.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1F.h"
-#include "TColor.h"
 #include "TLatex.h"
 #include "TLegend.h"
 #include "TString.h"
+#include "TStyle.h"
 #include "TVirtualPad.h"
 
 #include <rarexsec/plot/IHistogramPlot.h>
@@ -32,14 +33,13 @@ public:
                     std::vector<double> counts,
                     std::vector<CutFlowLossInfo> losses, double pot_scale = 1.0,
                     std::string output_directory = "plots",
-                    std::string x_label = "Cut Stage",
-                    std::string y_label = "Survival Probability (%)",
+                    std::string x_label = "Selection stage",
+                    std::string y_label = "Selection efficiency",
                     std::vector<double> mc_purity = {},
                     std::vector<double> total_purity = {},
                     std::string y2_label = "Purity (%)",
                     std::vector<double> syst_low = {},
-                    std::vector<double> syst_high = {},
-                    int band_color = kGray,
+                    std::vector<double> syst_high = {}, int band_color = kGray,
                     double band_alpha = 0.3)
       : IHistogramPlot(std::move(plot_name), std::move(output_directory)),
         stages_(std::move(stages)), survival_(std::move(survival)),
@@ -47,10 +47,9 @@ public:
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
         y_label_(std::move(y_label)), mc_purity_(std::move(mc_purity)),
-        total_purity_(std::move(total_purity)),
-        y2_label_(std::move(y2_label)), syst_low_(std::move(syst_low)),
-        syst_high_(std::move(syst_high)), band_color_(band_color),
-        band_alpha_(band_alpha) {}
+        total_purity_(std::move(total_purity)), y2_label_(std::move(y2_label)),
+        syst_low_(std::move(syst_low)), syst_high_(std::move(syst_high)),
+        band_color_(band_color), band_alpha_(band_alpha) {}
 
 protected:
   void draw(TCanvas &) override {
@@ -62,13 +61,21 @@ protected:
       h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
       h->SetBinContent(i + 1, survival_[i] * 100.0);
     }
-    h->GetXaxis()->SetLabelSize(0.045);
-    h->GetYaxis()->SetLabelSize(0.045);
-    h->GetXaxis()->SetTitleSize(0.05);
-    h->GetYaxis()->SetTitleSize(0.05);
-    h->SetMinimum(0.01);
-    h->SetMaximum(100.0);
-    gPad->SetLogy();
+    double y_min = 0.01;
+    double y_max = 100.0;
+    h->SetMinimum(y_min);
+    h->SetMaximum(y_max);
+
+    // Ensure axis fonts/sizes follow global style
+    h->GetXaxis()->SetLabelFont(gStyle->GetLabelFont("X"));
+    h->GetYaxis()->SetLabelFont(gStyle->GetLabelFont("Y"));
+    h->GetXaxis()->SetTitleFont(gStyle->GetTitleFont("X"));
+    h->GetYaxis()->SetTitleFont(gStyle->GetTitleFont("Y"));
+    h->GetXaxis()->SetLabelSize(gStyle->GetLabelSize("X"));
+    h->GetYaxis()->SetLabelSize(gStyle->GetLabelSize("Y"));
+    h->GetXaxis()->SetTitleSize(gStyle->GetTitleSize("X"));
+    h->GetYaxis()->SetTitleSize(gStyle->GetTitleSize("Y"));
+
     h->Draw("hist");
 
     TGraphAsymmErrors *gb = nullptr;
@@ -116,24 +123,29 @@ protected:
         gp_tot->Draw("PL SAME");
       }
 
-      auto *axis = new TGaxis(n + 0.5, h->GetMinimum(), n + 0.5,
-                               h->GetMaximum(), h->GetMinimum(),
-                               h->GetMaximum(), 510, "+LG");
+      auto *axis =
+          new TGaxis(n + 0.5, h->GetMinimum(), n + 0.5, h->GetMaximum(),
+                     h->GetMinimum(), h->GetMaximum(), 510, "+LG");
       axis->SetLineColor(kBlack);
       axis->SetLabelColor(kBlack);
       axis->SetTitleColor(kBlack);
-      axis->SetLabelSize(0.045);
-      axis->SetTitleSize(0.05);
+      axis->SetLabelFont(gStyle->GetLabelFont("Y"));
+      axis->SetTitleFont(gStyle->GetTitleFont("Y"));
+      axis->SetLabelSize(gStyle->GetLabelSize("Y"));
+      axis->SetTitleSize(gStyle->GetTitleSize("Y"));
       axis->SetTitle(y2_label_.c_str());
+      axis->SetMoreLogLabels();
+      axis->SetNoExponent();
       axis->Draw();
     }
 
-    TLegend *legend = new TLegend(0.6, 0.7, 0.88, 0.9);
+    TLegend *legend = new TLegend(0.12, 0.75, 0.95, 0.9);
     legend->SetBorderSize(0);
     legend->SetFillStyle(0);
     legend->SetTextFont(42);
-    legend->SetTextSize(0.045);
-    legend->AddEntry(g, "Survival", "p");
+    int n_entries = 1 + (gb ? 1 : 0) + (gp_mc ? 1 : 0) + (gp_tot ? 1 : 0);
+    legend->SetNColumns(n_entries > 4 ? 3 : 2);
+    legend->AddEntry(g, "Selection efficiency", "p");
     if (gb)
       legend->AddEntry(gb, "Syst. Unc.", "f");
     if (gp_mc)
