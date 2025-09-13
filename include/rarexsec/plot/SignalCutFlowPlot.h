@@ -38,6 +38,7 @@ public:
                     std::string output_directory = "plots",
                     std::string x_label = "Selection stage",
                     std::string y_label = "Selection efficiency",
+                    std::string eff_label = "Selection efficiency",
                     std::vector<double> mc_purity = {},
                     std::vector<double> total_purity = {},
                     std::string y2_label = "Purity (%)",
@@ -49,7 +50,8 @@ public:
         err_low_(std::move(err_low)), err_high_(std::move(err_high)), N0_(N0),
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
-        y_label_(std::move(y_label)), mc_purity_(std::move(mc_purity)),
+        y_label_(std::move(y_label)), eff_label_(std::move(eff_label)),
+        mc_purity_(std::move(mc_purity)),
         total_purity_(std::move(total_purity)), y2_label_(std::move(y2_label)),
         syst_low_(std::move(syst_low)), syst_high_(std::move(syst_high)),
         band_color_(band_color), band_alpha_(band_alpha) {}
@@ -131,16 +133,16 @@ protected:
       gb->Draw("2 SAME");
     }
 
-    // Efficiency points with stat. errors
-    auto *g_eff = new TGraphAsymmErrors(n);
-    g_eff->SetMarkerStyle(20);
-    g_eff->SetMarkerSize(1.1);
-    g_eff->SetLineWidth(2);
+    // Statistical error bars on efficiency (no markers)
+    auto *g_err = new TGraphAsymmErrors(n);
+    g_err->SetMarkerStyle(0);
+    g_err->SetLineWidth(2);
     for (int i = 0; i < n; ++i) {
-      g_eff->SetPoint(i, i + 1, survival_.at(i) * 100.0);
-      g_eff->SetPointError(i, 0.0, 0.0, err_low_.at(i) * 100.0, err_high_.at(i) * 100.0);
+      g_err->SetPoint(i, i + 1, survival_.at(i) * 100.0);
+      g_err->SetPointError(i, 0.0, 0.0, err_low_.at(i) * 100.0,
+                          err_high_.at(i) * 100.0);
     }
-    g_eff->Draw("P SAME");
+    g_err->Draw("E SAME");
 
     // -- Overlay pad for purity (log-y) --------------------------------------
     TGraph *gp_mc = nullptr;
@@ -224,7 +226,7 @@ protected:
 
       // Right-hand axis in overlay pad user coords
       const double xRight = n + 0.5;
-      TGaxis *y2 = new TGaxis(xRight, y2min, xRight, y2max, y2min, y2max, 510, "G+");
+      TGaxis *y2 = new TGaxis(xRight, y2min, xRight, y2max, y2min, y2max, 510, "G");
       y2->SetTitle(y2_label_.c_str());    // e.g. "Purity (%)"
       y2->SetLabelFont(gStyle->GetLabelFont("Y"));
       y2->SetTitleFont(gStyle->GetTitleFont("Y"));
@@ -244,9 +246,10 @@ protected:
     legend->SetFillStyle(0);
     legend->SetTextFont(42);
 
-    int n_entries = 1 + (gb ? 1 : 0) + (gp_mc ? 1 : 0) + (gp_tot ? 1 : 0);
+    int n_entries = 1 + (gb ? 1 : 0) + 1 + (gp_mc ? 1 : 0) + (gp_tot ? 1 : 0);
     legend->SetNColumns((n_entries > 4) ? 3 : 2);
-    legend->AddEntry(g_eff, "Selection efficiency", "p");
+    legend->AddEntry(h, eff_label_.c_str(), "l");
+    legend->AddEntry(g_err, "Stat. unc.", "le");
     if (gb)     legend->AddEntry(gb, "Syst. unc.", "f");
     if (gp_mc)  legend->AddEntry(gp_mc, "MC purity (log)", "pl");
     if (gp_tot) legend->AddEntry(gp_tot, "Total purity (log)", "pl");
@@ -266,6 +269,7 @@ private:
   double pot_scale_;
   std::string x_label_;
   std::string y_label_;
+  std::string eff_label_;
   std::vector<double> mc_purity_;     // fractions [0..1]
   std::vector<double> total_purity_;  // fractions [0..1]
   std::string y2_label_;
