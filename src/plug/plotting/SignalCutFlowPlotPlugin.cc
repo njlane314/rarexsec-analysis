@@ -122,6 +122,11 @@ private:
                   " missing column ", pc.truth_column, "; defaulting to false");
         df = df.Define(pc.truth_column.c_str(), "false");
       }
+      if (!df.HasColumn("pure_slice_signal")) {
+        log::warn("SignalCutFlowPlotPlugin::processPlot", "Sample ", skey,
+                  " missing column pure_slice_signal; defaulting to false");
+        df = df.Define("pure_slice_signal", "false");
+      }
       auto lam = [&](bool is_sig, bool is_pure, bool p0, bool p1, bool p2,
                      bool p3, bool p4, bool p5, const std::string &r1,
                      const std::string &r2, const std::string &r3,
