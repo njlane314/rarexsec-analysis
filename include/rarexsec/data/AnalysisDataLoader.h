@@ -106,21 +106,30 @@ class AnalysisDataLoader {
 
     void loadAll() {
         const std::string ext_beam{"numi_ext"};
+
+        // First pass: accumulate total POT and triggers for all run periods
+        // (including external samples) so that every WeightProcessor sees the
+        // same overall totals.
+        std::vector<const RunConfig *> configs_to_process;
         for (auto &period : periods_) {
             const auto &rc = run_registry_.get(beam_, period);
             total_pot_ += rc.nominal_pot;
             total_triggers_ += rc.nominal_triggers;
-            this->processRunConfig(rc);
+            configs_to_process.push_back(&rc);
 
             auto key = ext_beam + ":" + period;
             if (run_registry_.all().count(key)) {
                 const auto &ext_rc = run_registry_.get(ext_beam, period);
-                // Include external run totals before building pipelines so
-                // external samples are scaled by the full trigger count.
                 total_pot_ += ext_rc.nominal_pot;
                 total_triggers_ += ext_rc.nominal_triggers;
-                this->processRunConfig(ext_rc);
+                configs_to_process.push_back(&ext_rc);
             }
+        }
+
+        // Second pass: build processing pipelines using the final totals so all
+        // samples are scaled consistently.
+        for (const RunConfig *rc : configs_to_process) {
+            this->processRunConfig(*rc);
         }
     }
 
