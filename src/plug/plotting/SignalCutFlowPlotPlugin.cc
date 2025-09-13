@@ -92,17 +92,23 @@ private:
   }
 
   void processPlot(const PlotConfig &pc) const {
+    auto stages = pc.stages;
     double N0 = 0.0;
     double N0_w2 = 0.0;
+    double N0_pure = 0.0;
+    double N0_pure_w2 = 0.0;
     [[maybe_unused]] double Ntot = 0.0;
     std::vector<double> cum_counts(pc.stages.size(), 0.0);
     std::vector<double> cum_counts_w2(pc.stages.size(), 0.0);
     std::vector<double> cum_counts_all(pc.stages.size(), 0.0);
+    std::vector<double> cum_counts_pure(pc.stages.size(), 0.0);
+    std::vector<double> cum_counts_pure_w2(pc.stages.size(), 0.0);
     std::vector<std::map<std::string, double>> loss_reason(pc.stages.size());
     std::mutex m;
 
     std::vector<std::string> cols;
     cols.push_back(pc.truth_column);
+    cols.push_back("pure_slice_signal");
     for (auto const &c : pc.pass_columns)
       cols.push_back(c);
     for (size_t i = 1; i < pc.reason_columns.size(); ++i)
@@ -116,10 +122,16 @@ private:
                   " missing column ", pc.truth_column, "; defaulting to false");
         df = df.Define(pc.truth_column.c_str(), "false");
       }
-      auto lam = [&](bool is_sig, bool p0, bool p1, bool p2, bool p3, bool p4,
-                     bool p5, const std::string &r1, const std::string &r2,
-                     const std::string &r3, const std::string &r4,
-                     const std::string &r5, double weight) {
+      if (!df.HasColumn("pure_slice_signal")) {
+        log::warn("SignalCutFlowPlotPlugin::processPlot", "Sample ", skey,
+                  " missing column pure_slice_signal; defaulting to false");
+        df = df.Define("pure_slice_signal", "false");
+      }
+      auto lam = [&](bool is_sig, bool is_pure, bool p0, bool p1, bool p2,
+                     bool p3, bool p4, bool p5, const std::string &r1,
+                     const std::string &r2, const std::string &r3,
+                     const std::string &r4, const std::string &r5,
+                     double weight) {
         std::lock_guard<std::mutex> lock(m);
         Ntot += weight;
         bool pass[6] = {p0, p1, p2, p3, p4, p5};
@@ -131,30 +143,44 @@ private:
           else
             break;
         }
-        if (!is_sig)
-          return;
-        N0 += weight;
-        N0_w2 += weight * weight;
-        cum = true;
-        int first_fail = -1;
-        for (int i = 0; i < 6; ++i) {
-          cum = cum && pass[i];
-          if (cum) {
-            cum_counts[i] += weight;
-            cum_counts_w2[i] += weight * weight;
-          } else {
-            first_fail = i;
-            break;
+        if (is_sig) {
+          N0 += weight;
+          N0_w2 += weight * weight;
+          cum = true;
+          int first_fail = -1;
+          for (int i = 0; i < 6; ++i) {
+            cum = cum && pass[i];
+            if (cum) {
+              cum_counts[i] += weight;
+              cum_counts_w2[i] += weight * weight;
+            } else {
+              first_fail = i;
+              break;
+            }
+          }
+          if (first_fail > 0) {
+            const std::string &reason = (first_fail == 1)   ? r1
+                                        : (first_fail == 2) ? r2
+                                        : (first_fail == 3) ? r3
+                                        : (first_fail == 4) ? r4
+                                                            : r5;
+            std::string key = reason.empty() ? "unspecified" : reason;
+            loss_reason[first_fail][key] += weight;
           }
         }
-        if (first_fail > 0) {
-          const std::string &reason = (first_fail == 1)   ? r1
-                                      : (first_fail == 2) ? r2
-                                      : (first_fail == 3) ? r3
-                                      : (first_fail == 4) ? r4
-                                                          : r5;
-          std::string key = reason.empty() ? "unspecified" : reason;
-          loss_reason[first_fail][key] += weight;
+        if (is_pure) {
+          N0_pure += weight;
+          N0_pure_w2 += weight * weight;
+          cum = true;
+          for (int i = 0; i < 6; ++i) {
+            cum = cum && pass[i];
+            if (cum) {
+              cum_counts_pure[i] += weight;
+              cum_counts_pure_w2[i] += weight * weight;
+            } else {
+              break;
+            }
+          }
         }
       };
       df.Foreach(lam, cols);
@@ -162,10 +188,11 @@ private:
 
     std::vector<double> survival;
     std::vector<double> err_low, err_high;
+    std::vector<double> survival_pure;
+    std::vector<double> err_low_pure, err_high_pure;
     for (size_t i = 0; i < pc.stages.size(); ++i) {
       double s = N0 > 0.0 ? cum_counts[i] / N0 : 0.0;
       survival.push_back(s);
-
       double cw = cum_counts[i];
       double cw2 = cum_counts_w2[i];
       double fw = N0 - cw;
@@ -176,6 +203,19 @@ private:
       auto [lo, hi] = wilsonInterval(k_eff, n_eff);
       err_low.push_back(s - lo);
       err_high.push_back(hi - s);
+
+      double sp = N0_pure > 0.0 ? cum_counts_pure[i] / N0_pure : 0.0;
+      survival_pure.push_back(sp);
+      double cwp = cum_counts_pure[i];
+      double cwp2 = cum_counts_pure_w2[i];
+      double fwp = N0_pure - cwp;
+      double fwp2 = N0_pure_w2 - cwp2;
+      double k_eff_p = (cwp2 > 0.0) ? (cwp * cwp) / cwp2 : 0.0;
+      double f_eff_p = (fwp2 > 0.0) ? (fwp * fwp) / fwp2 : 0.0;
+      double n_eff_p = k_eff_p + f_eff_p;
+      auto [lo_p, hi_p] = wilsonInterval(k_eff_p, n_eff_p);
+      err_low_pure.push_back(sp - lo_p);
+      err_high_pure.push_back(hi_p - sp);
     }
 
     std::vector<CutFlowLossInfo> losses(pc.stages.size());
@@ -300,14 +340,63 @@ private:
       }
     }
 
-    SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
+    // Remove final stage and prepend empty-selection stage
+    if (!stages.empty()) {
+      stages.pop_back();
+      survival.pop_back();
+      err_low.pop_back();
+      err_high.pop_back();
+      cum_counts.pop_back();
+      losses.pop_back();
+      purity.pop_back();
+      if (!syst_low.empty()) {
+        syst_low.pop_back();
+        syst_high.pop_back();
+      }
+      survival_pure.pop_back();
+      err_low_pure.pop_back();
+      err_high_pure.pop_back();
+      cum_counts_pure.pop_back();
+    }
+    stages.insert(stages.begin(), "Empty selection");
+    survival.insert(survival.begin(), 1.0);
+    err_low.insert(err_low.begin(), 0.0);
+    err_high.insert(err_high.begin(), 0.0);
+    cum_counts.insert(cum_counts.begin(), N0);
+    losses.insert(losses.begin(), {});
+    purity.insert(purity.begin(), N0 > 0.0 ? N0 / Ntot : 0.0);
+    if (!syst_low.empty()) {
+      syst_low.insert(syst_low.begin(), 0.0);
+      syst_high.insert(syst_high.begin(), 0.0);
+    }
+    survival_pure.insert(survival_pure.begin(), 1.0);
+    err_low_pure.insert(err_low_pure.begin(), 0.0);
+    err_high_pure.insert(err_high_pure.begin(), 0.0);
+    cum_counts_pure.insert(cum_counts_pure.begin(), N0_pure);
+
+    SignalCutFlowPlot plot(pc.plot_name, stages, survival, err_low, err_high,
                            N0, cum_counts, losses, loader_->getTotalPot(),
                            pc.output_directory, pc.x_label, pc.y_label,
-                           purity, purity, "Purity (%)", syst_low, syst_high,
-                           pc.band_color, pc.band_alpha);
+                           "Nominal Selection Efficiency", purity, purity,
+                           "Purity (%)", syst_low, syst_high, pc.band_color,
+                           pc.band_alpha);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");
+
+    // Well reconstructed signal efficiency plot
+    std::vector<CutFlowLossInfo> losses_pure(stages.size());
+    SignalCutFlowPlot plot_pure(pc.plot_name + "_pure", stages, survival_pure,
+                                err_low_pure, err_high_pure, N0_pure,
+                                cum_counts_pure, losses_pure,
+                                loader_->getTotalPot(), pc.output_directory,
+                                pc.x_label, pc.y_label,
+                                "Well-Reconstructed Selection Efficiency", {}, {},
+                                "Purity (%)", {}, {}, pc.band_color,
+                                pc.band_alpha);
+    plot_pure.drawAndSave("pdf");
+    log::info("SignalCutFlowPlotPlugin::onPlot",
+              pc.output_directory + "/" + pc.plot_name + "_pure.pdf");
   }
 
   std::vector<PlotConfig> plots_;
