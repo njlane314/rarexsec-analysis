@@ -9,7 +9,7 @@
         "beamlines": {
             "numi_fhc": {
                 "run1": {
-                    "pot": 3.922e+20,
+                    "nominal_pot": 3.922e+20,
                     "samples": [
                         {
                             "sample_key": "mc_inclusive_run1_fhc",
