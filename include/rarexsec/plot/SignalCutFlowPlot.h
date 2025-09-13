@@ -39,9 +39,9 @@ public:
                     std::string x_label = "Selection stage",
                     std::string y_label = "Selection efficiency",
                     std::string eff_label = "Selection efficiency",
-                    std::vector<double> mc_purity = {},
-                    std::vector<double> total_purity = {},
-                    std::string y2_label = "Purity (%)",
+                    std::vector<double> mc_bkg_rej = {},
+                    std::vector<double> total_bkg_rej = {},
+                    std::string y2_label = "Background rejection (%)",
                     std::vector<double> syst_low = {},
                     std::vector<double> syst_high = {}, int band_color = kGray,
                     double band_alpha = 0.3)
@@ -51,8 +51,8 @@ public:
         counts_(std::move(counts)), losses_(std::move(losses)),
         pot_scale_(pot_scale), x_label_(std::move(x_label)),
         y_label_(std::move(y_label)), eff_label_(std::move(eff_label)),
-        mc_purity_(std::move(mc_purity)),
-        total_purity_(std::move(total_purity)), y2_label_(std::move(y2_label)),
+        mc_bkg_rej_(std::move(mc_bkg_rej)),
+        total_bkg_rej_(std::move(total_bkg_rej)), y2_label_(std::move(y2_label)),
         syst_low_(std::move(syst_low)), syst_high_(std::move(syst_high)),
         band_color_(band_color), band_alpha_(band_alpha) {}
 
@@ -144,17 +144,17 @@ protected:
     }
     g_err->Draw("E SAME");
 
-    // -- Overlay pad for purity (log-y) --------------------------------------
+    // -- Overlay pad for background rejection --------------------------------
     TGraph *gp_mc = nullptr;
     TGraph *gp_tot = nullptr;
 
-    const bool have_purity =
-        (mc_purity_.size() == static_cast<size_t>(n)) ||
-        (total_purity_.size() == static_cast<size_t>(n));
+    const bool have_bkg_rej =
+        (mc_bkg_rej_.size() == static_cast<size_t>(n)) ||
+        (total_bkg_rej_.size() == static_cast<size_t>(n));
 
     TPad *padOverlay = nullptr;
 
-    if (have_purity) {
+    if (have_bkg_rej) {
       canvas.cd();
       padOverlay = new TPad("padOverlay", "padOverlay", 0.0, 0.0, 1.0, split);
       padOverlay->SetFillStyle(4000);      // transparent fill
@@ -163,41 +163,34 @@ protected:
       padOverlay->SetRightMargin(padMain->GetRightMargin());
       padOverlay->SetTopMargin(padMain->GetTopMargin());
       padOverlay->SetBottomMargin(padMain->GetBottomMargin());
-      padOverlay->SetLogy();               // <- log scale for purity
       padOverlay->Draw();
       padOverlay->cd();
 
-      const double eps_pct = 1e-2; // 0.01% minimum for log scale
-      auto pct_clip = [&](double f) {
-        // Convert [0..1] fraction to percent and clip at epsilon
-        double v = f * 100.0;
-        if (!(v > 0.0)) v = eps_pct;
-        return std::max(v, eps_pct);
-      };
+      auto pct = [](double f) { return f * 100.0; };
 
       double y2min = std::numeric_limits<double>::infinity();
       double y2max = -std::numeric_limits<double>::infinity();
 
-      if (mc_purity_.size() == static_cast<size_t>(n)) {
+      if (mc_bkg_rej_.size() == static_cast<size_t>(n)) {
         gp_mc = new TGraph(n);
         gp_mc->SetLineColor(kRed);
         gp_mc->SetMarkerColor(kRed);
         gp_mc->SetMarkerStyle(24);
         for (int i = 0; i < n; ++i) {
-          const double y = pct_clip(mc_purity_.at(i));
+          const double y = pct(mc_bkg_rej_.at(i));
           gp_mc->SetPoint(i, i + 1, y);
           y2min = std::min(y2min, y);
           y2max = std::max(y2max, y);
         }
       }
 
-      if (total_purity_.size() == static_cast<size_t>(n)) {
+      if (total_bkg_rej_.size() == static_cast<size_t>(n)) {
         gp_tot = new TGraph(n);
         gp_tot->SetLineColor(kBlue);
         gp_tot->SetMarkerColor(kBlue);
         gp_tot->SetMarkerStyle(25);
         for (int i = 0; i < n; ++i) {
-          const double y = pct_clip(total_purity_.at(i));
+          const double y = pct(total_bkg_rej_.at(i));
           gp_tot->SetPoint(i, i + 1, y);
           y2min = std::min(y2min, y);
           y2max = std::max(y2max, y);
@@ -205,12 +198,12 @@ protected:
       }
 
       if (!std::isfinite(y2min) || !std::isfinite(y2max) || !(y2min < y2max)) {
-        y2min = eps_pct;
+        y2min = 0.0;
         y2max = 100.0;
       }
       // add a little headroom/footroom
-      y2min = std::max(eps_pct, y2min * 0.8);
-      y2max = std::min(100.0, y2max * 1.25);
+      y2min = std::max(0.0, y2min - 5.0);
+      y2max = std::min(100.0, y2max + 5.0);
 
       // Dummy frame defines overlay ranges; hide all its axes/ticks
       TH1F *h2 = padOverlay->DrawFrame(0.5, y2min, n + 0.5, y2max);
@@ -220,21 +213,19 @@ protected:
       h2->GetYaxis()->SetLabelSize(0);
       h2->GetYaxis()->SetTickLength(0);
 
-      // Draw purity graphs
+      // Draw background rejection graphs
       if (gp_mc)  gp_mc->Draw("PL SAME");
       if (gp_tot) gp_tot->Draw("PL SAME");
 
       // Right-hand axis in overlay pad user coords
       const double xRight = n + 0.5;
-      TGaxis *y2 = new TGaxis(xRight, y2min, xRight, y2max, y2min, y2max, 510, "G");
-      y2->SetTitle(y2_label_.c_str());    // e.g. "Purity (%)"
+      TGaxis *y2 = new TGaxis(xRight, y2min, xRight, y2max, y2min, y2max, 510);
+      y2->SetTitle(y2_label_.c_str());    // e.g. "Background rejection (%)"
       y2->SetLabelFont(gStyle->GetLabelFont("Y"));
       y2->SetTitleFont(gStyle->GetTitleFont("Y"));
       y2->SetLabelSize(gStyle->GetLabelSize("Y") * 0.85);
       y2->SetTitleSize(gStyle->GetTitleSize("Y") * 0.85);
       y2->SetTitleOffset(1.2);
-      y2->SetMoreLogLabels(kTRUE);
-      y2->SetNoExponent(kTRUE);
       y2->Draw();
     }
 
@@ -251,8 +242,8 @@ protected:
     legend->AddEntry(h, eff_label_.c_str(), "l");
     legend->AddEntry(g_err, "Stat. unc.", "le");
     if (gb)     legend->AddEntry(gb, "Syst. unc.", "f");
-    if (gp_mc)  legend->AddEntry(gp_mc, "MC purity (log)", "pl");
-    if (gp_tot) legend->AddEntry(gp_tot, "Total purity (log)", "pl");
+    if (gp_mc)  legend->AddEntry(gp_mc, "MC bkg rejection", "pl");
+    if (gp_tot) legend->AddEntry(gp_tot, "Total bkg rejection", "pl");
     legend->Draw();
 
     canvas.cd();
@@ -270,8 +261,8 @@ private:
   std::string x_label_;
   std::string y_label_;
   std::string eff_label_;
-  std::vector<double> mc_purity_;     // fractions [0..1]
-  std::vector<double> total_purity_;  // fractions [0..1]
+  std::vector<double> mc_bkg_rej_;     // fractions [0..1]
+  std::vector<double> total_bkg_rej_;  // fractions [0..1]
   std::string y2_label_;
   std::vector<double> syst_low_;   // fractional syst [0..1]
   std::vector<double> syst_high_;  // fractional syst [0..1]
