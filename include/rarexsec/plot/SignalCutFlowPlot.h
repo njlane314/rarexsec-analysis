@@ -3,7 +3,10 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <limits>
 
+#include "TCanvas.h"
 #include "TColor.h"
 #include "TGaxis.h"
 #include "TGraph.h"
@@ -53,10 +56,13 @@ public:
 
 protected:
   void draw(TCanvas &canvas) override {
+    // Labels (you can tweak these defaults)
     x_label_ = "Selection Stage";
-    y_label_ = "efficiency";
+    y_label_ = "Selection efficiency";
 
-    const double split = 0.85;
+    const double split = 0.85; // lower pad for plot, upper for legend
+
+    // -- Pads -----------------------------------------------------------------
     canvas.cd();
     TPad *padMain = new TPad("padMain", "padMain", 0.0, 0.0, 1.0, split);
     padMain->SetLeftMargin(0.15);
@@ -74,15 +80,17 @@ protected:
     padLegend->SetBottomMargin(0.01);
     padLegend->Draw();
 
+    // -- Main pad (linear efficiency, 0-100%) --------------------------------
     padMain->cd();
 
-    int n = static_cast<int>(stages_.size());
-    std::string title = ";" + x_label_ + ";" + y_label_;
-    auto *h = new TH1F("h_surv", title.c_str(), n, 0.5, n + 0.5);
+    const int n = static_cast<int>(stages_.size());
+    const std::string title = ";" + x_label_ + ";" + y_label_;
+    TH1F *h = new TH1F("h_surv", title.c_str(), n, 0.5, n + 0.5);
     h->SetDirectory(nullptr);
+
     for (int i = 0; i < n; ++i) {
       h->GetXaxis()->SetBinLabel(i + 1, stages_[i].c_str());
-      h->SetBinContent(i + 1, survival_[i] * 100.0);
+      h->SetBinContent(i + 1, survival_.at(i) * 100.0);
     }
 
     h->SetMinimum(0.0);
@@ -108,69 +116,140 @@ protected:
 
     h->Draw("hist");
 
+    // Systematic band on efficiency (if provided)
     TGraphAsymmErrors *gb = nullptr;
     if (syst_low_.size() == static_cast<size_t>(n) &&
         syst_high_.size() == static_cast<size_t>(n)) {
       gb = new TGraphAsymmErrors(n);
       for (int i = 0; i < n; ++i) {
-        gb->SetPoint(i, i + 1, survival_[i] * 100.0);
-        gb->SetPointError(i, 0.0, 0.0, syst_low_[i] * 100.0,
-                          syst_high_[i] * 100.0);
+        gb->SetPoint(i, i + 1, survival_.at(i) * 100.0);
+        gb->SetPointError(i, 0.0, 0.0, syst_low_.at(i) * 100.0,
+                          syst_high_.at(i) * 100.0);
       }
       gb->SetFillColorAlpha(band_color_, band_alpha_);
       gb->SetLineColorAlpha(band_color_, 0.0);
       gb->Draw("2 SAME");
     }
 
-    auto *g = new TGraphAsymmErrors(n);
-    g->SetMarkerStyle(20);
-    g->SetMarkerSize(1.1);
-    g->SetLineWidth(2);
+    // Efficiency points with stat. errors
+    auto *g_eff = new TGraphAsymmErrors(n);
+    g_eff->SetMarkerStyle(20);
+    g_eff->SetMarkerSize(1.1);
+    g_eff->SetLineWidth(2);
     for (int i = 0; i < n; ++i) {
-      g->SetPoint(i, i + 1, survival_[i] * 100.0);
-      g->SetPointError(i, 0.0, 0.0, err_low_[i] * 100.0, err_high_[i] * 100.0);
+      g_eff->SetPoint(i, i + 1, survival_.at(i) * 100.0);
+      g_eff->SetPointError(i, 0.0, 0.0, err_low_.at(i) * 100.0, err_high_.at(i) * 100.0);
     }
-    g->Draw("P SAME");
+    g_eff->Draw("P SAME");
 
+    // -- Overlay pad for purity (log-y) --------------------------------------
     TGraph *gp_mc = nullptr;
     TGraph *gp_tot = nullptr;
+
     const bool have_purity =
         (mc_purity_.size() == static_cast<size_t>(n)) ||
         (total_purity_.size() == static_cast<size_t>(n));
 
+    TPad *padOverlay = nullptr;
+
     if (have_purity) {
+      canvas.cd();
+      padOverlay = new TPad("padOverlay", "padOverlay", 0.0, 0.0, 1.0, split);
+      padOverlay->SetFillStyle(4000);      // transparent fill
+      padOverlay->SetFrameFillStyle(0);    // transparent frame
+      padOverlay->SetLeftMargin(padMain->GetLeftMargin());
+      padOverlay->SetRightMargin(padMain->GetRightMargin());
+      padOverlay->SetTopMargin(padMain->GetTopMargin());
+      padOverlay->SetBottomMargin(padMain->GetBottomMargin());
+      padOverlay->SetLogy();               // <- log scale for purity
+      padOverlay->Draw();
+      padOverlay->cd();
+
+      const double eps_pct = 1e-2; // 0.01% minimum for log scale
+      auto pct_clip = [&](double f) {
+        // Convert [0..1] fraction to percent and clip at epsilon
+        double v = f * 100.0;
+        if (!(v > 0.0)) v = eps_pct;
+        return std::max(v, eps_pct);
+      };
+
+      double y2min = std::numeric_limits<double>::infinity();
+      double y2max = -std::numeric_limits<double>::infinity();
+
       if (mc_purity_.size() == static_cast<size_t>(n)) {
         gp_mc = new TGraph(n);
         gp_mc->SetLineColor(kRed);
         gp_mc->SetMarkerColor(kRed);
         gp_mc->SetMarkerStyle(24);
-        for (int i = 0; i < n; ++i)
-          gp_mc->SetPoint(i, i + 1, mc_purity_[i] * 100.0);
-        gp_mc->Draw("PL SAME");
+        for (int i = 0; i < n; ++i) {
+          const double y = pct_clip(mc_purity_.at(i));
+          gp_mc->SetPoint(i, i + 1, y);
+          y2min = std::min(y2min, y);
+          y2max = std::max(y2max, y);
+        }
       }
+
       if (total_purity_.size() == static_cast<size_t>(n)) {
         gp_tot = new TGraph(n);
         gp_tot->SetLineColor(kBlue);
         gp_tot->SetMarkerColor(kBlue);
         gp_tot->SetMarkerStyle(25);
-        for (int i = 0; i < n; ++i)
-          gp_tot->SetPoint(i, i + 1, total_purity_[i] * 100.0);
-        gp_tot->Draw("PL SAME");
+        for (int i = 0; i < n; ++i) {
+          const double y = pct_clip(total_purity_.at(i));
+          gp_tot->SetPoint(i, i + 1, y);
+          y2min = std::min(y2min, y);
+          y2max = std::max(y2max, y);
+        }
       }
+
+      if (!std::isfinite(y2min) || !std::isfinite(y2max) || !(y2min < y2max)) {
+        y2min = eps_pct;
+        y2max = 100.0;
+      }
+      // add a little headroom/footroom
+      y2min = std::max(eps_pct, y2min * 0.8);
+      y2max = std::min(100.0, y2max * 1.25);
+
+      // Dummy frame defines overlay ranges; hide all its axes/ticks
+      TH1F *h2 = padOverlay->DrawFrame(0.5, y2min, n + 0.5, y2max);
+      h2->SetDirectory(nullptr);
+      h2->GetXaxis()->SetLabelSize(0);
+      h2->GetXaxis()->SetTickLength(0);
+      h2->GetYaxis()->SetLabelSize(0);
+      h2->GetYaxis()->SetTickLength(0);
+
+      // Draw purity graphs
+      if (gp_mc)  gp_mc->Draw("PL SAME");
+      if (gp_tot) gp_tot->Draw("PL SAME");
+
+      // Right-hand axis in overlay pad user coords
+      const double xRight = n + 0.5;
+      TGaxis *y2 = new TGaxis(xRight, y2min, xRight, y2max, y2min, y2max, 510, "G+");
+      y2->SetTitle(y2_label_.c_str());    // e.g. "Purity (%)"
+      y2->SetLabelFont(gStyle->GetLabelFont("Y"));
+      y2->SetTitleFont(gStyle->GetTitleFont("Y"));
+      y2->SetLabelSize(gStyle->GetLabelSize("Y") * 0.85);
+      y2->SetTitleSize(gStyle->GetTitleSize("Y") * 0.85);
+      y2->SetTitleOffset(1.2);
+      y2->SetMoreLogLabels(kTRUE);
+      y2->SetNoExponent(kTRUE);
+      y2->Draw();
     }
 
+    // -- Legend ---------------------------------------------------------------
     canvas.cd();
     padLegend->cd();
     TLegend *legend = new TLegend(0.12, 0.0, 0.95, 0.75);
     legend->SetBorderSize(0);
     legend->SetFillStyle(0);
     legend->SetTextFont(42);
+
     int n_entries = 1 + (gb ? 1 : 0) + (gp_mc ? 1 : 0) + (gp_tot ? 1 : 0);
     legend->SetNColumns((n_entries > 4) ? 3 : 2);
-    legend->AddEntry(g, "Selection efficiency", "p");
-    if (gb) legend->AddEntry(gb, "Syst. unc.", "f");
-    if (gp_mc) legend->AddEntry(gp_mc, "MC purity", "pl");
-    if (gp_tot) legend->AddEntry(gp_tot, "Total purity", "pl");
+    legend->AddEntry(g_eff, "Selection efficiency", "p");
+    if (gb)     legend->AddEntry(gb, "Syst. unc.", "f");
+    if (gp_mc)  legend->AddEntry(gp_mc, "MC purity (log)", "pl");
+    if (gp_tot) legend->AddEntry(gp_tot, "Total purity (log)", "pl");
     legend->Draw();
 
     canvas.cd();
@@ -178,20 +257,20 @@ protected:
 
 private:
   std::vector<std::string> stages_;
-  std::vector<double> survival_;
-  std::vector<double> err_low_;
-  std::vector<double> err_high_;
+  std::vector<double> survival_;   // fractions [0..1]
+  std::vector<double> err_low_;    // fractional errors [0..1]
+  std::vector<double> err_high_;   // fractional errors [0..1]
   double N0_;
   std::vector<double> counts_;
   std::vector<CutFlowLossInfo> losses_;
   double pot_scale_;
   std::string x_label_;
   std::string y_label_;
-  std::vector<double> mc_purity_;
-  std::vector<double> total_purity_;
+  std::vector<double> mc_purity_;     // fractions [0..1]
+  std::vector<double> total_purity_;  // fractions [0..1]
   std::string y2_label_;
-  std::vector<double> syst_low_;
-  std::vector<double> syst_high_;
+  std::vector<double> syst_low_;   // fractional syst [0..1]
+  std::vector<double> syst_high_;  // fractional syst [0..1]
   int band_color_;
   double band_alpha_;
 };
