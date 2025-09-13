@@ -302,9 +302,9 @@ private:
 
     SignalCutFlowPlot plot(pc.plot_name, pc.stages, survival, err_low, err_high,
                            N0, cum_counts, losses, loader_->getTotalPot(),
-                           pc.output_directory, pc.x_label, pc.y_label, purity,
-                           "Purity (%)", syst_low, syst_high, pc.band_color,
-                           pc.band_alpha);
+                           pc.output_directory, pc.x_label, pc.y_label,
+                           purity, purity, "Purity (%)", syst_low, syst_high,
+                           pc.band_color, pc.band_alpha);
     plot.drawAndSave("pdf");
     log::info("SignalCutFlowPlotPlugin::onPlot",
               pc.output_directory + "/" + pc.plot_name + ".pdf");
