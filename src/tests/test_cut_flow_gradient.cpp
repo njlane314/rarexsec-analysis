@@ -1,5 +1,6 @@
 #include <rarexsec/core/CutFlowGradient.h>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 using namespace analysis;
@@ -33,10 +34,10 @@ TEST_CASE("compute finite difference gradients for cut flow") {
     REQUIRE(grad.backgrounds.at(2).size() == 3);
 
     // Stage 1 gradients
-    CHECK(grad.signal[1] == Approx((0.61 - 0.59) / 2.0));
-    CHECK(grad.backgrounds.at(2)[1] == Approx((0.15 - 0.25) / 2.0));
+    CHECK(grad.signal[1] == Catch::Approx((0.61 - 0.59) / 2.0));
+    CHECK(grad.backgrounds.at(2)[1] == Catch::Approx((0.15 - 0.25) / 2.0));
 
     // Stage 2 gradients
-    CHECK(grad.signal[2] == Approx((0.31 - 0.29) / 2.0));
-    CHECK(grad.backgrounds.at(2)[2] == Approx((0.075 - 0.125) / 2.0));
+    CHECK(grad.signal[2] == Catch::Approx((0.31 - 0.29) / 2.0));
+    CHECK(grad.backgrounds.at(2)[2] == Catch::Approx((0.075 - 0.125) / 2.0));
 }
