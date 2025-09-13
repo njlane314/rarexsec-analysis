@@ -258,10 +258,18 @@ private:
 
     auto signal_df =
         chan_alias_df.Define("is_truth_signal",
-                              [](int ch) { return ch == 15 || ch == 16; },
-                              {"channel_def"});
+                             [](int ch) { return ch == 15 || ch == 16; },
+                             {"channel_def"});
 
-    return signal_df;
+    auto pure_sig_df = signal_df.Define(
+        "pure_slice_signal",
+        [](bool is_sig, float purity, float completeness) {
+          return is_sig && purity > 0.5f && completeness > 0.1f;
+        },
+        {"is_truth_signal", "neutrino_purity_from_pfp",
+         "neutrino_completeness_from_pfp"});
+
+    return pure_sig_df;
   }
 };
 
