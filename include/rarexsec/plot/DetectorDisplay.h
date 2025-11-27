@@ -1,6 +1,7 @@
 #ifndef DETECTORDISPLAY_H
 #define DETECTORDISPLAY_H
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -24,7 +25,6 @@ public:
 protected:
   void draw(TCanvas &canvas) override {
     const int bin_offset = 1;
-    const float threshold = 4;
     const float min_val = 1;
     const float max_val = 1000;
 
@@ -36,7 +36,7 @@ protected:
       for (int c = 0; c < dim; ++c) {
         float v = data_[r * dim + c];
         hist_->SetBinContent(c + bin_offset, r + bin_offset,
-                             v > threshold ? v : min_val);
+                             std::max(v, min_val));
       }
     }
 
